@@ -1,0 +1,63 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <RootNamespace>TransPeek</RootNamespace>
+    <AssemblyName>TransPeek</AssemblyName>
+    <!-- Version shown in Settings > About and used for the release-notes
+         link (releases/tag/v0.1.0). Bump per release. -->
+    <Version>0.1.0</Version>
+    <!-- ScreenCaptureService uses an unsafe block to copy D3D frame rows. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>12</LangVersion>
+    <UseWinUI>true</UseWinUI>
+    <!-- Unpackaged (no MSIX) for v0.1: Manh runs the exe directly.
+         Self-contained Windows App SDK runtime ships with the app, so no
+         separate runtime installer is needed. Packaged/MSIX comes at
+         release time (see docs/DECISIONS.md). -->
+    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+    <Platforms>x64</Platforms>
+    <!-- WinUI 3 apps are single-project; the appxmanifest below is kept
+         minimal (identity only) because the app is unpackaged. -->
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Windows App SDK 1.8.12 (NuGet version 1.8.260921001). 1.x line,
+         latest stable in that line; 2.x exists but changes packaging
+         (metapackage refactor) — upgrade is a deliberate follow-up. -->
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260921001" />
+    <!-- Tray icon for WinUI 3 (H.NotifyIcon 2.4.1, MIT). WinUI has no
+         built-in NotifyIcon; this is the standard community control. -->
+    <PackageReference Include="H.NotifyIcon.WinUI" Version="2.4.1" />
+    <!-- UI Automation (TextPattern.GetSelection) for the selected text. -->
+    <PackageReference Include="FlaUI.Core" Version="5.0.0" />
+    <PackageReference Include="FlaUI.UIA3" Version="5.0.0" />
+    <!-- Direct3D 11 for the GraphicsCapture path (Vortice 3.8.3). -->
+    <PackageReference Include="Vortice.Direct3D11" Version="3.8.3" />
+    <PackageReference Include="Vortice.DXGI" Version="3.8.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TransPeek.Core\TransPeek.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AppxManifest Include="Package.appxmanifest" />
+    <!-- SDK default globs pick up Views\*.xaml (Page) and *.cs (Compile)
+         automatically; only App.xaml needs an explicit item type. -->
+    <ApplicationDefinition Include="App.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </ApplicationDefinition>
+  </ItemGroup>
+
+  <!-- No binary assets in v0.1 (the connector cannot push binaries, and
+       the app icon is a follow-up — see docs/DECISIONS.md). The tray icon
+       is an embedded base64 PNG (Assets/EmbeddedIcon.cs). -->
+</Project>

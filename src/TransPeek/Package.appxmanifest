@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Minimal identity manifest for the unpackaged v0.1 build.
+     The app runs as a plain exe (WindowsPackageType=None), so no package
+     identity, capabilities or visual assets are enforced at runtime.
+     Kept because the WinUI 3 project template expects the file to exist.
+     When the app is packaged (MSIX, release time) this file gains the real
+     identity, capabilities (including graphicsCaptureProgrammatic for
+     picker-free screen capture) and logo assets. -->
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  IgnorableNamespaces="uap mp">
+  <Identity
+    Name="TranManhTuanLabs.TransPeek"
+    Publisher="CN=TranManhTuanLabs"
+    Version="0.1.0.0" />
+  <mp:PhoneIdentity PhoneProductId="7A1E5C3D-9B2F-4A6E-8C1D-3F5A7B9E0C2A" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
+  <Properties>
+    <DisplayName>TransPeek</DisplayName>
+    <PublisherDisplayName>TranManhTuanLabs</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.17763.0" MaxVersionTested="10.0.19041.0" />
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.19041.0" />
+  </Dependencies>
+  <Resources>
+    <Resource Language="x-generate" />
+  </Resources>
+  <Applications>
+    <Application Id="App"
+      Executable="$targetnametoken$.exe"
+      EntryPoint="TransPeek.App">
+      <uap:VisualElements
+        DisplayName="TransPeek"
+        Description="Translate anywhere, peek instantly."
+        BackgroundColor="transparent"
+        Square150x150Logo="Assets\Square150x150Logo.png"
+        Square44x44Logo="Assets\Square44x44Logo.png">
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
+        <uap:SplashScreen Image="Assets\SplashScreen.png" />
+      </uap:VisualElements>
+    </Application>
+  </Applications>
+  <Capabilities>
+    <Capability Name="internetClient" />
+  </Capabilities>
+</Package>

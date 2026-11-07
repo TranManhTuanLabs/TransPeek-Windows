@@ -1,0 +1,17 @@
+<Window
+    x:Class="TransPeek.Views.SettingsWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <NavigationView x:Name="NavView" IsSettingsVisible="False" IsBackButtonVisible="Collapsed"
+                    SelectionChanged="OnSelectionChanged" PaneDisplayMode="Left">
+        <NavigationView.MenuItems>
+            <NavigationViewItem Content="General" Tag="General" />
+            <NavigationViewItem Content="Translation" Tag="Translation" />
+            <NavigationViewItem Content="Dictionary" Tag="Dictionary" />
+            <NavigationViewItem Content="OCR" Tag="OCR" />
+            <NavigationViewItem Content="About" Tag="About" />
+        </NavigationView.MenuItems>
+        <Frame x:Name="ContentFrame" Margin="16" />
+    </NavigationView>
+</Window>

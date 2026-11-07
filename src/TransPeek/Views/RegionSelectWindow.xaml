@@ -1,0 +1,15 @@
+<Window
+    x:Class="TransPeek.Views.RegionSelectWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid x:Name="RootGrid" Background="#66000000">
+        <TextBlock Text="Kéo chuột để chọn vùng cần OCR — Esc để hủy"
+                   HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,24,0,0"
+                   Foreground="White" FontSize="15" FontWeight="SemiBold" />
+        <Canvas x:Name="SelectionCanvas">
+            <Rectangle x:Name="SelectionRect" Stroke="White" StrokeThickness="2"
+                       Fill="#22FFFFFF" Visibility="Collapsed" />
+        </Canvas>
+    </Grid>
+</Window>

@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>12</LangVersion>
+    <AssemblyName>TransPeek.Core</AssemblyName>
+    <RootNamespace>TransPeek.Core</RootNamespace>
+    <!-- Pure logic only: no WinUI / WinRT dependency, so this library and
+         its tests build anywhere (including Linux CI). Windows-only pieces
+         (Windows.Media.Ocr, UIA, capture) live in the app project. -->
+  </PropertyGroup>
+
+  <!-- Tests need the internal helpers (GTX response parsing, OpenAI
+       request building) to verify them without hitting the network. -->
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>TransPeek.Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Tesseract 5.2.0 wrapper (Apache-2.0). Native tesseract/leptonica
+         DLLs for win-x64/x86 ship inside the package. Language data files
+         (*.traineddata) are NOT bundled; they are downloaded on demand
+         from tessdata_best into %LOCALAPPDATA%\TransPeek\tessdata. -->
+    <PackageReference Include="Tesseract" Version="5.2.0" />
+    <PackageReference Include="Tesseract.Drawing" Version="5.2.0" />
+    <PackageReference Include="System.Drawing.Common" Version="8.0.0" />
+  </ItemGroup>
+
+</Project>

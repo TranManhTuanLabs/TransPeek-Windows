@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>12</LangVersion>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>TransPeek.Tests</RootNamespace>
+    <AssemblyName>TransPeek.Tests</AssemblyName>
+    <!-- Pure-logic tests only (Core): they build and run anywhere,
+         including Linux CI. Windows-only pieces (WinUI, UIA, capture,
+         OCR engines) are verified by the Windows CI build + live test. -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.0" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\TransPeek.Core\TransPeek.Core.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,15 @@
+<Window
+    x:Class="TransPeek.Views.TriggerIconWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid Background="Transparent">
+        <Border x:Name="IconBorder" Width="44" Height="44" CornerRadius="12"
+                Background="#2B7FFF" BorderBrush="#1E5FCC" BorderThickness="1">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="1">
+                <TextBlock Text="A" FontSize="20" FontWeight="Bold" Foreground="White" VerticalAlignment="Center" />
+                <TextBlock Text="&#x6587;" FontSize="15" Foreground="White" VerticalAlignment="Center" Margin="0,2,0,0" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

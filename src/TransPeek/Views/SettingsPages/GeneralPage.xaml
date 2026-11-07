@@ -1,0 +1,39 @@
+<Page
+    x:Class="TransPeek.Views.SettingsPages.GeneralPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ScrollViewer>
+        <StackPanel Spacing="12" MaxWidth="560" HorizontalAlignment="Left">
+            <ToggleSwitch x:Name="WatchSelectionToggle" Header="Theo dõi vùng chọn tự động"
+                          OnContent="Bật" OffContent="Tắt"
+                          Toggled="OnWatchSelectionToggled" />
+            <TextBlock Text="Khi bật, icon trigger hiện ra mỗi khi bạn bôi chọn chữ. Khi tắt, app chỉ phản hồi phím tắt và menu tray."
+                       FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
+
+            <ComboBox x:Name="HoverDelayCombo" Header="Hover bao lâu thì mở panel"
+                      SelectionChanged="OnHoverDelayChanged">
+                <ComboBoxItem Content="300 ms" Tag="300" />
+                <ComboBoxItem Content="500 ms" Tag="500" />
+            </ComboBox>
+
+            <NumberBox x:Name="AutoHideBox" Header="Icon trigger tự ẩn sau (giây)"
+                       Minimum="1" Maximum="30" SpinButtonPlacementMode="Compact"
+                       ValueChanged="OnAutoHideChanged" />
+
+            <TextBox x:Name="TranslateHotkeyBox" Header="Phím tắt mở panel dịch (vd: Control+Alt+T)"
+                     LostFocus="OnTranslateHotkeyLostFocus" />
+            <TextBlock x:Name="HotkeyErrorText" FontSize="12" Foreground="Red" Visibility="Collapsed" />
+
+            <ToggleSwitch x:Name="LaunchAtLoginToggle" Header="Mở cùng Windows"
+                          OnContent="Bật" OffContent="Tắt"
+                          Toggled="OnLaunchAtLoginToggled" />
+            <TextBlock Text="Ghi vào khóa Run của Windows (HKCU\Software\Microsoft\Windows\CurrentVersion\Run). Không cần quyền admin."
+                       FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
+            <TextBlock x:Name="LaunchErrorText" FontSize="12" Foreground="Red" Visibility="Collapsed" />
+
+            <TextBlock Text="Settings lưu ở %LOCALAPPDATA%\TransPeek\settings.json"
+                       FontSize="12" Foreground="Gray" TextWrapping="Wrap" Margin="0,12,0,0" />
+        </StackPanel>
+    </ScrollViewer>
+</Page>

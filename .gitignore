@@ -1,0 +1,59 @@
+## .NET / Visual Studio
+bin/
+obj/
+out/
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+## NuGet
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+!**/packages/build/
+*.nuget.props
+*.nuget.targets
+
+## Publish output
+publish/
+PublishProfiles/
+
+## Windows App SDK / packaging
+*.msix
+*.msixbundle
+*.appx
+*.appxbundle
+*.appinstaller
+*.cer
+*.pfx
+Package.StoreAssociation.xml
+
+## Test results
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+
+## Misc
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+Desktop.ini

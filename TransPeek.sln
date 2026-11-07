@@ -1,0 +1,51 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TransPeek", "src\TransPeek\TransPeek.csproj", "{290A96AB-B480-40A7-BE58-A60BCAB1960E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TransPeek.Core", "src\TransPeek.Core\TransPeek.Core.csproj", "{E462001C-1E29-4F08-B905-81C87C58DA30}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TransPeek.Tests", "tests\TransPeek.Tests\TransPeek.Tests.csproj", "{0736C4F9-1D36-4664-9B2F-97EB63D4E679}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{290A96AB-B480-40A7-BE58-A60BCAB1960E}.Debug|x64.ActiveCfg = Debug|x64
+		{290A96AB-B480-40A7-BE58-A60BCAB1960E}.Debug|x64.Build.0 = Debug|x64
+		{290A96AB-B480-40A7-BE58-A60BCAB1960E}.Debug|x86.ActiveCfg = Debug|x86
+		{290A96AB-B480-40A7-BE58-A60BCAB1960E}.Debug|x86.Build.0 = Debug|x86
+		{290A96AB-B480-40A7-BE58-A60BCAB1960E}.Release|x64.ActiveCfg = Release|x64
+		{290A96AB-B480-40A7-BE58-A60BCAB1960E}.Release|x64.Build.0 = Release|x64
+		{290A96AB-B480-40A7-BE58-A60BCAB1960E}.Release|x86.ActiveCfg = Release|x86
+		{290A96AB-B480-40A7-BE58-A60BCAB1960E}.Release|x86.Build.0 = Release|x86
+		{E462001C-1E29-4F08-B905-81C87C58DA30}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{E462001C-1E29-4F08-B905-81C87C58DA30}.Debug|x64.Build.0 = Debug|Any CPU
+		{E462001C-1E29-4F08-B905-81C87C58DA30}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E462001C-1E29-4F08-B905-81C87C58DA30}.Debug|x86.Build.0 = Debug|Any CPU
+		{E462001C-1E29-4F08-B905-81C87C58DA30}.Release|x64.ActiveCfg = Release|Any CPU
+		{E462001C-1E29-4F08-B905-81C87C58DA30}.Release|x64.Build.0 = Release|Any CPU
+		{E462001C-1E29-4F08-B905-81C87C58DA30}.Release|x86.ActiveCfg = Release|Any CPU
+		{E462001C-1E29-4F08-B905-81C87C58DA30}.Release|x86.Build.0 = Release|Any CPU
+		{0736C4F9-1D36-4664-9B2F-97EB63D4E679}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{0736C4F9-1D36-4664-9B2F-97EB63D4E679}.Debug|x64.Build.0 = Debug|Any CPU
+		{0736C4F9-1D36-4664-9B2F-97EB63D4E679}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{0736C4F9-1D36-4664-9B2F-97EB63D4E679}.Debug|x86.Build.0 = Debug|Any CPU
+		{0736C4F9-1D36-4664-9B2F-97EB63D4E679}.Release|x64.ActiveCfg = Release|Any CPU
+		{0736C4F9-1D36-4664-9B2F-97EB63D4E679}.Release|x64.Build.0 = Release|Any CPU
+		{0736C4F9-1D36-4664-9B2F-97EB63D4E679}.Release|x86.ActiveCfg = Release|Any CPU
+		{0736C4F9-1D36-4664-9B2F-97EB63D4E679}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A3F2C41E-7B8D-4E2A-9C15-5D6E7F8091A2}
+	EndGlobalSection
+EndGlobal
