@@ -20,11 +20,11 @@
          release time (see docs/DECISIONS.md). -->
     <WindowsPackageType>None</WindowsPackageType>
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
-    <!-- Keep MSIX tooling on even though the app is unpackaged: these
-         targets generate resources.pri (compiled XAML) into the publish
-         output. With WindowsPackageType=None the SDK turns them off by
-         default, and dotnet publish then ships no PRI at all. -->
-    <EnableMsixTooling>true</EnableMsixTooling>
+    <!-- NOTE: do NOT set EnableMsixTooling=true here. It activates the
+         MSIX packaging targets, which fail the build with "Improper
+         project configuration: WindowsPackageType is set to None, but a
+         AppxManifest is specified" (CI runs #19/#20). The .pri/.xbf
+         gap is handled by the CopyWinUIPublishOutputs target below. -->
     <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
     <Platforms>x64</Platforms>
     <!-- WinUI 3 apps are single-project; the appxmanifest below is kept
