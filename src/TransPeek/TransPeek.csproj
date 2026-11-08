@@ -66,13 +66,18 @@
        App.xaml's resources and dies at startup inside
        Microsoft.UI.Xaml.dll (STATUS_STOWED_EXCEPTION). Copy them from
        the build output after publish. The .pri is copied under both
-       its build name and the runtime-expected name resources.pri. -->
+       its build name and the runtime-expected name resources.pri.
+       NOTE: only App.xbf lands flat in OutDir; the pages' .xbf files
+       may sit in OutDir subfolders or only in the intermediate output
+       (obj), so search all of them. The PRI references every .xbf by
+       bare filename, so copy them flat into the publish folder. -->
   <Target Name="CopyWinUIPublishOutputs" AfterTargets="Publish" Condition="'$(WindowsPackageType)' == 'None'">
     <ItemGroup>
-      <_WinUIXbfFiles Include="$(OutDir)*.xbf" />
+      <_WinUIXbfFiles Include="$(OutDir)**\*.xbf" />
+      <_WinUIXbfFiles Include="$(MSBuildProjectDirectory)\obj\**\*.xbf" />
       <_WinUIPriFile Include="$(OutDir)$(AssemblyName).pri" />
     </ItemGroup>
-    <Copy SourceFiles="@(_WinUIXbfFiles)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_WinUIXbfFiles)" DestinationFiles="@(_WinUIXbfFiles->'$(PublishDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(_WinUIPriFile)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(_WinUIPriFile)" DestinationFiles="$(PublishDir)resources.pri" SkipUnchangedFiles="true" />
     <Message Importance="high" Text="WinUI publish outputs copied: @(_WinUIXbfFiles); @(_WinUIPriFile)" />
