@@ -26,6 +26,14 @@ jobs:
         run: dotnet test tests/TransPeek.Tests/TransPeek.Tests.csproj -c Release --no-build
       - name: Publish
         run: dotnet publish src/TransPeek/TransPeek.csproj -c Release -r win-x64 --self-contained -o publish
+      - name: Verify publish has WinUI resources
+        shell: pwsh
+        run: |
+          $hasPri = (Test-Path publish/TransPeek.pri) -or (Test-Path publish/resources.pri)
+          $xbfCount = @(Get-ChildItem publish/*.xbf -ErrorAction SilentlyContinue).Count
+          if (-not $hasPri) { throw 'Missing app .pri in publish output (TransPeek.pri/resources.pri)' }
+          if ($xbfCount -eq 0) { throw 'Missing .xbf files in publish output' }
+          Write-Host "Publish OK: .pri present, $xbfCount .xbf files"
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
