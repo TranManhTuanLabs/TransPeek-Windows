@@ -27,7 +27,7 @@ public sealed class DictionaryLinkTests
         Assert.NotNull(url);
         Assert.Equal(
             "https://www.oxfordlearnersdictionaries.com/definition/english/hello",
-            url!.ToString());
+            url!.AbsoluteUri);
     }
 
     [Fact]
@@ -40,7 +40,7 @@ public sealed class DictionaryLinkTests
         };
         var url = link.UrlFor("hello world");
         Assert.NotNull(url);
-        Assert.Equal("https://www.google.com/search?q=define+hello%20world", url!.ToString());
+        Assert.Equal("https://www.google.com/search?q=define+hello%20world", url!.AbsoluteUri);
     }
 
     [Fact]
@@ -54,8 +54,8 @@ public sealed class DictionaryLinkTests
         // "&" and "+" must not leak into the URL structure.
         var url = link.UrlFor("a&b+c");
         Assert.NotNull(url);
-        Assert.DoesNotContain("&", url!.ToString());
-        Assert.Contains("a%26b%2Bc", url.ToString());
+        Assert.DoesNotContain("&", url!.AbsoluteUri);
+        Assert.Contains("a%26b%2Bc", url.AbsoluteUri);
     }
 
     [Fact]
@@ -68,8 +68,8 @@ public sealed class DictionaryLinkTests
         };
         var url = link.UrlFor("tiếng việt");
         Assert.NotNull(url);
-        Assert.StartsWith("https://example.com/ti", url!.ToString());
-        Assert.DoesNotContain("ế", url.ToString());
+        Assert.StartsWith("https://example.com/ti", url!.AbsoluteUri);
+        Assert.DoesNotContain("ế", url.AbsoluteUri);
     }
 
     [Fact]
