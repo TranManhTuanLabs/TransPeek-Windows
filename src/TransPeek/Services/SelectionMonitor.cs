@@ -86,7 +86,7 @@ public sealed class SelectionMonitor : IDisposable
 
     private static (string? Text, (int X, int Y) Point) TryGetSelection(UIA3Automation automation)
     {
-        var element = automation.GetFocusedElement();
+        var element = automation.FocusedElement();
         if (element is null)
             return (null, (0, 0));
         var pattern = element.Patterns.Text.PatternOrDefault;

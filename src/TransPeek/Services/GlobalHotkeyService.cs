@@ -26,7 +26,7 @@ public sealed class GlobalHotkeyService : IDisposable
     private bool _disposed;
 
     // Kept alive for the lifetime of the service (native callback).
-    private readonly NativeMethods.WNDCLASSEX _wndClass;
+    private NativeMethods.WNDCLASSEX _wndClass;
     private readonly WndProc _wndProc;
 
     private delegate IntPtr WndProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);

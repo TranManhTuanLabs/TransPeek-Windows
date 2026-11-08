@@ -57,7 +57,7 @@ public sealed class ScreenCaptureService
 
         // D3D11 device (BGRA support is required for capture).
         D3D11.D3D11CreateDevice(null, Vortice.Direct3D.DriverType.Hardware,
-            Vortice.Direct3D11.DeviceCreationFlags.BgraSupport, null,
+            Vortice.Direct3D11.DeviceCreationFlags.BgraSupport, null!,
             out var device, out _, out var context);
         using var d3dDevice = device ?? throw new InvalidOperationException("Could not create a D3D11 device.");
         using var d3dContext = context ?? throw new InvalidOperationException("Could not create a D3D11 context.");
@@ -115,7 +115,7 @@ public sealed class ScreenCaptureService
     {
         // IDirect3DSurface -> ID3D11Texture2D via IDirect3DDxgiInterfaceAccess.
         var access = surface.As<IDirect3DDxgiInterfaceAccess>();
-        access.GetInterface(typeof(ID3D11Texture2D).GUID, out var texturePtr);
+        var texturePtr = access.GetInterface(typeof(ID3D11Texture2D).GUID);
         using var texture = new ID3D11Texture2D(texturePtr);
 
         var desc = texture.Description;
@@ -134,7 +134,7 @@ public sealed class ScreenCaptureService
         };
         using var staging = device.CreateTexture2D(stagingDesc);
         context.CopyResource(texture, staging);
-        var mapped = context.Map(staging, 0, MapMode.Read, MapFlags.None);
+        var mapped = context.Map(staging, 0, MapMode.Read, Vortice.Direct3D11.MapFlags.None);
         try
         {
             var bytes = new byte[cropW * cropH * 4];

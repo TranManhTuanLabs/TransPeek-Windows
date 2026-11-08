@@ -41,9 +41,9 @@ public sealed class TrayIconService : IDisposable
 
         _tray = new TaskbarIcon
         {
-            Icon = LoadEmbeddedIcon(),
+            IconSource = LoadEmbeddedIcon(),
             ToolTipText = "TransPeek — Translate anywhere, peek instantly.",
-            ContextMenu = menu,
+            ContextMenuFlyout = menu,
             LeftClickCommand = new RelayCommand(openSettings),
         };
         // ForceCreate is required: the icon is created lazily otherwise and

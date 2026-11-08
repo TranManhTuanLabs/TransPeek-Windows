@@ -121,8 +121,8 @@ public sealed class OcrFlowService
         {
             var result = await _coordinatorFactory().TranslateAsync(
                 text,
-                sourceLanguage: settings.SourceLanguage == LanguageCode.Auto ? null : settings.SourceLanguage,
-                targetLanguage: settings.TargetLanguage)
+                sourceLang: settings.SourceLanguage == LanguageCode.Auto ? null : settings.SourceLanguage,
+                targetLang: settings.TargetLanguage)
                 .ConfigureAwait(false);
             translation = result.Text;
             providerName = result.ProviderName;

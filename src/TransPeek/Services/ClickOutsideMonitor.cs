@@ -58,7 +58,7 @@ public sealed class ClickOutsideMonitor : IDisposable
         {
             var pt = System.Runtime.InteropServices.Marshal.PtrToStructure<NativeMethods.MSLLHOOKSTRUCT>(lParam).pt;
             var (x, y, w, h) = _getRect();
-            var outside = pt.x < x || pt.x >= x + w || pt.y < y || pt.y >= y + h;
+            var outside = pt.X < x || pt.X >= x + w || pt.Y < y || pt.Y >= y + h;
             if (outside)
             {
                 _dispatcher.TryEnqueue(() =>
