@@ -8,6 +8,7 @@
 
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using TransPeek.Core.Dictionary;
 using TransPeek.Core.Translation;
 using TransPeek.Interop;
