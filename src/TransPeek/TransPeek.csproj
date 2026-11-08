@@ -20,6 +20,11 @@
          release time (see docs/DECISIONS.md). -->
     <WindowsPackageType>None</WindowsPackageType>
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <!-- Keep MSIX tooling on even though the app is unpackaged: these
+         targets generate resources.pri (compiled XAML) into the publish
+         output. With WindowsPackageType=None the SDK turns them off by
+         default, and dotnet publish then ships no PRI at all. -->
+    <EnableMsixTooling>true</EnableMsixTooling>
     <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
     <Platforms>x64</Platforms>
     <!-- WinUI 3 apps are single-project; the appxmanifest below is kept
@@ -53,6 +58,25 @@
          default globs; listing it explicitly duplicates the item and
          breaks the build (XamlCompiler WMC1012, CI run 42430004573). -->
   </ItemGroup>
+
+  <!-- Unpackaged publish fix (WinUI 3 startup crash 0xC000027B):
+       dotnet publish with WindowsPackageType=None does not copy the
+       app's compiled XAML (.xbf) or its resource index (.pri) into the
+       publish folder. Without them the shipped exe cannot load
+       App.xaml's resources and dies at startup inside
+       Microsoft.UI.Xaml.dll (STATUS_STOWED_EXCEPTION). Copy them from
+       the build output after publish. The .pri is copied under both
+       its build name and the runtime-expected name resources.pri. -->
+  <Target Name="CopyWinUIPublishOutputs" AfterTargets="Publish" Condition="'$(WindowsPackageType)' == 'None'">
+    <ItemGroup>
+      <_WinUIXbfFiles Include="$(OutDir)*.xbf" />
+      <_WinUIPriFile Include="$(OutDir)$(AssemblyName).pri" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_WinUIXbfFiles)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_WinUIPriFile)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_WinUIPriFile)" DestinationFiles="$(PublishDir)resources.pri" SkipUnchangedFiles="true" />
+    <Message Importance="high" Text="WinUI publish outputs copied: @(_WinUIXbfFiles); @(_WinUIPriFile)" />
+  </Target>
 
   <!-- No binary assets in v0.1 (the connector cannot push binaries, and
        the app icon is a follow-up — see docs/DECISIONS.md). The tray icon
