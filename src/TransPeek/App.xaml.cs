@@ -155,8 +155,8 @@ public sealed partial class App : Application
         {
             var result = await Coordinator.TranslateAsync(
                 text,
-                sourceLanguage: Settings.SourceLanguage == LanguageCode.Auto ? null : Settings.SourceLanguage,
-                targetLanguage: Settings.TargetLanguage);
+                sourceLang: Settings.SourceLanguage == LanguageCode.Auto ? null : Settings.SourceLanguage,
+                targetLang: Settings.TargetLanguage);
             return (result.Text, result.ProviderName);
         }
         catch (Exception ex)
