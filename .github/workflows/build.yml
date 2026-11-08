@@ -32,7 +32,7 @@ jobs:
           $hasPri = (Test-Path publish/TransPeek.pri) -or (Test-Path publish/resources.pri)
           $xbfCount = @(Get-ChildItem publish/*.xbf -ErrorAction SilentlyContinue).Count
           if (-not $hasPri) { throw 'Missing app .pri in publish output (TransPeek.pri/resources.pri)' }
-          if ($xbfCount -eq 0) { throw 'Missing .xbf files in publish output' }
+          if ($xbfCount -lt 12) { throw "Only $xbfCount .xbf files in publish output, expected at least 12 (one per app XAML file)" }
           Write-Host "Publish OK: .pri present, $xbfCount .xbf files"
       - name: Upload artifact
         uses: actions/upload-artifact@v4
