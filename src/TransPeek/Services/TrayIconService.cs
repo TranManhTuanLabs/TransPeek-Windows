@@ -43,7 +43,7 @@ public sealed class TrayIconService : IDisposable
         {
             IconSource = LoadEmbeddedIcon(),
             ToolTipText = "TransPeek — Translate anywhere, peek instantly.",
-            ContextMenuFlyout = menu,
+            ContextFlyout = menu,
             LeftClickCommand = new RelayCommand(openSettings),
         };
         // ForceCreate is required: the icon is created lazily otherwise and

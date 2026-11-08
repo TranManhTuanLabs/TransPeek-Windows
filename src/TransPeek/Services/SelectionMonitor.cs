@@ -95,7 +95,7 @@ public sealed class SelectionMonitor : IDisposable
         var ranges = pattern.GetSelection();
         if (ranges is null || ranges.Length == 0)
             return (null, (0, 0));
-        var text = string.Concat(ranges.Select(r => r.Text ?? "")).Trim();
+        var text = string.Concat(ranges.Select(r => r.GetText(-1) ?? "")).Trim();
         if (string.IsNullOrWhiteSpace(text))
             return (null, (0, 0));
 

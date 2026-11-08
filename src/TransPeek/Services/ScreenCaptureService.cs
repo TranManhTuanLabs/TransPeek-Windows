@@ -70,7 +70,10 @@ public sealed class ScreenCaptureService
         var winrtDevice = (IDirect3DDevice)Marshal.GetObjectForIUnknown(graphicsDevicePtr);
         Marshal.Release(graphicsDevicePtr);
 
-        var item = GraphicsCaptureItem.TryCreateFromDisplayId(area.DisplayId)
+        // DisplayArea.DisplayId (Microsoft.UI) and the capture API's
+        // Windows.Graphics.DisplayId are different structs wrapping the same id.
+        var displayId = new Windows.Graphics.DisplayId { Value = area.DisplayId.Value };
+        var item = GraphicsCaptureItem.TryCreateFromDisplayId(displayId)
             ?? throw new InvalidOperationException("Could not create a capture item for this display.");
 
         var poolSize = new SizeInt32(displayBounds.Width, displayBounds.Height);
@@ -115,7 +118,7 @@ public sealed class ScreenCaptureService
     {
         // IDirect3DSurface -> ID3D11Texture2D via IDirect3DDxgiInterfaceAccess.
         var access = surface.As<IDirect3DDxgiInterfaceAccess>();
-        var texturePtr = access.GetInterface(typeof(ID3D11Texture2D).GUID);
+        access.GetInterface(typeof(ID3D11Texture2D).GUID, out var texturePtr);
         using var texture = new ID3D11Texture2D(texturePtr);
 
         var desc = texture.Description;
