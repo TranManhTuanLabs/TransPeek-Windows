@@ -3,67 +3,57 @@
 ## Build (máy Windows của Manh)
 
 - Cần: Visual Studio 2022 (17.8+) với workload **.NET desktop
-  development**, .NET 8 SDK, Windows SDK 10.0.19041+.
+  development**, .NET 8 SDK, Windows SDK 10.0.22000+ (VS2022 cài
+  mặc định thường có sẵn).
 - Mở `TransPeek.sln` → Build **Release | x64**.
-- Chạy: `src\TransPeek\bin\x64\Release\net8.0-windows10.0.19041.0\TransPeek.exe`
+- Chạy: `src\TransPeek\bin\x64\Release\net8.0-windows10.0.22000.0\TransPeek.exe`
   (unpackaged — chạy trực tiếp, không cần cài đặt).
 - Test logic thuần (không cần Windows, chạy được cả trên Linux):
   `dotnet test tests\TransPeek.Tests\TransPeek.Tests.csproj`
 
+## Tải bản build sẵn (không cần cài VS)
+
+- Vào tab **Actions** của repo → mở run **Build** mới nhất đang xanh
+  → kéo xuống mục **Artifacts** → tải `TransPeek-Windows-v0.1`
+  → giải nén rồi chạy `TransPeek.exe` trong đó.
+- Bản này là self-contained (đã gồm .NET runtime) nên chạy được trên
+  máy Windows 10/11 chưa cài gì thêm; file zip hơi nặng (~100–200MB).
+- Artifact chỉ lưu 30 ngày — quá hạn thì báo Muse chạy lại CI để có
+  bản mới.
+
 ## CI (GitHub Actions, Windows runner)
 
-File `.github/workflows/build.yml` **không có trong repo** — GitHub App
-không đẩy được file workflow (403). Manh tự tạo trên web GitHub:
+File `.github/workflows/build.yml` đã có trong repo, chạy tự động mỗi
+lần push lên `main` (cũng chạy khi mở PR hoặc bấm Run workflow tay):
+Restore → Build (Release) → Test → Publish (self-contained win-x64)
+→ Upload artifact `TransPeek-Windows-v0.1`.
 
-1. Mở repo → **Add file → Create new file**.
-2. Tên file: `.github/workflows/build.yml`
-3. Dán nội dung dưới đây → **Commit changes** (commit thẳng lên `main`).
+**Checkpoint 2026-11-08: Build run #13 (commit `d08da85`) SUCCESS
+toàn bộ — Restore + Build + Test đều xanh, 59/59 test pass.**
+Xem tại tab Actions của repo.
 
-```yaml
-name: Build
-on:
-  push:
-    branches: [main]
-  pull_request:
-  workflow_dispatch:
-jobs:
-  build:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '8.0.x'
-      - name: Restore
-        run: dotnet restore TransPeek.sln
-      - name: Build
-        run: dotnet build TransPeek.sln -c Release --no-restore
-      - name: Test
-        run: dotnet test tests/TransPeek.Tests/TransPeek.Tests.csproj -c Release --no-build
-```
+## Những chỗ CI đã xác minh (Build #13 xanh)
 
-Sau khi commit, vào tab **Actions** xem run `Build` xanh hay đỏ.
-Nếu `dotnet build` lỗi trên runner, báo lại cho Muse (có thể cần
-chuyển sang `msbuild` qua `microsoft/setup-msbuild`).
+Các điểm sau đã được kiểm chứng bằng lần biên dịch + test đầu tiên
+trên runner Windows thật:
 
-## Những chỗ cần CI xác minh đầu tiên
-
-Code trên VM Linux không build được nên các điểm sau CHƯA được kiểm
-chứng — CI sẽ là lần kiểm tra đầu tiên:
-
-1. `ScreenCaptureService`: `GraphicsCaptureItem.TryCreateFromDisplayId(area.DisplayId)`
-   (chuyển `Microsoft.UI.DisplayId` → WinRT `DisplayId`) và
-   `surface.As<IDirect3DDxgiInterfaceAccess>()` + `GetInterface(Guid, out …)`.
-   Nếu lỗi biên dịch, đường BitBlt fallback vẫn giữ OCR chạy được.
-2. `TrayIconService`: API `H.NotifyIcon.WinUI` (`TaskbarIcon`,
-   `ForceCreate()`, `LeftClickCommand`, `ContextMenu`).
-3. `SelectionMonitor`: API FlaUI (`GetFocusedElement()`,
-   `Patterns.Text.PatternOrDefault`, `GetSelection()`).
-4. `Package.appxmanifest` tham chiếu logo `Assets\*.png` chưa tồn tại
-   (v0.1 không có binary asset). Với build unpackaged, manifest
-   không được đóng gói nên thường chỉ là warning — nếu build báo lỗi
-   về asset, cần thêm PNG placeholder hoặc bỏ thuộc tính Logo.
+1. `ScreenCaptureService`: `GraphicsCaptureItem.TryCreateFromDisplayId`
+   chỉ có từ SDK 22000 (đã nâng TargetFramework lên
+   `net8.0-windows10.0.22000.0`); chuyển `Microsoft.UI.DisplayId` →
+   `Windows.Graphics.DisplayId` bằng `new Windows.Graphics.DisplayId
+   { Value = area.DisplayId.Value }`; `GetInterface` là hàm generic
+   của CsWinRT: `GetInterface<ID3D11Texture2D>(out var texture)`.
+   Trên Win10 cũ, `TryCreateFromDisplayId` sẽ throw lúc runtime và
+   code rơi về đường BitBlt fallback.
+2. `TrayIconService`: API `H.NotifyIcon.WinUI` 2.3.2 — `TaskbarIcon`
+   có `IconSource` (BitmapImage), `ForceCreate()`,
+   `LeftClickCommand` / `RightClickCommand`, gắn menu bằng
+   `ContextFlyout = menu` (không có property `ContextMenu`).
+3. `SelectionMonitor`: API FlaUI 5.0.0 — `FocusedElement()` (không
+   có `GetFocusedElement()`), `TextRange.GetText(-1)` (không có
+   property `ITextRange.Text`).
+4. `Package.appxmanifest` tham chiếu logo `Assets\*.png` chưa tồn
+   tại nhưng build unpackaged vẫn xanh — chỉ là warning, không lỗi.
 
 ## Live test trên máy Windows (Manh)
 
