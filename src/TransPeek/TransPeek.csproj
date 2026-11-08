@@ -49,12 +49,9 @@
 
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest" />
-    <!-- SDK default globs pick up Views\*.xaml (Page) and *.cs (Compile)
-         automatically; only App.xaml needs an explicit item type. -->
-    <ApplicationDefinition Include="App.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </ApplicationDefinition>
+    <!-- App.xaml is picked up as ApplicationDefinition by the SDK's
+         default globs; listing it explicitly duplicates the item and
+         breaks the build (XamlCompiler WMC1012, CI run 42430004573). -->
   </ItemGroup>
 
   <!-- No binary assets in v0.1 (the connector cannot push binaries, and
