@@ -117,11 +117,13 @@ public sealed class ScreenCaptureService
         int frameW, int frameH)
     {
         // IDirect3DSurface -> ID3D11Texture2D via IDirect3DDxgiInterfaceAccess.
+        // CsWinRT projects GetInterface as a generic method: the interface
+        // to query for is the type argument, the result comes back via out.
         var access = surface.As<IDirect3DDxgiInterfaceAccess>();
-        access.GetInterface(typeof(ID3D11Texture2D).GUID, out var texturePtr);
-        using var texture = new ID3D11Texture2D(texturePtr);
+        access.GetInterface<ID3D11Texture2D>(out var texture);
+        using var tex = texture ?? throw new InvalidOperationException("Could not get ID3D11Texture2D from the captured surface.");
 
-        var desc = texture.Description;
+        var desc = tex.Description;
         var stagingDesc = new Texture2DDescription
         {
             Width = (uint)desc.Width,
@@ -136,7 +138,7 @@ public sealed class ScreenCaptureService
             MiscFlags = ResourceOptionFlags.None,
         };
         using var staging = device.CreateTexture2D(stagingDesc);
-        context.CopyResource(texture, staging);
+        context.CopyResource(tex, staging);
         var mapped = context.Map(staging, 0, MapMode.Read, Vortice.Direct3D11.MapFlags.None);
         try
         {
