@@ -1,7 +1,9 @@
 // System tray icon (SPEC §2: tray icon + Settings window).
 //
 // WinUI 3 has no built-in NotifyIcon, so v0.1 uses H.NotifyIcon.WinUI
-// (2.4.1, MIT). The icon is the embedded base64 PNG (see
+// (2.3.2, MIT). 2.3.2 is the newest version targeting net8.0-windows;
+// 2.4.1+ targets net10.0-windows only (NU1202 on .NET 8, CI run
+// 42428017607). The icon is the embedded base64 PNG (see
 // Assets/EmbeddedIcon.cs) — no binary assets in the repo.
 // Left-click opens Settings; right-click shows the context menu.
 

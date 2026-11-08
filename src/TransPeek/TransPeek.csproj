@@ -32,9 +32,9 @@
          latest stable in that line; 2.x exists but changes packaging
          (metapackage refactor) — upgrade is a deliberate follow-up. -->
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260921001" />
-    <!-- Tray icon for WinUI 3 (H.NotifyIcon 2.4.1, MIT). WinUI has no
+    <!-- Tray icon for WinUI 3 (H.NotifyIcon 2.3.2, MIT). WinUI has no
          built-in NotifyIcon; this is the standard community control. -->
-    <PackageReference Include="H.NotifyIcon.WinUI" Version="2.4.1" />
+    <PackageReference Include="H.NotifyIcon.WinUI" Version="2.3.2" />
     <!-- UI Automation (TextPattern.GetSelection) for the selected text. -->
     <PackageReference Include="FlaUI.Core" Version="5.0.0" />
     <PackageReference Include="FlaUI.UIA3" Version="5.0.0" />
