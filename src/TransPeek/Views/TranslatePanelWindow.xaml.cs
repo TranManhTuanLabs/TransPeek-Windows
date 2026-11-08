@@ -9,6 +9,7 @@
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 using TransPeek.Core.Dictionary;
 using TransPeek.Core.Translation;
 using TransPeek.Interop;
@@ -36,21 +37,30 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         _translateAsync = translateAsync;
         _ocrRequested = ocrRequested;
         InitializeComponent();
-        Loaded += (_, _) =>
+        // WinUI 3 Window is not a UIElement, so it has no Loaded event:
+        // attach to the root content element instead.
+        if (Content is UIElement contentRoot)
         {
-            WindowHelpers.MakeBorderlessTopmost(this);
-            WindowHelpers.MakeToolWindow(this);
-        };
+            contentRoot.Loaded += (_, _) =>
+            {
+                WindowHelpers.MakeBorderlessTopmost(this);
+                WindowHelpers.MakeToolWindow(this);
+            };
+        }
         CloseButton.Click += (_, _) => HidePanel();
         CopyButton.Click += async (_, _) => await CopyWithFeedbackAsync(CopyButton, _translationText);
         CopySourceButton.Click += async (_, _) => await CopyWithFeedbackAsync(CopySourceButton, _sourceText);
         CopyTranslationButton.Click += async (_, _) => await CopyWithFeedbackAsync(CopyTranslationButton, _translationText);
         OcrButton.Click += (_, _) => { HidePanel(); _ = _ocrRequested(); };
-        KeyDown += (_, e) =>
+        // WinUI 3 Window has no KeyDown event: Esc is a keyboard
+        // accelerator on the root element instead.
+        var esc = new KeyboardAccelerator { Key = Windows.System.VirtualKey.Escape };
+        esc.Invoked += (_, args) =>
         {
-            if (e.Key == Windows.System.VirtualKey.Escape)
-                HidePanel();
+            HidePanel();
+            args.Handled = true;
         };
+        contentRoot.KeyboardAccelerators.Add(esc);
         _clickOutside = new ClickOutsideMonitor(
             DispatcherQueue.GetForCurrentThread(),
             isActive: () => _visible,

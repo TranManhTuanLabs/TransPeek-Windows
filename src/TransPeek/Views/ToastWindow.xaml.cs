@@ -19,11 +19,16 @@ public sealed partial class ToastWindow : Window, IToastService
     public ToastWindow()
     {
         InitializeComponent();
-        Loaded += (_, _) =>
+        // WinUI 3 Window is not a UIElement, so it has no Loaded event:
+        // attach to the root content element instead.
+        if (Content is UIElement contentRoot)
         {
-            WindowHelpers.MakeBorderlessTopmost(this);
-            WindowHelpers.MakeToolWindow(this);
-        };
+            contentRoot.Loaded += (_, _) =>
+            {
+                WindowHelpers.MakeBorderlessTopmost(this);
+                WindowHelpers.MakeToolWindow(this);
+            };
+        }
         _hideTimer.Tick += (_, _) =>
         {
             _hideTimer.Stop();

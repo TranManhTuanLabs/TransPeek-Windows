@@ -5,6 +5,7 @@
 // the window's DPI factor). Esc or right-click cancels (null).
 
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using TransPeek.Interop;
 using Windows.Foundation;
@@ -21,20 +22,29 @@ public sealed partial class RegionSelectWindow : Window
     public RegionSelectWindow()
     {
         InitializeComponent();
-        Loaded += (_, _) =>
+        // WinUI 3 Window is not a UIElement, so it has no Loaded event:
+        // attach to the root content element instead.
+        if (Content is UIElement contentRoot)
         {
-            WindowHelpers.MakeBorderlessTopmost(this);
-            WindowHelpers.MakeToolWindow(this);
-        };
+            contentRoot.Loaded += (_, _) =>
+            {
+                WindowHelpers.MakeBorderlessTopmost(this);
+                WindowHelpers.MakeToolWindow(this);
+            };
+        }
         RootGrid.PointerPressed += OnPointerPressed;
         RootGrid.PointerMoved += OnPointerMoved;
         RootGrid.PointerReleased += OnPointerReleased;
         RootGrid.PointerCanceled += (_, _) => Cancel();
-        KeyDown += (_, e) =>
+        // WinUI 3 Window has no KeyDown event: Esc is a keyboard
+        // accelerator on the root element instead.
+        var esc = new KeyboardAccelerator { Key = Windows.System.VirtualKey.Escape };
+        esc.Invoked += (_, args) =>
         {
-            if (e.Key == Windows.System.VirtualKey.Escape)
-                Cancel();
+            Cancel();
+            args.Handled = true;
         };
+        contentRoot.KeyboardAccelerators.Add(esc);
     }
 
     public Task<RectInt32?> SelectRegionAsync()

@@ -20,11 +20,16 @@ public sealed partial class SettingsWindow : Window
     {
         InitializeComponent();
         Title = "TransPeek Settings";
-        Loaded += (_, _) =>
+        // WinUI 3 Window is not a UIElement, so it has no Loaded event:
+        // attach to the root content element instead.
+        if (Content is UIElement contentRoot)
         {
-            NavView.SelectedItem = NavView.MenuItems[0];
-            SelectPage("General");
-        };
+            contentRoot.Loaded += (_, _) =>
+            {
+                NavView.SelectedItem = NavView.MenuItems[0];
+                SelectPage("General");
+            };
+        }
     }
 
     public void ShowSettings()
