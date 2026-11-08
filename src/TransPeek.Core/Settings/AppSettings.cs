@@ -47,7 +47,8 @@ public sealed class AppSettings
     public string DictionaryDisplayMode { get; set; } = "IconAndText";
 
     // --- OCR ---
-    public string OcrProviderId { get; set; } = OcrProviderId.Tesseract.ToIdString();
+    // Fully qualified: the property name shadows the enum type inside this class.
+    public string OcrProviderId { get; set; } = TransPeek.Core.Ocr.OcrProviderId.Tesseract.ToIdString();
     public List<string> OcrLanguages { get; set; } = ["vi-VN", "en-US"];
     /// <summary>"OpenPanel" (OCR -> translate -> panel, auto-copy translation)
     /// or "CopyOnly" (OCR -> copy source text, toast only).</summary>

@@ -3,6 +3,7 @@
 // {word} / {text} templates, same URL building and validation rules.
 // Persistence is JSON via AppSettings (not UserDefaults — this is Windows).
 
+using System.Text;
 using System.Text.Json;
 
 namespace TransPeek.Core.Dictionary;
