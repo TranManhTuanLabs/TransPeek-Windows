@@ -19,3 +19,11 @@ jobs:
         run: dotnet build TransPeek.sln -c Release --no-restore
       - name: Test
         run: dotnet test tests/TransPeek.Tests/TransPeek.Tests.csproj -c Release --no-build
+      - name: Publish
+        run: dotnet publish src/TransPeek/TransPeek.csproj -c Release -r win-x64 --self-contained -o publish
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TransPeek-Windows-v0.1
+          path: publish
+          retention-days: 30
