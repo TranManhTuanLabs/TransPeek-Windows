@@ -19,9 +19,9 @@ public sealed partial class ToastWindow : Window, IToastService
     public ToastWindow()
     {
         InitializeComponent();
-        // WinUI 3 Window is not a UIElement, so it has no Loaded event:
-        // attach to the root content element instead.
-        if (Content is UIElement contentRoot)
+        // WinUI 3 Window has no Loaded event (Loaded lives on
+        // FrameworkElement): attach to the root content element instead.
+        if (Content is FrameworkElement contentRoot)
         {
             contentRoot.Loaded += (_, _) =>
             {

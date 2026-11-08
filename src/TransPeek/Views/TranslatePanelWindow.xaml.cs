@@ -37,30 +37,30 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         _translateAsync = translateAsync;
         _ocrRequested = ocrRequested;
         InitializeComponent();
-        // WinUI 3 Window is not a UIElement, so it has no Loaded event:
-        // attach to the root content element instead.
-        if (Content is UIElement contentRoot)
+        // WinUI 3 Window has no Loaded event (Loaded lives on
+        // FrameworkElement): attach to the root content element instead.
+        if (Content is FrameworkElement contentRoot)
         {
             contentRoot.Loaded += (_, _) =>
             {
                 WindowHelpers.MakeBorderlessTopmost(this);
                 WindowHelpers.MakeToolWindow(this);
             };
+            // WinUI 3 Window has no KeyDown event: Esc is a keyboard
+            // accelerator on the root element instead.
+            var esc = new KeyboardAccelerator { Key = Windows.System.VirtualKey.Escape };
+            esc.Invoked += (_, args) =>
+            {
+                HidePanel();
+                args.Handled = true;
+            };
+            contentRoot.KeyboardAccelerators.Add(esc);
         }
         CloseButton.Click += (_, _) => HidePanel();
         CopyButton.Click += async (_, _) => await CopyWithFeedbackAsync(CopyButton, _translationText);
         CopySourceButton.Click += async (_, _) => await CopyWithFeedbackAsync(CopySourceButton, _sourceText);
         CopyTranslationButton.Click += async (_, _) => await CopyWithFeedbackAsync(CopyTranslationButton, _translationText);
         OcrButton.Click += (_, _) => { HidePanel(); _ = _ocrRequested(); };
-        // WinUI 3 Window has no KeyDown event: Esc is a keyboard
-        // accelerator on the root element instead.
-        var esc = new KeyboardAccelerator { Key = Windows.System.VirtualKey.Escape };
-        esc.Invoked += (_, args) =>
-        {
-            HidePanel();
-            args.Handled = true;
-        };
-        contentRoot.KeyboardAccelerators.Add(esc);
         _clickOutside = new ClickOutsideMonitor(
             DispatcherQueue.GetForCurrentThread(),
             isActive: () => _visible,

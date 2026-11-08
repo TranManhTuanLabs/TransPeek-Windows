@@ -22,29 +22,29 @@ public sealed partial class RegionSelectWindow : Window
     public RegionSelectWindow()
     {
         InitializeComponent();
-        // WinUI 3 Window is not a UIElement, so it has no Loaded event:
-        // attach to the root content element instead.
-        if (Content is UIElement contentRoot)
+        // WinUI 3 Window has no Loaded event (Loaded lives on
+        // FrameworkElement): attach to the root content element instead.
+        if (Content is FrameworkElement contentRoot)
         {
             contentRoot.Loaded += (_, _) =>
             {
                 WindowHelpers.MakeBorderlessTopmost(this);
                 WindowHelpers.MakeToolWindow(this);
             };
+            // WinUI 3 Window has no KeyDown event: Esc is a keyboard
+            // accelerator on the root element instead.
+            var esc = new KeyboardAccelerator { Key = Windows.System.VirtualKey.Escape };
+            esc.Invoked += (_, args) =>
+            {
+                Cancel();
+                args.Handled = true;
+            };
+            contentRoot.KeyboardAccelerators.Add(esc);
         }
         RootGrid.PointerPressed += OnPointerPressed;
         RootGrid.PointerMoved += OnPointerMoved;
         RootGrid.PointerReleased += OnPointerReleased;
         RootGrid.PointerCanceled += (_, _) => Cancel();
-        // WinUI 3 Window has no KeyDown event: Esc is a keyboard
-        // accelerator on the root element instead.
-        var esc = new KeyboardAccelerator { Key = Windows.System.VirtualKey.Escape };
-        esc.Invoked += (_, args) =>
-        {
-            Cancel();
-            args.Handled = true;
-        };
-        contentRoot.KeyboardAccelerators.Add(esc);
     }
 
     public Task<RectInt32?> SelectRegionAsync()
