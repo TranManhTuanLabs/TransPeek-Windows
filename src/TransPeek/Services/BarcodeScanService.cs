@@ -60,11 +60,13 @@ public sealed class BarcodeScanService
         string? payload;
         try
         {
-            // Bitmap keeps the stream open while it lives: decode inside
-            // the using scope, not after.
+            // ZXing.Net 0.16: BarcodeReader<T> is generic (the plain
+            // `new BarcodeReader()` of older versions is CS0305 now).
+            // BarcodeReaderGeneric is the concrete reader for
+            // System.Drawing.Bitmap, with Decode/DecodeMultiple(Bitmap).
             using var stream = new MemoryStream(png);
             using var bitmap = new Bitmap(stream);
-            var reader = new BarcodeReader { AutoRotate = true, TryInverted = true };
+            var reader = new BarcodeReaderGeneric { AutoRotate = true, TryInverted = true };
             var results = reader.DecodeMultiple(bitmap);
             payload = results
                 ?.Select(r => r?.Text?.Trim())
