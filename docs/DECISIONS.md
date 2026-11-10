@@ -323,8 +323,14 @@ LanguageBarView / Settings) với Windows, làm trước nhóm panel + từ đi�
 - **Why not system-first:** the system tool differs between Win10 and
   Win11, depends on a user setting (auto-copy to clipboard), and
   reports nothing back (no cancel/success signal). PowerToys was
-  considered and ruled out: it has no region-screenshot-to-clipboard
-  tool (only Screen Ruler for measuring and Crop And Lock for windows).
+  considered and ruled out as a capture backend — correction
+  (2026-11-11, Manh pointed it out): PowerToys DOES have OCR, Text
+  Extractor (Win+Shift+T, region select -> recognized text to the
+  clipboard). It still cannot serve Screenshot Copy: it outputs TEXT
+  only, never the image, and there is no URI or API for TransPeek to
+  invoke it — the user triggers it by hotkey. PowerToys has no
+  screenshot/image-capture tool of its own (the "capture" side is the
+  Snipping Tool, which is already the fallback here).
 - **Scope:** fallback applies to Screenshot Copy only. The OCR flows
   need the PNG bytes inside the app, so the system tool cannot feed
   them.

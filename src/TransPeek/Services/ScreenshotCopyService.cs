@@ -38,6 +38,10 @@ public sealed class ScreenshotCopyService
         byte[] png;
         try
         {
+            // Primary: the app's own region capture — same behaviour on
+            // Win10/Win11, with proper cancel/error feedback. The system
+            // Snipping Tool (ms-screenclip:) is the fallback below, only
+            // when this capture fails.
             png = await _capture.CaptureRegionPngAsync(region.Value);
         }
         catch (Exception)
