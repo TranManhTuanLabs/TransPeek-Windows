@@ -24,6 +24,7 @@
                 <Button Content="Thêm" Click="OnAddLink" />
                 <Button Content="Cập nhật" Click="OnUpdateLink" />
                 <Button Content="Xóa" Click="OnDeleteLink" />
+                <Button Content="Reset to Defaults" Click="OnResetDefaults" />
             </StackPanel>
 
             <ComboBox x:Name="DisplayModeCombo" Header="Hiển thị ở bottom panel"

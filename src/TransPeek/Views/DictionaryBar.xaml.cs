@@ -30,6 +30,9 @@ public sealed partial class DictionaryBar : UserControl
     {
         _sourceText = sourceText;
         LinksPanel.Children.Clear();
+        // No text to look up (mac renders EmptyView): show no buttons.
+        if (string.IsNullOrWhiteSpace(sourceText))
+            return;
         var iconOnly = string.Equals(displayMode, "IconOnly", StringComparison.OrdinalIgnoreCase);
         foreach (var link in links)
         {
@@ -75,6 +78,9 @@ public sealed partial class DictionaryBar : UserControl
             Padding = new Thickness(8, 4, 8, 4),
             CornerRadius = new CornerRadius(6),
         };
+        // Tooltip with the link name: in IconOnly mode this is the only
+        // way to tell which dictionary an icon is (mac: .help(link.name)).
+        ToolTipService.SetToolTip(button, link.Name);
         var url = link.UrlFor(_sourceText);
         button.IsEnabled = url is not null;
         button.Click += async (_, _) =>

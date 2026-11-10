@@ -79,15 +79,30 @@ trên runner Windows thật:
 - [ ] `Ctrl+Alt+T` khi đang bôi chọn → panel mở với bản dịch.
 - [ ] Tắt "Theo dõi vùng chọn tự động" trong Settings → bôi chọn
       không hiện icon nữa; `Ctrl+Alt+T` vẫn dịch được.
+- [ ] **Panel v0.1.2 (ngang mac):** sửa chữ trong ô nguồn rồi bấm
+      Enter → dịch lại ngay (Shift+Enter xuống dòng); đổi picker
+      ngôn ngữ nguồn/đích hoặc bấm ⇄ trong panel → dịch lại ngay
+      với ngôn ngữ mới; nút "Copy gốc" luôn có.
+- [ ] **Tra từ theo text chọn trong panel (v0.1.2):** bôi chọn 1 từ
+      trong ô nguồn hoặc trong bản dịch → các link từ điển ở bottom
+      panel đổi sang tra từ đó ngay; bỏ chọn (bấm 1 cái vào text) →
+      link quay về tra text gốc mở panel.
 
 ### 3. Từ điển (bottom panel)
-- [ ] Panel có 4 nút: Oxford / Cambridge / Google Dictionary / YouGlish.
+- [ ] Panel có 4 nút: Oxford / Cambridge / Google / YouGlish.
 - [ ] Bấm Oxford → mở trình duyệt đúng trang từ của từ đã chọn.
+- [ ] Bôi chọn từ viết hoa đầu câu (vd "Hello") → Oxford mở
+      `.../hello` chữ thường, không mở `.../Hello` báo lỗi (v0.1.2).
+- [ ] Bôi chọn cả cụm (vd "hello world") → YouGlish tra cả cụm,
+      không chỉ lấy từ đầu tiên (v0.1.2, template `{text}` như mac).
 - [ ] Favicon của từng trang hiện dần lên (cần mạng); mất mạng thì
       nút vẫn bấm được, icon là chữ cái đầu.
+- [ ] Đổi Display mode sang "Chỉ icon" → hover từng icon hiện
+      tooltip tên từ điển (v0.1.2); thêm nhiều link → bottom panel
+      cuộn ngang được, không tràn/cắt.
 - [ ] Settings → Dictionary: thêm link mới (vd: `https://www.merriam-webster.com/dictionary/{word}`)
-      → hiện thêm nút ở panel; đổi Display mode sang "Chỉ icon" →
-      panel chỉ còn icon.
+      → hiện thêm nút ở panel; thêm xong 2 ô nhập tự xóa trắng;
+      bấm "Reset to Defaults" → về lại 4 link mặc định (v0.1.2).
 
 ### 4. OCR
 - [ ] `Ctrl+Shift+S` → màn hình tối lại, kéo chuột chọn vùng có chữ
@@ -104,7 +119,8 @@ trên runner Windows thật:
       "Ready (eng, vie)". OCR thử ảnh tiếng Việt (sách/web) → nhận
       đúng dấu tiếng Việt.
 - [ ] Đổi chế độ sau OCR sang "OCR → copy thẳng" → chụp xong chỉ
-      toast "Đã copy", không mở panel.
+      toast "Đã copy", không mở panel; ở chế độ này toggle "Tự copy
+      bản dịch" bị khóa (không có bản dịch để copy, v0.1.2).
 
 ### 5. Translation providers
 - [ ] Settings → Translation: đổi provider chính sang OpenAI (chưa

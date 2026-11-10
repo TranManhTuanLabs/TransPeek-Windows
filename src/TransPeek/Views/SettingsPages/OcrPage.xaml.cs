@@ -30,6 +30,7 @@ public sealed partial class OcrPage : Page
         OcrLanguagesBox.Text = string.Join(", ", s.OcrLanguages);
         SelectComboByTag(PostModeCombo, s.OcrAfterCapture);
         AutoCopyToggle.IsOn = s.OcrAutoCopyTranslation;
+        UpdateAutoCopyEnabled();
         OcrHotkeyBox.Text = s.OcrHotkey;
         RefreshTesseractStatus();
         _loading = false;
@@ -79,7 +80,16 @@ public sealed partial class OcrPage : Page
         {
             App.Settings.OcrAfterCapture = mode;
             Save();
+            UpdateAutoCopyEnabled();
         }
+    }
+
+    /// <summary>Mac parity: auto-copy needs a translation, so the toggle
+    /// is disabled in CopyOnly mode (OCR copies the source text instead).</summary>
+    private void UpdateAutoCopyEnabled()
+    {
+        var copyOnly = string.Equals(App.Settings.OcrAfterCapture, "CopyOnly", StringComparison.OrdinalIgnoreCase);
+        AutoCopyToggle.IsEnabled = !copyOnly;
     }
 
     private void OnAutoCopyToggled(object sender, RoutedEventArgs e)

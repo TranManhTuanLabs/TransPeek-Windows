@@ -5,30 +5,46 @@
 //
 // v0.1 has NO speaker button and NO click-to-read: TTS comes after the
 // mac side is stable (see README).
+//
+// v0.1.2 mac parity — lookup follows the panel selection (mac PopupView):
+// selecting words in the source box OR in the translation re-points the
+// dictionary links at the selection; clearing the selection points them
+// back at the source text that opened the panel. The source box is
+// editable (Enter re-translates, Shift+Enter newlines) and the header
+// has source/target pickers + swap, like the mac LanguageBarView.
 
 using Microsoft.UI.Dispatching;
+using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using TransPeek.Core.Dictionary;
+using TransPeek.Core.Settings;
 using TransPeek.Core.Translation;
 using TransPeek.Interop;
 using TransPeek.Services;
+using Windows.System;
+using Windows.UI.Core;
 
 namespace TransPeek.Views;
 
 public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
 {
     private const int PanelWidth = 440;
-    private const int PanelHeight = 400;
+    private const int PanelHeight = 440;
 
     private readonly Func<string, Task<(string? Translation, string ProviderName)>> _translateAsync;
     private readonly Func<Task> _ocrRequested;
     private readonly ClickOutsideMonitor _clickOutside;
     private string _sourceText = "";
     private string _translationText = "";
+    /// <summary>Text currently selected inside the panel (source or
+    /// translation), or null to look up the source text. Mac parity:
+    /// dictionary links follow the live selection.</summary>
+    private string? _lookupText;
     private bool _visible;
     private bool _ocrMode;
+    private bool _syncingCombos;
 
     public TranslatePanelWindow(
         Func<string, Task<(string? Translation, string ProviderName)>> translateAsync,
@@ -37,6 +53,8 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         _translateAsync = translateAsync;
         _ocrRequested = ocrRequested;
         InitializeComponent();
+        PopulateLangCombos();
+        SyncLangCombos();
         // WinUI 3 Window has no Loaded event (Loaded lives on
         // FrameworkElement): attach to the root content element instead.
         if (Content is FrameworkElement contentRoot)
@@ -50,7 +68,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
             // accelerator on the root element instead. Same caveat as
             // RegionSelectWindow (v0.1.1): an accelerator needs a focused
             // element, so KeyDown on the root is the primary Esc path.
-            var esc = new KeyboardAccelerator { Key = Windows.System.VirtualKey.Escape };
+            var esc = new KeyboardAccelerator { Key = VirtualKey.Escape };
             esc.Invoked += (_, args) =>
             {
                 HidePanel();
@@ -59,7 +77,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
             contentRoot.KeyboardAccelerators.Add(esc);
             contentRoot.KeyDown += (_, e) =>
             {
-                if (e.Key == Windows.System.VirtualKey.Escape)
+                if (e.Key == VirtualKey.Escape)
                 {
                     HidePanel();
                     e.Handled = true;
@@ -92,7 +110,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         _ocrMode = false;
         ShowPanelNear(x, y);
         SetSource(text);
-        TranslationText.Text = "Đang dịch…";
+        TranslationTextBox.Text = "Đang dịch…";
         ProviderText.Text = "";
         _ = TranslateAndShowAsync(text);
     }
@@ -105,7 +123,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         var (cx, cy) = WindowHelpers.CursorPosition();
         ShowPanelNear(cx, cy);
         SetSource(sourceText);
-        TranslationText.Text = "Đang dịch…";
+        TranslationTextBox.Text = "Đang dịch…";
         ProviderText.Text = "";
     }
 
@@ -113,7 +131,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     {
         SetSource(sourceText);
         _translationText = translation ?? "";
-        TranslationText.Text = _translationText;
+        TranslationTextBox.Text = _translationText;
         ProviderText.Text = string.IsNullOrEmpty(providerName) ? "" : $"via {providerName}";
         UpdateCopyButtons();
     }
@@ -132,15 +150,17 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     private void SetSource(string text)
     {
         _sourceText = text;
+        _lookupText = null;
         SourceTextBox.Text = text;
-        LangLabel.Text = $"{LanguageCode.DisplayName(App.Settings.SourceLanguage)} → {LanguageCode.DisplayName(App.Settings.TargetLanguage)}";
+        SyncLangCombos();
         RefreshDictionaryBar(App.Settings.DictionaryLinks, App.Settings.DictionaryDisplayMode);
     }
 
     private void UpdateCopyButtons()
     {
         CopyButton.Visibility = _ocrMode ? Visibility.Collapsed : Visibility.Visible;
-        CopySourceButton.Visibility = _ocrMode ? Visibility.Visible : Visibility.Collapsed;
+        // Copy source is always available (mac has it in the source area).
+        CopySourceButton.Visibility = Visibility.Visible;
         CopyTranslationButton.Visibility = _ocrMode ? Visibility.Visible : Visibility.Collapsed;
     }
 
@@ -167,7 +187,128 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
 
     public void RefreshDictionaryBar(IReadOnlyList<DictionaryLink> links, string displayMode)
     {
-        DictionaryBarControl.SetLinks(links, displayMode, _sourceText);
+        DictionaryBarControl.SetLinks(links, displayMode, _lookupText ?? _sourceText);
+    }
+
+    // ----- dictionary lookup follows the panel selection (mac parity) -----
+
+    private void OnSourceSelectionChanged(object sender, RoutedEventArgs e)
+        => OnPanelSelectionChanged((TextBox)sender);
+
+    private void OnTranslationSelectionChanged(object sender, RoutedEventArgs e)
+        => OnPanelSelectionChanged((TextBox)sender);
+
+    private void OnPanelSelectionChanged(TextBox box)
+    {
+        _lookupText = string.IsNullOrEmpty(box.SelectedText) ? null : box.SelectedText;
+        RefreshDictionaryBar(App.Settings.DictionaryLinks, App.Settings.DictionaryDisplayMode);
+    }
+
+    // ----- editable source: Enter re-translates -----
+
+    private void OnSourceTextChanged(object sender, TextChangedEventArgs e)
+    {
+        _sourceText = SourceTextBox.Text;
+    }
+
+    private void OnSourceKeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key != VirtualKey.Enter)
+            return;
+        var shiftDown = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Shift)
+            .HasFlag(CoreVirtualKeyStates.Down);
+        if (shiftDown)
+            return; // Shift+Enter: newline (AcceptsReturn handles it).
+        e.Handled = true;
+        if (string.IsNullOrWhiteSpace(_sourceText))
+            return;
+        _lookupText = null;
+        TranslationTextBox.Text = "Đang dịch…";
+        ProviderText.Text = "";
+        _ = TranslateAndShowAsync(_sourceText);
+    }
+
+    // ----- language pickers + swap (mac LanguageBarView) -----
+
+    private void PopulateLangCombos()
+    {
+        SourceLangCombo.Items.Add(new ComboBoxItem { Content = "Auto Detect", Tag = LanguageCode.Auto });
+        foreach (var (code, name) in LanguageCode.Supported)
+        {
+            SourceLangCombo.Items.Add(new ComboBoxItem { Content = name, Tag = code });
+            TargetLangCombo.Items.Add(new ComboBoxItem { Content = name, Tag = code });
+        }
+    }
+
+    private void SyncLangCombos()
+    {
+        _syncingCombos = true;
+        try
+        {
+            SelectComboByTag(SourceLangCombo, App.Settings.SourceLanguage);
+            SelectComboByTag(TargetLangCombo, App.Settings.TargetLanguage);
+        }
+        finally
+        {
+            _syncingCombos = false;
+        }
+    }
+
+    private static void SelectComboByTag(ComboBox combo, string tag)
+    {
+        foreach (var item in combo.Items.OfType<ComboBoxItem>())
+        {
+            if (string.Equals(item.Tag as string, tag, StringComparison.Ordinal))
+            {
+                combo.SelectedItem = item;
+                return;
+            }
+        }
+        if (combo.Items.Count > 0)
+            combo.SelectedIndex = 0;
+    }
+
+    private static string SelectedTag(ComboBox combo)
+        => (combo.SelectedItem as ComboBoxItem)?.Tag as string ?? LanguageCode.Auto;
+
+    private void OnSourceLangChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_syncingCombos || SourceLangCombo.SelectedItem is not ComboBoxItem)
+            return;
+        App.Settings.SourceLanguage = SelectedTag(SourceLangCombo);
+        SettingsStore.Save(App.Settings);
+        RetranslateCurrent();
+    }
+
+    private void OnTargetLangChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_syncingCombos || TargetLangCombo.SelectedItem is not ComboBoxItem)
+            return;
+        App.Settings.TargetLanguage = SelectedTag(TargetLangCombo);
+        SettingsStore.Save(App.Settings);
+        RetranslateCurrent();
+    }
+
+    private void OnSwapLanguages(object sender, RoutedEventArgs e)
+    {
+        var oldSource = SelectedTag(SourceLangCombo);
+        var oldTarget = SelectedTag(TargetLangCombo);
+        // Target can never be Auto: swapping out of Auto targets English.
+        App.Settings.SourceLanguage = oldTarget;
+        App.Settings.TargetLanguage = oldSource == LanguageCode.Auto ? LanguageCode.English : oldSource;
+        SettingsStore.Save(App.Settings);
+        SyncLangCombos();
+        RetranslateCurrent();
+    }
+
+    private void RetranslateCurrent()
+    {
+        if (!_visible || string.IsNullOrWhiteSpace(_sourceText))
+            return;
+        _lookupText = null;
+        TranslationTextBox.Text = "Đang dịch…";
+        ProviderText.Text = "";
+        _ = TranslateAndShowAsync(_sourceText);
     }
 
     private static async Task CopyWithFeedbackAsync(Button button, string text)

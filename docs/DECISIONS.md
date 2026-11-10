@@ -127,6 +127,31 @@ nothing is removed, only superseded (note the date).
   is rewritten from scratch in C# — it mirrors design/behaviour and
   copies no Swift code.
 
+## v0.1.2 — Panel ngang mac, batch A (2026-11-11)
+
+Đối chiếu mac hiện tại (PopupView / DictionaryBarView / DictionaryLink /
+LanguageBarView / Settings) với Windows, làm trước nhóm panel + từ điển:
+- **Tra từ theo text chọn trong panel (Gap 1):** bản dịch đổi từ
+  `TextBlock` sang `TextBox` read-only để chọn được; `SelectionChanged`
+  ở cả ô nguồn và bản dịch đổi `_lookupText`, bỏ chọn quay về text gốc.
+- **Link mặc định khớp mac (Gap 5):** Oxford thêm `?q={word}`, tên
+  "Google Dictionary" → "Google", YouGlish `{word}` → `{text}`; `{word}`
+  viết thường trước khi encode (Oxford/Cambridge phân biệt hoa-thường);
+  `MigrateDefaults` nâng cấp 1 lần link cũ đã lưu, `FreshDefaults` để
+  sửa link mặc định không làm hỏng `Defaults` dùng chung.
+- **Ô nhập sửa được + Enter dịch lại (Gap 2), picker ngôn ngữ + ⇄
+  trong panel (Gap 3):** đổi picker lưu setting và dịch lại ngay.
+- **DictionaryBar (Gap 6):** cuộn ngang, tooltip tên link ở chế độ chỉ
+  icon, không text tra thì không hiện nút.
+- **Dictionary Settings (Gap 11):** nút Reset to Defaults, thêm xong
+  xóa trắng ô nhập. **OCR Settings (Gap 12 nhỏ):** khóa toggle tự copy
+  khi chế độ CopyOnly.
+- **Chưa làm, để đợt sau:** card từng provider + Retry (Gap 4, đụng
+  coordinator, tốn công nhất); kéo/resize/nhớ vị trí/pin/nút Settings
+  trong panel (Gap 7); tab Excluded Apps/Order, Favorite languages,
+  thêm phím tắt (Gap 8–10); OCR chọn ngôn ngữ bằng checkbox + About
+  Build CI # (Gap 12–13). TTS vẫn ngoài phạm vi (chờ mac ổn, SPEC §5).
+
 ## v0.1.1 — OCR overlay trap + no visible menu (2026-11-11, Manh live test)
 
 - **OCR overlay trapped the user fullscreen.** Root cause: Esc was

@@ -72,6 +72,10 @@ public sealed partial class DictionaryPage : Page
         });
         Save();
         RefreshLinks();
+        // Clear the form so the next link can be typed right away (mac).
+        LinkNameBox.Text = "";
+        LinkTemplateBox.Text = "";
+        LinksList.SelectedItem = null;
     }
 
     private void OnUpdateLink(object sender, RoutedEventArgs e)
@@ -99,6 +103,17 @@ public sealed partial class DictionaryPage : Page
         App.Settings.DictionaryLinks.Remove(link);
         Save();
         RefreshLinks();
+    }
+
+    private void OnResetDefaults(object sender, RoutedEventArgs e)
+    {
+        // Mac parity: restore the 4 default links (DictionarySettingsView).
+        App.Settings.DictionaryLinks = DictionaryLink.FreshDefaults();
+        Save();
+        RefreshLinks();
+        LinkNameBox.Text = "";
+        LinkTemplateBox.Text = "";
+        LinksList.SelectedItem = null;
     }
 
     private void OnDisplayModeChanged(object sender, SelectionChangedEventArgs e)

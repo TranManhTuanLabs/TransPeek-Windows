@@ -42,7 +42,7 @@ public sealed class AppSettings
     public bool WatchSelection { get; set; } = true;
 
     // --- Dictionary bar ---
-    public List<DictionaryLink> DictionaryLinks { get; set; } = DictionaryLink.Defaults.ToList();
+    public List<DictionaryLink> DictionaryLinks { get; set; } = DictionaryLink.FreshDefaults();
     /// <summary>"IconAndText" or "IconOnly".</summary>
     public string DictionaryDisplayMode { get; set; } = "IconAndText";
 
@@ -101,7 +101,11 @@ public static class SettingsStore
             var path = Dictionary.AppPaths.SettingsFilePath;
             if (!File.Exists(path))
                 return AppSettings.Default();
-            return AppSettings.FromJson(File.ReadAllText(path));
+            var settings = AppSettings.FromJson(File.ReadAllText(path));
+            // v0.1 saved the old dictionary defaults: migrate them once
+            // in memory (saved back on the next settings save).
+            DictionaryLink.MigrateDefaults(settings.DictionaryLinks);
+            return settings;
         }
         catch
         {

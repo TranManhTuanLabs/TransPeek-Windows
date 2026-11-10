@@ -3,5 +3,9 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <StackPanel x:Name="LinksPanel" Orientation="Horizontal" Spacing="6" />
+    <!-- Horizontal scroll like the mac DictionaryBarView: many links scroll
+         instead of overflowing / being cut off. -->
+    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+        <StackPanel x:Name="LinksPanel" Orientation="Horizontal" Spacing="6" />
+    </ScrollViewer>
 </UserControl>

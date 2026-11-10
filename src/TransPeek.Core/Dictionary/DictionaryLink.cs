@@ -21,11 +21,58 @@ public sealed class DictionaryLink
 
     public static IReadOnlyList<DictionaryLink> Defaults { get; } =
     [
-        new() { Name = "Oxford", UrlTemplate = "https://www.oxfordlearnersdictionaries.com/definition/english/{word}" },
+        // Same defaults as the mac app (DictionaryLink.swift): Oxford
+        // carries ?q={word} as well as the path, Google is named "Google"
+        // (not "Google Dictionary"), and YouGlish uses {text} so a whole
+        // phrase can be looked up, not just its first word.
+        new() { Name = "Oxford", UrlTemplate = "https://www.oxfordlearnersdictionaries.com/definition/english/{word}?q={word}" },
         new() { Name = "Cambridge", UrlTemplate = "https://dictionary.cambridge.org/dictionary/english/{word}" },
-        new() { Name = "Google Dictionary", UrlTemplate = "https://www.google.com/search?q=define+{text}" },
-        new() { Name = "YouGlish", UrlTemplate = "https://youglish.com/pronounce/{word}/english" },
+        new() { Name = "Google", UrlTemplate = "https://www.google.com/search?q=define+{text}" },
+        new() { Name = "YouGlish", UrlTemplate = "https://youglish.com/pronounce/{text}/english" },
     ];
+
+    /// <summary>Fresh copies of the defaults (new ids, new objects).
+    /// Use this instead of <see cref="Defaults"/>.ToList(): the default
+    /// entries are shared instances, and editing one in place (Settings
+    /// update mutates the selected link) would corrupt the defaults.</summary>
+    public static List<DictionaryLink> FreshDefaults()
+        => Defaults.Select(l => new DictionaryLink { Name = l.Name, UrlTemplate = l.UrlTemplate }).ToList();
+
+    /// <summary>One-time migration for links saved by v0.1 with the old
+    /// defaults (Oxford without ?q, YouGlish with {word}, "Google
+    /// Dictionary"). Only links whose template matches an old default
+    /// exactly are touched — user-edited templates are left alone.
+    /// Returns true when anything changed.</summary>
+    public static bool MigrateDefaults(List<DictionaryLink> links)
+    {
+        var changed = false;
+        foreach (var link in links)
+        {
+            if (string.Equals(link.UrlTemplate,
+                    "https://www.oxfordlearnersdictionaries.com/definition/english/{word}",
+                    StringComparison.Ordinal))
+            {
+                link.UrlTemplate = "https://www.oxfordlearnersdictionaries.com/definition/english/{word}?q={word}";
+                changed = true;
+            }
+            if (string.Equals(link.UrlTemplate,
+                    "https://youglish.com/pronounce/{word}/english",
+                    StringComparison.Ordinal))
+            {
+                link.UrlTemplate = "https://youglish.com/pronounce/{text}/english";
+                changed = true;
+            }
+            if (string.Equals(link.Name, "Google Dictionary", StringComparison.Ordinal)
+                && string.Equals(link.UrlTemplate,
+                    "https://www.google.com/search?q=define+{text}",
+                    StringComparison.Ordinal))
+            {
+                link.Name = "Google";
+                changed = true;
+            }
+        }
+        return changed;
+    }
 
     /// <summary>Host of the link's site, used as the favicon cache key.</summary>
     public string? Host => UrlFor("test")?.Host.ToLowerInvariant();
@@ -50,7 +97,10 @@ public sealed class DictionaryLink
             var firstWord = trimmed.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
             if (firstWord is null)
                 return null;
-            var encoded = PercentEncode(firstWord);
+            // Lowercase first: Oxford/Cambridge paths are case-sensitive,
+            // so a capitalised first word ("Word" at a sentence start)
+            // would open a not-found page. Same rule as the mac app.
+            var encoded = PercentEncode(firstWord.ToLowerInvariant());
             if (encoded is null)
                 return null;
             substituted = substituted.Replace("{word}", encoded, StringComparison.Ordinal);
