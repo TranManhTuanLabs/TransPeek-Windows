@@ -312,25 +312,41 @@ LanguageBarView / Settings) với Windows, làm trước nhóm panel + từ đi�
 
 ## Screenshot Copy: app capture first, system Snipping Tool as fallback (2026-11-11, Manh)
 
-- **Decision (Manh): app capture is primary, the system tool is the
-  fallback.** Screenshot Copy first tries the app's own region select +
-  capture (same on Win10/Win11, proper cancel/error/toast). Only when
-  that capture throws does it open the system Snipping Tool via the
-  `ms-screenclip:` URI (Snip & Sketch on Win10, Snipping Tool on
-  Win11) and toast that the screenshot will be copied to the clipboard
-  — the app gets no completion callback from the system tool, so the
-  toast states what will happen instead of claiming "Copied".
-- **Why not system-first:** the system tool differs between Win10 and
-  Win11, depends on a user setting (auto-copy to clipboard), and
-  reports nothing back (no cancel/success signal). PowerToys was
-  considered and ruled out as a capture backend — correction
-  (2026-11-11, Manh pointed it out): PowerToys DOES have OCR, Text
-  Extractor (Win+Shift+T, region select -> recognized text to the
-  clipboard). It still cannot serve Screenshot Copy: it outputs TEXT
-  only, never the image, and there is no URI or API for TransPeek to
-  invoke it — the user triggers it by hotkey. PowerToys has no
+- **Decision (Manh, confirmed final 06:49): app capture is primary, the
+  system tool is the fallback.** Screenshot Copy first tries the app's
+  own region select + capture (same on Win10/Win11, proper
+  cancel/error/toast). Only when that capture throws does it open the
+  system Snipping Tool via the `ms-screenclip:` URI (Snip & Sketch on
+  Win10, Snipping Tool on Win11) and toast that the screenshot will be
+  copied to the clipboard — the app gets no completion callback from
+  the system tool, so the toast states what will happen instead of
+  claiming "Copied".
+- **Why not system-first (Manh asked 06:44, rejected 06:49):** the
+  reverse order is not a real fallback. Once the app launches
+  `ms-screenclip:` it gets no signal back — it cannot tell whether the
+  user snipped, cancelled, or has auto-copy-to-clipboard switched off
+  — so it would never know when to step in with its own capture. The
+  only detectable failure is the URI failing to launch at all
+  (Snipping Tool uninstalled). A clipboard-watch workaround (wait for
+  a new image in the clipboard, with a timeout) was considered and
+  rejected as fragile: arbitrary timeout, false positives if the user
+  copies something else meanwhile. The app's own capture is already
+  built, deterministic, identical on Win10/Win11, gives proper
+  cancel/error feedback, and shares the region overlay with the OCR
+  flows.
+- **Why not system-first (other reasons):** the system tool differs
+  between Win10 and Win11, depends on a user setting (auto-copy to
+  clipboard), and reports nothing back (no cancel/success signal).
+  PowerToys was considered and ruled out as a capture backend —
+  correction (2026-11-11, Manh pointed it out): PowerToys DOES have
+  OCR, Text Extractor (Win+Shift+T, region select -> recognized text
+  to the clipboard). It still cannot serve Screenshot Copy: it outputs
+  TEXT only, never the image, and there is no URI or API for TransPeek
+  to invoke it — the user triggers it by hotkey. PowerToys has no
   screenshot/image-capture tool of its own (the "capture" side is the
   Snipping Tool, which is already the fallback here).
 - **Scope:** fallback applies to Screenshot Copy only. The OCR flows
   need the PNG bytes inside the app, so the system tool cannot feed
   them.
+- **Shipped:** commit `c1b2eb9` (fallback) + `939eb73` `[build-app]`,
+  run #40 SUCCESS, artifact 126 MB, app version 0.1.3.40.
