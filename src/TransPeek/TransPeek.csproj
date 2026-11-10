@@ -54,7 +54,7 @@
          Core's Tesseract.Drawing, but BarcodeScanService uses Bitmap
          directly, so it is referenced explicitly. -->
     <PackageReference Include="ZXing.Net" Version="0.16.9" />
-    <PackageReference Include="System.Drawing.Common" Version="8.0.0" />
+    <PackageReference Include="System.Drawing.Common" Version="8.0.10" />
   </ItemGroup>
 
   <ItemGroup>
