@@ -15,6 +15,7 @@
 
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Input;
+using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
@@ -116,6 +117,29 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         TranslationTextBox.Text = AppStrings.Get("Panel.Translating", "Translating…");
         ProviderText.Text = "";
         _ = TranslateAndShowAsync(text);
+    }
+
+    /// <summary>Manual translation (mac parity: prepareInputMode + panel
+    /// at screen center). Empty source box, centered on the primary
+    /// display, ACTIVATED with the keyboard focus in the source box —
+    /// typing is the point, unlike the no-activate selection/OCR flows.
+    /// Enter in the source box re-translates (existing handler).</summary>
+    public void ShowInputMode()
+    {
+        _ocrMode = false;
+        var work = DisplayArea.Primary.WorkArea;
+        var px = work.X + Math.Max((work.Width - PanelWidth) / 2, 0);
+        var py = work.Y + Math.Max((work.Height - PanelHeight) / 2, 0);
+        WindowHelpers.MoveAndResize(this, px, py, PanelWidth, PanelHeight);
+        SetSource("");
+        _translationText = "";
+        TranslationTextBox.Text = "";
+        ProviderText.Text = "";
+        UpdateCopyButtons();
+        Activate();
+        _visible = true;
+        _clickOutside.Start();
+        SourceTextBox.Focus(FocusState.Keyboard);
     }
 
     // ----- OCR flow (ITranslatePanel) -----

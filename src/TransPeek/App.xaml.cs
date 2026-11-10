@@ -12,6 +12,7 @@
 
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
+using TransPeek.Core.Barcode;
 using TransPeek.Core.Dictionary;
 using TransPeek.Core.Ocr;
 using TransPeek.Core.Settings;
@@ -39,6 +40,8 @@ public sealed partial class App : Application
     private ToastWindow? _toast;
     private SettingsWindow? _settingsWindow;
     private OcrFlowService? _ocrFlow;
+    private ScreenshotCopyService? _screenshotCopy;
+    private BarcodeScanService? _barcodeScan;
     private string _lastSelection = "";
     private DateTimeOffset _lastSelectionAt = DateTimeOffset.MinValue;
     private (int X, int Y) _lastPoint;
@@ -73,10 +76,22 @@ public sealed partial class App : Application
             _toast,
             SelectRegionAsync);
 
+        _screenshotCopy = new ScreenshotCopyService(SelectRegionAsync, _toast);
+        _barcodeScan = new BarcodeScanService(SelectRegionAsync);
+
+        // Tray menu mirrors the mac menubar (MenuItemView.swift). No Smart
+        // Translation and no Check for Updates: both deferred by Manh
+        // (2026-11-11). No Permissions Guide: Windows has no
+        // Accessibility / Screen Recording grants to walk through.
         _tray = new TrayIconService(
+            manualTranslation: () => _panel?.ShowInputMode(),
+            screenshotOcr: () => _ = _ocrFlow!.RunOcrAsync(),
+            clipboardOcr: () => _ = _ocrFlow!.RunSilentOcrAsync(),
+            selectionTranslation: () => _ = TranslateCurrentSelectionAsync(),
+            clipboardTranslation: () => _ = TranslateClipboardAsync(),
+            screenshotCopy: () => _ = _screenshotCopy!.RunAsync(),
+            scanBarcodes: () => _ = ScanBarcodesAsync(),
             openSettings: ShowSettings,
-            translateSelection: () => _ = TranslateCurrentSelectionAsync(),
-            captureOcr: () => _ = _ocrFlow!.RunOcrAsync(),
             quit: () => Exit());
 
         _selectionMonitor = new SelectionMonitor(OnSelectionChanged);
@@ -157,6 +172,49 @@ public sealed partial class App : Application
         }
         var (cx, cy) = WindowHelpers.CursorPosition();
         _panel?.ShowTranslationFlow(text, cx, cy);
+    }
+
+    /// <summary>Clipboard Translation (mac parity): read the clipboard
+    /// text and translate it in the panel. Empty clipboard shows a toast,
+    /// like the no-selection case above.</summary>
+    private async Task TranslateClipboardAsync()
+    {
+        var text = (await ClipboardHelper.GetTextAsync())?.Trim();
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            _toast?.Show(AppStrings.Get("App.Toast.ClipboardEmpty", "Clipboard is empty. Copy some text first."));
+            return;
+        }
+        var (cx, cy) = WindowHelpers.CursorPosition();
+        _panel?.ShowTranslationFlow(text, cx, cy);
+    }
+
+    /// <summary>Scan Barcodes/QR Codes (mac parity): URL payloads open in
+    /// the default browser, anything else is copied with a short toast
+    /// preview, nothing found toasts "No barcode found".</summary>
+    private async Task ScanBarcodesAsync()
+    {
+        var outcome = await _barcodeScan!.ScanAsync();
+        switch (outcome)
+        {
+            case BarcodeScanOutcome.Opened:
+                if (_barcodeScan.Payload is not null
+                    && Uri.TryCreate(_barcodeScan.Payload, UriKind.Absolute, out var uri))
+                    _ = await Windows.System.Launcher.LaunchUriAsync(uri);
+                break;
+            case BarcodeScanOutcome.Copied:
+                await ClipboardHelper.CopyTextAsync(_barcodeScan.Payload!);
+                _toast?.Show(BarcodePayload.Preview(_barcodeScan.Payload!));
+                break;
+            case BarcodeScanOutcome.NotFound:
+                _toast?.Show(AppStrings.Get("Barcode.NoBarcode", "No barcode found"));
+                break;
+            case BarcodeScanOutcome.Failed:
+                _toast?.Show(AppStrings.Get("Barcode.Failed", "Barcode scan failed: {0}", _barcodeScan.ErrorMessage ?? ""));
+                break;
+            case BarcodeScanOutcome.Cancelled:
+                break;
+        }
     }
 
     private async Task<(string? Translation, string ProviderName)> TranslateAsync(string text)

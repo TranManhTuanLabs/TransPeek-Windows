@@ -6,10 +6,26 @@
 // 42428017607). The icon is the embedded base64 PNG (see
 // Assets/EmbeddedIcon.cs) — no binary assets in the repo.
 // Left-click opens Settings; right-click shows the context menu.
+//
+// The menu mirrors the mac menubar (MenuItemView.swift): header with
+// the running version, section headlines, one item per action, icons
+// from Segoe Fluent Icons (glyph codes verified against Microsoft's
+// icon list: Edit E70F, Settings E713, KeyboardClassic E765,
+// Paste E77F, Copy E8C8, Scan E8FE, Camera E722, Cancel E711,
+// BarcodeScanner EC5A).
+//
+// Deliberately NOT in this menu (Manh, 2026-11-11):
+// - Smart Translation: deferred — Manh does not yet know how that
+//   feature behaves, so it stays out until he decides.
+// - Check for Updates: deferred — to discuss later.
+// - Permissions Guide: skipped, no Windows equivalent — Windows never
+//   asks for the Accessibility / Screen Recording grants the mac guide
+//   walks through, so there is nothing to guide the user to grant.
 
 using System.IO;
 using System.Runtime.InteropServices.WindowsRuntime;
 using H.NotifyIcon;
+using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Imaging;
@@ -22,24 +38,38 @@ public sealed class TrayIconService : IDisposable
     private readonly TaskbarIcon _tray;
     private bool _disposed;
 
-    public TrayIconService(Action openSettings, Action translateSelection, Action captureOcr, Action quit)
+    public TrayIconService(
+        Action manualTranslation,
+        Action screenshotOcr,
+        Action clipboardOcr,
+        Action selectionTranslation,
+        Action clipboardTranslation,
+        Action screenshotCopy,
+        Action scanBarcodes,
+        Action openSettings,
+        Action quit)
     {
         var menu = new MenuFlyout();
         // Labels come from Resources.resw (English base) via AppStrings,
         // so a future translation file changes them without touching code.
-        var settingsItem = new MenuFlyoutItem { Text = AppStrings.Get("Tray.Menu.Settings", "Settings…") };
-        settingsItem.Click += (_, _) => openSettings();
-        var translateItem = new MenuFlyoutItem { Text = AppStrings.Get("Tray.Menu.TranslateSelection", "Translate selection") };
-        translateItem.Click += (_, _) => translateSelection();
-        var ocrItem = new MenuFlyoutItem { Text = AppStrings.Get("Tray.Menu.CaptureOcr", "Capture & OCR") };
-        ocrItem.Click += (_, _) => captureOcr();
-        menu.Items.Add(settingsItem);
-        menu.Items.Add(translateItem);
-        menu.Items.Add(ocrItem);
+        // The header is the app name + running version, like the mac
+        // menubar; disabled so it reads as a title, not an action.
+        menu.Items.Add(HeaderItem($"TransPeek {AppInfo.Version}"));
         menu.Items.Add(new MenuFlyoutSeparator());
-        var quitItem = new MenuFlyoutItem { Text = AppStrings.Get("Tray.Menu.Quit", "Quit TransPeek") };
-        quitItem.Click += (_, _) => quit();
-        menu.Items.Add(quitItem);
+        menu.Items.Add(SectionItem(AppStrings.Get("Tray.Section.Capture", "Text Capture from Screen")));
+        menu.Items.Add(Item("Tray.Menu.ManualTranslation", "Manual Translation", "\uE765", manualTranslation));
+        menu.Items.Add(Item("Tray.Menu.ScreenshotOcr", "Screenshot OCR", "\uE8FE", screenshotOcr));
+        menu.Items.Add(Item("Tray.Menu.ClipboardOcr", "Clipboard OCR", "\uE8C8", clipboardOcr));
+        menu.Items.Add(Item("Tray.Menu.SelectionTranslation", "Selection Translation", "\uE70F", selectionTranslation));
+        menu.Items.Add(Item("Tray.Menu.ClipboardTranslation", "Clipboard Translation", "\uE77F", clipboardTranslation));
+        menu.Items.Add(Item("Tray.Menu.ScreenshotCopy", "Screenshot Copy", "\uE722", screenshotCopy));
+        menu.Items.Add(new MenuFlyoutSeparator());
+        menu.Items.Add(SectionItem(AppStrings.Get("Tray.Section.Barcodes", "Barcodes / QR Codes")));
+        menu.Items.Add(Item("Tray.Menu.ScanBarcodes", "Scan Barcodes/QR Codes", "\uEC5A", scanBarcodes));
+        menu.Items.Add(new MenuFlyoutSeparator());
+        menu.Items.Add(Item("Tray.Menu.Settings", "Settings…", "\uE713", openSettings));
+        menu.Items.Add(new MenuFlyoutSeparator());
+        menu.Items.Add(Item("Tray.Menu.Quit", "Quit TransPeek", "\uE711", quit));
 
         _tray = new TaskbarIcon
         {
@@ -51,6 +81,32 @@ public sealed class TrayIconService : IDisposable
         // ForceCreate is required: the icon is created lazily otherwise and
         // a tray-only app would show nothing until the first interaction.
         _tray.ForceCreate();
+    }
+
+    /// <summary>Header / section headline: a disabled item reads as a
+    /// title, not an action (mac uses a dimmed, non-clickable Text).</summary>
+    private static MenuFlyoutItem HeaderItem(string text) => new()
+    {
+        Text = text,
+        IsEnabled = false,
+        FontWeight = FontWeights.SemiBold,
+    };
+
+    private static MenuFlyoutItem SectionItem(string text) => new()
+    {
+        Text = text,
+        IsEnabled = false,
+    };
+
+    private static MenuFlyoutItem Item(string key, string fallback, string glyph, Action onClick)
+    {
+        var item = new MenuFlyoutItem
+        {
+            Text = AppStrings.Get(key, fallback),
+            Icon = new FontIcon { Glyph = glyph },
+        };
+        item.Click += (_, _) => onClick();
+        return item;
     }
 
     private static BitmapImage LoadEmbeddedIcon()

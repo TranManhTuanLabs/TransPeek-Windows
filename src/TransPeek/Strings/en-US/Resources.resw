@@ -18,14 +18,35 @@
   <data name="Tray.Menu.Settings" xml:space="preserve">
     <value>Settings…</value>
   </data>
-  <data name="Tray.Menu.TranslateSelection" xml:space="preserve">
-    <value>Translate selection</value>
+  <data name="Tray.Menu.ManualTranslation" xml:space="preserve">
+    <value>Manual Translation</value>
   </data>
-  <data name="Tray.Menu.CaptureOcr" xml:space="preserve">
-    <value>Capture &amp; OCR</value>
+  <data name="Tray.Menu.ScreenshotOcr" xml:space="preserve">
+    <value>Screenshot OCR</value>
+  </data>
+  <data name="Tray.Menu.ClipboardOcr" xml:space="preserve">
+    <value>Clipboard OCR</value>
+  </data>
+  <data name="Tray.Menu.SelectionTranslation" xml:space="preserve">
+    <value>Selection Translation</value>
+  </data>
+  <data name="Tray.Menu.ClipboardTranslation" xml:space="preserve">
+    <value>Clipboard Translation</value>
+  </data>
+  <data name="Tray.Menu.ScreenshotCopy" xml:space="preserve">
+    <value>Screenshot Copy</value>
+  </data>
+  <data name="Tray.Menu.ScanBarcodes" xml:space="preserve">
+    <value>Scan Barcodes/QR Codes</value>
   </data>
   <data name="Tray.Menu.Quit" xml:space="preserve">
     <value>Quit TransPeek</value>
+  </data>
+  <data name="Tray.Section.Capture" xml:space="preserve">
+    <value>Text Capture from Screen</value>
+  </data>
+  <data name="Tray.Section.Barcodes" xml:space="preserve">
+    <value>Barcodes / QR Codes</value>
   </data>
   <data name="Tray.ToolTip" xml:space="preserve">
     <value>TransPeek — Translate anywhere, peek instantly. Left-click: Settings. Right-click: menu.</value>
@@ -36,11 +57,23 @@
   <data name="App.Toast.NoSelection" xml:space="preserve">
     <value>No text selected to translate.</value>
   </data>
+  <data name="App.Toast.ClipboardEmpty" xml:space="preserve">
+    <value>Clipboard is empty. Copy some text first.</value>
+  </data>
   <data name="App.Toast.SettingsSaved" xml:space="preserve">
     <value>Settings saved.</value>
   </data>
   <data name="App.Toast.Copied" xml:space="preserve">
     <value>Copied</value>
+  </data>
+  <data name="Barcode.Failed" xml:space="preserve">
+    <value>Barcode scan failed: {0}</value>
+  </data>
+  <data name="Barcode.NoBarcode" xml:space="preserve">
+    <value>No barcode found</value>
+  </data>
+  <data name="ScreenshotCopy.Failed" xml:space="preserve">
+    <value>Could not copy the screenshot: {0}</value>
   </data>
   <data name="Translation.ErrorPrefix" xml:space="preserve">
     <value>[Translation error: </value>

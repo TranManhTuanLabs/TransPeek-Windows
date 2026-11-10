@@ -242,6 +242,10 @@ LanguageBarView / Settings) với Windows, làm trước nhóm panel + từ đi�
   change. A manual language picker in Settings is deferred to the first
   translation (until then the app follows the system language, which is
   English on Manh's machine — and the base file is English anyway).
+- **When to add languages (Manh, 2026-11-11): only once the app is
+  final.** Adding Vietnamese / Chinese / Korean before the UI settles
+  would mean re-translating every changed string after each UI change,
+  so translations wait until the app is complete. Applies to mac too.
 - **Core stays English-only literals:** `TransPeek.Core` has no resw
   (it is UI-framework-free and unit-tested on Linux). Its user-facing
   messages (`UpdateChecker`, `DictionaryLink.ValidationError`,
@@ -255,3 +259,36 @@ LanguageBarView / Settings) với Windows, làm trước nhóm panel + từ đi�
   no duplicate keys, every `x:Uid` property and every `AppStrings.Get`
   key exists in the resw, no key unreferenced, no Vietnamese left in UI
   string literals (comments + endonyms only).
+
+## Tray menu mirrors the mac menubar (2026-11-11, Manh)
+
+- **Decision (Manh): make the tray menu match the mac menubar design,
+  full features per the menu — except Check for Updates (discuss later)
+  and Smart Translation (deferred: Manh does not yet know how that
+  feature behaves).** Menu now: header "TransPeek {version}" + section
+  "Text Capture from Screen" (Manual Translation, Screenshot OCR,
+  Clipboard OCR, Selection Translation, Clipboard Translation,
+  Screenshot Copy) + section "Barcodes / QR Codes" (Scan Barcodes/QR
+  Codes) + Settings… + Quit TransPeek. Icons from Segoe Fluent Icons
+  (glyph codes verified against Microsoft's list).
+- **Semantics mirror mac exactly:** Manual Translation = empty panel at
+  screen center, focused for typing; Screenshot OCR = region → OCR →
+  translate → panel (existing flow); Clipboard OCR = region → OCR →
+  copy text + "Copied" toast, ignores the post-OCR mode setting;
+  Selection Translation = current selection → panel; Clipboard
+  Translation = clipboard text → panel; Screenshot Copy = region →
+  the IMAGE to the clipboard (NOT OCR text — mac uses
+  `screencapture -i -c`); Scan Barcodes/QR = region → ZXing.Net decode,
+  URL opens in the browser, anything else copies with an 80-char toast
+  preview, none found toasts "No barcode found".
+- **Permissions Guide is skipped, deliberately:** Windows never asks
+  for the Accessibility / Screen Recording grants the mac guide walks
+  through — those permissions are mac-only, so there is nothing to
+  guide the user to grant.
+- **Bug fixed on the way:** `<Version>` in TransPeek.csproj was still
+  0.1.0 while Package.appxmanifest said 0.1.3.0 — About showed 0.1.0
+  (AppInfo.Version reads the assembly version). Bumped to 0.1.3; the
+  tray header uses the same AppInfo.Version.
+- **Tests:** BarcodePayload routing/preview are pure Core logic with
+  xUnit tests (runs on Linux CI). The capture/decode flows are WinRT
+  and need Manh's live test.

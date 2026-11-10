@@ -68,53 +68,9 @@ public sealed class OcrFlowService
     public async Task RunOcrAsync()
     {
         var settings = _settingsFactory();
-        var region = await _selectRegionAsync();
-        if (region is null)
-            return; // user cancelled the region selection
-
-        byte[] png;
-        try
-        {
-            png = await _capture.CaptureRegionPngAsync(region.Value);
-        }
-        catch (Exception ex)
-        {
-            _toast.Show(AppStrings.Get("Ocr.CaptureFailed", "Could not capture the screen: {0}", ex.Message));
+        var text = await CaptureAndRecognizeTextAsync(settings);
+        if (text is null)
             return;
-        }
-
-        // First run: download Tesseract language data if the user picked
-        // Tesseract (the default) and it is missing, instead of silently
-        // falling back to Windows OCR (English-only on most machines).
-        await EnsureTesseractDataAsync(settings);
-
-        string text;
-        try
-        {
-            var provider = _resolveProvider(settings.OcrLanguages, settings.OcrProviderId);
-            try
-            {
-                text = await provider.RecognizeTextAsync(png, settings.OcrLanguages);
-            }
-            catch (Exception) when (provider is TesseractOcrProvider)
-            {
-                // Tesseract failed (engine or language data): one automatic
-                // fallback to Windows OCR, then the error stands.
-                text = await new WindowsOcrProvider()
-                    .RecognizeTextAsync(png, settings.OcrLanguages);
-            }
-        }
-        catch (Exception ex)
-        {
-            _toast.Show(AppStrings.Get("Ocr.Failed", "OCR error: {0}", ex.Message));
-            return;
-        }
-        if (string.IsNullOrWhiteSpace(text))
-        {
-            _toast.Show(AppStrings.Get("Ocr.NoText", "No text recognized in the selected region."));
-            return;
-        }
-        text = text.Trim();
 
         // "CopyOnly" (OCR -> copy source text, toast only). Anything else
         // is the default OpenPanel mode.
@@ -151,6 +107,76 @@ public sealed class OcrFlowService
         {
             await ClipboardHelper.CopyTextAsync(translation);
         }
+    }
+
+    /// <summary>Silent OCR (mac "Clipboard OCR"): region select → OCR →
+    /// copy the recognized text straight to the clipboard, toast "Copied".
+    /// Unlike RunOcrAsync this ignores the post-OCR mode setting — the
+    /// tray item always copies. Cancellation returns silently; failures
+    /// were already toasted by the shared capture step.</summary>
+    public async Task RunSilentOcrAsync()
+    {
+        var settings = _settingsFactory();
+        var text = await CaptureAndRecognizeTextAsync(settings);
+        if (text is null)
+            return;
+        await ClipboardHelper.CopyTextAsync(text);
+        _toast.Show(AppStrings.Get("App.Toast.Copied", "Copied"));
+    }
+
+    /// <summary>Shared prefix of both OCR flows: region select → capture →
+    /// first-run Tesseract data → recognize (Tesseract, Windows OCR on
+    /// failure). Returns the trimmed text, or null when the user cancelled
+    /// or a step failed (the failure was already toasted).</summary>
+    private async Task<string?> CaptureAndRecognizeTextAsync(AppSettings settings)
+    {
+        var region = await _selectRegionAsync();
+        if (region is null)
+            return null; // user cancelled the region selection
+
+        byte[] png;
+        try
+        {
+            png = await _capture.CaptureRegionPngAsync(region.Value);
+        }
+        catch (Exception ex)
+        {
+            _toast.Show(AppStrings.Get("Ocr.CaptureFailed", "Could not capture the screen: {0}", ex.Message));
+            return null;
+        }
+
+        // First run: download Tesseract language data if the user picked
+        // Tesseract (the default) and it is missing, instead of silently
+        // falling back to Windows OCR (English-only on most machines).
+        await EnsureTesseractDataAsync(settings);
+
+        string text;
+        try
+        {
+            var provider = _resolveProvider(settings.OcrLanguages, settings.OcrProviderId);
+            try
+            {
+                text = await provider.RecognizeTextAsync(png, settings.OcrLanguages);
+            }
+            catch (Exception) when (provider is TesseractOcrProvider)
+            {
+                // Tesseract failed (engine or language data): one automatic
+                // fallback to Windows OCR, then the error stands.
+                text = await new WindowsOcrProvider()
+                    .RecognizeTextAsync(png, settings.OcrLanguages);
+            }
+        }
+        catch (Exception ex)
+        {
+            _toast.Show(AppStrings.Get("Ocr.Failed", "OCR error: {0}", ex.Message));
+            return null;
+        }
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            _toast.Show(AppStrings.Get("Ocr.NoText", "No text recognized in the selected region."));
+            return null;
+        }
+        return text.Trim();
     }
 
     /// <summary>First-run Tesseract setup: download any missing language
