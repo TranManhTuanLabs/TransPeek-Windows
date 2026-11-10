@@ -90,7 +90,10 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         CopyTranslationButton.Click += async (_, _) => await CopyWithFeedbackAsync(CopyTranslationButton, _translationText);
         OcrButton.Click += (_, _) => { HidePanel(); _ = _ocrRequested(); };
         _clickOutside = new ClickOutsideMonitor(
-            DispatcherQueue.GetForCurrentThread(),
+            // Fully qualified: the unqualified name binds to Window's
+            // instance DispatcherQueue property (CS0176) instead of the
+            // Microsoft.UI.Dispatching type.
+            Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread(),
             isActive: () => _visible,
             getRect: () =>
             {
