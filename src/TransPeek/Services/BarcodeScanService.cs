@@ -63,11 +63,18 @@ public sealed class BarcodeScanService
             // ZXing.Net 0.16: BarcodeReader<T> is generic (the plain
             // `new BarcodeReader()` of older versions is CS0305 now).
             // BarcodeReaderGeneric is the concrete reader for
-            // System.Drawing.Bitmap, with Decode/DecodeMultiple(Bitmap).
+            // System.Drawing.Bitmap — but its Decode/DecodeMultiple take
+            // a LuminanceSource, not a Bitmap (passing Bitmap is CS1503):
+            // wrap the bitmap in BitmapLuminanceSource first. TryInverted
+            // is obsolete on the reader itself; set it via Options.
             using var stream = new MemoryStream(png);
             using var bitmap = new Bitmap(stream);
-            var reader = new BarcodeReaderGeneric { AutoRotate = true, TryInverted = true };
-            var results = reader.DecodeMultiple(bitmap);
+            var reader = new BarcodeReaderGeneric
+            {
+                AutoRotate = true,
+                Options = { TryInverted = true },
+            };
+            var results = reader.DecodeMultiple(new BitmapLuminanceSource(bitmap));
             payload = results
                 ?.Select(r => r?.Text?.Trim())
                 .FirstOrDefault(t => !string.IsNullOrWhiteSpace(t));
