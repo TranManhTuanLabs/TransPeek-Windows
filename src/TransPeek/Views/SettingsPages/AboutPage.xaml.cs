@@ -26,7 +26,7 @@ public sealed partial class AboutPage : Page
         InitializeComponent();
         Loaded += (_, _) =>
         {
-            VersionText.Text = $"Version {AppInfo.Version} (build {AppInfo.Build})";
+            VersionText.Text = $"Version {AppInfo.Version} (build {AppInfo.BuildDisplay})";
             ReleaseNotesLink.Content = $"Release notes (v{AppInfo.Version})";
         };
     }

@@ -54,7 +54,7 @@ public sealed class TrayIconService : IDisposable
         // so a future translation file changes them without touching code.
         // The header is the app name + running version, like the mac
         // menubar; disabled so it reads as a title, not an action.
-        menu.Items.Add(HeaderItem($"TransPeek {AppInfo.Version}"));
+        menu.Items.Add(HeaderItem(TrayHeaderText()));
         menu.Items.Add(new MenuFlyoutSeparator());
         menu.Items.Add(SectionItem(AppStrings.Get("Tray.Section.Capture", "Text Capture from Screen")));
         menu.Items.Add(Item("Tray.Menu.ManualTranslation", "Manual Translation", "\uE765", manualTranslation));
@@ -81,6 +81,17 @@ public sealed class TrayIconService : IDisposable
         // ForceCreate is required: the icon is created lazily otherwise and
         // a tray-only app would show nothing until the first interaction.
         _tray.ForceCreate();
+    }
+
+    /// <summary>Header: app name + version, plus the CI build number in
+    /// parentheses when the build was stamped by CI — mac parity
+    /// ("TransPeek 0.1.3 (36)"). Local builds show no number.</summary>
+    private static string TrayHeaderText()
+    {
+        var text = $"TransPeek {AppInfo.Version}";
+        if (AppInfo.CiBuildNumber > 0)
+            text += $" ({AppInfo.CiBuildNumber})";
+        return text;
     }
 
     /// <summary>Header / section headline: a disabled item reads as a

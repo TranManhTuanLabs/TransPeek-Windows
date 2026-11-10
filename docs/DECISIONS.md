@@ -292,3 +292,20 @@ LanguageBarView / Settings) với Windows, làm trước nhóm panel + từ đi�
 - **Tests:** BarcodePayload routing/preview are pure Core logic with
   xUnit tests (runs on Linux CI). The capture/decode flows are WinRT
   and need Manh's live test.
+
+## Tray header shows the CI build number (2026-11-11, Manh)
+
+- **Decision (Manh): the tray header shows the CI build number like
+  the mac menubar** — "TransPeek 0.1.3 (36)", where 36 is the GitHub
+  Actions run number of the build that produced the running app.
+- **How:** `build.yml` stamps it at build time with
+  `-p:Version=0.1.3.${{ github.run_number }}` on both the Build and
+  the Publish steps, so the assembly version becomes 0.1.3.36.
+  `AppInfo.CiBuildNumber` reads the 4th version part (0 for local
+  builds, where the csproj `<Version>` has no 4th part — the header
+  then shows no number, as before). The About page shows
+  "Version 0.1.3 (build 36)" from the same value.
+- **Local copy of build.yml is STALE** (predates the browser commit
+  8d912bb that added paths-ignore + [build-app] gating + concurrency):
+  never push the local file — workflow edits go through the browser
+  on the GitHub-side file.
