@@ -53,6 +53,24 @@ public static class TesseractLanguageDataManager
         File.Move(temp, destination, overwrite: true);
     }
 
+    /// <summary>Language codes the user asked for (BCP 47) that are not
+    /// installed yet, as Tesseract codes. Pure function of (languages,
+    /// isInstalled) so tests can cover it without touching disk or network.
+    /// No usable code in settings: match TesseractOcrProvider, which falls
+    /// back to English on its own.</summary>
+    public static IReadOnlyList<string> MissingCodes(
+        IReadOnlyList<string> languages, Func<string, bool> isInstalled)
+    {
+        var codes = languages
+            .Select(TessCodeForBcp47)
+            .Where(c => c is not null)
+            .Distinct()
+            .ToList();
+        if (codes.Count == 0)
+            codes = ["eng"];
+        return codes.Where(c => !isInstalled(c!)).ToList();
+    }
+
     /// <summary>BCP 47 -&gt; Tesseract code. Unknown codes return null (caller drops them).</summary>
     public static string? TessCodeForBcp47(string code) => code switch
     {

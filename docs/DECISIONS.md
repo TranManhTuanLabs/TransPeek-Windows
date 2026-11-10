@@ -175,3 +175,48 @@ LanguageBarView / Settings) với Windows, làm trước nhóm panel + từ đi�
   `Closed` and rebuilds it next time. Tray menu labels are now
   Vietnamese, with a tooltip explaining left-click = Settings,
   right-click = menu.
+
+## Baseline Windows = mac main CI #84–#93 (2026-11-11, Manh)
+
+- **Reference pinned:** mac main at CI runs #84–#93 (head 5530bb98,
+  local copy at 3779269 — only the #93 workflow-only commit is
+  missing, no feature impact). Runs #85–#93 are all red/cancelled
+  (CI capacity + signing), but their code is on main; the only
+  feature batch in the range is #84 (313847f1).
+- **Baseline scope (in):** select text → trigger icon/panel → translate
+  → dictionary lookup follows the panel selection; region OCR →
+  panel (OpenPanel) or copy-only; hotkeys (Ctrl+Alt+T translate,
+  Ctrl+Shift+S OCR); tray menu + Settings open on launch. Batch A
+  (v0.1.2) + the two OCR fixes below bring Windows to this baseline.
+- **Mac #84 extras — deferred as advanced (not baseline):** Scan
+  Barcodes/QR (Vision on mac; Windows.Media.Ocr has no barcode API —
+  needs ZXing/ML Kit equivalent), Screenshot Copy (region capture
+  straight to clipboard), Clipboard OCR (OCR an image already in the
+  clipboard), panel top/bottom bars (Gap 7), menubar section headlines,
+  CI build number in the header (Gap 13). Manh: advanced features
+  come after baseline.
+- **OCR must stay on the UI thread (`OcrFlowService.RunOcrAsync`):**
+  every entry point starts on the UI thread (tray click, hotkey via
+  the UI queue, panel button), but the flow used `ConfigureAwait(false)`
+  on every await, so after the first await its continuations ran on
+  thread-pool threads — and then it touched the panel, the toast and
+  the clipboard, which throw off-thread. Fix: no `ConfigureAwait(false)`
+  anywhere in `RunOcrAsync`; the heavy work already runs off-thread
+  inside the providers. Found by code audit 2026-11-11; never live-tested
+  before (v0.1 OCR testing stopped at the overlay trap).
+- **First-run Tesseract data auto-download:** Tesseract is the default
+  OCR provider for Vietnamese but its `*.traineddata` files are NOT
+  bundled. On a fresh install the registry silently fell back to
+  Windows OCR (English-only on most machines), so Vietnamese OCR came
+  back as garbage or nothing. Fix: `RunOcrAsync` downloads the missing
+  codes for the configured languages before resolving the provider
+  (toast shows progress); a failed download falls back to Windows OCR
+  with an explanatory toast. Pure part
+  (`TesseractLanguageDataManager.MissingCodes`) is unit-tested; the
+  download itself is live-tested.
+- **Google GTX endpoint check (2026-11-11):** a curl from this Linux VM
+  got Google's HTML "Sorry..." block page instead of JSON — datacenter
+  IPs are blocked/rate-limited for the unofficial endpoint. NOT treated
+  as breakage: the mac app uses the same endpoint and translates fine
+  from Manh's network. Re-check from a real user network if translation
+  ever fails on Windows.
