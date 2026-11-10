@@ -40,9 +40,15 @@ public sealed class ScreenshotCopyService
         {
             png = await _capture.CaptureRegionPngAsync(region.Value);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            _toast.Show(AppStrings.Get("Ocr.CaptureFailed", "Could not capture the screen: {0}", ex.Message));
+            // Primary capture failed: fall back to the system Snipping
+            // Tool (ms-screenclip: — Snip & Sketch on Win10, Snipping
+            // Tool on Win11). The system tool copies the snip to the
+            // clipboard itself; the app gets no completion callback and
+            // cannot tell cancel from success, so the toast says what
+            // will happen instead of claiming "Copied".
+            await TryOpenSystemSnippingToolAsync();
             return;
         }
 
@@ -56,6 +62,24 @@ public sealed class ScreenshotCopyService
             package.SetBitmap(RandomAccessStreamReference.CreateFromStream(stream));
             Clipboard.SetContent(package);
             _toast.Show(AppStrings.Get("App.Toast.Copied", "Copied"));
+        }
+        catch (Exception ex)
+        {
+            _toast.Show(AppStrings.Get("ScreenshotCopy.Failed", "Could not copy the screenshot: {0}", ex.Message));
+        }
+    }
+
+    /// <summary>System fallback: open the OS snipping UI. Returns after
+    /// launching (or failing to launch) — the snip itself happens in the
+    /// system tool, outside this app.</summary>
+    private async Task TryOpenSystemSnippingToolAsync()
+    {
+        try
+        {
+            var opened = await Windows.System.Launcher.LaunchUriAsync(new Uri("ms-screenclip:"));
+            _toast.Show(opened
+                ? AppStrings.Get("ScreenshotCopy.SystemFallback", "Opened Windows Snipping Tool instead — the screenshot will be copied to the clipboard.")
+                : AppStrings.Get("ScreenshotCopy.Failed", "Could not copy the screenshot: {0}", "Snipping Tool is not available."));
         }
         catch (Exception ex)
         {

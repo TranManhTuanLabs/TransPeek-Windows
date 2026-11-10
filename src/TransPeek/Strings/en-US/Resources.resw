@@ -75,6 +75,9 @@
   <data name="ScreenshotCopy.Failed" xml:space="preserve">
     <value>Could not copy the screenshot: {0}</value>
   </data>
+  <data name="ScreenshotCopy.SystemFallback" xml:space="preserve">
+    <value>Opened Windows Snipping Tool instead — the screenshot will be copied to the clipboard.</value>
+  </data>
   <data name="Translation.ErrorPrefix" xml:space="preserve">
     <value>[Translation error: </value>
   </data>

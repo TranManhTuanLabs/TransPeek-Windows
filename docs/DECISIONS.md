@@ -309,3 +309,22 @@ LanguageBarView / Settings) với Windows, làm trước nhóm panel + từ đi�
   8d912bb that added paths-ignore + [build-app] gating + concurrency):
   never push the local file — workflow edits go through the browser
   on the GitHub-side file.
+
+## Screenshot Copy: app capture first, system Snipping Tool as fallback (2026-11-11, Manh)
+
+- **Decision (Manh): app capture is primary, the system tool is the
+  fallback.** Screenshot Copy first tries the app's own region select +
+  capture (same on Win10/Win11, proper cancel/error/toast). Only when
+  that capture throws does it open the system Snipping Tool via the
+  `ms-screenclip:` URI (Snip & Sketch on Win10, Snipping Tool on
+  Win11) and toast that the screenshot will be copied to the clipboard
+  — the app gets no completion callback from the system tool, so the
+  toast states what will happen instead of claiming "Copied".
+- **Why not system-first:** the system tool differs between Win10 and
+  Win11, depends on a user setting (auto-copy to clipboard), and
+  reports nothing back (no cancel/success signal). PowerToys was
+  considered and ruled out: it has no region-screenshot-to-clipboard
+  tool (only Screen Ruler for measuring and Crop And Lock for windows).
+- **Scope:** fallback applies to Screenshot Copy only. The OCR flows
+  need the PNG bytes inside the app, so the system tool cannot feed
+  them.
