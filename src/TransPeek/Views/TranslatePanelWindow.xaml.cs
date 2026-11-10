@@ -47,7 +47,9 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
                 WindowHelpers.MakeToolWindow(this);
             };
             // WinUI 3 Window has no KeyDown event: Esc is a keyboard
-            // accelerator on the root element instead.
+            // accelerator on the root element instead. Same caveat as
+            // RegionSelectWindow (v0.1.1): an accelerator needs a focused
+            // element, so KeyDown on the root is the primary Esc path.
             var esc = new KeyboardAccelerator { Key = Windows.System.VirtualKey.Escape };
             esc.Invoked += (_, args) =>
             {
@@ -55,6 +57,14 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
                 args.Handled = true;
             };
             contentRoot.KeyboardAccelerators.Add(esc);
+            contentRoot.KeyDown += (_, e) =>
+            {
+                if (e.Key == Windows.System.VirtualKey.Escape)
+                {
+                    HidePanel();
+                    e.Handled = true;
+                }
+            };
         }
         CloseButton.Click += (_, _) => HidePanel();
         CopyButton.Click += async (_, _) => await CopyWithFeedbackAsync(CopyButton, _translationText);

@@ -126,3 +126,27 @@ nothing is removed, only superseded (note the date).
   attribution to cosZone/MoePeek in the README. The Windows edition
   is rewritten from scratch in C# — it mirrors design/behaviour and
   copies no Swift code.
+
+## v0.1.1 — OCR overlay trap + no visible menu (2026-11-11, Manh live test)
+
+- **OCR overlay trapped the user fullscreen.** Root cause: Esc was
+  only a `KeyboardAccelerator` on the root `Grid`, and a `Grid`
+  never takes keyboard focus, so Esc never fired; there was no
+  Cancel button; `Finish()` only hid the window, so Alt+F4 left the
+  selection `TaskCompletionSource` uncompleted and the OCR flow hung
+  forever. Fix (`RegionSelectWindow`): grid is focusable and focused
+  on show/activate, `KeyDown` handles Esc directly (accelerator kept
+  as backup), `RightTapped` handles right-click, a visible
+  "✕ Hủy (Esc)" button, `Closed` completes the task, `Finish()`
+  closes the window exactly once (guarded). Same `KeyDown` backup
+  added to the translate panel's Esc path.
+- **App showed no menu/UI at all.** Root causes: tray-only design
+  + Windows 11 hides new tray icons in the overflow, so v0.1 looked
+  like it never started; and `SettingsWindow` was a single instance
+  that WinUI destroys on close, so `Activate()` on the dead window
+  silently did nothing on reopen. Fix (`App`, `SettingsWindow`):
+  Settings opens centered (960×640) on launch plus a startup toast
+  explaining the tray; App drops the `SettingsWindow` reference on
+  `Closed` and rebuilds it next time. Tray menu labels are now
+  Vietnamese, with a tooltip explaining left-click = Settings,
+  right-click = menu.

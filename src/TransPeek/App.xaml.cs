@@ -4,6 +4,8 @@
 // The app is tray-only: the main Window is hidden (it only keeps the
 // WinUI app lifetime alive). All visible UI is TriggerIconWindow,
 // TranslatePanelWindow, RegionSelectWindow, SettingsWindow and ToastWindow.
+// Settings opens on launch (v0.1.1): a tray-only app shows nothing at
+// all otherwise, and Windows 11 hides new tray icons in the overflow.
 //
 // NOTE — no TTS in v0.1 (SPEC §5): there is deliberately no speaker button,
 // no click-to-read, no EdgeTTS. Clicking the trigger icon opens the panel.
@@ -82,6 +84,14 @@ public sealed partial class App : Application
             _selectionMonitor.Start();
 
         StartHotkeys();
+
+        // v0.1.1 — the app is tray-only, and v0.1 showed nothing at all
+        // on launch: Windows 11 hides new tray icons in the overflow, so
+        // the user saw no window and no menu. Open Settings right away
+        // so there is always visible UI, and tell the user (toast) where
+        // the app keeps running after the window is closed.
+        ShowSettings();
+        _toast?.Show("TransPeek đã chạy — đóng cửa sổ này app vẫn chạy ở khay hệ thống, chuột phải icon tray để mở menu.");
     }
 
     // ----- providers -----
@@ -212,6 +222,12 @@ public sealed partial class App : Application
         {
             _settingsWindow = new SettingsWindow();
             _settingsWindow.SettingsSaved += OnSettingsSaved;
+            // v0.1.1 — a WinUI 3 Window is destroyed when the user closes
+            // it with ✕: v0.1 kept the dead instance and Activate() on it
+            // silently did nothing, so Settings never opened again after
+            // the first close. Drop the reference so the next open builds
+            // a fresh window.
+            _settingsWindow.Closed += (_, _) => _settingsWindow = null;
         }
         _settingsWindow.ShowSettings();
     }

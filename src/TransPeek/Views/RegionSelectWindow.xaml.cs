@@ -2,7 +2,18 @@
 // contains the cursor, dims it, and lets the user drag a rectangle.
 // Returns the rectangle in PHYSICAL pixels (capture APIs work in physical
 // pixels; XAML layout uses effective pixels, so the result is scaled by
-// the window's DPI factor). Esc or right-click cancels (null).
+// the window's DPI factor). Esc, right-click, the Cancel button, or
+// Alt+F4 cancels (null).
+//
+// v0.1.1 fix — the v0.1 overlay could trap the user fullscreen: Esc was
+// only a KeyboardAccelerator on the root Grid, and a Grid never takes
+// keyboard focus, so the accelerator never fired; there was no Cancel
+// button at all; and Finish() only hid the window, so closing it with
+// Alt+F4 left the TaskCompletionSource uncompleted and the OCR flow
+// awaiting forever. Now: the grid is focusable and focused on show,
+// KeyDown handles Esc directly, RightTapped handles right-click, the
+// Cancel button is clickable, Closed completes the task, and Finish()
+// closes (not just hides) the window exactly once.
 
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -10,6 +21,7 @@ using Microsoft.UI.Xaml.Input;
 using TransPeek.Interop;
 using Windows.Foundation;
 using Windows.Graphics;
+using Windows.System;
 
 namespace TransPeek.Views;
 
@@ -18,6 +30,7 @@ public sealed partial class RegionSelectWindow : Window
     private TaskCompletionSource<RectInt32?>? _result;
     private Point _start;
     private bool _dragging;
+    private bool _finished;
 
     public RegionSelectWindow()
     {
@@ -30,21 +43,45 @@ public sealed partial class RegionSelectWindow : Window
             {
                 WindowHelpers.MakeBorderlessTopmost(this);
                 WindowHelpers.MakeToolWindow(this);
+                // Give the grid keyboard focus so Esc (KeyDown below and
+                // the accelerator) actually reaches this window.
+                RootGrid.Focus(FocusState.Programmatic);
             };
             // WinUI 3 Window has no KeyDown event: Esc is a keyboard
-            // accelerator on the root element instead.
-            var esc = new KeyboardAccelerator { Key = Windows.System.VirtualKey.Escape };
+            // accelerator on the root element instead. The accelerator
+            // alone is NOT reliable (it needs a focused element), so
+            // KeyDown on the focused grid is the primary Esc path and
+            // the accelerator stays only as a backup.
+            var esc = new KeyboardAccelerator { Key = VirtualKey.Escape };
             esc.Invoked += (_, args) =>
             {
                 Cancel();
                 args.Handled = true;
             };
             contentRoot.KeyboardAccelerators.Add(esc);
+            contentRoot.KeyDown += (_, e) =>
+            {
+                if (e.Key == VirtualKey.Escape)
+                {
+                    Cancel();
+                    e.Handled = true;
+                }
+            };
         }
+        // Re-focus whenever the window is activated (e.g. after the user
+        // clicked another window and came back): without focus, Esc is dead.
+        Activated += (_, _) => RootGrid.Focus(FocusState.Programmatic);
+        // Alt+F4 / taskbar close must complete the selection instead of
+        // hanging the OCR flow forever awaiting a result that never comes.
+        Closed += (_, _) => Cancel();
+        CancelButton.Click += (_, _) => Cancel();
         RootGrid.PointerPressed += OnPointerPressed;
         RootGrid.PointerMoved += OnPointerMoved;
         RootGrid.PointerReleased += OnPointerReleased;
         RootGrid.PointerCanceled += (_, _) => Cancel();
+        // Right-click release: PointerPressed already handles the press,
+        // but RightTapped is the reliable right-click signal in WinUI.
+        RootGrid.RightTapped += (_, _) => Cancel();
     }
 
     public Task<RectInt32?> SelectRegionAsync()
@@ -57,6 +94,7 @@ public sealed partial class RegionSelectWindow : Window
         var bounds = area.OuterBounds;
         WindowHelpers.MoveAndResize(this, bounds.X, bounds.Y, bounds.Width, bounds.Height);
         Activate();
+        RootGrid.Focus(FocusState.Programmatic);
         return _result.Task;
     }
 
@@ -126,8 +164,23 @@ public sealed partial class RegionSelectWindow : Window
 
     private void Finish(RectInt32? rect)
     {
-        WindowHelpers.Hide(this);
-        _result?.TrySetResult(rect);
+        // Exactly once: Closed fires while closing, and Cancel() can be
+        // reached from several events for the same press — a second
+        // Finish must be a no-op, and Close() on an already-closed
+        // window must not throw out of an event handler.
+        if (_finished)
+            return;
+        _finished = true;
+        var result = _result;
         _result = null;
+        result?.TrySetResult(rect);
+        try
+        {
+            Close();
+        }
+        catch
+        {
+            WindowHelpers.Hide(this);
+        }
     }
 }

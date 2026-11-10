@@ -58,10 +58,16 @@ trên runner Windows thật:
 ## Live test trên máy Windows (Manh)
 
 ### 1. Khởi động
-- [ ] Chạy exe → icon TransPeek hiện ở system tray (khay hệ thống),
-      không có cửa sổ chính nào mở ra.
-- [ ] Right-click tray icon → menu: Settings / Translate selection /
-      Capture & OCR / Quit.
+- [ ] Chạy exe → cửa sổ **Settings mở ngay** (v0.1.1: app tray-only
+      nhưng phải có giao diện nhìn thấy được; Windows 11 giấu icon
+      tray mới trong overflow nên v0.1 chạy mà như không chạy).
+- [ ] Toast góc phải dưới báo app đang chạy ở khay hệ thống.
+- [ ] Đóng Settings bằng nút ✕ → app vẫn chạy (icon tray còn).
+      Bấm **trái** icon tray → Settings mở lại được (v0.1.1: v0.1
+      giữ instance Settings đã đóng nên mở lại không lên).
+- [ ] Right-click tray icon → menu tiếng Việt: Cài đặt / Dịch vùng
+      chọn / Chụp & OCR / Thoát TransPeek.
+- [ ] Không còn tình trạng "chạy exe mà không thấy gì".
 
 ### 2. Dịch từ vùng chọn (base mirror)
 - [ ] Bôi chọn chữ trong Notepad → icon `A 文` hiện gần chỗ chọn.
@@ -86,6 +92,12 @@ trên runner Windows thật:
 ### 4. OCR
 - [ ] `Ctrl+Shift+S` → màn hình tối lại, kéo chuột chọn vùng có chữ
       → panel hiện text gốc + bản dịch; có 2 nút [Copy gốc] / [Copy dịch].
+- [ ] **Thoát màn hình chọn vùng (v0.1.1, lỗi Manh gặp): Esc, chuột
+      phải, nút "✕ Hủy (Esc)" góc phải trên, hoặc Alt+F4 — cả 4 cách
+      đều phải thoát ngay, không kẹt toàn màn hình. V0.1 chỉ có Esc
+      qua KeyboardAccelerator trên Grid không focus nên Esc chết,
+      không có nút Hủy, Alt+F4 làm luồng OCR treo mãi.**
+- [ ] Esc khi đang chọn vùng → hủy, không làm gì.
 - [ ] Bản dịch tự copy vào clipboard (paste ra kiểm tra). Tắt
       "Tự copy bản dịch sau OCR" → không tự copy nữa.
 - [ ] Settings → OCR → "Tải vie + eng" → tải xong, trạng thái báo
@@ -93,7 +105,6 @@ trên runner Windows thật:
       đúng dấu tiếng Việt.
 - [ ] Đổi chế độ sau OCR sang "OCR → copy thẳng" → chụp xong chỉ
       toast "Đã copy", không mở panel.
-- [ ] Esc khi đang chọn vùng → hủy, không làm gì.
 
 ### 5. Translation providers
 - [ ] Settings → Translation: đổi provider chính sang OpenAI (chưa

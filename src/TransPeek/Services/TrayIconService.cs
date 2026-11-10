@@ -25,24 +25,26 @@ public sealed class TrayIconService : IDisposable
     public TrayIconService(Action openSettings, Action translateSelection, Action captureOcr, Action quit)
     {
         var menu = new MenuFlyout();
-        var settingsItem = new MenuFlyoutItem { Text = "Settings…" };
+        // v0.1.1: Vietnamese labels — the user reads the tray menu in
+        // Vietnamese, like the rest of the app's UI.
+        var settingsItem = new MenuFlyoutItem { Text = "Cài đặt…" };
         settingsItem.Click += (_, _) => openSettings();
-        var translateItem = new MenuFlyoutItem { Text = "Translate selection" };
+        var translateItem = new MenuFlyoutItem { Text = "Dịch vùng chọn" };
         translateItem.Click += (_, _) => translateSelection();
-        var ocrItem = new MenuFlyoutItem { Text = "Capture & OCR" };
+        var ocrItem = new MenuFlyoutItem { Text = "Chụp & OCR" };
         ocrItem.Click += (_, _) => captureOcr();
         menu.Items.Add(settingsItem);
         menu.Items.Add(translateItem);
         menu.Items.Add(ocrItem);
         menu.Items.Add(new MenuFlyoutSeparator());
-        var quitItem = new MenuFlyoutItem { Text = "Quit TransPeek" };
+        var quitItem = new MenuFlyoutItem { Text = "Thoát TransPeek" };
         quitItem.Click += (_, _) => quit();
         menu.Items.Add(quitItem);
 
         _tray = new TaskbarIcon
         {
             IconSource = LoadEmbeddedIcon(),
-            ToolTipText = "TransPeek — Translate anywhere, peek instantly.",
+            ToolTipText = "TransPeek — Dịch mọi nơi, xem ngay. Bấm trái: Cài đặt. Bấm phải: menu.",
             ContextFlyout = menu,
             LeftClickCommand = new RelayCommand(openSettings),
         };
