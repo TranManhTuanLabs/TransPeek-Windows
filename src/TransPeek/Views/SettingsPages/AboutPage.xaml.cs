@@ -12,6 +12,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using TransPeek.Core.Update;
+using TransPeek.Services;
 using Windows.System;
 
 namespace TransPeek.Views.SettingsPages;
@@ -44,7 +45,7 @@ public sealed partial class AboutPage : Page
     {
         CheckUpdatesButton.IsEnabled = false;
         DownloadUpdateButton.Visibility = Visibility.Collapsed;
-        UpdateStatusText.Text = "Đang kiểm tra…";
+        UpdateStatusText.Text = AppStrings.Get("Settings.About.Checking", "Checking…");
         try
         {
             var current = UpdateChecker.ParseVersion(AppInfo.Version) ?? new Version(0, 1, 0);
@@ -52,18 +53,17 @@ public sealed partial class AboutPage : Page
             switch (result.Status)
             {
                 case UpdateCheckStatus.UpToDate:
-                    UpdateStatusText.Text = $"Bạn đang dùng bản mới nhất (v{AppInfo.Version}).";
+                    UpdateStatusText.Text = AppStrings.Get("Settings.About.UpToDate", "You're on the latest version (v{0}).", AppInfo.Version);
                     break;
                 case UpdateCheckStatus.UpdateAvailable:
-                    UpdateStatusText.Text =
-                        $"Có bản mới: v{result.LatestVersion} (bạn đang dùng v{AppInfo.Version}).";
+                    UpdateStatusText.Text = AppStrings.Get("Settings.About.UpdateAvailable", "New version available: v{0} (you're on v{1}).", result.LatestVersion, AppInfo.Version);
                     _latestReleaseUrl = result.ReleaseUrl;
-                    DownloadUpdateButton.Content = $"Tải bản mới v{result.LatestVersion}";
+                    DownloadUpdateButton.Content = AppStrings.Get("Settings.About.DownloadUpdate", "Download v{0}", result.LatestVersion);
                     DownloadUpdateButton.Visibility = Visibility.Visible;
                     break;
                 case UpdateCheckStatus.Error:
                 default:
-                    UpdateStatusText.Text = result.ErrorMessage ?? "Không kiểm tra được.";
+                    UpdateStatusText.Text = result.ErrorMessage ?? AppStrings.Get("Settings.About.CheckFailed", "Could not check.");
                     break;
             }
         }

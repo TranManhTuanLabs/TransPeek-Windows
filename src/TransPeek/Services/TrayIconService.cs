@@ -25,26 +25,26 @@ public sealed class TrayIconService : IDisposable
     public TrayIconService(Action openSettings, Action translateSelection, Action captureOcr, Action quit)
     {
         var menu = new MenuFlyout();
-        // v0.1.1: Vietnamese labels — the user reads the tray menu in
-        // Vietnamese, like the rest of the app's UI.
-        var settingsItem = new MenuFlyoutItem { Text = "Cài đặt…" };
+        // Labels come from Resources.resw (English base) via AppStrings,
+        // so a future translation file changes them without touching code.
+        var settingsItem = new MenuFlyoutItem { Text = AppStrings.Get("Tray.Menu.Settings", "Settings…") };
         settingsItem.Click += (_, _) => openSettings();
-        var translateItem = new MenuFlyoutItem { Text = "Dịch vùng chọn" };
+        var translateItem = new MenuFlyoutItem { Text = AppStrings.Get("Tray.Menu.TranslateSelection", "Translate selection") };
         translateItem.Click += (_, _) => translateSelection();
-        var ocrItem = new MenuFlyoutItem { Text = "Chụp & OCR" };
+        var ocrItem = new MenuFlyoutItem { Text = AppStrings.Get("Tray.Menu.CaptureOcr", "Capture & OCR") };
         ocrItem.Click += (_, _) => captureOcr();
         menu.Items.Add(settingsItem);
         menu.Items.Add(translateItem);
         menu.Items.Add(ocrItem);
         menu.Items.Add(new MenuFlyoutSeparator());
-        var quitItem = new MenuFlyoutItem { Text = "Thoát TransPeek" };
+        var quitItem = new MenuFlyoutItem { Text = AppStrings.Get("Tray.Menu.Quit", "Quit TransPeek") };
         quitItem.Click += (_, _) => quit();
         menu.Items.Add(quitItem);
 
         _tray = new TaskbarIcon
         {
             IconSource = LoadEmbeddedIcon(),
-            ToolTipText = "TransPeek — Dịch mọi nơi, xem ngay. Bấm trái: Cài đặt. Bấm phải: menu.",
+            ToolTipText = AppStrings.Get("Tray.ToolTip", "TransPeek — Translate anywhere, peek instantly. Left-click: Settings. Right-click: menu."),
             ContextFlyout = menu,
             LeftClickCommand = new RelayCommand(openSettings),
         };

@@ -17,22 +17,22 @@
                 </ListView.ItemTemplate>
             </ListView>
 
-            <TextBox x:Name="LinkNameBox" Header="Tên (vd: Oxford)" />
-            <TextBox x:Name="LinkTemplateBox" Header="URL template (phải chứa {word} hoặc {text})" />
+            <TextBox x:Name="LinkNameBox" x:Uid="Settings.Dictionary.LinkName" Header="Name (e.g. Oxford)" />
+            <TextBox x:Name="LinkTemplateBox" x:Uid="Settings.Dictionary.LinkTemplate" Header="URL template (must contain {word} or {text})" />
             <TextBlock x:Name="LinkErrorText" FontSize="12" Foreground="Red" Visibility="Collapsed" />
             <StackPanel Orientation="Horizontal" Spacing="8">
-                <Button Content="Thêm" Click="OnAddLink" />
-                <Button Content="Cập nhật" Click="OnUpdateLink" />
-                <Button Content="Xóa" Click="OnDeleteLink" />
-                <Button Content="Reset to Defaults" Click="OnResetDefaults" />
+                <Button x:Uid="Settings.Dictionary.Add" Content="Add" Click="OnAddLink" />
+                <Button x:Uid="Settings.Dictionary.Update" Content="Update" Click="OnUpdateLink" />
+                <Button x:Uid="Settings.Dictionary.Delete" Content="Delete" Click="OnDeleteLink" />
+                <Button x:Uid="Settings.Dictionary.ResetDefaults" Content="Reset to Defaults" Click="OnResetDefaults" />
             </StackPanel>
 
-            <ComboBox x:Name="DisplayModeCombo" Header="Hiển thị ở bottom panel"
+            <ComboBox x:Name="DisplayModeCombo" x:Uid="Settings.Dictionary.DisplayMode" Header="Shown in the bottom panel"
                       SelectionChanged="OnDisplayModeChanged">
-                <ComboBoxItem Content="Icon + Text" Tag="IconAndText" />
-                <ComboBoxItem Content="Chỉ icon" Tag="IconOnly" />
+                <ComboBoxItem x:Uid="Settings.Dictionary.IconAndText" Content="Icon + Text" Tag="IconAndText" />
+                <ComboBoxItem x:Uid="Settings.Dictionary.IconOnly" Content="Icon only" Tag="IconOnly" />
             </ComboBox>
-            <TextBlock Text="Bấm vào link ở bottom panel sẽ mở trang từ điển trong trình duyệt mặc định. Icon lấy từ favicon của trang, lỗi thì hiện chữ cái đầu của tên."
+            <TextBlock x:Uid="Settings.Dictionary.Note" Text="Clicking a link in the bottom panel opens the dictionary page in your default browser. The icon comes from the site's favicon; on error it shows the first letter of the name."
                        FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
         </StackPanel>
     </ScrollViewer>

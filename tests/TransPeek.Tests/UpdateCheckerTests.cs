@@ -83,7 +83,7 @@ public sealed class UpdateCheckerTests
         var http = new HttpClient(new FakeHandler(_ => new HttpResponseMessage(HttpStatusCode.NotFound)));
         var result = await new UpdateChecker(http).CheckAsync(new Version(0, 1, 0));
         Assert.Equal(UpdateCheckStatus.Error, result.Status);
-        Assert.Contains("Chưa có bản release", result.ErrorMessage);
+        Assert.Contains("No releases", result.ErrorMessage);
     }
 
     [Fact]
@@ -92,7 +92,7 @@ public sealed class UpdateCheckerTests
         var http = new HttpClient(new ThrowingHandler());
         var result = await new UpdateChecker(http).CheckAsync(new Version(0, 1, 0));
         Assert.Equal(UpdateCheckStatus.Error, result.Status);
-        Assert.Contains("mạng", result.ErrorMessage);
+        Assert.Contains("network", result.ErrorMessage);
     }
 
     [Fact]

@@ -220,3 +220,38 @@ LanguageBarView / Settings) với Windows, làm trước nhóm panel + từ đi�
   as breakage: the mac app uses the same endpoint and translates fine
   from Manh's network. Re-check from a real user network if translation
   ever fails on Windows.
+
+## UI language: English base, Vietnamese later (2026-11-11, Manh)
+
+- **Decision (Manh): English is the base UI language; Vietnamese comes
+  later, then more languages if needed (planned next: zh-Hans Chinese
+  Simplified, ko Korean).** Background: the app shipped Vietnamese-only
+  because Muse set it without asking — Manh flagged it. The mac app
+  already uses English as its base (`Localizable.xcstrings`,
+  `sourceLanguage: en`, 319 strings, no translations yet), so Windows
+  follows the same direction.
+- **How it works (WinUI standard):** `Strings/en-US/Resources.resw`
+  holds every user-visible string (105 keys); XAML reads them through
+  `x:Uid` (resw name = `Uid.Property`) with the English literal kept in
+  the markup as the fallback; code reads them through
+  `TransPeek.Services.AppStrings.Get(key, fallback)` with the same
+  English text as the fallback. A lookup never shows a blank: a missing
+  key or a missing `.pri` falls back to English.
+- **Adding a language later = adding one file:**
+  `Strings/<bcp47>/Resources.resw` with the same keys. No code or XAML
+  change. A manual language picker in Settings is deferred to the first
+  translation (until then the app follows the system language, which is
+  English on Manh's machine — and the base file is English anyway).
+- **Core stays English-only literals:** `TransPeek.Core` has no resw
+  (it is UI-framework-free and unit-tested on Linux). Its user-facing
+  messages (`UpdateChecker`, `DictionaryLink.ValidationError`,
+  `TesseractOcrProvider.Status`) are plain English literals. The WinUI
+  layer owns localization.
+- **Not localized (deliberately):** language endonyms in the language
+  picker ("Tiếng Việt", "中文 (简体)", "한국어", … — a language is always
+  shown in its own name), provider/dictionary proper nouns ("Google
+  Translate", "Oxford"), developer comments, and test data.
+- **Version:** 0.1.3.0. Verified by script before push: resw XML valid,
+  no duplicate keys, every `x:Uid` property and every `AppStrings.Get`
+  key exists in the resw, no key unreferenced, no Vietnamese left in UI
+  string literals (comments + endonyms only).

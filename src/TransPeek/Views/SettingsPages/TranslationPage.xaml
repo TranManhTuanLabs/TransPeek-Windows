@@ -5,33 +5,33 @@
 
     <ScrollViewer>
         <StackPanel Spacing="12" MaxWidth="560" HorizontalAlignment="Left">
-            <ComboBox x:Name="PrimaryProviderCombo" Header="Provider chính"
+            <ComboBox x:Name="PrimaryProviderCombo" x:Uid="Settings.Translation.PrimaryProvider" Header="Primary provider"
                       SelectionChanged="OnPrimaryChanged" />
-            <ComboBox x:Name="FallbackProviderCombo" Header="Provider dự phòng"
+            <ComboBox x:Name="FallbackProviderCombo" x:Uid="Settings.Translation.FallbackProvider" Header="Fallback provider"
                       SelectionChanged="OnFallbackChanged" />
-            <TextBlock Text="Khi provider chính lỗi, app thử provider dự phòng, rồi các provider đang bật khác, cuối cùng là Google Translate miễn phí."
+            <TextBlock x:Uid="Settings.Translation.FallbackNote" Text="When the primary provider fails, the app tries the fallback provider, then other enabled providers, and finally free Google Translate."
                        FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
 
-            <ComboBox x:Name="SourceLanguageCombo" Header="Ngôn ngữ nguồn"
+            <ComboBox x:Name="SourceLanguageCombo" x:Uid="Settings.Translation.SourceLanguage" Header="Source language"
                       SelectionChanged="OnSourceLanguageChanged" />
-            <ComboBox x:Name="TargetLanguageCombo" Header="Ngôn ngữ đích"
+            <ComboBox x:Name="TargetLanguageCombo" x:Uid="Settings.Translation.TargetLanguage" Header="Target language"
                       SelectionChanged="OnTargetLanguageChanged" />
 
-            <TextBlock Text="Bật / tắt từng provider" FontWeight="SemiBold" Margin="0,8,0,0" />
+            <TextBlock x:Uid="Settings.Translation.EnableProviders" Text="Enable / disable providers" FontWeight="SemiBold" Margin="0,8,0,0" />
             <StackPanel x:Name="ProviderToggles" Spacing="4" />
 
-            <TextBlock Text="Custom OpenAI-compatible endpoint" FontWeight="SemiBold" Margin="0,8,0,0" />
+            <TextBlock x:Uid="Settings.Translation.CustomEndpoint" Text="Custom OpenAI-compatible endpoint" FontWeight="SemiBold" Margin="0,8,0,0" />
             <ListView x:Name="CustomList" SelectionChanged="OnCustomSelected" MaxHeight="120" />
             <StackPanel Orientation="Horizontal" Spacing="8">
-                <Button Content="Thêm OpenAI" Click="OnAddOpenAi" />
-                <Button Content="Thêm DeepSeek" Click="OnAddDeepSeek" />
-                <Button Content="Xóa" Click="OnDeleteCustom" />
+                <Button x:Uid="Settings.Translation.AddOpenAi" Content="Add OpenAI" Click="OnAddOpenAi" />
+                <Button x:Uid="Settings.Translation.AddDeepSeek" Content="Add DeepSeek" Click="OnAddDeepSeek" />
+                <Button x:Uid="Settings.Translation.Delete" Content="Delete" Click="OnDeleteCustom" />
             </StackPanel>
-            <TextBox x:Name="CustomNameBox" Header="Tên" LostFocus="OnCustomEdited" />
-            <TextBox x:Name="CustomBaseUrlBox" Header="Base URL" LostFocus="OnCustomEdited" />
-            <TextBox x:Name="CustomModelBox" Header="Model" LostFocus="OnCustomEdited" />
-            <PasswordBox x:Name="CustomApiKeyBox" Header="API key" LostFocus="OnCustomEdited" />
-            <TextBlock Text="NỢ v0.1: API key lưu dạng text thường trong settings.json (xem README). Sẽ chuyển sang Credential Locker sau."
+            <TextBox x:Name="CustomNameBox" x:Uid="Settings.Translation.CustomName" Header="Name" LostFocus="OnCustomEdited" />
+            <TextBox x:Name="CustomBaseUrlBox" x:Uid="Settings.Translation.CustomBaseUrl" Header="Base URL" LostFocus="OnCustomEdited" />
+            <TextBox x:Name="CustomModelBox" x:Uid="Settings.Translation.CustomModel" Header="Model" LostFocus="OnCustomEdited" />
+            <PasswordBox x:Name="CustomApiKeyBox" x:Uid="Settings.Translation.CustomApiKey" Header="API key" LostFocus="OnCustomEdited" />
+            <TextBlock x:Uid="Settings.Translation.ApiKeyDebt" Text="DEBT v0.1: API keys are stored as plain text in settings.json (see README). They will move to Credential Locker later."
                        FontSize="12" Foreground="DarkOrange" TextWrapping="Wrap" />
         </StackPanel>
     </ScrollViewer>

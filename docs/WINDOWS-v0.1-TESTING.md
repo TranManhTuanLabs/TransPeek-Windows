@@ -152,3 +152,13 @@ trên runner Windows thật:
 Chụp màn hình lỗi + ghi lại bước làm trước đó. Nếu app crash lúc khởi
 động, kiểm tra Event Viewer → Windows Logs → Application, tìm lỗi
 `.NET Runtime` và gửi kèm.
+
+## Checklist v0.1.3 — English UI (localization base)
+
+- App opens in English everywhere: tray menu (Settings / Translate selection / Capture & OCR / Quit TransPeek), Settings nav (General / Translation / Dictionary / OCR / About), panel buttons (Copy / Copy source / Copy translation / Capture OCR), region-select hint + Cancel button.
+- Startup toast, "Settings saved", "No text selected to translate" all in English.
+- Settings pages: every header, hint and button in English; On/Off toggles say On/Off.
+- OCR flow in English: first-run download toasts, "No text recognized in the selected region", CopyOnly toast says "Copied".
+- About → Check for Updates: "Checking…", up-to-date / update-available / error states in English.
+- Language picker still lists each language in its own name (Tiếng Việt, 中文 (简体), 한국어…) — that is deliberate, not a leftover.
+- No Vietnamese left in the UI except language names. (Comments in code are still partly Vietnamese — dev-facing only.)

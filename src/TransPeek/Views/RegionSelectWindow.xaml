@@ -14,10 +14,10 @@
             <Rectangle x:Name="SelectionRect" Stroke="White" StrokeThickness="2"
                        Fill="#22FFFFFF" Visibility="Collapsed" />
         </Canvas>
-        <TextBlock Text="Kéo chuột để chọn vùng cần OCR — Esc / chuột phải / nút Hủy để thoát"
+        <TextBlock x:Uid="RegionSelect.Hint" Text="Drag to select the region to OCR — Esc / right-click / Cancel to exit"
                    HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,24,0,0"
                    Foreground="White" FontSize="15" FontWeight="SemiBold" />
-        <Button x:Name="CancelButton" Content="✕ Hủy (Esc)"
+        <Button x:Name="CancelButton" x:Uid="RegionSelect.Cancel" Content="✕ Cancel (Esc)"
                 HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,16,16,0"
                 Padding="12,6" />
     </Grid>

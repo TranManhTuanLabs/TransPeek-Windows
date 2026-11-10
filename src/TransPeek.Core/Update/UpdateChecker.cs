@@ -76,19 +76,19 @@ public sealed class UpdateChecker
             using var response = await _http.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-                return UpdateCheckResult.Failed("Chưa có bản release nào trên GitHub.");
+                return UpdateCheckResult.Failed("No releases on GitHub yet.");
             if (!response.IsSuccessStatusCode)
                 return UpdateCheckResult.Failed(
-                    $"GitHub trả lỗi HTTP {(int)response.StatusCode}. Thử lại sau.");
+                    $"GitHub returned HTTP {(int)response.StatusCode}. Try again later.");
 
             using var doc = JsonDocument.Parse(
                 await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false));
             var root = doc.RootElement;
             if (!root.TryGetProperty("tag_name", out var tag) || tag.GetString() is not { } tagName)
-                return UpdateCheckResult.Failed("GitHub trả về dữ liệu lạ, không đọc được tag.");
+                return UpdateCheckResult.Failed("GitHub returned unexpected data; could not read the tag.");
             var latest = ParseVersion(tagName);
             if (latest is null)
-                return UpdateCheckResult.Failed($"Không hiểu được tag mới nhất: {tagName}");
+                return UpdateCheckResult.Failed($"Could not understand the latest tag: {tagName}");
             var releaseUrl = root.TryGetProperty("html_url", out var url)
                 ? url.GetString() : null;
             var releaseName = root.TryGetProperty("name", out var name)
@@ -98,16 +98,16 @@ public sealed class UpdateChecker
             if (latest <= currentVersion)
                 return UpdateCheckResult.UpToDate(latestText);
             if (string.IsNullOrEmpty(releaseUrl))
-                return UpdateCheckResult.Failed("Tìm thấy bản mới nhưng không có link tải.");
+                return UpdateCheckResult.Failed("Found a new version but no download link.");
             return UpdateCheckResult.Available(latestText, releaseUrl, releaseName);
         }
         catch (HttpRequestException)
         {
-            return UpdateCheckResult.Failed("Không có mạng hoặc không tới được GitHub. Kiểm tra mạng rồi thử lại.");
+            return UpdateCheckResult.Failed("No network or could not reach GitHub. Check your connection and try again.");
         }
         catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
-            return UpdateCheckResult.Failed("Kiểm tra quá lâu (timeout). Thử lại sau.");
+            return UpdateCheckResult.Failed("Check timed out. Try again later.");
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -115,7 +115,7 @@ public sealed class UpdateChecker
         }
         catch (Exception ex)
         {
-            return UpdateCheckResult.Failed($"Không kiểm tra được: {ex.Message}");
+            return UpdateCheckResult.Failed($"Could not check: {ex.Message}");
         }
     }
 

@@ -39,7 +39,7 @@
                  AcceptsReturn="True" MaxHeight="120" Margin="0,0,0,4"
                  TextChanged="OnSourceTextChanged" SelectionChanged="OnSourceSelectionChanged"
                  KeyDown="OnSourceKeyDown" />
-        <TextBlock Grid.Row="2" Text="Enter: dịch lại • Bôi chọn chữ trong panel để tra từ điển theo từ đó"
+        <TextBlock Grid.Row="2" x:Uid="Panel.Hint" Text="Enter: translate again • Select text in the panel to look it up in the dictionary"
                    FontSize="11" Foreground="Gray" Margin="0,0,0,8" />
 
         <!-- Translation: read-only TextBox (not TextBlock) so the user can
@@ -51,10 +51,10 @@
 
         <!-- Actions -->
         <StackPanel Grid.Row="4" Orientation="Horizontal" Spacing="8" Margin="0,8,0,8">
-            <Button x:Name="CopyButton" Content="Copy" />
-            <Button x:Name="CopySourceButton" Content="Copy gốc" />
-            <Button x:Name="CopyTranslationButton" Content="Copy dịch" Visibility="Collapsed" />
-            <Button x:Name="OcrButton" Content="Chụp OCR (Ctrl+Shift+S)" />
+            <Button x:Name="CopyButton" x:Uid="Panel.Copy" Content="Copy" />
+            <Button x:Name="CopySourceButton" x:Uid="Panel.CopySource" Content="Copy source" />
+            <Button x:Name="CopyTranslationButton" x:Uid="Panel.CopyTranslation" Content="Copy translation" Visibility="Collapsed" />
+            <Button x:Name="OcrButton" x:Uid="Panel.CaptureOcr" Content="Capture OCR (Ctrl+Shift+S)" />
         </StackPanel>
 
         <!-- Dictionary links -->

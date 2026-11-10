@@ -50,8 +50,8 @@ public sealed partial class OcrPage : Page
         TesseractStatusText.Text = provider.Status;
         var installed = TesseractLanguageDataManager.InstalledCodes();
         InstalledCodesText.Text = installed.Count == 0
-            ? "Chưa cài ngôn ngữ nào."
-            : "Đã cài: " + string.Join(", ", installed);
+            ? AppStrings.Get("Settings.Ocr.NoLanguagesInstalled", "No languages installed.")
+            : AppStrings.Get("Settings.Ocr.InstalledLanguages", "Installed: {0}", string.Join(", ", installed));
     }
 
     private void OnProviderChanged(object sender, SelectionChangedEventArgs e)
@@ -132,15 +132,15 @@ public sealed partial class OcrPage : Page
         {
             foreach (var code in codes)
             {
-                DownloadStatusText.Text = $"Đang tải {code}…";
+                DownloadStatusText.Text = AppStrings.Get("Settings.Ocr.DownloadingLanguage", "Downloading {0}…", code);
                 await TesseractLanguageDataManager.DownloadAsync(code);
             }
-            DownloadStatusText.Text = "Đã tải xong: " + string.Join(", ", codes) + ".";
+            DownloadStatusText.Text = AppStrings.Get("Settings.Ocr.DownloadedLanguages", "Downloaded: {0}.", string.Join(", ", codes));
             RefreshTesseractStatus();
         }
         catch (Exception ex)
         {
-            DownloadStatusText.Text = $"Tải lỗi: {ex.Message}";
+            DownloadStatusText.Text = AppStrings.Get("Settings.Ocr.DownloadError", "Download failed: {0}", ex.Message);
         }
         finally
         {

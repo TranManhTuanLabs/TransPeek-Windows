@@ -96,7 +96,7 @@ public sealed partial class GeneralPage : Page
         }
         catch (Exception ex)
         {
-            LaunchErrorText.Text = $"Không ghi được khóa Run: {ex.Message}";
+            LaunchErrorText.Text = AppStrings.Get("Settings.General.RunKeyWriteFailed", "Could not write the Run key: {0}", ex.Message);
             LaunchErrorText.Visibility = Visibility.Visible;
             _loading = true;
             LaunchAtLoginToggle.IsOn = IsLaunchAtLoginSet();
@@ -120,11 +120,11 @@ public sealed partial class GeneralPage : Page
     private static void SetLaunchAtLogin(bool enable)
     {
         using var key = Registry.CurrentUser.OpenSubKey(RunKeyPath, writable: true)
-            ?? throw new InvalidOperationException("Không mở được khóa Run.");
+            ?? throw new InvalidOperationException(AppStrings.Get("Settings.General.RunKeyOpenFailed", "Could not open the Run key."));
         if (enable)
         {
             var exe = Environment.ProcessPath
-                ?? throw new InvalidOperationException("Không biết đường dẫn exe.");
+                ?? throw new InvalidOperationException(AppStrings.Get("Settings.General.ExePathUnknown", "Could not find the exe path."));
             key.SetValue(RunValueName, $"\"{exe}\"");
         }
         else

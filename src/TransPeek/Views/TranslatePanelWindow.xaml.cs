@@ -113,7 +113,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         _ocrMode = false;
         ShowPanelNear(x, y);
         SetSource(text);
-        TranslationTextBox.Text = "Đang dịch…";
+        TranslationTextBox.Text = AppStrings.Get("Panel.Translating", "Translating…");
         ProviderText.Text = "";
         _ = TranslateAndShowAsync(text);
     }
@@ -126,7 +126,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         var (cx, cy) = WindowHelpers.CursorPosition();
         ShowPanelNear(cx, cy);
         SetSource(sourceText);
-        TranslationTextBox.Text = "Đang dịch…";
+        TranslationTextBox.Text = AppStrings.Get("Panel.Translating", "Translating…");
         ProviderText.Text = "";
     }
 
@@ -226,7 +226,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         if (string.IsNullOrWhiteSpace(_sourceText))
             return;
         _lookupText = null;
-        TranslationTextBox.Text = "Đang dịch…";
+        TranslationTextBox.Text = AppStrings.Get("Panel.Translating", "Translating…");
         ProviderText.Text = "";
         _ = TranslateAndShowAsync(_sourceText);
     }
@@ -309,7 +309,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         if (!_visible || string.IsNullOrWhiteSpace(_sourceText))
             return;
         _lookupText = null;
-        TranslationTextBox.Text = "Đang dịch…";
+        TranslationTextBox.Text = AppStrings.Get("Panel.Translating", "Translating…");
         ProviderText.Text = "";
         _ = TranslateAndShowAsync(_sourceText);
     }
@@ -320,7 +320,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
             return;
         await ClipboardHelper.CopyTextAsync(text);
         var original = button.Content;
-        button.Content = "Đã copy ✓";
+        button.Content = AppStrings.Get("Panel.Copied", "Copied ✓");
         var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1.5) };
         timer.Tick += (_, _) =>
         {

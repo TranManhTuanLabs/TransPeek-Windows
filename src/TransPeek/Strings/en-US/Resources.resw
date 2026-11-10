@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!--
+    English (base) UI strings for TransPeek Windows.
+    - Code reads these through TransPeek.Services.AppStrings.Get(key, fallback):
+      the fallback is the same English text, so the UI stays English even if
+      a lookup fails (e.g. a missing .pri in an unpackaged build).
+    - XAML reads these through x:Uid on the element (resw name = Uid.Property);
+      the English literal stays in the XAML as the fallback.
+    - Adding a language later = adding Strings/<bcp47>/Resources.resw with the
+      same keys. No code or XAML change. Roadmap (Manh, 2026-11-11):
+      vi (Vietnamese) first, then zh-Hans (Chinese Simplified), then ko (Korean).
+    - NOT in here: Core strings (TransPeek.Core stays English-only literals —
+      UpdateChecker, DictionaryLink.ValidationError, Tesseract Status), language
+      endonyms ("Tiếng Việt", "中文 (简体)", "한국어", … — a language is always
+      shown in its own name), and developer comments.
+  -->
+  <data name="Tray.Menu.Settings" xml:space="preserve">
+    <value>Settings…</value>
+  </data>
+  <data name="Tray.Menu.TranslateSelection" xml:space="preserve">
+    <value>Translate selection</value>
+  </data>
+  <data name="Tray.Menu.CaptureOcr" xml:space="preserve">
+    <value>Capture &amp; OCR</value>
+  </data>
+  <data name="Tray.Menu.Quit" xml:space="preserve">
+    <value>Quit TransPeek</value>
+  </data>
+  <data name="Tray.ToolTip" xml:space="preserve">
+    <value>TransPeek — Translate anywhere, peek instantly. Left-click: Settings. Right-click: menu.</value>
+  </data>
+  <data name="App.Toast.Started" xml:space="preserve">
+    <value>TransPeek is running — closing this window keeps the app in the system tray. Right-click the tray icon for the menu.</value>
+  </data>
+  <data name="App.Toast.NoSelection" xml:space="preserve">
+    <value>No text selected to translate.</value>
+  </data>
+  <data name="App.Toast.SettingsSaved" xml:space="preserve">
+    <value>Settings saved.</value>
+  </data>
+  <data name="App.Toast.Copied" xml:space="preserve">
+    <value>Copied</value>
+  </data>
+  <data name="Translation.ErrorPrefix" xml:space="preserve">
+    <value>[Translation error: </value>
+  </data>
+  <data name="Panel.Translating" xml:space="preserve">
+    <value>Translating…</value>
+  </data>
+  <data name="Panel.Copied" xml:space="preserve">
+    <value>Copied ✓</value>
+  </data>
+  <data name="Panel.Hint.Text" xml:space="preserve">
+    <value>Enter: translate again • Select text in the panel to look it up in the dictionary</value>
+  </data>
+  <data name="Panel.Copy.Content" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="Panel.CopySource.Content" xml:space="preserve">
+    <value>Copy source</value>
+  </data>
+  <data name="Panel.CopyTranslation.Content" xml:space="preserve">
+    <value>Copy translation</value>
+  </data>
+  <data name="Panel.CaptureOcr.Content" xml:space="preserve">
+    <value>Capture OCR (Ctrl+Shift+S)</value>
+  </data>
+  <data name="RegionSelect.Hint.Text" xml:space="preserve">
+    <value>Drag to select the region to OCR — Esc / right-click / Cancel to exit</value>
+  </data>
+  <data name="RegionSelect.Cancel.Content" xml:space="preserve">
+    <value>✕ Cancel (Esc)</value>
+  </data>
+  <data name="Ocr.CaptureFailed" xml:space="preserve">
+    <value>Could not capture the screen: {0}</value>
+  </data>
+  <data name="Ocr.Failed" xml:space="preserve">
+    <value>OCR error: {0}</value>
+  </data>
+  <data name="Ocr.NoText" xml:space="preserve">
+    <value>No text recognized in the selected region.</value>
+  </data>
+  <data name="Ocr.DownloadingData" xml:space="preserve">
+    <value>Downloading OCR data for the first time ({0})…</value>
+  </data>
+  <data name="Ocr.DownloadFailed" xml:space="preserve">
+    <value>Could not download OCR data {0}: {1} — will use Windows OCR instead.</value>
+  </data>
+  <data name="Ocr.DownloadDone" xml:space="preserve">
+    <value>OCR data downloaded.</value>
+  </data>
+  <data name="Settings.Nav.General.Content" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="Settings.Nav.Translation.Content" xml:space="preserve">
+    <value>Translation</value>
+  </data>
+  <data name="Settings.Nav.Dictionary.Content" xml:space="preserve">
+    <value>Dictionary</value>
+  </data>
+  <data name="Settings.Nav.Ocr.Content" xml:space="preserve">
+    <value>OCR</value>
+  </data>
+  <data name="Settings.Nav.About.Content" xml:space="preserve">
+    <value>About</value>
+  </data>
+  <data name="Settings.General.WatchSelection.Header" xml:space="preserve">
+    <value>Watch selection automatically</value>
+  </data>
+  <data name="Settings.General.WatchSelection.OnContent" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="Settings.General.WatchSelection.OffContent" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="Settings.General.WatchSelectionHint.Text" xml:space="preserve">
+    <value>When on, the trigger icon appears whenever you select text. When off, the app only responds to hotkeys and the tray menu.</value>
+  </data>
+  <data name="Settings.General.HoverDelay.Header" xml:space="preserve">
+    <value>How long to hover before the panel opens</value>
+  </data>
+  <data name="Settings.General.AutoHide.Header" xml:space="preserve">
+    <value>Trigger icon hides after (seconds)</value>
+  </data>
+  <data name="Settings.General.TranslateHotkey.Header" xml:space="preserve">
+    <value>Hotkey to open the translate panel (e.g. Control+Alt+T)</value>
+  </data>
+  <data name="Settings.General.LaunchAtLogin.Header" xml:space="preserve">
+    <value>Launch with Windows</value>
+  </data>
+  <data name="Settings.General.LaunchAtLogin.OnContent" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="Settings.General.LaunchAtLogin.OffContent" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="Settings.General.RunKeyNote.Text" xml:space="preserve">
+    <value>Writes to the Windows Run key (HKCU\Software\Microsoft\Windows\CurrentVersion\Run). No admin rights needed.</value>
+  </data>
+  <data name="Settings.General.SettingsPath.Text" xml:space="preserve">
+    <value>Settings are stored in %LOCALAPPDATA%\TransPeek\settings.json</value>
+  </data>
+  <data name="Settings.General.RunKeyWriteFailed" xml:space="preserve">
+    <value>Could not write the Run key: {0}</value>
+  </data>
+  <data name="Settings.General.RunKeyOpenFailed" xml:space="preserve">
+    <value>Could not open the Run key.</value>
+  </data>
+  <data name="Settings.General.ExePathUnknown" xml:space="preserve">
+    <value>Could not find the exe path.</value>
+  </data>
+  <data name="Settings.Translation.PrimaryProvider.Header" xml:space="preserve">
+    <value>Primary provider</value>
+  </data>
+  <data name="Settings.Translation.FallbackProvider.Header" xml:space="preserve">
+    <value>Fallback provider</value>
+  </data>
+  <data name="Settings.Translation.FallbackNote.Text" xml:space="preserve">
+    <value>When the primary provider fails, the app tries the fallback provider, then other enabled providers, and finally free Google Translate.</value>
+  </data>
+  <data name="Settings.Translation.SourceLanguage.Header" xml:space="preserve">
+    <value>Source language</value>
+  </data>
+  <data name="Settings.Translation.TargetLanguage.Header" xml:space="preserve">
+    <value>Target language</value>
+  </data>
+  <data name="Settings.Translation.EnableProviders.Text" xml:space="preserve">
+    <value>Enable / disable providers</value>
+  </data>
+  <data name="Settings.Translation.CustomEndpoint.Text" xml:space="preserve">
+    <value>Custom OpenAI-compatible endpoint</value>
+  </data>
+  <data name="Settings.Translation.AddOpenAi.Content" xml:space="preserve">
+    <value>Add OpenAI</value>
+  </data>
+  <data name="Settings.Translation.AddDeepSeek.Content" xml:space="preserve">
+    <value>Add DeepSeek</value>
+  </data>
+  <data name="Settings.Translation.Delete.Content" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Settings.Translation.CustomName.Header" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Settings.Translation.CustomBaseUrl.Header" xml:space="preserve">
+    <value>Base URL</value>
+  </data>
+  <data name="Settings.Translation.CustomModel.Header" xml:space="preserve">
+    <value>Model</value>
+  </data>
+  <data name="Settings.Translation.CustomApiKey.Header" xml:space="preserve">
+    <value>API key</value>
+  </data>
+  <data name="Settings.Translation.ApiKeyDebt.Text" xml:space="preserve">
+    <value>DEBT v0.1: API keys are stored as plain text in settings.json (see README). They will move to Credential Locker later.</value>
+  </data>
+  <data name="Settings.Translation.Auto" xml:space="preserve">
+    <value>Automatic</value>
+  </data>
+  <data name="Settings.Translation.RequiresKey" xml:space="preserve">
+    <value> (requires key)</value>
+  </data>
+  <data name="Settings.Dictionary.LinkName.Header" xml:space="preserve">
+    <value>Name (e.g. Oxford)</value>
+  </data>
+  <data name="Settings.Dictionary.LinkTemplate.Header" xml:space="preserve">
+    <value>URL template (must contain {word} or {text})</value>
+  </data>
+  <data name="Settings.Dictionary.Add.Content" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="Settings.Dictionary.Update.Content" xml:space="preserve">
+    <value>Update</value>
+  </data>
+  <data name="Settings.Dictionary.Delete.Content" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Settings.Dictionary.ResetDefaults.Content" xml:space="preserve">
+    <value>Reset to Defaults</value>
+  </data>
+  <data name="Settings.Dictionary.DisplayMode.Header" xml:space="preserve">
+    <value>Shown in the bottom panel</value>
+  </data>
+  <data name="Settings.Dictionary.IconAndText.Content" xml:space="preserve">
+    <value>Icon + Text</value>
+  </data>
+  <data name="Settings.Dictionary.IconOnly.Content" xml:space="preserve">
+    <value>Icon only</value>
+  </data>
+  <data name="Settings.Dictionary.Note.Text" xml:space="preserve">
+    <value>Clicking a link in the bottom panel opens the dictionary page in your default browser. The icon comes from the site's favicon; on error it shows the first letter of the name.</value>
+  </data>
+  <data name="Settings.Ocr.Provider.Header" xml:space="preserve">
+    <value>OCR engine</value>
+  </data>
+  <data name="Settings.Ocr.Tesseract.Content" xml:space="preserve">
+    <value>Tesseract (best for Vietnamese)</value>
+  </data>
+  <data name="Settings.Ocr.WindowsOcr.Content" xml:space="preserve">
+    <value>Windows OCR (built-in)</value>
+  </data>
+  <data name="Settings.Ocr.Languages.Header" xml:space="preserve">
+    <value>OCR languages (BCP 47, comma-separated)</value>
+  </data>
+  <data name="Settings.Ocr.PostMode.Header" xml:space="preserve">
+    <value>After OCR</value>
+  </data>
+  <data name="Settings.Ocr.OpenPanel.Content" xml:space="preserve">
+    <value>OCR → translate → panel</value>
+  </data>
+  <data name="Settings.Ocr.CopyOnly.Content" xml:space="preserve">
+    <value>OCR → copy source text directly</value>
+  </data>
+  <data name="Settings.Ocr.AutoCopy.Header" xml:space="preserve">
+    <value>Auto-copy translation after OCR</value>
+  </data>
+  <data name="Settings.Ocr.AutoCopy.OnContent" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="Settings.Ocr.AutoCopy.OffContent" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="Settings.Ocr.Hotkey.Header" xml:space="preserve">
+    <value>Hotkey to capture a region (e.g. Control+Shift+S)</value>
+  </data>
+  <data name="Settings.Ocr.LanguageData.Text" xml:space="preserve">
+    <value>Tesseract language data</value>
+  </data>
+  <data name="Settings.Ocr.DownloadVie.Content" xml:space="preserve">
+    <value>Download vie</value>
+  </data>
+  <data name="Settings.Ocr.DownloadEng.Content" xml:space="preserve">
+    <value>Download eng</value>
+  </data>
+  <data name="Settings.Ocr.DownloadBoth.Content" xml:space="preserve">
+    <value>Download vie + eng</value>
+  </data>
+  <data name="Settings.Ocr.DataNote.Text" xml:space="preserve">
+    <value>Data downloads from tessdata_best (GitHub) into %LOCALAPPDATA%\TransPeek\tessdata. Windows OCR needs no download, but Vietnamese needs the 'Vietnamese OCR' package in Windows Settings (Time &amp; language → Language → Vietnamese → Options).</value>
+  </data>
+  <data name="Settings.Ocr.NoLanguagesInstalled" xml:space="preserve">
+    <value>No languages installed.</value>
+  </data>
+  <data name="Settings.Ocr.InstalledLanguages" xml:space="preserve">
+    <value>Installed: {0}</value>
+  </data>
+  <data name="Settings.Ocr.DownloadingLanguage" xml:space="preserve">
+    <value>Downloading {0}…</value>
+  </data>
+  <data name="Settings.Ocr.DownloadedLanguages" xml:space="preserve">
+    <value>Downloaded: {0}.</value>
+  </data>
+  <data name="Settings.Ocr.DownloadError" xml:space="preserve">
+    <value>Download failed: {0}</value>
+  </data>
+  <data name="Settings.About.Tagline.Text" xml:space="preserve">
+    <value>Translate anywhere, peek instantly.</value>
+  </data>
+  <data name="Settings.About.Author.Text" xml:space="preserve">
+    <value>Author:</value>
+  </data>
+  <data name="Settings.About.RequiresRelease.Text" xml:space="preserve">
+    <value>Only opens once this build has been released on GitHub.</value>
+  </data>
+  <data name="Settings.About.Updates.Text" xml:space="preserve">
+    <value>Updates</value>
+  </data>
+  <data name="Settings.About.CheckUpdates.Content" xml:space="preserve">
+    <value>Check for Updates</value>
+  </data>
+  <data name="Settings.About.V01Note.Text" xml:space="preserve">
+    <value>v0.1 only checks and opens the download page — you download the file and install it manually. Automatic download + install + relaunch (Velopack) will come at release time.</value>
+  </data>
+  <data name="Settings.About.License.Text" xml:space="preserve">
+    <value>AGPL-3.0 license. The original idea is from MoePeek (cosZone) — the Windows version is rewritten from scratch in C#, mirroring the design and behavior, not copying Swift code.</value>
+  </data>
+  <data name="Settings.About.Checking" xml:space="preserve">
+    <value>Checking…</value>
+  </data>
+  <data name="Settings.About.UpToDate" xml:space="preserve">
+    <value>You're on the latest version (v{0}).</value>
+  </data>
+  <data name="Settings.About.UpdateAvailable" xml:space="preserve">
+    <value>New version available: v{0} (you're on v{1}).</value>
+  </data>
+  <data name="Settings.About.DownloadUpdate" xml:space="preserve">
+    <value>Download v{0}</value>
+  </data>
+  <data name="Settings.About.CheckFailed" xml:space="preserve">
+    <value>Could not check.</value>
+  </data>
+</root>

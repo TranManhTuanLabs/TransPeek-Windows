@@ -91,7 +91,7 @@ public sealed partial class App : Application
         // so there is always visible UI, and tell the user (toast) where
         // the app keeps running after the window is closed.
         ShowSettings();
-        _toast?.Show("TransPeek đã chạy — đóng cửa sổ này app vẫn chạy ở khay hệ thống, chuột phải icon tray để mở menu.");
+        _toast?.Show(AppStrings.Get("App.Toast.Started", "TransPeek is running — closing this window keeps the app in the system tray. Right-click the tray icon for the menu."));
     }
 
     // ----- providers -----
@@ -152,7 +152,7 @@ public sealed partial class App : Application
         }
         if (string.IsNullOrWhiteSpace(text))
         {
-            _toast?.Show("Chưa chọn chữ nào để dịch.");
+            _toast?.Show(AppStrings.Get("App.Toast.NoSelection", "No text selected to translate."));
             return;
         }
         var (cx, cy) = WindowHelpers.CursorPosition();
@@ -171,7 +171,7 @@ public sealed partial class App : Application
         }
         catch (Exception ex)
         {
-            return ($"[Lỗi dịch: {ex.Message}]", "");
+            return ($"{AppStrings.Get("Translation.ErrorPrefix", "[Translation error: ")}{ex.Message}]", "");
         }
     }
 
@@ -243,6 +243,6 @@ public sealed partial class App : Application
         if (Settings.WatchSelection)
             _selectionMonitor.Start();
         _panel?.RefreshDictionaryBar(Settings.DictionaryLinks, Settings.DictionaryDisplayMode);
-        _toast?.Show("Đã lưu Settings.");
+        _toast?.Show(AppStrings.Get("App.Toast.SettingsSaved", "Settings saved."));
     }
 }

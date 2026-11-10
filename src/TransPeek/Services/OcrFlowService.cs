@@ -79,7 +79,7 @@ public sealed class OcrFlowService
         }
         catch (Exception ex)
         {
-            _toast.Show($"Không chụp được màn hình: {ex.Message}");
+            _toast.Show(AppStrings.Get("Ocr.CaptureFailed", "Could not capture the screen: {0}", ex.Message));
             return;
         }
 
@@ -106,12 +106,12 @@ public sealed class OcrFlowService
         }
         catch (Exception ex)
         {
-            _toast.Show($"OCR lỗi: {ex.Message}");
+            _toast.Show(AppStrings.Get("Ocr.Failed", "OCR error: {0}", ex.Message));
             return;
         }
         if (string.IsNullOrWhiteSpace(text))
         {
-            _toast.Show("Không nhận ra chữ nào trong vùng đã chọn.");
+            _toast.Show(AppStrings.Get("Ocr.NoText", "No text recognized in the selected region."));
             return;
         }
         text = text.Trim();
@@ -121,7 +121,7 @@ public sealed class OcrFlowService
         if (string.Equals(settings.OcrAfterCapture, "CopyOnly", StringComparison.OrdinalIgnoreCase))
         {
             await ClipboardHelper.CopyTextAsync(text);
-            _toast.Show("Đã copy");
+            _toast.Show(AppStrings.Get("App.Toast.Copied", "Copied"));
             return;
         }
 
@@ -143,11 +143,11 @@ public sealed class OcrFlowService
         {
             // Translation failed: still show the source text in the panel
             // with the error, instead of failing silently.
-            translation = $"[Lỗi dịch: {ex.Message}]";
+            translation = $"{AppStrings.Get("Translation.ErrorPrefix", "[Translation error: ")}{ex.Message}]";
         }
         _panel.ShowResult(text, translation, providerName);
         if (settings.OcrAutoCopyTranslation && translation is not null
-            && !translation.StartsWith("[Lỗi dịch:", StringComparison.Ordinal))
+            && !translation.StartsWith(AppStrings.Get("Translation.ErrorPrefix", "[Translation error: "), StringComparison.Ordinal))
         {
             await ClipboardHelper.CopyTextAsync(translation);
         }
@@ -167,7 +167,7 @@ public sealed class OcrFlowService
         var missing = TesseractLanguageDataManager.MissingCodes(settings.OcrLanguages, TesseractLanguageDataManager.IsInstalled);
         if (missing.Count == 0)
             return;
-        _toast.Show($"Đang tải dữ liệu OCR lần đầu ({string.Join(", ", missing)})…");
+        _toast.Show(AppStrings.Get("Ocr.DownloadingData", "Downloading OCR data for the first time ({0})…", string.Join(", ", missing)));
         foreach (var code in missing)
         {
             try
@@ -176,10 +176,10 @@ public sealed class OcrFlowService
             }
             catch (Exception ex)
             {
-                _toast.Show($"Không tải được dữ liệu OCR {code}: {ex.Message} — sẽ dùng OCR của Windows.");
+                _toast.Show(AppStrings.Get("Ocr.DownloadFailed", "Could not download OCR data {0}: {1} — will use Windows OCR instead.", code, ex.Message));
                 return;
             }
         }
-        _toast.Show("Đã tải xong dữ liệu OCR.");
+        _toast.Show(AppStrings.Get("Ocr.DownloadDone", "OCR data downloaded."));
     }
 }

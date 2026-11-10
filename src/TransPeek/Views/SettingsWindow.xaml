@@ -6,11 +6,11 @@
     <NavigationView x:Name="NavView" IsSettingsVisible="False" IsBackButtonVisible="Collapsed"
                     SelectionChanged="OnSelectionChanged" PaneDisplayMode="Left">
         <NavigationView.MenuItems>
-            <NavigationViewItem Content="General" Tag="General" />
-            <NavigationViewItem Content="Translation" Tag="Translation" />
-            <NavigationViewItem Content="Dictionary" Tag="Dictionary" />
-            <NavigationViewItem Content="OCR" Tag="OCR" />
-            <NavigationViewItem Content="About" Tag="About" />
+            <NavigationViewItem x:Uid="Settings.Nav.General" Content="General" Tag="General" />
+            <NavigationViewItem x:Uid="Settings.Nav.Translation" Content="Translation" Tag="Translation" />
+            <NavigationViewItem x:Uid="Settings.Nav.Dictionary" Content="Dictionary" Tag="Dictionary" />
+            <NavigationViewItem x:Uid="Settings.Nav.Ocr" Content="OCR" Tag="OCR" />
+            <NavigationViewItem x:Uid="Settings.Nav.About" Content="About" Tag="About" />
         </NavigationView.MenuItems>
         <Frame x:Name="ContentFrame" Margin="16" />
     </NavigationView>

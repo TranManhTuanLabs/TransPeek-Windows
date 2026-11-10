@@ -5,39 +5,39 @@
 
     <ScrollViewer>
         <StackPanel Spacing="12" MaxWidth="560" HorizontalAlignment="Left">
-            <ComboBox x:Name="OcrProviderCombo" Header="OCR engine"
+            <ComboBox x:Name="OcrProviderCombo" x:Uid="Settings.Ocr.Provider" Header="OCR engine"
                       SelectionChanged="OnProviderChanged">
-                <ComboBoxItem Content="Tesseract (best for Vietnamese)" Tag="tesseract" />
-                <ComboBoxItem Content="Windows OCR (built-in)" Tag="windows-ocr" />
+                <ComboBoxItem x:Uid="Settings.Ocr.Tesseract" Content="Tesseract (best for Vietnamese)" Tag="tesseract" />
+                <ComboBoxItem x:Uid="Settings.Ocr.WindowsOcr" Content="Windows OCR (built-in)" Tag="windows-ocr" />
             </ComboBox>
 
-            <TextBox x:Name="OcrLanguagesBox" Header="Ngôn ngữ OCR (BCP 47, cách nhau bằng dấu phẩy)"
+            <TextBox x:Name="OcrLanguagesBox" x:Uid="Settings.Ocr.Languages" Header="OCR languages (BCP 47, comma-separated)"
                      LostFocus="OnLanguagesLostFocus" />
 
-            <ComboBox x:Name="PostModeCombo" Header="Sau khi OCR"
+            <ComboBox x:Name="PostModeCombo" x:Uid="Settings.Ocr.PostMode" Header="After OCR"
                       SelectionChanged="OnPostModeChanged">
-                <ComboBoxItem Content="OCR → dịch → panel" Tag="OpenPanel" />
-                <ComboBoxItem Content="OCR → copy thẳng text gốc" Tag="CopyOnly" />
+                <ComboBoxItem x:Uid="Settings.Ocr.OpenPanel" Content="OCR → translate → panel" Tag="OpenPanel" />
+                <ComboBoxItem x:Uid="Settings.Ocr.CopyOnly" Content="OCR → copy source text directly" Tag="CopyOnly" />
             </ComboBox>
 
-            <ToggleSwitch x:Name="AutoCopyToggle" Header="Tự copy bản dịch sau OCR"
-                          OnContent="Bật" OffContent="Tắt"
+            <ToggleSwitch x:Name="AutoCopyToggle" x:Uid="Settings.Ocr.AutoCopy" Header="Auto-copy translation after OCR"
+                          OnContent="On" OffContent="Off"
                           Toggled="OnAutoCopyToggled" />
 
-            <TextBox x:Name="OcrHotkeyBox" Header="Phím tắt chụp vùng (vd: Control+Shift+S)"
+            <TextBox x:Name="OcrHotkeyBox" x:Uid="Settings.Ocr.Hotkey" Header="Hotkey to capture a region (e.g. Control+Shift+S)"
                      LostFocus="OnHotkeyLostFocus" />
             <TextBlock x:Name="HotkeyErrorText" FontSize="12" Foreground="Red" Visibility="Collapsed" />
 
-            <TextBlock Text="Tesseract language data" FontWeight="SemiBold" Margin="0,8,0,0" />
+            <TextBlock x:Uid="Settings.Ocr.LanguageData" Text="Tesseract language data" FontWeight="SemiBold" Margin="0,8,0,0" />
             <TextBlock x:Name="TesseractStatusText" FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
             <TextBlock x:Name="InstalledCodesText" FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
             <StackPanel Orientation="Horizontal" Spacing="8">
-                <Button x:Name="DownloadVieButton" Content="Tải vie" Click="OnDownloadVie" />
-                <Button x:Name="DownloadEngButton" Content="Tải eng" Click="OnDownloadEng" />
-                <Button x:Name="DownloadBothButton" Content="Tải vie + eng" Click="OnDownloadBoth" />
+                <Button x:Name="DownloadVieButton" x:Uid="Settings.Ocr.DownloadVie" Content="Download vie" Click="OnDownloadVie" />
+                <Button x:Name="DownloadEngButton" x:Uid="Settings.Ocr.DownloadEng" Content="Download eng" Click="OnDownloadEng" />
+                <Button x:Name="DownloadBothButton" x:Uid="Settings.Ocr.DownloadBoth" Content="Download vie + eng" Click="OnDownloadBoth" />
             </StackPanel>
             <TextBlock x:Name="DownloadStatusText" FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
-            <TextBlock Text="Dữ liệu tải từ tessdata_best (GitHub) vào %LOCALAPPDATA%\TransPeek\tessdata. Windows OCR không cần tải gì thêm, nhưng tiếng Việt cần gói 'Vietnamese OCR' trong Settings Windows (Time &amp; language → Language → Vietnamese → Options)."
+            <TextBlock x:Uid="Settings.Ocr.DataNote" Text="Data downloads from tessdata_best (GitHub) into %LOCALAPPDATA%\TransPeek\tessdata. Windows OCR needs no download, but Vietnamese needs the 'Vietnamese OCR' package in Windows Settings (Time &amp; language → Language → Vietnamese → Options)."
                        FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
         </StackPanel>
     </ScrollViewer>

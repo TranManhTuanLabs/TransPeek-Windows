@@ -7,6 +7,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using TransPeek.Core.Settings;
 using TransPeek.Core.Translation;
+using TransPeek.Services;
 
 namespace TransPeek.Views.SettingsPages;
 
@@ -46,7 +47,7 @@ public sealed partial class TranslationPage : Page
     private void BuildLanguageCombos()
     {
         SourceLanguageCombo.Items.Clear();
-        SourceLanguageCombo.Items.Add(new ComboBoxItem { Content = "Tự động (auto)", Tag = LanguageCode.Auto });
+        SourceLanguageCombo.Items.Add(new ComboBoxItem { Content = AppStrings.Get("Settings.Translation.Auto", "Automatic"), Tag = LanguageCode.Auto });
         foreach (var (code, name) in LanguageCode.Supported)
             SourceLanguageCombo.Items.Add(new ComboBoxItem { Content = name, Tag = code });
         SelectComboByTag(SourceLanguageCombo, App.Settings.SourceLanguage);
@@ -72,7 +73,7 @@ public sealed partial class TranslationPage : Page
         {
             combo.Items.Add(new ComboBoxItem
             {
-                Content = p.DisplayName + (p.NeedsApiKey ? " (cần key)" : ""),
+                Content = p.DisplayName + (p.NeedsApiKey ? AppStrings.Get("Settings.Translation.RequiresKey", " (requires key)") : ""),
                 Tag = p.Id,
             });
         }
