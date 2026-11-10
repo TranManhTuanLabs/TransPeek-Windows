@@ -4,10 +4,21 @@
 // the caller (App) owns the browser/copy/toast side effects, this
 // service only reports the outcome. Must run on the UI thread: region
 // select and capture both touch UI objects.
+//
+// Decoding uses the WinRT BitmapDecoder (PNG -> BGRA pixels) plus
+// ZXing's RGBLuminanceSource — deliberately NO System.Drawing here:
+// ZXing.Net 0.16 moved the Bitmap-based helpers out of the core package
+// (BarcodeReader<T> is generic, Decode takes a LuminanceSource, and
+// BitmapLuminanceSource is not in ZXing.Net 0.16.9 — CS0305/CS1503/
+// CS0246 across runs #33-#35). RGBLuminanceSource with BGRA32 is core
+// ZXing and takes raw pixels, so this path has no Drawing dependency
+// and no package-downgrade fight (NU1605 in runs #31-#32).
 
-using System.Drawing;
+using System.Runtime.InteropServices.WindowsRuntime;
 using TransPeek.Core.Barcode;
 using Windows.Graphics;
+using Windows.Graphics.Imaging;
+using Windows.Storage.Streams;
 using ZXing;
 
 namespace TransPeek.Services;
@@ -60,21 +71,22 @@ public sealed class BarcodeScanService
         string? payload;
         try
         {
-            // ZXing.Net 0.16: BarcodeReader<T> is generic (the plain
-            // `new BarcodeReader()` of older versions is CS0305 now).
-            // BarcodeReaderGeneric is the concrete reader for
-            // System.Drawing.Bitmap — but its Decode/DecodeMultiple take
-            // a LuminanceSource, not a Bitmap (passing Bitmap is CS1503):
-            // wrap the bitmap in BitmapLuminanceSource first. TryInverted
-            // is obsolete on the reader itself; set it via Options.
-            using var stream = new MemoryStream(png);
-            using var bitmap = new Bitmap(stream);
+            using var stream = new InMemoryRandomAccessStream();
+            await stream.WriteAsync(png.AsBuffer());
+            stream.Seek(0);
+            var decoder = await BitmapDecoder.CreateAsync(stream);
+            var bitmap = await decoder.GetSoftwareBitmapAsync(BitmapPixelFormat.Bgra8, BitmapAlphaMode.Ignore);
+            var pixels = new byte[bitmap.PixelWidth * bitmap.PixelHeight * 4];
+            bitmap.CopyToBuffer(pixels.AsBuffer());
+            var source = new RGBLuminanceSource(
+                pixels, bitmap.PixelWidth, bitmap.PixelHeight,
+                RGBLuminanceSource.BitmapFormat.BGRA32);
             var reader = new BarcodeReaderGeneric
             {
                 AutoRotate = true,
                 Options = { TryInverted = true },
             };
-            var results = reader.DecodeMultiple(new BitmapLuminanceSource(bitmap));
+            var results = reader.DecodeMultiple(source);
             payload = results
                 ?.Select(r => r?.Text?.Trim())
                 .FirstOrDefault(t => !string.IsNullOrWhiteSpace(t));

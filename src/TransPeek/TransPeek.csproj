@@ -49,12 +49,14 @@
     <PackageReference Include="Vortice.Direct3D11" Version="3.8.3" />
     <PackageReference Include="Vortice.DXGI" Version="3.8.3" />
     <!-- Barcode/QR decoding for the tray menu (ZXing.Net 0.16.9, Apache
-         2.0): BarcodeReader.Decode(Bitmap) over the captured PNG.
-         System.Drawing.Common is already a transitive dependency via
-         Core's Tesseract.Drawing, but BarcodeScanService uses Bitmap
-         directly, so it is referenced explicitly. -->
+         2.0). Decoding uses the WinRT BitmapDecoder + ZXing's
+         RGBLuminanceSource, so this project needs NO direct
+         System.Drawing.Common reference: adding one pinned below the
+         transitive versions caused NU1605 downgrade errors (runs #31:
+         FlaUI needs >= 8.0.10; #32: H.NotifyIcon needs >= 9.0.1).
+         Without a direct reference NuGet takes the highest transitive
+         version and the downgrade disappears. -->
     <PackageReference Include="ZXing.Net" Version="0.16.9" />
-    <PackageReference Include="System.Drawing.Common" Version="9.0.1" />
   </ItemGroup>
 
   <ItemGroup>
