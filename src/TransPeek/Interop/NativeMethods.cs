@@ -227,6 +227,42 @@ internal static class NativeMethods
     [DllImport("d3d11.dll", ExactSpelling = true)]
     public static extern int CreateDirect3D11DeviceFromDXGIDevice(IntPtr dxgiDevice, out IntPtr graphicsDevice);
 
+    // ----- user32: monitor work area (DisplayArea.FindAll replacement)
+    // -----
+    // DisplayArea.FindAll() throws InvalidCastException ("NamedResource
+    // Not Found") on some machines: enumerating the WinRT display list
+    // fails in unpackaged apps (crash.log, 2026-11-12). MonitorFromPoint
+    // + GetMonitorInfo give the same work area with pure Win32 calls.
+    public const uint MONITOR_DEFAULTTONEAREST = 2;
+    public const uint SPI_GETWORKAREA = 0x0030;
+
+    [DllImport("user32.dll")]
+    public static extern IntPtr MonitorFromPoint(POINT pt, uint dwFlags);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct RECT
+    {
+        public int Left;
+        public int Top;
+        public int Right;
+        public int Bottom;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MONITORINFO
+    {
+        public uint cbSize;
+        public RECT rcMonitor;
+        public RECT rcWork;
+        public uint dwFlags;
+    }
+
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern bool SystemParametersInfo(uint uiAction, uint uiParam, out RECT pvParam, uint fWinIni);
+
     // ----- user32: low-level mouse hook (click-outside-to-dismiss) -----
     public const int WH_MOUSE_LL = 14;
     public const int WM_LBUTTONDOWN = 0x0201;

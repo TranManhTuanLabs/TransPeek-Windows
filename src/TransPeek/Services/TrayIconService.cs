@@ -23,12 +23,10 @@
 //   walks through, so there is nothing to guide the user to grant.
 
 using System.IO;
-using System.Runtime.InteropServices.WindowsRuntime;
 using H.NotifyIcon;
 using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Media.Imaging;
 using TransPeek.Assets;
 
 namespace TransPeek.Services;
@@ -73,7 +71,7 @@ public sealed class TrayIconService : IDisposable
 
         _tray = new TaskbarIcon
         {
-            IconSource = LoadEmbeddedIcon(),
+            Icon = LoadEmbeddedIcon(),
             ToolTipText = AppStrings.Get("Tray.ToolTip", "TransPeek — Translate anywhere, peek instantly. Left-click: Settings. Right-click: menu."),
             ContextFlyout = menu,
             LeftClickCommand = new RelayCommand(openSettings),
@@ -120,17 +118,26 @@ public sealed class TrayIconService : IDisposable
         return item;
     }
 
-    private static BitmapImage LoadEmbeddedIcon()
+    /// <summary>Build the tray icon from the embedded PNG as a
+    /// System.Drawing.Icon — NOT a BitmapImage. H.NotifyIcon loads
+    /// IconSource through a WinRT Uri (ToStream(Uri)), and a
+    /// stream-sourced BitmapImage has UriSource == null, which is the
+    /// NullReferenceException in crash.log (2026-11-12, builds
+    /// 0.1.3.40/.42). The Icon property takes the handle straight to
+    /// Shell_NotifyIcon with no WinRT URI resolution — the path the
+    /// library itself recommends for unpackaged apps, where ms-appx
+    /// URIs cannot resolve either (no package identity).
+    /// The HICON is deliberately leaked for the app lifetime:
+    /// Icon.FromHandle does not take ownership, GetHicon() returns a
+    /// new handle (disposing the Bitmap does not destroy it), and the
+    /// tray icon needs the handle alive as long as the app runs.</summary>
+    private static System.Drawing.Icon LoadEmbeddedIcon()
     {
-        // Synchronous on purpose: the tray icon is created on the UI thread
-        // at startup, and AsRandomAccessStream() needs no async work.
-        // NOTE: the stream is deliberately NOT disposed — BitmapImage
-        // decodes lazily and needs the source stream to stay open.
         var bytes = Convert.FromBase64String(EmbeddedIcon.PngBase64);
-        var image = new BitmapImage();
-        var stream = new MemoryStream(bytes).AsRandomAccessStream();
-        image.SetSource(stream);
-        return image;
+        using var stream = new MemoryStream(bytes);
+        using var bitmap = new System.Drawing.Bitmap(stream);
+        var hicon = bitmap.GetHicon();
+        return System.Drawing.Icon.FromHandle(hicon);
     }
 
     public void Dispose()

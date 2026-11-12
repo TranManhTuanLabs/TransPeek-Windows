@@ -42,6 +42,12 @@
     <!-- Tray icon for WinUI 3 (H.NotifyIcon 2.3.2, MIT). WinUI has no
          built-in NotifyIcon; this is the standard community control. -->
     <PackageReference Include="H.NotifyIcon.WinUI" Version="2.3.2" />
+    <!-- System.Drawing for the tray icon handle (TrayIconService builds
+         a System.Drawing.Icon from the embedded PNG). Floor is 9.0.1:
+         H.NotifyIcon needs >= 9.0.1 and FlaUI needs >= 8.0.10 — a
+         direct reference BELOW those floors caused NU1605 downgrade
+         errors (runs #31/#32), so never pin lower. -->
+    <PackageReference Include="System.Drawing.Common" Version="9.0.1" />
     <!-- UI Automation (TextPattern.GetSelection) for the selected text. -->
     <PackageReference Include="FlaUI.Core" Version="5.0.0" />
     <PackageReference Include="FlaUI.UIA3" Version="5.0.0" />

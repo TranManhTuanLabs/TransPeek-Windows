@@ -2,6 +2,7 @@
 // translate panel, toast). WinUI's AppWindow APIs work in physical
 // pixels; the Win32 helpers below match that coordinate space.
 
+using System.Runtime.InteropServices;
 using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
@@ -80,15 +81,33 @@ internal static class WindowHelpers
     }
 
     /// <summary>Work area of the display containing a point, in physical
-    /// pixels. Used to clamp floating windows on-screen.</summary>
+    /// pixels. Used to clamp floating windows on-screen.
+    /// Win32 only, deliberately: DisplayArea.FindAll() throws
+    /// InvalidCastException ("NamedResource Not Found") when its WinRT
+    /// list is enumerated on some machines — crash.log 2026-11-12,
+    /// builds 0.1.3.40/.42 (toast at startup). MonitorFromPoint +
+    /// GetMonitorInfo return the same work area with no WinRT call.
+    /// </summary>
     public static Windows.Graphics.RectInt32 DisplayWorkArea(int x, int y)
     {
-        foreach (var area in DisplayArea.FindAll())
+        var monitor = NativeMethods.MonitorFromPoint(
+            new NativeMethods.POINT { X = x, Y = y },
+            NativeMethods.MONITOR_DEFAULTTONEAREST);
+        if (monitor != IntPtr.Zero)
         {
-            var work = area.WorkArea;
-            if (x >= work.X && x < work.X + work.Width && y >= work.Y && y < work.Y + work.Height)
-                return work;
+            var info = new NativeMethods.MONITORINFO
+            {
+                cbSize = (uint)Marshal.SizeOf<NativeMethods.MONITORINFO>(),
+            };
+            if (NativeMethods.GetMonitorInfo(monitor, ref info))
+            {
+                var w = info.rcWork;
+                return new Windows.Graphics.RectInt32(w.Left, w.Top, w.Right - w.Left, w.Bottom - w.Top);
+            }
         }
-        return DisplayArea.Primary.WorkArea;
+        // Fallback: primary monitor work area.
+        if (NativeMethods.SystemParametersInfo(NativeMethods.SPI_GETWORKAREA, 0, out var rc, 0))
+            return new Windows.Graphics.RectInt32(rc.Left, rc.Top, rc.Right - rc.Left, rc.Bottom - rc.Top);
+        return new Windows.Graphics.RectInt32(0, 0, 1920, 1080);
     }
 }

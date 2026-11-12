@@ -383,3 +383,43 @@ LanguageBarView / Settings) với Windows, làm trước nhóm panel + từ đi�
   takes ~2 min and returns a huge report. Use the export URL instead:
   `https://docs.google.com/document/d/<id>/export?format=txt` —
   one fast text fetch, full plain-text content, far fewer tokens.
+
+## Startup crash persists in 0.1.3.42 — now CoreMessagingXP.dll (2026-11-12)
+
+- **New log (Event Viewer, doc "LOG TransSpeek TEST", read via
+  downloaded export + grep):** Manh ran 0.1.3.42 twice (16:32:29 and
+  16:33:41), crashed twice the same way. Application Error, Event
+  1000 — faulting module now `CoreMessagingXP.dll` 10.0.27108.1058
+  (offset `0x93bd6`), exception still `0xc000027b`; WER still
+  `combase.dll` + `80004002` (E_NOINTERFACE). (Build #40 faulted in
+  `Microsoft.UI.Xaml.dll`; the module changed, the exception did not.)
+- **What this rules out:** 0.1.3.42 contains BOTH the
+  `UnhandledException` trap (commit `73b887d`) and the
+  ShowSettings/toast try/catch (commit `f34798`) — and the app still
+  died. A managed exception reaching the WinUI unhandled path would
+  have been caught (and the app would have survived). So this crash
+  never passes through managed code: it is a native WinRT/COM failure
+  (E_NOINTERFACE stowed through the CoreMessaging pump). No
+  `crash.log` content appears in the doc — check whether
+  `%LOCALAPPDATA%\TransPeek\crash.log` exists at all: an empty/missing
+  file confirms the fully-native crash.
+- **Next step:** get the crash.log verdict from Manh. If missing:
+  bisect by disabling startup suspects one at a time (tray icon
+  ForceCreate, hotkey thread, selection monitor, hidden window, toast
+  presenter calls) or analyze the WER minidump in the ReportArchive.
+- **Correction:** run #42 is `f34798` (0.1.3.42), run #43 is the
+  workflow commit `0a82b86` (0.1.3.43). An earlier note said #42 was
+  0.1.3.41 — wrong, off by one.
+- **Auto pre-release VERIFIED (same day):** run #43 created public
+  pre-release `v0.1.3.43` with `TransPeek-Windows-0.1.3.43.zip`
+  (132,278,940 B — Compress-Archive size, differs from the artifact
+  zip of the same code). Download needs no login. Manh's manual
+  pre-release `0.0.1` was NOT deleted by the cleanup step (its tag
+  does not match `v0.1.3.<number>`). Note: 0.1.3.43 has identical app
+  code to 0.1.3.42 (only build.yml changed), so it crashes the same
+  way — no need to test it for the crash.
+- **Reading the log doc (Manh's rule, 12/11):** download the export
+  to a file and grep it — `curl -sL -A "<browser UA>"
+  .../export?format=txt -o /tmp/transpeek-log.txt` (plain curl returns
+  empty). Do NOT dump the whole doc into context and do NOT use the
+  live browser.
