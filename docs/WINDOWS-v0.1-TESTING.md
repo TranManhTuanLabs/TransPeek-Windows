@@ -89,7 +89,7 @@ trên runner Windows thật:
       link quay về tra text gốc mở panel.
 
 ### 3. Từ điển (bottom panel)
-- [ ] Panel có 4 nút: Oxford / Cambridge / Google / YouGlish.
+- [ ] Panel có 5 nút: Oxford / Cambridge / Google / YouGlish / Cambridge Vi.
 - [ ] Bấm Oxford → mở trình duyệt đúng trang từ của từ đã chọn.
 - [ ] Bôi chọn từ viết hoa đầu câu (vd "Hello") → Oxford mở
       `.../hello` chữ thường, không mở `.../Hello` báo lỗi (v0.1.2).

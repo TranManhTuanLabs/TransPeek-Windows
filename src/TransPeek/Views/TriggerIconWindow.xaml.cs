@@ -12,8 +12,9 @@ namespace TransPeek.Views;
 
 public sealed partial class TriggerIconWindow : Window
 {
-    private const int WidthPx = 48;
-    private const int HeightPx = 48;
+    // Mac parity (TriggerIconPanel): 32 px.
+    private const int WidthPx = 32;
+    private const int HeightPx = 32;
 
     private readonly DispatcherTimer _hoverTimer = new();
     private readonly DispatcherTimer _autoHideTimer = new();

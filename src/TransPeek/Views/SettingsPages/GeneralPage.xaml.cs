@@ -33,6 +33,7 @@ public sealed partial class GeneralPage : Page
         HoverDelayCombo.SelectedIndex = s.HoverDelayMs == 500 ? 1 : 0;
         AutoHideBox.Value = s.TriggerIconAutoHideSeconds;
         TranslateHotkeyBox.Text = s.TranslateHotkey;
+        OcrHotkeyBox.Text = s.OcrHotkey;
         LaunchAtLoginToggle.IsOn = IsLaunchAtLoginSet();
         _loading = false;
     }
@@ -82,6 +83,24 @@ public sealed partial class GeneralPage : Page
             HotkeyErrorText.Text = ex.Message;
             HotkeyErrorText.Visibility = Visibility.Visible;
             TranslateHotkeyBox.Text = App.Settings.TranslateHotkey;
+        }
+    }
+
+    private void OnOcrHotkeyLostFocus(object sender, RoutedEventArgs e)
+    {
+        var spec = OcrHotkeyBox.Text.Trim();
+        try
+        {
+            GlobalHotkeyService.Parse(spec); // validate
+            OcrHotkeyErrorText.Visibility = Visibility.Collapsed;
+            App.Settings.OcrHotkey = spec;
+            Save();
+        }
+        catch (FormatException ex)
+        {
+            OcrHotkeyErrorText.Text = ex.Message;
+            OcrHotkeyErrorText.Visibility = Visibility.Visible;
+            OcrHotkeyBox.Text = App.Settings.OcrHotkey;
         }
     }
 

@@ -127,7 +127,10 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     public void ShowInputMode()
     {
         _ocrMode = false;
-        var work = DisplayArea.Primary.WorkArea;
+        // Win32 only: DisplayArea.Primary.WorkArea threw on this machine
+        // (same WinRT display bug as FindAll()) and the tray Manual
+        // Translation click died silently — the panel never appeared.
+        var work = WindowHelpers.PrimaryWorkArea();
         var px = work.X + Math.Max((work.Width - PanelWidth) / 2, 0);
         var py = work.Y + Math.Max((work.Height - PanelHeight) / 2, 0);
         WindowHelpers.MoveAndResize(this, px, py, PanelWidth, PanelHeight);

@@ -31,6 +31,11 @@ public sealed partial class RegionSelectWindow : Window
     private Point _start;
     private bool _dragging;
     private bool _finished;
+    // Origin of the display this window covers (set in
+    // SelectRegionAsync): the pointer math offsets by it, and it must
+    // be the same display the window was placed on.
+    private int _originX;
+    private int _originY;
 
     public RegionSelectWindow()
     {
@@ -87,11 +92,14 @@ public sealed partial class RegionSelectWindow : Window
     public Task<RectInt32?> SelectRegionAsync()
     {
         _result = new TaskCompletionSource<RectInt32?>();
-        // Cover the display containing the cursor.
+        // Cover the display containing the cursor. Win32 only:
+        // DisplayArea.GetFromPoint is the same WinRT display API family
+        // as the broken FindAll(), and the window could land on the
+        // wrong display (0.1.3.47 test: grey overlay, no content).
         var (cx, cy) = WindowHelpers.CursorPosition();
-        var area = Microsoft.UI.Windowing.DisplayArea.GetFromPoint(
-            new PointInt32(cx, cy), Microsoft.UI.Windowing.DisplayAreaFallback.Nearest);
-        var bounds = area.OuterBounds;
+        var bounds = WindowHelpers.MonitorBounds(cx, cy);
+        _originX = bounds.X;
+        _originY = bounds.Y;
         WindowHelpers.MoveAndResize(this, bounds.X, bounds.Y, bounds.Width, bounds.Height);
         Activate();
         RootGrid.Focus(FocusState.Programmatic);
@@ -141,12 +149,11 @@ public sealed partial class RegionSelectWindow : Window
             (int)Math.Round(y * scale),
             (int)Math.Round(w * scale),
             (int)Math.Round(h * scale));
-        // The window was placed at the display origin: offset by it.
-        var (cx, cy) = WindowHelpers.CursorPosition();
-        var area = Microsoft.UI.Windowing.DisplayArea.GetFromPoint(
-            new PointInt32(cx, cy), Microsoft.UI.Windowing.DisplayAreaFallback.Nearest);
-        rect.X += area.OuterBounds.X;
-        rect.Y += area.OuterBounds.Y;
+        // The window was placed at the display origin: offset by it
+        // (the origin stored when the window was shown, so the rect is
+        // on the same display even if the cursor moved since).
+        rect.X += _originX;
+        rect.Y += _originY;
         Finish(rect);
     }
 

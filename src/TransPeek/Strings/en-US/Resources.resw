@@ -162,6 +162,9 @@
   <data name="Settings.General.TranslateHotkey.Header" xml:space="preserve">
     <value>Hotkey to open the translate panel (e.g. Control+Alt+T)</value>
   </data>
+  <data name="Settings.General.OcrHotkey.Header" xml:space="preserve">
+    <value>Hotkey to capture a region for OCR (e.g. Control+Shift+S)</value>
+  </data>
   <data name="Settings.General.LaunchAtLogin.Header" xml:space="preserve">
     <value>Launch with Windows</value>
   </data>

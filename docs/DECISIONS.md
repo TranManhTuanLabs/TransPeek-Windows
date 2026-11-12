@@ -79,9 +79,10 @@ nothing is removed, only superseded (note the date).
 
 ## Dictionary
 
-- **Mirror of mac Phase 1**: same 4 defaults (Oxford / Cambridge /
-  Google Dictionary / YouGlish), same `{word}` / `{text}` templates,
-  same validation rules, Icon+Text / Icon-only.
+- **Mirror of mac Phase 1**: same 5 defaults (Oxford / Cambridge /
+  Cambridge Vi / Google Dictionary / YouGlish), same `{word}` / `{text}`
+  templates, same validation rules, Icon+Text / Icon-only. Cambridge Vi
+  (english-vietnamese) added 2026-11-12, last in the list, mac parity.
 - **Favicon chain**: `<host>/favicon.ico` → Google s2 → DuckDuckGo,
   disk cache `%LOCALAPPDATA%\TransPeek\Favicons`, magic-byte image
   check, generic letter tile on failure. Loading is async and never

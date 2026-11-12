@@ -99,16 +99,31 @@ public sealed class SelectionMonitor : IDisposable
         if (string.IsNullOrWhiteSpace(text))
             return (null, (0, 0));
 
-        var rect = element.BoundingRectangle;
         (int X, int Y) point;
-        if (rect.IsEmpty)
+        // Anchor at the SELECTION's rectangle (bottom-right of the last
+        // selected range), not the focused element's: the element rect
+        // is the whole editor/window, so the icon landed at the
+        // screen's corner instead of near the cursor (0.1.3.47 test).
+        // The mouse is where the user just selected, so the cursor is
+        // the fallback when the provider reports no rectangles.
+        try
+        {
+            var rects = ranges
+                .SelectMany(r => r.GetBoundingRectangles() ?? Array.Empty<System.Drawing.Rectangle>())
+                .ToArray();
+            if (rects.Length > 0)
+            {
+                var last = rects[^1];
+                point = (last.Right, last.Bottom);
+            }
+            else
+            {
+                point = Interop.WindowHelpers.CursorPosition();
+            }
+        }
+        catch
         {
             point = Interop.WindowHelpers.CursorPosition();
-        }
-        else
-        {
-            // Anchor just below-right of the focused element.
-            point = ((int)rect.Right, (int)rect.Bottom);
         }
         return (text, point);
     }

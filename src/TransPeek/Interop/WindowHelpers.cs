@@ -110,4 +110,40 @@ internal static class WindowHelpers
             return new Windows.Graphics.RectInt32(rc.Left, rc.Top, rc.Right - rc.Left, rc.Bottom - rc.Top);
         return new Windows.Graphics.RectInt32(0, 0, 1920, 1080);
     }
+
+    /// <summary>Outer bounds of the display containing a point (Win32
+    /// only — DisplayArea.GetFromPoint is the same WinRT display API
+    /// family as the broken FindAll(): the OCR region window landed on
+    /// the wrong display / could not be placed reliably. Same
+    /// MonitorFromPoint + GetMonitorInfo as DisplayWorkArea, but the
+    /// full monitor rect (rcMonitor) instead of the work area.</summary>
+    public static Windows.Graphics.RectInt32 MonitorBounds(int x, int y)
+    {
+        var monitor = NativeMethods.MonitorFromPoint(
+            new NativeMethods.POINT { X = x, Y = y },
+            NativeMethods.MONITOR_DEFAULTTONEAREST);
+        if (monitor != IntPtr.Zero)
+        {
+            var info = new NativeMethods.MONITORINFO
+            {
+                cbSize = (uint)Marshal.SizeOf<NativeMethods.MONITORINFO>(),
+            };
+            if (NativeMethods.GetMonitorInfo(monitor, ref info))
+            {
+                var m = info.rcMonitor;
+                return new Windows.Graphics.RectInt32(m.Left, m.Top, m.Right - m.Left, m.Bottom - m.Top);
+            }
+        }
+        return new Windows.Graphics.RectInt32(0, 0, 1920, 1080);
+    }
+
+    /// <summary>Work area of the primary display (Win32 only —
+    /// DisplayArea.Primary.WorkArea threw on this machine and broke
+    /// the tray Manual Translation panel, which centers on it).</summary>
+    public static Windows.Graphics.RectInt32 PrimaryWorkArea()
+    {
+        if (NativeMethods.SystemParametersInfo(NativeMethods.SPI_GETWORKAREA, 0, out var rc, 0))
+            return new Windows.Graphics.RectInt32(rc.Left, rc.Top, rc.Right - rc.Left, rc.Bottom - rc.Top);
+        return new Windows.Graphics.RectInt32(0, 0, 1920, 1080);
+    }
 }

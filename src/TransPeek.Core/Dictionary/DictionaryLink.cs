@@ -29,6 +29,10 @@ public sealed class DictionaryLink
         new() { Name = "Cambridge", UrlTemplate = "https://dictionary.cambridge.org/dictionary/english/{word}" },
         new() { Name = "Google", UrlTemplate = "https://www.google.com/search?q=define+{text}" },
         new() { Name = "YouGlish", UrlTemplate = "https://youglish.com/pronounce/{text}/english" },
+        // Cambridge Vi (mac parity, 2026-11-11): English–Vietnamese, added
+        // LAST in the defaults, like on mac. {word} is lowercased + first
+        // word only (UrlFor rule below).
+        new() { Name = "Cambridge Vi", UrlTemplate = "https://dictionary.cambridge.org/dictionary/english-vietnamese/{word}" },
     ];
 
     /// <summary>Fresh copies of the defaults (new ids, new objects).
@@ -70,6 +74,23 @@ public sealed class DictionaryLink
                 link.Name = "Google";
                 changed = true;
             }
+        }
+        // Cambridge Vi (2026-11-12): append for users who never edited
+        // their list — still exactly the 4 old defaults, in order (mac
+        // rule: edited lists add it by hand in Settings).
+        var oldDefaults = new[]
+        {
+            "https://www.oxfordlearnersdictionaries.com/definition/english/{word}?q={word}",
+            "https://dictionary.cambridge.org/dictionary/english/{word}",
+            "https://www.google.com/search?q=define+{text}",
+            "https://youglish.com/pronounce/{text}/english",
+        };
+        const string cambridgeVi = "https://dictionary.cambridge.org/dictionary/english-vietnamese/{word}";
+        if (links.Count == oldDefaults.Length
+            && links.Select(l => l.UrlTemplate).SequenceEqual(oldDefaults, StringComparer.Ordinal))
+        {
+            links.Add(new DictionaryLink { Name = "Cambridge Vi", UrlTemplate = cambridgeVi });
+            changed = true;
         }
         return changed;
     }

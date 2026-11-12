@@ -25,6 +25,10 @@
                      LostFocus="OnTranslateHotkeyLostFocus" />
             <TextBlock x:Name="HotkeyErrorText" FontSize="12" Foreground="Red" Visibility="Collapsed" />
 
+            <TextBox x:Name="OcrHotkeyBox" x:Uid="Settings.General.OcrHotkey" Header="Hotkey to capture a region for OCR (e.g. Control+Shift+S)"
+                     LostFocus="OnOcrHotkeyLostFocus" />
+            <TextBlock x:Name="OcrHotkeyErrorText" FontSize="12" Foreground="Red" Visibility="Collapsed" />
+
             <ToggleSwitch x:Name="LaunchAtLoginToggle" x:Uid="Settings.General.LaunchAtLogin" Header="Launch with Windows"
                           OnContent="On" OffContent="Off"
                           Toggled="OnLaunchAtLoginToggled" />
