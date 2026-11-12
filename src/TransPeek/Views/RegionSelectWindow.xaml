@@ -9,32 +9,33 @@
          was trapped fullscreen with no button to click. There are now
          four independent ways out: Esc, right-click, the Cancel button,
          and Alt+F4 (window Closed completes the selection task).
-         The dim is deliberately light (~15% black): the 40% dim hid the
-         screen content the user needs to see to pick a region (0.1.3.47
-         test). The hint sits on a dark chip so it stays readable on any
-         background.
+         NO dim layer (removed 2026-11-13, Manh): the 15% dim was
+         suspected of filling color instead of dimming (the user picks
+         blind when the overlay renders opaque); no dim is needed to
+         signal capture mode — the cursor changes to the capture shape
+         while dragging. The hint sits on a dark chip so it stays
+         readable on any background, and the selection rectangle keeps
+         its light fill (#22FFFFFF) so the picked region stays visible.
          BackgroundImage (0.1.3.54): the window renders opaque, so the
          dim alone shows only a flat grey board — the user picks blind
          and a capture taken while the overlay is up photographs the
          overlay, not the desktop. The display screenshot (captured
          before the overlay appears) is the background instead, so the
-         user sees the real desktop dimmed, and the region is cropped
+         user sees the real desktop, and the region is cropped
          out of that same screenshot. -->
     <Grid x:Name="RootGrid" IsTabStop="True">
         <Image x:Name="BackgroundImage" Stretch="Fill" />
-        <Grid Background="#26000000">
-            <Canvas x:Name="SelectionCanvas">
-                <Rectangle x:Name="SelectionRect" Stroke="White" StrokeThickness="2"
-                           Fill="#22FFFFFF" Visibility="Collapsed" />
-            </Canvas>
-            <Border HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,16,0,0"
-                    Background="#CC000000" CornerRadius="6" Padding="10,4">
-                <TextBlock x:Uid="RegionSelect.Hint" Text="Drag to select the region to OCR — Esc / right-click / Cancel to exit"
-                           Foreground="White" FontSize="15" FontWeight="SemiBold" />
-            </Border>
-            <Button x:Name="CancelButton" x:Uid="RegionSelect.Cancel" Content="✕ Cancel (Esc)"
-                    HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,16,16,0"
-                    Padding="12,6" />
-        </Grid>
+        <Canvas x:Name="SelectionCanvas">
+            <Rectangle x:Name="SelectionRect" Stroke="White" StrokeThickness="2"
+                       Fill="#22FFFFFF" Visibility="Collapsed" />
+        </Canvas>
+        <Border HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,16,0,0"
+                Background="#CC000000" CornerRadius="6" Padding="10,4">
+            <TextBlock x:Uid="RegionSelect.Hint" Text="Drag to select the region to OCR — Esc / right-click / Cancel to exit"
+                       Foreground="White" FontSize="15" FontWeight="SemiBold" />
+        </Border>
+        <Button x:Name="CancelButton" x:Uid="RegionSelect.Cancel" Content="✕ Cancel (Esc)"
+                HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,16,16,0"
+                Padding="12,6" />
     </Grid>
 </Window>

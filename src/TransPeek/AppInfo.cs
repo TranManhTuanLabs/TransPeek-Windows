@@ -19,10 +19,12 @@ public static class AppInfo
     /// account. The QR card (Assets/DonateCard.png) is the full
     /// official VietQR card; its QR was verified to decode to this
     /// account before shipping (mac: same account and card).</summary>
-    public const string DonateBank = "BIDV";
     public const string DonateAccountNumber = "2600786466";
     public const string DonateAccountName = "TRAN MANH TUAN";
-    public static string DonateAccountLine => $"{DonateBank} — {DonateAccountNumber} — {DonateAccountName}";
+    public const string DonateBankFullName = "BIDV (Bank for Investment and Development of VietNam)";
+    /// <summary>Account block shown under the Support text and in the
+    /// QR dialog (the standard donate template, Manh 2026-11-13).</summary>
+    public static string DonateAccountBlock => $"Account: {DonateAccountNumber}\nHolder: {DonateAccountName}\n{DonateBankFullName}";
 
     /// <summary>ms-appx URI of the donate card image (shipped as
     /// Content next to the exe).</summary>

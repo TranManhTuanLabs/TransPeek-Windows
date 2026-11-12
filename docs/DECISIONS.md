@@ -681,3 +681,30 @@ and ran 51. New round of fixes (next build):
   the code commit that references it as `<Content>` — otherwise
   the code commit's CI build fails on the missing file. The app
   icon stays base64 in `Assets/EmbeddedIcon.cs`.
+
+## OCR selection dim removed (Manh, 2026-11-13)
+
+- **The `#26000000` dim Grid is GONE from `RegionSelectWindow`.**
+  Manh's suspicion (2026-11-12): the light dim "fills color in"
+  instead of dimming, so the user picks blind. No dim is needed to
+  signal capture mode — the cursor changes to the capture shape
+  while dragging. Kept: the screenshot background, the selection
+  rectangle's light fill (`#22FFFFFF`, so the picked region stays
+  visible), and the hint's dark chip (`#CC000000`).
+- Done in the same commit as the donate-template update (batch rule),
+  after the round-3 screenshot-background fix (build 58) — so build
+  59 tests both changes at once; attribution between the two is
+  traded for one test round, per Manh's call.
+
+## Donate template = the standard one (Manh, 2026-11-13)
+
+- **The standard template (EN + VI, both ending in "!") now applies
+  to TransPeek-Windows too** (About + README), mirroring mac:
+  "If this app is useful to you, you can support the project by
+  buying me a coffee!" / "Nếu ứng dụng này hữu ích với bạn, bạn có
+  thể ủng hộ dự án bằng một ly cà phê!" + the 3-line account block
+  (Account / Holder / BIDV full name). The old one-line
+  "BIDV — 2600786466 — TRAN MANH TUAN" (`DonateAccountLine`) is
+  gone; `AppInfo.DonateAccountBlock` is the single source. SeekZip
+  keeps its old text (Manh's call) — the template applies from the
+  next repo onward, and TransPeek (mac + Windows) was updated to it.

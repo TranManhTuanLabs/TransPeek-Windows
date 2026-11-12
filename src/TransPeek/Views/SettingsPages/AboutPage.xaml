@@ -47,13 +47,17 @@
             <TextBlock x:Uid="Settings.About.License" Text="AGPL-3.0 license. The original idea is from MoePeek (cosZone) — the Windows version is rewritten from scratch in C#, mirroring the design and behavior, not copying Swift code."
                        FontSize="12" Foreground="Gray" TextWrapping="Wrap" Margin="0,8,0,0" />
 
-            <!-- Support (donate): the app is free — a coffee via VietQR
-                 (BIDV) keeps it improving (Manh 2026-11-12, mirrors mac
-                 About). The QR stays behind a button so About stays
+            <!-- Support (donate): the standard template (Manh
+                 2026-11-13, mirrors mac About) — EN sentence + VI
+                 sentence + the 3-line account block, then the two
+                 buttons. The QR stays behind a button so About stays
                  compact; the account number can be copied directly. -->
             <TextBlock x:Uid="Settings.About.Support" Text="Support TransPeek" FontSize="15" FontWeight="SemiBold" Margin="0,8,0,0" />
-            <TextBlock x:Uid="Settings.About.Support.Message" Text="If this app is useful to you, buy me a coffee to keep improving it."
+            <TextBlock x:Uid="Settings.About.Support.Message" Text="If this app is useful to you, you can support the project by buying me a coffee!"
                        FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
+            <TextBlock x:Uid="Settings.About.Support.MessageVi" Text="Nếu ứng dụng này hữu ích với bạn, bạn có thể ủng hộ dự án bằng một ly cà phê!"
+                       FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
+            <TextBlock x:Name="SupportAccountText" FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
             <StackPanel Orientation="Horizontal" Spacing="8">
                 <Button x:Name="ShowQrButton" Click="OnShowQrClick">
                     <StackPanel Orientation="Horizontal" Spacing="6">

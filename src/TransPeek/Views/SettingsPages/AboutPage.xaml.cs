@@ -37,6 +37,7 @@ public sealed partial class AboutPage : Page
                 : $"Release Ver {AppInfo.Version}";
             GithubMarkImage.Source = GitHubMark.Image();
             AppIconImage.Source = EmbeddedIcon.Image();
+            SupportAccountText.Text = AppInfo.DonateAccountBlock;
         };
     }
 
@@ -104,7 +105,7 @@ public sealed partial class AboutPage : Page
         content.Children.Add(image);
         content.Children.Add(new TextBlock
         {
-            Text = AppInfo.DonateAccountLine,
+            Text = AppInfo.DonateAccountBlock,
             FontSize = 12,
             HorizontalAlignment = HorizontalAlignment.Center,
             TextWrapping = TextWrapping.Wrap,

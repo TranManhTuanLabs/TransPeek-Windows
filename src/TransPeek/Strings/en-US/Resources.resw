@@ -391,7 +391,10 @@
     <value>Support TransPeek</value>
   </data>
   <data name="Settings.About.Support.Message.Text" xml:space="preserve">
-    <value>If this app is useful to you, buy me a coffee to keep improving it.</value>
+    <value>If this app is useful to you, you can support the project by buying me a coffee!</value>
+  </data>
+  <data name="Settings.About.Support.MessageVi.Text" xml:space="preserve">
+    <value>Nếu ứng dụng này hữu ích với bạn, bạn có thể ủng hộ dự án bằng một ly cà phê!</value>
   </data>
   <data name="Settings.About.Support.ShowQr.Text" xml:space="preserve">
     <value>Show QR Code</value>

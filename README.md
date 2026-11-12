@@ -124,11 +124,15 @@ docs/
 
 ## Support
 
-If this app is useful to you, buy me a coffee to keep improving it.
+If this app is useful to you, you can support the project by buying me a coffee!
+
+Nếu ứng dụng này hữu ích với bạn, bạn có thể ủng hộ dự án bằng một ly cà phê!
 
 <img src="src/TransPeek/Assets/DonateCard.png" width="300" alt="Donate via VietQR" />
 
-**BIDV — 2600786466 — TRAN MANH TUAN**
+- Account: 2600786466
+- Holder: TRAN MANH TUAN
+- BIDV (Bank for Investment and Development of VietNam)
 
 ## License
 
