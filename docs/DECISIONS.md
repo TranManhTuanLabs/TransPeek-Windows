@@ -350,3 +350,36 @@ LanguageBarView / Settings) với Windows, làm trước nhóm panel + từ đi�
   them.
 - **Shipped:** commit `c1b2eb9` (fallback) + `939eb73` `[build-app]`,
   run #40 SUCCESS, artifact 126 MB, app version 0.1.3.40.
+
+## Startup crash 0xc000027b in Microsoft.UI.Xaml.dll (run #40, 2026-11-12)
+
+- **Symptom (Manh, 12/11 15:25):** build #40 (0.1.3.40) shows the
+  Settings panel, then exits at once. PowerShell prints no error;
+  Task Manager shows the process appear and vanish.
+- **Log (Event Viewer, pasted in Google Doc "LOG TransSpeek TEST"):**
+  Application Error, Event 1000, 15:24:55 — faulting module
+  `Microsoft.UI.Xaml.dll` 3.1.8.0, exception `0xc000027b`
+  (STATUS_STOWED_EXCEPTION: a WinRT exception escaped through WinUI),
+  fault offset `0x3a7515`. WER Event 1001 attributes the same crash to
+  `combase.dll`, exception `80004002` (E_NOINTERFACE). **No ".NET
+  Runtime" event and no stack trace anywhere** — the crash is a WinRT
+  exception crossing the ABI boundary, not a managed exception with a
+  message. The faulting module is WinUI itself, so the log alone does
+  not say which app call threw.
+- **Fix (first step): crash trap + crash log.** The app had NO
+  `UnhandledException` handler, so any unhandled error killed it
+  silently. `App` now subscribes to `Application.UnhandledException`
+  (writes type/message/stack trace to
+  `%LOCALAPPDATA%\TransPeek\crash.log` via `Services/CrashLog.cs` and
+  marks it handled, so a stowed exception no longer kills the app),
+  plus `AppDomain.UnhandledException` and
+  `TaskScheduler.UnobservedTaskException` (log-only). Next run: if it
+  crashes again, the log file names the exact throwing call; if the
+  handler catches it, the app stays alive and the log still tells us
+  what threw.
+- **Reading the test log doc:** do NOT use the live browser for the
+  "LOG TransSpeek TEST" Google Doc — `browser.open` on the edit URL
+  fails ("browser version no longer supported") and a browser task
+  takes ~2 min and returns a huge report. Use the export URL instead:
+  `https://docs.google.com/document/d/<id>/export?format=txt` —
+  one fast text fetch, full plain-text content, far fewer tokens.

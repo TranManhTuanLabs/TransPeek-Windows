@@ -49,6 +49,25 @@ public sealed partial class App : Application
     public App()
     {
         InitializeComponent();
+        // Crash trap (run #40 died silently at startup with 0xc000027b in
+        // Microsoft.UI.Xaml.dll — no console output, no .NET Runtime
+        // event, no stack trace). Log every unhandled exception to
+        // %LOCALAPPDATA%\TransPeek\crash.log and mark the WinUI one
+        // handled, so a stowed WinRT exception no longer kills the app
+        // before the user ever sees it. The log file carries the real
+        // type/message/stack trace for the next diagnosis.
+        UnhandledException += (_, e) =>
+        {
+            CrashLog.Write("Application.UnhandledException", e.Exception);
+            e.Handled = true;
+        };
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+            CrashLog.Write("AppDomain.UnhandledException", e.ExceptionObject as Exception);
+        TaskScheduler.UnobservedTaskException += (_, e) =>
+        {
+            CrashLog.Write("TaskScheduler.UnobservedTaskException", e.Exception);
+            e.SetObserved();
+        };
     }
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
