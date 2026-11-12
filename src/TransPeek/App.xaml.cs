@@ -316,6 +316,9 @@ public sealed partial class App : Application
         if (_settingsWindow is null)
         {
             _settingsWindow = new SettingsWindow();
+            // App icon in the title bar / taskbar: same .ico as the tray.
+            try { _settingsWindow.AppWindow.SetIcon(TrayIconService.EnsureIconFile()); }
+            catch (Exception ex) { CrashLog.Write("SettingsWindow.SetIcon", ex); }
             _settingsWindow.SettingsSaved += OnSettingsSaved;
             // v0.1.1 — a WinUI 3 Window is destroyed when the user closes
             // it with ✕: v0.1 kept the dead instance and Activate() on it

@@ -101,6 +101,6 @@
   </Target>
 
   <!-- No binary assets in v0.1 (the connector cannot push binaries, and
-       the app icon is a follow-up — see docs/DECISIONS.md). The tray icon
-       is an embedded base64 PNG (Assets/EmbeddedIcon.cs). -->
+       the app icon is the mac S3 artwork converted to a multi-size .ico
+       stored as base64 in Assets/EmbeddedIcon.cs). -->
 </Project>

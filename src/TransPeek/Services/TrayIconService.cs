@@ -3,8 +3,10 @@
 // WinUI 3 has no built-in NotifyIcon, so v0.1 uses H.NotifyIcon.WinUI
 // (2.3.2, MIT). 2.3.2 is the newest version targeting net8.0-windows;
 // 2.4.1+ targets net10.0-windows only (NU1202 on .NET 8, CI run
-// 42428017607). The icon is the embedded base64 PNG (see
-// Assets/EmbeddedIcon.cs) — no binary assets in the repo.
+// 42428017607). The icon is the mac app icon (Assets/EmbeddedIcon.cs —
+// the S3 artwork converted to a multi-size .ico), the same on both
+// platforms. No binary assets in the repo: the .ico lives in the code
+// as base64.
 // Left-click opens Settings; right-click shows the context menu.
 //
 // The menu mirrors the mac menubar (MenuItemView.swift): header with
@@ -35,6 +37,11 @@ public sealed class TrayIconService : IDisposable
 {
     private readonly TaskbarIcon _tray;
     private bool _disposed;
+
+    // The .ico stream behind the tray Icon: Icon(Stream) needs the
+    // stream to stay open while the Icon is used, so it lives here
+    // for the lifetime of the service.
+    private static MemoryStream? _iconStream;
 
     public TrayIconService(
         Action manualTranslation,
@@ -71,11 +78,15 @@ public sealed class TrayIconService : IDisposable
 
         _tray = new TaskbarIcon
         {
-            Icon = LoadEmbeddedIcon(),
             ToolTipText = AppStrings.Get("Tray.ToolTip", "TransPeek — Translate anywhere, peek instantly. Left-click: Settings. Right-click: menu."),
             ContextFlyout = menu,
             LeftClickCommand = new RelayCommand(openSettings),
         };
+        // The icon is set separately: a bad icon must never kill
+        // startup (LoadEmbeddedIcon returns null instead of throwing).
+        var icon = LoadEmbeddedIcon();
+        if (icon is not null)
+            _tray.Icon = icon;
         // ForceCreate is required: the icon is created lazily otherwise and
         // a tray-only app would show nothing until the first interaction.
         _tray.ForceCreate();
@@ -118,26 +129,41 @@ public sealed class TrayIconService : IDisposable
         return item;
     }
 
-    /// <summary>Build the tray icon from the embedded PNG as a
-    /// System.Drawing.Icon — NOT a BitmapImage. H.NotifyIcon loads
-    /// IconSource through a WinRT Uri (ToStream(Uri)), and a
-    /// stream-sourced BitmapImage has UriSource == null, which is the
-    /// NullReferenceException in crash.log (2026-11-12, builds
-    /// 0.1.3.40/.42). The Icon property takes the handle straight to
-    /// Shell_NotifyIcon with no WinRT URI resolution — the path the
-    /// library itself recommends for unpackaged apps, where ms-appx
-    /// URIs cannot resolve either (no package identity).
-    /// The HICON is deliberately leaked for the app lifetime:
-    /// Icon.FromHandle does not take ownership, GetHicon() returns a
-    /// new handle (disposing the Bitmap does not destroy it), and the
-    /// tray icon needs the handle alive as long as the app runs.</summary>
-    private static System.Drawing.Icon LoadEmbeddedIcon()
+    /// <summary>Build the tray icon from the embedded .ico bytes — the
+    /// mac app icon (S3), same artwork on both platforms. new
+    /// Icon(stream) reads the .ico data directly; no WinRT URI is
+    /// involved, so the NullReferenceException from the old BitmapImage
+    /// path (UriSource == null, crash.log 2026-11-12) cannot recur.
+    /// Returns null (and logs) instead of throwing: a bad icon must
+    /// never kill startup — the app runs without a tray image.</summary>
+    private static System.Drawing.Icon? LoadEmbeddedIcon()
     {
-        var bytes = Convert.FromBase64String(EmbeddedIcon.PngBase64);
-        using var stream = new MemoryStream(bytes);
-        using var bitmap = new System.Drawing.Bitmap(stream);
-        var hicon = bitmap.GetHicon();
-        return System.Drawing.Icon.FromHandle(hicon);
+        try
+        {
+            var bytes = Convert.FromBase64String(EmbeddedIcon.IcoBase64);
+            _iconStream = new MemoryStream(bytes);
+            return new System.Drawing.Icon(_iconStream);
+        }
+        catch (Exception ex)
+        {
+            CrashLog.Write("TrayIcon", ex);
+            return null;
+        }
+    }
+
+    /// <summary>Path of the .ico written to disk for AppWindow.SetIcon
+    /// (the Settings window title-bar/taskbar icon, which needs a file
+    /// path, not a stream). Written once; rewritten only if the bytes
+    /// change.</summary>
+    internal static string EnsureIconFile()
+    {
+        var dir = TransPeek.Core.Dictionary.AppPaths.LocalDataDirectory;
+        Directory.CreateDirectory(dir);
+        var path = Path.Combine(dir, "app-icon.ico");
+        var bytes = Convert.FromBase64String(EmbeddedIcon.IcoBase64);
+        if (!File.Exists(path) || new FileInfo(path).Length != bytes.Length)
+            File.WriteAllBytes(path, bytes);
+        return path;
     }
 
     public void Dispose()
