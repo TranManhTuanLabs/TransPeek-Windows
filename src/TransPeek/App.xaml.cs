@@ -124,8 +124,26 @@ public sealed partial class App : Application
         // the user saw no window and no menu. Open Settings right away
         // so there is always visible UI, and tell the user (toast) where
         // the app keeps running after the window is closed.
-        ShowSettings();
-        _toast?.Show(AppStrings.Get("App.Toast.Started", "TransPeek is running — closing this window keeps the app in the system tray. Right-click the tray icon for the menu."));
+        // Startup hardening (run #40 crash 0xc000027b): if Settings or
+        // the toast throws, log it and keep running in the tray instead
+        // of dying silently. The tray icon already exists by now, so the
+        // user can retry Settings from the tray menu.
+        try
+        {
+            ShowSettings();
+        }
+        catch (Exception ex)
+        {
+            CrashLog.Write("ShowSettings", ex);
+        }
+        try
+        {
+            _toast?.Show(AppStrings.Get("App.Toast.Started", "TransPeek is running — closing this window keeps the app in the system tray. Right-click the tray icon for the menu."));
+        }
+        catch (Exception ex)
+        {
+            CrashLog.Write("Toast.Show", ex);
+        }
     }
 
     // ----- providers -----
