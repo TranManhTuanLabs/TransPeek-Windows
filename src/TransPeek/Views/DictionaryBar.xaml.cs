@@ -29,10 +29,13 @@ public sealed partial class DictionaryBar : UserControl
         InitializeComponent();
         // Mouse wheel: a horizontal ScrollViewer ignores the wheel by
         // default, so translate it into horizontal scrolling (0.1.3.49
-        // test: the wheel did nothing on the dictionary bar).
+        // test: the wheel did nothing on the dictionary bar). WinUI has
+        // no wheel-delta property on the event args — it lives on the
+        // pointer point (MouseWheelDelta, 120 per notch).
         BarScroll.PointerWheelChanged += (_, e) =>
         {
-            BarScroll.ChangeView(BarScroll.HorizontalOffset - e.Delta, null, null);
+            var delta = e.GetCurrentPoint(BarScroll).Properties.MouseWheelDelta;
+            BarScroll.ChangeView(BarScroll.HorizontalOffset - delta, null, null);
             e.Handled = true;
         };
         // Mouse drag pans like a touch swipe (0.1.3.49 test request):
