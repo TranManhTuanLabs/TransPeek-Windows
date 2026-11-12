@@ -708,3 +708,54 @@ and ran 51. New round of fixes (next build):
   gone; `AppInfo.DonateAccountBlock` is the single source. SeekZip
   keeps its old text (Manh's call) — the template applies from the
   next repo onward, and TransPeek (mac + Windows) was updated to it.
+
+## Pre-release zip name includes the CI run (Manh, 2026-11-13)
+
+- **Chosen format: `TransPeek-Windows-0.1.3-CI<run>.zip`** (e.g.
+  `TransPeek-Windows-0.1.3-CI60.zip`), picked from 7 options Manh
+  listed. Why this one: "CI60" says outright that 60 is the CI run
+  number — the old name hid it inside the version
+  (`...-0.1.3.59.zip`), `-59` reads like a SemVer prerelease
+  suffix, parentheses (options 1/4/5/6) are ugly in URLs and
+  scripts, 5/6 repeat the number twice, and dropping the version
+  (`TransPeek-Windows-59`) loses which app version a file is. A
+  future stable release just drops the `-CI<run>` suffix.
+- **Changed in `build.yml` only (commit `c4b68b6`, via browser —
+  the connector cannot push workflow files):** the Zip step and the
+  `ZIP=` variable (2 lines). The app version (`-p:Version=
+  0.1.3.<run>`) and the tag (`v0.1.3.<run>`) are UNCHANGED, and so
+  are the delete-older steps (they match tags/artifacts, not zip
+  names). Signing is unaffected (it applies to the exe inside, not
+  the zip name); Build/Test/Publish/Verify run before the Zip step,
+  so they cannot be affected either.
+- **Applies from the NEXT `[build-app]` run onward.** Build 59
+  keeps its old name (`TransPeek-Windows-0.1.3.59.zip`) — the
+  rename does not rebuild or re-upload it.
+
+## Pre-release zip name: short form, like mac (Manh, 2026-11-13)
+
+- **Final format: `TransPeek-Windows-<run>.zip`** (e.g.
+  `TransPeek-Windows-60.zip`), mirroring mac's
+  `TransPeek-macOS-<run>`. Supersedes the `...-0.1.3-CI<run>` form
+  chosen 30 minutes earlier (commit `c4b68b6`): Manh's call, same
+  reason as mac — the short name is instantly distinct from a
+  future stable release file (`TransPeek-Windows-0.1.3.zip`), while
+  the CI-suffixed name looks confusingly similar to it in the
+  Downloads folder. The version still shows on the release page
+  (tag `v0.1.3.<run>`) and inside the app (About: version + CI
+  build). Changed in `build.yml` only (commit `8973ef0`, via
+  browser): the Zip step + the `ZIP=` variable, 2 lines; version,
+  tag and delete-older steps untouched. Applies from the next
+  `[build-app]` run onward; build 59 keeps its old name.
+
+## About version line template (Manh, 2026-11-13, mirrors mac option B)
+
+- **The version line reads "Release 0.1.3 (Build CI #59)"** —
+  "Release" without "Ver" ("Ver" is redundant: "Release" already
+  means a version), and the build number only inside
+  "(Build CI #...)". Local builds (no CI number) show just
+  "Release 0.1.3". The line is already a link to the Releases page
+  (OnReleaseNotesClick); there is no standalone "Build CI #..." line
+  on Windows About, so nothing else to delete. The tray header
+  ("TransPeek 0.1.3 (36)") is unchanged — that is the tray, not
+  About.

@@ -29,12 +29,16 @@ public sealed partial class AboutPage : Page
         InitializeComponent();
         Loaded += (_, _) =>
         {
-            // "Release Ver 0.1.3 (Build CI #51)" — the version line lives
+            // "Release 0.1.3 (Build CI #59)" — the version line lives
             // here now that the separate Version line is gone (Manh
-            // 2026-11-12). Local builds (no CI number) show no build part.
+            // 2026-11-12). Template (Manh 2026-11-13, mirrors mac
+            // option B): "Release" without "Ver", and the build number
+            // only inside "(Build CI #...)". Local builds (no CI
+            // number) show no build part. The line is a link to the
+            // Releases page (OnReleaseNotesClick).
             ReleaseNotesLink.Content = AppInfo.CiBuildNumber > 0
-                ? $"Release Ver {AppInfo.Version} (Build CI #{AppInfo.CiBuildNumber})"
-                : $"Release Ver {AppInfo.Version}";
+                ? $"Release {AppInfo.Version} (Build CI #{AppInfo.CiBuildNumber})"
+                : $"Release {AppInfo.Version}";
             GithubMarkImage.Source = GitHubMark.Image();
             AppIconImage.Source = EmbeddedIcon.Image();
             SupportAccountText.Text = AppInfo.DonateAccountBlock;
