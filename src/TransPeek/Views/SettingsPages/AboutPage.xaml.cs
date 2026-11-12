@@ -11,6 +11,8 @@
 
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Imaging;
 using TransPeek.Assets;
 using TransPeek.Core.Update;
 using TransPeek.Services;
@@ -84,5 +86,53 @@ public sealed partial class AboutPage : Page
     {
         if (_latestReleaseUrl is not null)
             await Launcher.LaunchUriAsync(new Uri(_latestReleaseUrl));
+    }
+
+    /// <summary>Donate QR dialog (mirrors mac's popover): the full BIDV
+    /// VietQR card at 280px wide (the QR inside is ~165px, scannable)
+    /// plus the account line underneath. ContentDialog, not a flyout:
+    /// a modal dialog stays put while the user scans it with a phone.</summary>
+    private async void OnShowQrClick(object sender, RoutedEventArgs e)
+    {
+        var image = new Image
+        {
+            Source = new BitmapImage(new Uri(AppInfo.DonateCardUri)),
+            Width = 280,
+            Stretch = Stretch.Uniform,
+        };
+        var content = new StackPanel { Spacing = 12 };
+        content.Children.Add(image);
+        content.Children.Add(new TextBlock
+        {
+            Text = AppInfo.DonateAccountLine,
+            FontSize = 12,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            TextWrapping = TextWrapping.Wrap,
+        });
+        var dialog = new ContentDialog
+        {
+            XamlRoot = this.XamlRoot,
+            Content = content,
+            CloseButtonText = AppStrings.Get("Settings.About.Support.QrDialog.Close", "Close"),
+        };
+        await dialog.ShowAsync();
+    }
+
+    private async void OnCopyAccountClick(object sender, RoutedEventArgs e)
+    {
+        await ClipboardHelper.CopyTextAsync(AppInfo.DonateAccountNumber);
+        // Brief inline feedback (the About page has no toast): show
+        // "Copied" on the button for 2 seconds, then restore the label.
+        CopyAccountButton.IsEnabled = false;
+        var original = CopyAccountText.Text;
+        CopyAccountText.Text = AppStrings.Get("Settings.About.Support.Copied", "Copied");
+        var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
+        timer.Tick += (_, _) =>
+        {
+            timer.Stop();
+            CopyAccountText.Text = original;
+            CopyAccountButton.IsEnabled = true;
+        };
+        timer.Start();
     }
 }

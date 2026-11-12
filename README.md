@@ -122,6 +122,14 @@ docs/
   feature installed; Tesseract is the default precisely so Vietnamese
   works without it.
 
+## Support
+
+If this app is useful to you, buy me a coffee to keep improving it.
+
+<img src="src/TransPeek/Assets/DonateCard.png" width="300" alt="Donate via VietQR" />
+
+**BIDV — 2600786466 — TRAN MANH TUAN**
+
 ## License
 
 AGPL-3.0 — see [LICENSE](LICENSE).

@@ -387,4 +387,22 @@
   <data name="Settings.About.CheckFailed" xml:space="preserve">
     <value>Could not check.</value>
   </data>
+  <data name="Settings.About.Support.Text" xml:space="preserve">
+    <value>Support TransPeek</value>
+  </data>
+  <data name="Settings.About.Support.Message.Text" xml:space="preserve">
+    <value>If this app is useful to you, buy me a coffee to keep improving it.</value>
+  </data>
+  <data name="Settings.About.Support.ShowQr.Text" xml:space="preserve">
+    <value>Show QR Code</value>
+  </data>
+  <data name="Settings.About.Support.CopyAccount.Text" xml:space="preserve">
+    <value>Copy Account Number</value>
+  </data>
+  <data name="Settings.About.Support.Copied" xml:space="preserve">
+    <value>Copied</value>
+  </data>
+  <data name="Settings.About.Support.QrDialog.Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
 </root>

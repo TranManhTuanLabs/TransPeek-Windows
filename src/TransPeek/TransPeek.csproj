@@ -76,6 +76,15 @@
          breaks the build (XamlCompiler WMC1012, CI run 42430004573). -->
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Donate card ("Buy me a coffee", Manh 2026-11-12): the full
+         BIDV VietQR card, shipped as Content next to the exe and
+         loaded via ms-appx:///Assets/DonateCard.png. Binary asset —
+         pushed via the browser (the connector cannot push binaries);
+         the app icon stays base64 in Assets/EmbeddedIcon.cs. -->
+    <Content Include="Assets\DonateCard.png" />
+  </ItemGroup>
+
   <!-- Unpackaged publish fix (WinUI 3 startup crash 0xC000027B):
        dotnet publish with WindowsPackageType=None does not copy the
        app's compiled XAML (.xbf) or its resource index (.pri) into the
@@ -100,7 +109,6 @@
     <Message Importance="high" Text="WinUI publish outputs copied: @(_WinUIXbfFiles); @(_WinUIPriFile)" />
   </Target>
 
-  <!-- No binary assets in v0.1 (the connector cannot push binaries, and
-       the app icon is the mac S3 artwork converted to a multi-size .ico
-       stored as base64 in Assets/EmbeddedIcon.cs). -->
+  <!-- Binary assets: only Assets/DonateCard.png (see the Content item
+       above); the app icon stays base64 in Assets/EmbeddedIcon.cs. -->
 </Project>

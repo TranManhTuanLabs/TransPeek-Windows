@@ -643,3 +643,41 @@ and ran 51. New round of fixes (next build):
   needs to click a menu item and check crash.log for
   `TrayMenu: Clicked '...'` (the log in the doc ends with the three
   OcrCapture lines from 22:18–22:19).
+
+## Note for a later session (Manh, 2026-11-12 22:57 — do NOT do yet)
+
+- **OCR overlay dim: REMOVE it entirely next session (Manh
+  confirmed 22:59, pending his test report on 0.1.3.56 first — do
+  NOT do yet).** Manh's suspicion: the "slight dim" (#26000000 over
+  the screenshot) may be the problem — it may read as a solid
+  colour fill rather than a dim (consistent with the opaque-window
+  finding: over an opaque surface a semi-transparent brush is just
+  a flat tint). No dim is needed to signal capture mode: the cursor
+  already changes to a capture-drag shape while dragging. If the 56
+  test still shows a grey frame, remove the dim (show the
+  screenshot undimmed) before investigating anything else.
+
+## Donate "Buy me a coffee" (Manh, 2026-11-12, mirrors TransPeek mac)
+
+- **Account (author's own): BIDV — 2600786466 — TRAN MANH TUAN.**
+  The QR card is the full official VietQR card
+  (`src/TransPeek/Assets/DonateCard.png`, 600x732, black rounded
+  corners fixed to white); its QR was verified to decode to this
+  account before shipping (mac: same account and card at
+  `Resources/DonateCard.png`). Use the full card, NOT a QR-only
+  crop. International QR (for non-Vietnamese users) is a separate
+  later task — NOT this round.
+- **About > Support:** headline "Support TransPeek" + "If this app
+  is useful to you, buy me a coffee to keep improving it." +
+  "Show QR Code" (ContentDialog with the card at 280px wide — the
+  QR inside is ~165px, scannable — plus the account line
+  underneath) + "Copy Account Number" (copies 2600786466, button
+  briefly shows "Copied"). The QR stays behind a button so About
+  stays compact. UI language is English (settled policy).
+- **README:** "## Support" before "## License", same sentence +
+  the card image at width 300 + the bold account line.
+- **Binary asset rule:** the connector cannot push binaries, so
+  DonateCard.png goes up via the browser (its own commit) BEFORE
+  the code commit that references it as `<Content>` — otherwise
+  the code commit's CI build fails on the missing file. The app
+  icon stays base64 in `Assets/EmbeddedIcon.cs`.

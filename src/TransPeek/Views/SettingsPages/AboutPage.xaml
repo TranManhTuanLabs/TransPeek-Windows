@@ -46,6 +46,28 @@
 
             <TextBlock x:Uid="Settings.About.License" Text="AGPL-3.0 license. The original idea is from MoePeek (cosZone) — the Windows version is rewritten from scratch in C#, mirroring the design and behavior, not copying Swift code."
                        FontSize="12" Foreground="Gray" TextWrapping="Wrap" Margin="0,8,0,0" />
+
+            <!-- Support (donate): the app is free — a coffee via VietQR
+                 (BIDV) keeps it improving (Manh 2026-11-12, mirrors mac
+                 About). The QR stays behind a button so About stays
+                 compact; the account number can be copied directly. -->
+            <TextBlock x:Uid="Settings.About.Support" Text="Support TransPeek" FontSize="15" FontWeight="SemiBold" Margin="0,8,0,0" />
+            <TextBlock x:Uid="Settings.About.Support.Message" Text="If this app is useful to you, buy me a coffee to keep improving it."
+                       FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button x:Name="ShowQrButton" Click="OnShowQrClick">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <FontIcon Glyph="&#xE8FE;" FontSize="14" VerticalAlignment="Center" />
+                        <TextBlock x:Uid="Settings.About.Support.ShowQr" Text="Show QR Code" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button x:Name="CopyAccountButton" Click="OnCopyAccountClick">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <FontIcon Glyph="&#xE8C8;" FontSize="14" VerticalAlignment="Center" />
+                        <TextBlock x:Name="CopyAccountText" x:Uid="Settings.About.Support.CopyAccount" Text="Copy Account Number" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
         </StackPanel>
     </ScrollViewer>
 </Page>

@@ -15,6 +15,19 @@ public static class AppInfo
     public const string RepositoryUrl = "https://github.com/TranManhTuanLabs/TransPeek-Windows";
     public const string Author = "TranManhTuanLabs";
 
+    /// <summary>Donate ("Buy me a coffee"): the author's own BIDV
+    /// account. The QR card (Assets/DonateCard.png) is the full
+    /// official VietQR card; its QR was verified to decode to this
+    /// account before shipping (mac: same account and card).</summary>
+    public const string DonateBank = "BIDV";
+    public const string DonateAccountNumber = "2600786466";
+    public const string DonateAccountName = "TRAN MANH TUAN";
+    public static string DonateAccountLine => $"{DonateBank} — {DonateAccountNumber} — {DonateAccountName}";
+
+    /// <summary>ms-appx URI of the donate card image (shipped as
+    /// Content next to the exe).</summary>
+    public const string DonateCardUri = "ms-appx:///Assets/DonateCard.png";
+
     /// <summary>Running version, e.g. "0.1.0" (from the assembly version).</summary>
     public static string Version
     {
