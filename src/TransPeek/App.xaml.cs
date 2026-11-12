@@ -304,7 +304,10 @@ public sealed partial class App : Application
         {
             try
             {
-                hotkeys.Register(id, spec, () => _uiQueue.TryEnqueue(handler));
+                // TryEnqueue takes a DispatcherQueueHandler, not an Action:
+                // an Action variable does not convert to it implicitly,
+                // so wrap it in a lambda (CS1503 in run #52).
+                hotkeys.Register(id, spec, () => _uiQueue.TryEnqueue(() => handler()));
             }
             catch (FormatException ex)
             {
