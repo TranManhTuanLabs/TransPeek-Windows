@@ -6,13 +6,16 @@ namespace TransPeek.Tests;
 public sealed class DictionaryLinkTests
 {
     [Fact]
-    public void Defaults_HaveFourLinks()
+    public void Defaults_HaveFiveLinks()
     {
-        Assert.Equal(4, DictionaryLink.Defaults.Count);
+        Assert.Equal(5, DictionaryLink.Defaults.Count);
         Assert.Contains(DictionaryLink.Defaults, l => l.Name == "Oxford");
         Assert.Contains(DictionaryLink.Defaults, l => l.Name == "Cambridge");
         Assert.Contains(DictionaryLink.Defaults, l => l.Name == "Google");
         Assert.Contains(DictionaryLink.Defaults, l => l.Name == "YouGlish");
+        Assert.Contains(DictionaryLink.Defaults, l => l.Name == "Cambridge Vi");
+        // Cambridge Vi is last, like on mac.
+        Assert.Equal("Cambridge Vi", DictionaryLink.Defaults[^1].Name);
     }
 
     [Fact]
@@ -25,6 +28,10 @@ public sealed class DictionaryLinkTests
             oxford.UrlTemplate);
         var youglish = DictionaryLink.Defaults.First(l => l.Name == "YouGlish");
         Assert.Equal("https://youglish.com/pronounce/{text}/english", youglish.UrlTemplate);
+        var cambridgeVi = DictionaryLink.Defaults.First(l => l.Name == "Cambridge Vi");
+        Assert.Equal(
+            "https://dictionary.cambridge.org/dictionary/english-vietnamese/{word}",
+            cambridgeVi.UrlTemplate);
     }
 
     [Fact]
@@ -68,6 +75,27 @@ public sealed class DictionaryLinkTests
         Assert.Equal("https://example.com/{word}", links[3].UrlTemplate);
         // Second run is a no-op.
         Assert.False(DictionaryLink.MigrateDefaults(links));
+    }
+
+    [Fact]
+    public void MigrateDefaults_AppendsCambridgeVi_ForUneditedLists()
+    {
+        var links = new List<DictionaryLink>
+        {
+            new() { Name = "Oxford", UrlTemplate = "https://www.oxfordlearnersdictionaries.com/definition/english/{word}?q={word}" },
+            new() { Name = "Cambridge", UrlTemplate = "https://dictionary.cambridge.org/dictionary/english/{word}" },
+            new() { Name = "Google", UrlTemplate = "https://www.google.com/search?q=define+{text}" },
+            new() { Name = "YouGlish", UrlTemplate = "https://youglish.com/pronounce/{text}/english" },
+        };
+        Assert.True(DictionaryLink.MigrateDefaults(links));
+        Assert.Equal(5, links.Count);
+        Assert.Equal("Cambridge Vi", links[^1].Name);
+        Assert.Equal(
+            "https://dictionary.cambridge.org/dictionary/english-vietnamese/{word}",
+            links[^1].UrlTemplate);
+        // Second run is a no-op (no duplicate).
+        Assert.False(DictionaryLink.MigrateDefaults(links));
+        Assert.Equal(5, links.Count);
     }
 
     [Fact]
