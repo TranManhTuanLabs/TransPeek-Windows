@@ -88,7 +88,7 @@
     <value>Copied ✓</value>
   </data>
   <data name="Panel.Hint.Text" xml:space="preserve">
-    <value>Enter: translate again • Select text in the panel to look it up in the dictionary</value>
+    <value>Enter: translate again • Esc: close • Select text in the panel to look it up in the dictionary</value>
   </data>
   <data name="Panel.Copy.Content" xml:space="preserve">
     <value>Copy</value>
@@ -164,6 +164,24 @@
   </data>
   <data name="Settings.General.OcrHotkey.Header" xml:space="preserve">
     <value>Hotkey to capture a region for OCR (e.g. Control+Shift+S)</value>
+  </data>
+  <data name="Settings.General.ManualHotkey.Header" xml:space="preserve">
+    <value>Hotkey for Manual Translation (e.g. Control+Alt+M)</value>
+  </data>
+  <data name="Settings.General.ClipboardOcrHotkey.Header" xml:space="preserve">
+    <value>Hotkey for Clipboard OCR (e.g. Control+Alt+C)</value>
+  </data>
+  <data name="Settings.General.SelectionHotkey.Header" xml:space="preserve">
+    <value>Hotkey for Selection Translation (e.g. Control+Alt+S)</value>
+  </data>
+  <data name="Settings.General.ScreenshotCopyHotkey.Header" xml:space="preserve">
+    <value>Hotkey for Screenshot Copy (e.g. Control+Alt+P)</value>
+  </data>
+  <data name="Settings.General.ScanHotkey.Header" xml:space="preserve">
+    <value>Hotkey for Scan Barcodes / QR Codes (e.g. Control+Alt+B)</value>
+  </data>
+  <data name="Settings.General.SettingsHotkey.Header" xml:space="preserve">
+    <value>Hotkey to open Settings (e.g. Control+Alt+O)</value>
   </data>
   <data name="Settings.General.LaunchAtLogin.Header" xml:space="preserve">
     <value>Launch with Windows</value>
@@ -339,8 +357,8 @@
   <data name="Settings.About.Author.Text" xml:space="preserve">
     <value>Author:</value>
   </data>
-  <data name="Settings.About.RequiresRelease.Text" xml:space="preserve">
-    <value>Only opens once this build has been released on GitHub.</value>
+  <data name="Settings.About.AllReleases.Text" xml:space="preserve">
+    <value>See every release, including preview builds.</value>
   </data>
   <data name="Settings.About.Updates.Text" xml:space="preserve">
     <value>Updates</value>

@@ -462,3 +462,65 @@ LanguageBarView / Settings) với Windows, làm trước nhóm panel + từ đi�
 - **Dictionary bar scrolling**: the horizontal ScrollViewer ignored the
   mouse wheel — wheel now scrolls horizontally; mouse drag pans like a
   touch swipe (plain click still opens the link).
+
+## 0.1.3.51 test feedback (2026-11-12, evening)
+
+Manh killed the stuck 47/49 instances (`taskkill /IM TransPeek.exe /F`)
+and ran 51. New round of fixes (next build):
+
+- **Tray DEAD in 51 — regression under investigation**: left-click on
+  the icon does nothing, and NO right-click menu item responds
+  (including Quit — the `Environment.Exit(0)` fix from 51 did not get
+  to prove itself). Two suspects, both removed/neutralised: (1) the
+  `menu.Opening` handler (refreshing shortcut hints on every open)
+  — hints are now set once at construction and refreshed by
+  `TrayIconService.RefreshAccelerators()` when Settings are saved;
+  (2) the dispatcher-deferred Click — now falls back to a direct call
+  if the dispatcher is null or `TryEnqueue` fails, and the try/catch
+  moved into `RunMenuAction` (logged to crash.log). If 52 is still
+  dead, read crash.log + count TransPeek.exe processes in Task
+  Manager: a ghost icon (leftover from a taskkill'ed process, cleared
+  by hovering over it) looks identical to the live one, and a new
+  build's icon starts HIDDEN in the overflow (^) on Windows 11 — the
+  menu header shows the build number ("TransPeek 0.1.3 (52)") so the
+  live icon can be identified.
+- **Full shortcut set — DONE (reverses the deferral above)**: one
+  global hotkey per tray menu action, all in Settings > General, all
+  `Control+Alt+letter` (free on Windows): Manual Translation M,
+  Clipboard OCR C, Selection Translation S, Screenshot Copy P, Scan
+  Barcodes B, Settings O; the originals stay (translate Ctrl+Alt+T,
+  OCR Ctrl+Shift+S). No hotkey for Quit (accidental quit). Settings
+  rejects a chord already used by another action (Win32 silently
+  drops the duplicate registration); defaults covered by
+  `AppSettingsHotkeyTests`.
+- **Panel drag**: the title bar is the drag handle — `PointerPressed`
+  calls `WindowHelpers.BeginDrag` (`SendMessage(WM_NCLBUTTONDOWN,
+  HTCAPTION)`), after activating the window. The panel has no system
+  title bar, so without this it cannot be moved at all.
+- **Panel top bar**: app name centred, slogan on the line below.
+  **Footer**: GitHub mark + GitHub centred, build number right.
+  **Close (X) removed**: Esc + click-outside already close the
+  panel (hint text now says "Esc: close").
+- **Inline copy button removed** from the input row: the actions row
+  already has Copy source. **Settings gear (E713)** added at the
+  right end of the actions row — opens Settings (panel constructor
+  takes an `openSettings` callback from App).
+- **Dictionary bar scrollbar**: WinUI scrollbars overlay content, so
+  the bar covered the bottom half of the links. Fixed with bottom
+  padding (16px) on the scrollable content — the buttons sit fully
+  above the bar.
+- **About**: app icon (48px, decoded from the embedded ICO's largest
+  frame via `EmbeddedIcon.Image()`) + "TransPeek" + slogan below;
+  repo link text is now "Github.com/TranManhTuanLabs" (still opens
+  the repo URL); the separate "Version … (build …)" line is gone;
+  the release link is now "Release Ver 0.1.3 (Build CI #51)" and
+  opens the releases LIST page (`AppInfo.ReleasesUrl`, replaces the
+  per-tag `ReleaseNotesUrl`) so all releases are visible.
+- **OCR still unverified**: Manh reports it "still the same". The
+  51 overlay fix (15% dim + Win32 monitor bounds) was never actually
+  exercised — the dead tray menu meant OCR could not be triggered
+  from the tray. After the tray works, test OCR via the tray AND via
+  Ctrl+Shift+S; if the overlay is still opaque grey, the next step
+  is a screenshot-background overlay (capture first, show it behind
+  the selection rect), because a WinUI window surface may be opaque
+  regardless of the XAML background.

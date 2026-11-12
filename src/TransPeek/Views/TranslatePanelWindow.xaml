@@ -16,51 +16,40 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- Title: app name + slogan (mac parity: the panel shows what
-             app it is). Texts come from AppInfo in code-behind. -->
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" Margin="0,0,0,6" VerticalAlignment="Center">
-            <TextBlock x:Name="AppNameText" FontWeight="Bold" FontSize="13" />
-            <TextBlock x:Name="TaglineText" Foreground="Gray" FontSize="11" VerticalAlignment="Center" />
+        <!-- Title: app name centered, slogan on the line below (Manh
+             2026-11-12). The whole title bar is the drag handle: the
+             panel has no title bar of its own, so PointerPressed starts
+             a system move (see OnTitleBarPointerPressed). Texts come
+             from AppInfo in code-behind. -->
+        <StackPanel x:Name="TitleBar" Grid.Row="0" Margin="0,0,0,6"
+                    PointerPressed="OnTitleBarPointerPressed">
+            <TextBlock x:Name="AppNameText" FontWeight="Bold" FontSize="13" HorizontalAlignment="Center" />
+            <TextBlock x:Name="TaglineText" Foreground="Gray" FontSize="11" HorizontalAlignment="Center" />
         </StackPanel>
 
-        <!-- Header: source/target pickers + swap + provider + close.
+        <!-- Header: source/target pickers + swap + provider.
              Mac parity (LanguageBarView): changing a picker saves the
-             setting and re-translates immediately. -->
-        <Grid Grid.Row="1" Margin="0,0,0,8">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                <ComboBox x:Name="SourceLangCombo" Width="128"
-                          SelectionChanged="OnSourceLangChanged" />
-                <Button x:Name="SwapButton" Content="⇄" Padding="6,2" Click="OnSwapLanguages" />
-                <ComboBox x:Name="TargetLangCombo" Width="128"
-                          SelectionChanged="OnTargetLangChanged" />
-                <TextBlock x:Name="ProviderText" Foreground="Gray" FontSize="12" VerticalAlignment="Center" />
-            </StackPanel>
-            <Button x:Name="CloseButton" Grid.Column="1" Content="✕" Padding="8,2" />
-        </Grid>
+             setting and re-translates immediately. No close (X) button:
+             Esc and click-outside already close the panel (Manh
+             2026-11-12). -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" Margin="0,0,0,8">
+            <ComboBox x:Name="SourceLangCombo" Width="128"
+                      SelectionChanged="OnSourceLangChanged" />
+            <Button x:Name="SwapButton" Content="⇄" Padding="6,2" Click="OnSwapLanguages" />
+            <ComboBox x:Name="TargetLangCombo" Width="128"
+                      SelectionChanged="OnTargetLangChanged" />
+            <TextBlock x:Name="ProviderText" Foreground="Gray" FontSize="12" VerticalAlignment="Center" />
+        </StackPanel>
 
         <!-- Source text: editable like the mac SourceInputView.
              Enter re-translates, Shift+Enter inserts a newline.
-             The small copy button beside it copies the source text
-             (its own control, not the bottom actions row). -->
-        <Grid Grid.Row="2">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <TextBox x:Name="SourceTextBox" TextWrapping="Wrap"
-                     AcceptsReturn="True" MaxHeight="120" Margin="0,0,0,4"
-                     TextChanged="OnSourceTextChanged" SelectionChanged="OnSourceSelectionChanged"
-                     KeyDown="OnSourceKeyDown" />
-            <Button x:Name="CopySourceInlineButton" Grid.Column="1" Padding="6,2" Margin="6,0,0,0"
-                    VerticalAlignment="Top" ToolTipService.ToolTip="Copy source">
-                <FontIcon Glyph="&#xE8C8;" FontSize="12" />
-            </Button>
-        </Grid>
-        <TextBlock Grid.Row="3" x:Uid="Panel.Hint" Text="Enter: translate again • Select text in the panel to look it up in the dictionary"
+             No inline copy button here (Manh 2026-11-12): the actions
+             row already has Copy source. -->
+        <TextBox x:Name="SourceTextBox" Grid.Row="2" TextWrapping="Wrap"
+                 AcceptsReturn="True" MaxHeight="120" Margin="0,0,0,4"
+                 TextChanged="OnSourceTextChanged" SelectionChanged="OnSourceSelectionChanged"
+                 KeyDown="OnSourceKeyDown" />
+        <TextBlock Grid.Row="3" x:Uid="Panel.Hint" Text="Enter: translate again • Esc: close • Select text in the panel to look it up in the dictionary"
                    FontSize="11" Foreground="Gray" Margin="0,0,0,8" />
 
         <!-- Translation: read-only TextBox (not TextBlock) so the user can
@@ -70,24 +59,31 @@
                  Background="Transparent" FontSize="14"
                  SelectionChanged="OnTranslationSelectionChanged" />
 
-        <!-- Actions -->
-        <StackPanel Grid.Row="5" Orientation="Horizontal" Spacing="8" Margin="0,8,0,8">
-            <Button x:Name="CopyButton" x:Uid="Panel.Copy" Content="Copy" />
-            <Button x:Name="CopySourceButton" x:Uid="Panel.CopySource" Content="Copy source" />
-            <Button x:Name="CopyTranslationButton" x:Uid="Panel.CopyTranslation" Content="Copy translation" Visibility="Collapsed" />
-            <Button x:Name="OcrButton" x:Uid="Panel.CaptureOcr" Content="Capture OCR (Ctrl+Shift+S)" />
-        </StackPanel>
-
-        <!-- Dictionary links -->
-        <local:DictionaryBar x:Name="DictionaryBarControl" Grid.Row="6" />
-
-        <!-- Footer: GitHub repo link + dimmed build number. -->
-        <Grid Grid.Row="7" Margin="0,8,0,0">
+        <!-- Actions: copy buttons left, Settings gear on the right
+             (Manh 2026-11-12). -->
+        <Grid Grid.Row="5" Margin="0,8,0,8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <HyperlinkButton x:Name="GithubLink" Padding="0" VerticalAlignment="Center">
+            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <Button x:Name="CopyButton" x:Uid="Panel.Copy" Content="Copy" />
+                <Button x:Name="CopySourceButton" x:Uid="Panel.CopySource" Content="Copy source" />
+                <Button x:Name="CopyTranslationButton" x:Uid="Panel.CopyTranslation" Content="Copy translation" Visibility="Collapsed" />
+                <Button x:Name="OcrButton" x:Uid="Panel.CaptureOcr" Content="Capture OCR (Ctrl+Shift+S)" />
+            </StackPanel>
+            <Button x:Name="SettingsButton" Grid.Column="1" Padding="6,2" Margin="8,0,0,0"
+                    ToolTipService.ToolTip="Settings" Click="OnOpenSettings">
+                <FontIcon Glyph="&#xE713;" FontSize="12" />
+            </Button>
+        </Grid>
+
+        <!-- Dictionary links -->
+        <local:DictionaryBar x:Name="DictionaryBarControl" Grid.Row="6" />
+
+        <!-- Footer: GitHub repo link centered, dimmed build number right. -->
+        <Grid Grid.Row="7" Margin="0,8,0,0">
+            <HyperlinkButton x:Name="GithubLink" Padding="0" VerticalAlignment="Center" HorizontalAlignment="Center">
                 <StackPanel Orientation="Horizontal" Spacing="4">
                     <Border Width="16" Height="16" CornerRadius="3" Background="White" VerticalAlignment="Center">
                         <Image x:Name="GithubMarkFooterImage" Width="16" Height="16" Stretch="Uniform" />
@@ -95,8 +91,8 @@
                     <TextBlock Text="GitHub" FontSize="11" VerticalAlignment="Center" />
                 </StackPanel>
             </HyperlinkButton>
-            <TextBlock x:Name="FooterBuildText" Grid.Column="1" Foreground="Gray" FontSize="11"
-                       VerticalAlignment="Center" Opacity="0.7" />
+            <TextBlock x:Name="FooterBuildText" Foreground="Gray" FontSize="11"
+                       VerticalAlignment="Center" HorizontalAlignment="Right" Opacity="0.7" />
         </Grid>
     </Grid>
 </Window>

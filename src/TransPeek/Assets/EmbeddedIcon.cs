@@ -9,10 +9,46 @@
 // Settings window title-bar/taskbar icon (written to disk once, see
 // TrayIconService.EnsureIconFile).
 
+using System.Runtime.InteropServices.WindowsRuntime;
+
 namespace TransPeek.Assets;
 
 internal static class EmbeddedIcon
 {
+    /// <summary>Decode the embedded ICO into a WinUI image. The ICO
+    /// directory is parsed and the LARGEST frame (the 256px PNG) is
+    /// used, so the icon stays crisp at 48px — BitmapImage on the raw
+    /// ICO would pick a frame on its own.</summary>
+    public static Microsoft.UI.Xaml.Media.Imaging.BitmapImage Image()
+    {
+        var bytes = Convert.FromBase64String(IcoBase64);
+        // ICO header: reserved(2) type(2) count(2); each entry 16 bytes:
+        // width(1) height(1) colors(1) reserved(1) planes(2) bitcount(2)
+        // size(4) offset(4). Width 0 means 256.
+        var count = BitConverter.ToUInt16(bytes, 4);
+        var bestOffset = 0;
+        var bestSize = 0;
+        var bestDim = 0;
+        for (var i = 0; i < count; i++)
+        {
+            var o = 6 + i * 16;
+            var dim = bytes[o] == 0 ? 256 : bytes[o];
+            var size = BitConverter.ToInt32(bytes, o + 8);
+            var offset = BitConverter.ToInt32(bytes, o + 12);
+            if (dim > bestDim)
+            {
+                bestDim = dim;
+                bestSize = size;
+                bestOffset = offset;
+            }
+        }
+        var frame = new byte[bestSize];
+        Array.Copy(bytes, bestOffset, frame, 0, bestSize);
+        var image = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage();
+        image.SetSource(new MemoryStream(frame).AsRandomAccessStream());
+        return image;
+    }
+
     public const string IcoBase64 =
         "AAABAAQAEBAAAAAAIAAwAwAARgAAACAgAAAAACAAFgoAAHYDAAAwMAAAAAAgACgUAACMDQAAAAAAAAAAIACWiAEAtCEAAIlQTkcN" +
         "ChoKAAAADUlIRFIAAAAQAAAAEAgGAAAAH/P/YQAAAvdJREFUeJxNkztvW2UAQM/3uN99+CZxEtc2tUmKUioBHSoxUKigQ8XGzAZC" +

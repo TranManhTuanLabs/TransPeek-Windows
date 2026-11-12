@@ -34,6 +34,12 @@ public sealed partial class GeneralPage : Page
         AutoHideBox.Value = s.TriggerIconAutoHideSeconds;
         TranslateHotkeyBox.Text = s.TranslateHotkey;
         OcrHotkeyBox.Text = s.OcrHotkey;
+        ManualHotkeyBox.Text = s.ManualHotkey;
+        ClipboardOcrHotkeyBox.Text = s.ClipboardOcrHotkey;
+        SelectionHotkeyBox.Text = s.SelectionHotkey;
+        ScreenshotCopyHotkeyBox.Text = s.ScreenshotCopyHotkey;
+        ScanHotkeyBox.Text = s.ScanHotkey;
+        SettingsHotkeyBox.Text = s.SettingsHotkey;
         LaunchAtLoginToggle.IsOn = IsLaunchAtLoginSet();
         _loading = false;
     }
@@ -69,40 +75,86 @@ public sealed partial class GeneralPage : Page
     }
 
     private void OnTranslateHotkeyLostFocus(object sender, RoutedEventArgs e)
+        => TrySaveHotkey(TranslateHotkeyBox, HotkeyErrorText, "Translate",
+            s => App.Settings.TranslateHotkey = s, () => App.Settings.TranslateHotkey);
+
+    private void OnOcrHotkeyLostFocus(object sender, RoutedEventArgs e)
+        => TrySaveHotkey(OcrHotkeyBox, OcrHotkeyErrorText, "OCR",
+            s => App.Settings.OcrHotkey = s, () => App.Settings.OcrHotkey);
+
+    private void OnManualHotkeyLostFocus(object sender, RoutedEventArgs e)
+        => TrySaveHotkey(ManualHotkeyBox, ManualHotkeyErrorText, "Manual Translation",
+            s => App.Settings.ManualHotkey = s, () => App.Settings.ManualHotkey);
+
+    private void OnClipboardOcrHotkeyLostFocus(object sender, RoutedEventArgs e)
+        => TrySaveHotkey(ClipboardOcrHotkeyBox, ClipboardOcrHotkeyErrorText, "Clipboard OCR",
+            s => App.Settings.ClipboardOcrHotkey = s, () => App.Settings.ClipboardOcrHotkey);
+
+    private void OnSelectionHotkeyLostFocus(object sender, RoutedEventArgs e)
+        => TrySaveHotkey(SelectionHotkeyBox, SelectionHotkeyErrorText, "Selection Translation",
+            s => App.Settings.SelectionHotkey = s, () => App.Settings.SelectionHotkey);
+
+    private void OnScreenshotCopyHotkeyLostFocus(object sender, RoutedEventArgs e)
+        => TrySaveHotkey(ScreenshotCopyHotkeyBox, ScreenshotCopyHotkeyErrorText, "Screenshot Copy",
+            s => App.Settings.ScreenshotCopyHotkey = s, () => App.Settings.ScreenshotCopyHotkey);
+
+    private void OnScanHotkeyLostFocus(object sender, RoutedEventArgs e)
+        => TrySaveHotkey(ScanHotkeyBox, ScanHotkeyErrorText, "Scan Barcodes",
+            s => App.Settings.ScanHotkey = s, () => App.Settings.ScanHotkey);
+
+    private void OnSettingsHotkeyLostFocus(object sender, RoutedEventArgs e)
+        => TrySaveHotkey(SettingsHotkeyBox, SettingsHotkeyErrorText, "Settings",
+            s => App.Settings.SettingsHotkey = s, () => App.Settings.SettingsHotkey);
+
+    /// <summary>Validate one hotkey box (format + not already used by
+    /// another action — Win32 would silently drop the second registration),
+    /// save it, or show the error and restore the old text.</summary>
+    private void TrySaveHotkey(TextBox box, TextBlock error, string actionName,
+        Action<string> set, Func<string> get)
     {
-        var spec = TranslateHotkeyBox.Text.Trim();
+        var spec = box.Text.Trim();
         try
         {
-            GlobalHotkeyService.Parse(spec); // validate
-            HotkeyErrorText.Visibility = Visibility.Collapsed;
-            App.Settings.TranslateHotkey = spec;
+            var parsed = GlobalHotkeyService.Parse(spec);
+            foreach (var (name, other) in AllHotkeys())
+            {
+                if (name == actionName)
+                    continue;
+                try
+                {
+                    if (GlobalHotkeyService.Parse(other()) == parsed)
+                    {
+                        error.Text = $"Already used by {name}.";
+                        error.Visibility = Visibility.Visible;
+                        box.Text = get();
+                        return;
+                    }
+                }
+                catch (FormatException) { /* ignore an invalid stored spec */ }
+            }
+            error.Visibility = Visibility.Collapsed;
+            set(spec);
             Save();
         }
         catch (FormatException ex)
         {
-            HotkeyErrorText.Text = ex.Message;
-            HotkeyErrorText.Visibility = Visibility.Visible;
-            TranslateHotkeyBox.Text = App.Settings.TranslateHotkey;
+            error.Text = ex.Message;
+            error.Visibility = Visibility.Visible;
+            box.Text = get();
         }
     }
 
-    private void OnOcrHotkeyLostFocus(object sender, RoutedEventArgs e)
-    {
-        var spec = OcrHotkeyBox.Text.Trim();
-        try
-        {
-            GlobalHotkeyService.Parse(spec); // validate
-            OcrHotkeyErrorText.Visibility = Visibility.Collapsed;
-            App.Settings.OcrHotkey = spec;
-            Save();
-        }
-        catch (FormatException ex)
-        {
-            OcrHotkeyErrorText.Text = ex.Message;
-            OcrHotkeyErrorText.Visibility = Visibility.Visible;
-            OcrHotkeyBox.Text = App.Settings.OcrHotkey;
-        }
-    }
+    private static (string Name, Func<string> Get)[] AllHotkeys() =>
+    [
+        ("Translate", () => App.Settings.TranslateHotkey),
+        ("OCR", () => App.Settings.OcrHotkey),
+        ("Manual Translation", () => App.Settings.ManualHotkey),
+        ("Clipboard OCR", () => App.Settings.ClipboardOcrHotkey),
+        ("Selection Translation", () => App.Settings.SelectionHotkey),
+        ("Screenshot Copy", () => App.Settings.ScreenshotCopyHotkey),
+        ("Scan Barcodes", () => App.Settings.ScanHotkey),
+        ("Settings", () => App.Settings.SettingsHotkey),
+    ];
 
     private void OnLaunchAtLoginToggled(object sender, RoutedEventArgs e)
     {

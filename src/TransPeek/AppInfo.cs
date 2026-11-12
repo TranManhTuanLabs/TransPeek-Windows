@@ -27,10 +27,6 @@ public static class AppInfo
         }
     }
 
-    /// <summary>Full 4-part build, e.g. "0.1.0.0".</summary>
-    public static string Build =>
-        Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "0.1.0.0";
-
     /// <summary>CI build number (the GitHub Actions run number), stamped
     /// into the 4th version part by build.yml:
     /// <c>-p:Version=0.1.3.${{ github.run_number }}</c> turns 0.1.3.36
@@ -40,11 +36,9 @@ public static class AppInfo
     public static int CiBuildNumber =>
         Assembly.GetExecutingAssembly().GetName().Version?.Revision ?? 0;
 
-    /// <summary>Build string for the About page: just the CI number when
-    /// stamped ("36"), the full 4-part version otherwise ("0.1.3.0").</summary>
-    public static string BuildDisplay => CiBuildNumber > 0 ? CiBuildNumber.ToString() : Build;
-
-    /// <summary>Release notes for the running version:
-    /// https://github.com/TranManhTuanLabs/TransPeek-Windows/releases/tag/v0.1.0</summary>
-    public static string ReleaseNotesUrl => $"{RepositoryUrl}/releases/tag/v{Version}";
+    /// <summary>All releases (list page, not one tag):
+    /// https://github.com/TranManhTuanLabs/TransPeek-Windows/releases
+    /// — the About page links here so the user can see every release,
+    /// including preview builds (Manh 2026-11-12).</summary>
+    public static string ReleasesUrl => $"{RepositoryUrl}/releases";
 }

@@ -29,6 +29,31 @@
                      LostFocus="OnOcrHotkeyLostFocus" />
             <TextBlock x:Name="OcrHotkeyErrorText" FontSize="12" Foreground="Red" Visibility="Collapsed" />
 
+            <!-- One hotkey per tray menu action (Manh 2026-11-12). -->
+            <TextBox x:Name="ManualHotkeyBox" x:Uid="Settings.General.ManualHotkey" Header="Hotkey for Manual Translation (e.g. Control+Alt+M)"
+                     LostFocus="OnManualHotkeyLostFocus" />
+            <TextBlock x:Name="ManualHotkeyErrorText" FontSize="12" Foreground="Red" Visibility="Collapsed" />
+
+            <TextBox x:Name="ClipboardOcrHotkeyBox" x:Uid="Settings.General.ClipboardOcrHotkey" Header="Hotkey for Clipboard OCR (e.g. Control+Alt+C)"
+                     LostFocus="OnClipboardOcrHotkeyLostFocus" />
+            <TextBlock x:Name="ClipboardOcrHotkeyErrorText" FontSize="12" Foreground="Red" Visibility="Collapsed" />
+
+            <TextBox x:Name="SelectionHotkeyBox" x:Uid="Settings.General.SelectionHotkey" Header="Hotkey for Selection Translation (e.g. Control+Alt+S)"
+                     LostFocus="OnSelectionHotkeyLostFocus" />
+            <TextBlock x:Name="SelectionHotkeyErrorText" FontSize="12" Foreground="Red" Visibility="Collapsed" />
+
+            <TextBox x:Name="ScreenshotCopyHotkeyBox" x:Uid="Settings.General.ScreenshotCopyHotkey" Header="Hotkey for Screenshot Copy (e.g. Control+Alt+P)"
+                     LostFocus="OnScreenshotCopyHotkeyLostFocus" />
+            <TextBlock x:Name="ScreenshotCopyHotkeyErrorText" FontSize="12" Foreground="Red" Visibility="Collapsed" />
+
+            <TextBox x:Name="ScanHotkeyBox" x:Uid="Settings.General.ScanHotkey" Header="Hotkey for Scan Barcodes / QR Codes (e.g. Control+Alt+B)"
+                     LostFocus="OnScanHotkeyLostFocus" />
+            <TextBlock x:Name="ScanHotkeyErrorText" FontSize="12" Foreground="Red" Visibility="Collapsed" />
+
+            <TextBox x:Name="SettingsHotkeyBox" x:Uid="Settings.General.SettingsHotkey" Header="Hotkey to open Settings (e.g. Control+Alt+O)"
+                     LostFocus="OnSettingsHotkeyLostFocus" />
+            <TextBlock x:Name="SettingsHotkeyErrorText" FontSize="12" Foreground="Red" Visibility="Collapsed" />
+
             <ToggleSwitch x:Name="LaunchAtLoginToggle" x:Uid="Settings.General.LaunchAtLogin" Header="Launch with Windows"
                           OnContent="On" OffContent="Off"
                           Toggled="OnLaunchAtLoginToggled" />

@@ -83,7 +83,7 @@ public sealed partial class App : Application
         NativeMethods.ShowWindow(hwnd, NativeMethods.SW_HIDE);
 
         _toast = new ToastWindow();
-        _panel = new TranslatePanelWindow(TranslateAsync, () => _ocrFlow!.RunOcrAsync());
+        _panel = new TranslatePanelWindow(TranslateAsync, () => _ocrFlow!.RunOcrAsync(), ShowSettings);
         _triggerIcon = new TriggerIconWindow();
         _triggerIcon.OpenRequested += OnTriggerIconOpenRequested;
 
@@ -295,30 +295,39 @@ public sealed partial class App : Application
     private void StartHotkeys()
     {
         _hotkeys?.Dispose();
-        _hotkeys = new GlobalHotkeyService();
+        var hotkeys = new GlobalHotkeyService();
+        _hotkeys = hotkeys;
         // Hotkey callbacks arrive on the hotkey thread: marshal to the UI
-        // queue before touching windows or the clipboard.
-        try
+        // queue before touching windows or the clipboard. One action per
+        // tray menu item (Manh 2026-11-12: full shortcut set in Settings).
+        void TryRegister(int id, string spec, string name, Action handler)
         {
-            _hotkeys.Register(GlobalHotkeyService.TranslateHotkeyId,
-                Settings.TranslateHotkey,
-                () => _uiQueue.TryEnqueue(() => _ = TranslateCurrentSelectionAsync()));
+            try
+            {
+                hotkeys.Register(id, spec, () => _uiQueue.TryEnqueue(handler));
+            }
+            catch (FormatException ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Bad {name} hotkey {spec}: {ex.Message}");
+            }
         }
-        catch (FormatException ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Bad translate hotkey: {ex.Message}");
-        }
-        try
-        {
-            _hotkeys.Register(GlobalHotkeyService.OcrHotkeyId,
-                Settings.OcrHotkey,
-                () => _uiQueue.TryEnqueue(() => _ = _ocrFlow!.RunOcrAsync()));
-        }
-        catch (FormatException ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Bad OCR hotkey: {ex.Message}");
-        }
-        _hotkeys.Start();
+        TryRegister(GlobalHotkeyService.TranslateHotkeyId, Settings.TranslateHotkey, "translate",
+            () => _ = TranslateCurrentSelectionAsync());
+        TryRegister(GlobalHotkeyService.OcrHotkeyId, Settings.OcrHotkey, "OCR",
+            () => _ = _ocrFlow!.RunOcrAsync());
+        TryRegister(GlobalHotkeyService.ManualHotkeyId, Settings.ManualHotkey, "manual translation",
+            () => _panel?.ShowInputMode());
+        TryRegister(GlobalHotkeyService.ClipboardOcrHotkeyId, Settings.ClipboardOcrHotkey, "clipboard OCR",
+            () => _ = _ocrFlow!.RunSilentOcrAsync());
+        TryRegister(GlobalHotkeyService.SelectionHotkeyId, Settings.SelectionHotkey, "selection translation",
+            () => _ = TranslateCurrentSelectionAsync());
+        TryRegister(GlobalHotkeyService.ScreenshotCopyHotkeyId, Settings.ScreenshotCopyHotkey, "screenshot copy",
+            () => _ = _screenshotCopy!.RunAsync());
+        TryRegister(GlobalHotkeyService.ScanHotkeyId, Settings.ScanHotkey, "barcode scan",
+            () => _ = ScanBarcodesAsync());
+        TryRegister(GlobalHotkeyService.SettingsHotkeyId, Settings.SettingsHotkey, "settings",
+            () => ShowSettings());
+        hotkeys.Start();
     }
 
     // ----- settings -----
@@ -347,6 +356,7 @@ public sealed partial class App : Application
         Settings = SettingsStore.Load();
         RebuildProviders();
         StartHotkeys(); // re-register hotkeys with the new specs
+        _tray?.RefreshAccelerators(); // menu shortcut hints follow Settings
         // Restart the selection monitor if the user toggled WatchSelection.
         _selectionMonitor?.Dispose();
         _selectionMonitor = new SelectionMonitor(OnSelectionChanged);

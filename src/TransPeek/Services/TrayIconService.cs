@@ -88,16 +88,14 @@ public sealed class TrayIconService : IDisposable
         menu.Items.Add(Item("Tray.Menu.Quit", "Quit TransPeek", "\uE711", quit));
 
         // Shortcut hints on the right of the two hotkey actions (mac
-        // menubar parity): refreshed every time the menu opens, so a
-        // hotkey changed in Settings shows up immediately. WinUI renders
+        // menubar parity). Set once here and refreshed when Settings are
+        // saved (RefreshAccelerators) — NOT on menu.Opening: the Opening
+        // handler ran on every open and is suspected of breaking the
+        // menu in 0.1.3.51 (items unclickable). WinUI renders
         // KeyboardAcceleratorTextOverride dimmed, like the mac labels.
         // The other actions have no hotkey yet — when the full shortcut
-        // set lands in Settings (see docs/DECISIONS.md), add theirs here.
-        menu.Opening += (_, _) =>
-        {
-            _clipboardTranslationItem.KeyboardAcceleratorTextOverride = FormatHotkey(App.Settings.TranslateHotkey);
-            _screenshotOcrItem.KeyboardAcceleratorTextOverride = FormatHotkey(App.Settings.OcrHotkey);
-        };
+        // set lands in Settings, add theirs here.
+        RefreshAccelerators();
 
         _tray = new TaskbarIcon
         {
@@ -113,6 +111,14 @@ public sealed class TrayIconService : IDisposable
         // ForceCreate is required: the icon is created lazily otherwise and
         // a tray-only app would show nothing until the first interaction.
         _tray.ForceCreate();
+    }
+
+    /// <summary>Refresh the shortcut hints from the current Settings
+    /// (call after Settings are saved — hotkeys can change at runtime).</summary>
+    public void RefreshAccelerators()
+    {
+        _clipboardTranslationItem.KeyboardAcceleratorTextOverride = FormatHotkey(App.Settings.TranslateHotkey);
+        _screenshotOcrItem.KeyboardAcceleratorTextOverride = FormatHotkey(App.Settings.OcrHotkey);
     }
 
     /// <summary>Header: app name + version, plus the CI build number in
@@ -153,14 +159,29 @@ public sealed class TrayIconService : IDisposable
         // from a MenuFlyoutItem.Click is swallowed while the flyout is
         // dismissing — the Settings item did nothing from the menu
         // (left-click on the icon worked) in the 0.1.3.47/.49 test.
+        // Fall back to a direct call if the dispatcher is unavailable:
+        // a dead menu is worse than a swallowed action (0.1.3.51: the
+        // whole menu went unclickable, cause still unproven — the
+        // Opening handler is gone too, see RefreshAccelerators).
         // A throwing menu action must never die silently: log it so
         // crash.log shows what happened.
-        item.Click += (_, _) => _dispatcher.TryEnqueue(() =>
+        item.Click += (_, _) =>
         {
-            try { onClick(); }
-            catch (Exception ex) { CrashLog.Write("TrayMenu", ex); }
-        });
+            try
+            {
+                if (_dispatcher is not null && _dispatcher.TryEnqueue(() => RunMenuAction(onClick)))
+                    return;
+            }
+            catch { }
+            RunMenuAction(onClick);
+        };
         return item;
+    }
+
+    private static void RunMenuAction(Action onClick)
+    {
+        try { onClick(); }
+        catch (Exception ex) { CrashLog.Write("TrayMenu", ex); }
     }
 
     /// <summary>"Control+Alt+T" → "Ctrl+Alt+T" for the menu hint.</summary>

@@ -84,6 +84,13 @@ internal static class NativeMethods
     public const uint SWP_SHOWWINDOW = 0x0040;
     public const uint SWP_FRAMECHANGED = 0x0020;
 
+    // Dragging a borderless window: SendMessage(WM_NCLBUTTONDOWN,
+    // HTCAPTION) hands the drag to Windows (smooth, multi-monitor aware).
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern IntPtr SendMessage(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
+    public const uint WM_NCLBUTTONDOWN = 0x00A1;
+    public const int HTCAPTION = 2;
+
     [DllImport("user32.dll")]
     public static extern bool GetCursorPos(out POINT lpPoint);
 

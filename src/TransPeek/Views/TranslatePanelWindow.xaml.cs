@@ -53,13 +53,16 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// by the click that opened the panel (tray menu) must not kill
     /// the panel that click re-showed.</summary>
     private int _epoch;
+    private readonly Action _openSettings;
 
     public TranslatePanelWindow(
         Func<string, Task<(string? Translation, string ProviderName)>> translateAsync,
-        Func<Task> ocrRequested)
+        Func<Task> ocrRequested,
+        Action openSettings)
     {
         _translateAsync = translateAsync;
         _ocrRequested = ocrRequested;
+        _openSettings = openSettings;
         InitializeComponent();
         PopulateLangCombos();
         SyncLangCombos();
@@ -96,10 +99,8 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
                 }
             };
         }
-        CloseButton.Click += (_, _) => HidePanel();
         CopyButton.Click += async (_, _) => await CopyWithFeedbackAsync(CopyButton, _translationText);
         CopySourceButton.Click += async (_, _) => await CopyWithFeedbackAsync(CopySourceButton, _sourceText);
-        CopySourceInlineButton.Click += async (_, _) => await CopyWithFeedbackAsync(CopySourceInlineButton, _sourceText);
         CopyTranslationButton.Click += async (_, _) => await CopyWithFeedbackAsync(CopyTranslationButton, _translationText);
         OcrButton.Click += (_, _) => { HidePanel(); _ = _ocrRequested(); };
         _clickOutside = new ClickOutsideMonitor(
@@ -235,6 +236,18 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         _clickOutside.Start();
         UpdateCopyButtons();
     }
+
+    private void OnTitleBarPointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        // The panel has no system title bar: dragging the title area
+        // starts a native window move (Manh 2026-11-12). Activate first
+        // so the panel keeps keyboard focus after the drag.
+        WindowHelpers.ActivateWindow(this);
+        WindowHelpers.BeginDrag(this);
+        e.Handled = true;
+    }
+
+    private void OnOpenSettings(object sender, RoutedEventArgs e) => _openSettings();
 
     private void HidePanel()
     {

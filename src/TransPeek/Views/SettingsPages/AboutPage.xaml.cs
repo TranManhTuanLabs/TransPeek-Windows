@@ -1,6 +1,6 @@
-// About (Settings > About): app name + running version/build, author line
-// with GitHub icon + repo link, release-notes link for the running
-// version, and the simple update check (Check for Updates).
+// About (Settings > About): app icon + name + slogan, GitHub icon +
+// repo link, link to all releases (with the running version + CI build
+// in its text), and the simple update check (Check for Updates).
 //
 // Update check (Manh's decision, 2026-11-08): SIMPLE CHECK ONLY — call
 // the GitHub Releases API, compare the latest tag with the running
@@ -27,9 +27,14 @@ public sealed partial class AboutPage : Page
         InitializeComponent();
         Loaded += (_, _) =>
         {
-            VersionText.Text = $"Version {AppInfo.Version} (build {AppInfo.BuildDisplay})";
-            ReleaseNotesLink.Content = $"Release notes (v{AppInfo.Version})";
+            // "Release Ver 0.1.3 (Build CI #51)" — the version line lives
+            // here now that the separate Version line is gone (Manh
+            // 2026-11-12). Local builds (no CI number) show no build part.
+            ReleaseNotesLink.Content = AppInfo.CiBuildNumber > 0
+                ? $"Release Ver {AppInfo.Version} (Build CI #{AppInfo.CiBuildNumber})"
+                : $"Release Ver {AppInfo.Version}";
             GithubMarkImage.Source = GitHubMark.Image();
+            AppIconImage.Source = EmbeddedIcon.Image();
         };
     }
 
@@ -40,7 +45,7 @@ public sealed partial class AboutPage : Page
 
     private async void OnReleaseNotesClick(object sender, RoutedEventArgs e)
     {
-        await Launcher.LaunchUriAsync(new Uri(AppInfo.ReleaseNotesUrl));
+        await Launcher.LaunchUriAsync(new Uri(AppInfo.ReleasesUrl));
     }
 
     private async void OnCheckUpdatesClick(object sender, RoutedEventArgs e)

@@ -37,6 +37,15 @@ public sealed class AppSettings
     /// <summary>Global hotkey that shows the panel for the current selection.
     /// Win32 RegisterHotKey modifiers+key, e.g. "Control+Alt+T".</summary>
     public string TranslateHotkey { get; set; } = "Control+Alt+T";
+    /// <summary>One global hotkey per tray menu action (Manh 2026-11-12:
+    /// full shortcut set in Settings). Defaults use Control+Alt+letter —
+    /// free on Windows and distinct from the two originals.</summary>
+    public string ManualHotkey { get; set; } = "Control+Alt+M";
+    public string ClipboardOcrHotkey { get; set; } = "Control+Alt+C";
+    public string SelectionHotkey { get; set; } = "Control+Alt+S";
+    public string ScreenshotCopyHotkey { get; set; } = "Control+Alt+P";
+    public string ScanHotkey { get; set; } = "Control+Alt+B";
+    public string SettingsHotkey { get; set; } = "Control+Alt+O";
     /// <summary>Watch the selection automatically (poll UIA). Off means the
     /// app only reacts to the hotkey / tray menu.</summary>
     public bool WatchSelection { get; set; } = true;

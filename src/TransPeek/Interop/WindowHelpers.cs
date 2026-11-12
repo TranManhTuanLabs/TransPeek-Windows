@@ -56,6 +56,15 @@ internal static class WindowHelpers
         window.Activate();
     }
 
+    /// <summary>Start a native window drag (for borderless windows
+    /// like the panel): pretend the user grabbed the title bar.
+    /// Windows handles the move, including multi-monitor and snap.</summary>
+    public static void BeginDrag(Window window)
+    {
+        var hwnd = WindowNative.GetWindowHandle(window);
+        NativeMethods.SendMessage(hwnd, NativeMethods.WM_NCLBUTTONDOWN, new IntPtr(NativeMethods.HTCAPTION), IntPtr.Zero);
+    }
+
     public static void Hide(Window window)
     {
         var hwnd = WindowNative.GetWindowHandle(window);
