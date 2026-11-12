@@ -37,7 +37,7 @@ public sealed class OcrFlowService
     private readonly Func<IReadOnlyList<string>, string, IOcrProvider> _resolveProvider;
     private readonly ITranslatePanel _panel;
     private readonly IToastService _toast;
-    private readonly Func<Task<RectInt32?>> _selectRegionAsync;
+    private readonly Func<Task<RegionSelection>> _selectRegionAsync;
     private readonly ScreenCaptureService _capture = new();
 
     public OcrFlowService(
@@ -49,7 +49,7 @@ public sealed class OcrFlowService
         Func<IReadOnlyList<string>, string, IOcrProvider> resolveProvider,
         ITranslatePanel panel,
         IToastService toast,
-        Func<Task<RectInt32?>> selectRegionAsync)
+        Func<Task<RegionSelection>> selectRegionAsync)
     {
         _settingsFactory = settingsFactory;
         _coordinatorFactory = coordinatorFactory;
@@ -133,14 +133,19 @@ public sealed class OcrFlowService
     /// or a step failed (the failure was already toasted).</summary>
     private async Task<string?> CaptureAndRecognizeTextAsync(AppSettings settings)
     {
-        var region = await _selectRegionAsync();
-        if (region is null)
+        var selection = await _selectRegionAsync();
+        if (selection.Region is null)
             return null; // user cancelled the region selection
 
         byte[] png;
         try
         {
-            png = await _capture.CaptureRegionPngAsync(region.Value);
+            // Prefer the pre-overlay screenshot (0.1.3.54): the overlay
+            // renders opaque, so a live capture taken while it is up
+            // photographs the overlay, not the desktop. Fall back to a
+            // live region capture when there is no screenshot.
+            png = await selection.CropScreenshotAsync()
+                ?? await _capture.CaptureRegionPngAsync(selection.Region.Value);
         }
         catch (Exception ex)
         {
@@ -155,7 +160,7 @@ public sealed class OcrFlowService
         // vs a fine capture with a grey overlay (the window surface is
         // opaque and hides the desktop). The file is
         // %LOCALAPPDATA%\TransPeek\ocr-capture.png.
-        await LogCaptureDiagnosticsAsync(png, region.Value);
+        await LogCaptureDiagnosticsAsync(png, selection.Region.Value);
 
         // First run: download Tesseract language data if the user picked
         // Tesseract (the default) and it is missing, instead of silently

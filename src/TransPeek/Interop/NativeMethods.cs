@@ -283,6 +283,16 @@ internal static class NativeMethods
     public const int WM_LBUTTONDOWN = 0x0201;
     public const int WM_RBUTTONDOWN = 0x0204;
 
+    // ----- user32: low-level keyboard hook (Esc-to-dismiss) -----
+    // The panel is a no-activate window: it never receives keyboard
+    // input, so its Esc accelerator is dead until the user clicks into
+    // it first (0.1.3.54 test). A WH_KEYBOARD_LL hook sees Esc while
+    // the panel is visible, whatever window has focus.
+    public const int WH_KEYBOARD_LL = 13;
+    public const int WM_KEYDOWN = 0x0100;
+    public const int WM_SYSKEYDOWN = 0x0104;
+    public const int VK_ESCAPE = 0x1B;
+
     public delegate IntPtr HookProc(int nCode, IntPtr wParam, IntPtr lParam);
 
     [StructLayout(LayoutKind.Sequential)]

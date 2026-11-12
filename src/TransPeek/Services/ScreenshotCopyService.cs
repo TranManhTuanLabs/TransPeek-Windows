@@ -13,7 +13,7 @@ namespace TransPeek.Services;
 
 public sealed class ScreenshotCopyService
 {
-    private readonly Func<Task<RectInt32?>> _selectRegionAsync;
+    private readonly Func<Task<RegionSelection>> _selectRegionAsync;
     private readonly IToastService _toast;
     private readonly ScreenCaptureService _capture = new();
 
@@ -23,7 +23,7 @@ public sealed class ScreenshotCopyService
     // here would make a later paste fail.
     private InMemoryRandomAccessStream? _lastImageStream;
 
-    public ScreenshotCopyService(Func<Task<RectInt32?>> selectRegionAsync, IToastService toast)
+    public ScreenshotCopyService(Func<Task<RegionSelection>> selectRegionAsync, IToastService toast)
     {
         _selectRegionAsync = selectRegionAsync;
         _toast = toast;
@@ -31,18 +31,22 @@ public sealed class ScreenshotCopyService
 
     public async Task RunAsync()
     {
-        var region = await _selectRegionAsync();
-        if (region is null)
+        var selection = await _selectRegionAsync();
+        if (selection.Region is null)
             return; // user cancelled the region selection
 
         byte[] png;
         try
         {
-            // Primary: the app's own region capture — same behaviour on
+            // Primary: cut the region out of the pre-overlay screenshot
+            // (0.1.3.54: the overlay renders opaque, so a live capture
+            // photographs the overlay, not the desktop). Without a
+            // screenshot, capture the region live — same behaviour on
             // Win10/Win11, with proper cancel/error feedback. The system
             // Snipping Tool (ms-screenclip:) is the fallback below, only
             // when this capture fails.
-            png = await _capture.CaptureRegionPngAsync(region.Value);
+            png = await selection.CropScreenshotAsync()
+                ?? await _capture.CaptureRegionPngAsync(selection.Region.Value);
         }
         catch (Exception)
         {

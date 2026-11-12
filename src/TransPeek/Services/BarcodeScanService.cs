@@ -34,7 +34,7 @@ public enum BarcodeScanOutcome
 
 public sealed class BarcodeScanService
 {
-    private readonly Func<Task<RectInt32?>> _selectRegionAsync;
+    private readonly Func<Task<RegionSelection>> _selectRegionAsync;
     private readonly ScreenCaptureService _capture = new();
 
     /// <summary>Payload of the first code found (Opened / Copied only).</summary>
@@ -43,7 +43,7 @@ public sealed class BarcodeScanService
     /// <summary>Failure detail (Failed only).</summary>
     public string? ErrorMessage { get; private set; }
 
-    public BarcodeScanService(Func<Task<RectInt32?>> selectRegionAsync)
+    public BarcodeScanService(Func<Task<RegionSelection>> selectRegionAsync)
     {
         _selectRegionAsync = selectRegionAsync;
     }
@@ -53,14 +53,17 @@ public sealed class BarcodeScanService
         Payload = null;
         ErrorMessage = null;
 
-        var region = await _selectRegionAsync();
-        if (region is null)
+        var selection = await _selectRegionAsync();
+        if (selection.Region is null)
             return BarcodeScanOutcome.Cancelled; // user cancelled the region selection
 
         byte[] png;
         try
         {
-            png = await _capture.CaptureRegionPngAsync(region.Value);
+            // Prefer the pre-overlay screenshot (0.1.3.54: the overlay
+            // renders opaque, so a live capture photographs the overlay).
+            png = await selection.CropScreenshotAsync()
+                ?? await _capture.CaptureRegionPngAsync(selection.Region.Value);
         }
         catch (Exception ex)
         {

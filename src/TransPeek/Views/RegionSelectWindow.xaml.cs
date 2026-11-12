@@ -15,10 +15,14 @@
 // Cancel button is clickable, Closed completes the task, and Finish()
 // closes (not just hides) the window exactly once.
 
+using System.IO;
+using System.Runtime.InteropServices.WindowsRuntime;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media.Imaging;
 using TransPeek.Interop;
+using TransPeek.Services;
 using Windows.Foundation;
 using Windows.Graphics;
 using Windows.System;
@@ -104,6 +108,32 @@ public sealed partial class RegionSelectWindow : Window
         Activate();
         RootGrid.Focus(FocusState.Programmatic);
         return _result.Task;
+    }
+
+    /// <summary>Show the display screenshot behind the dim (0.1.3.54):
+    /// the window renders opaque, so without it the user sees only a
+    /// flat grey board and picks a region blind.</summary>
+    public void SetBackgroundImage(byte[] png)
+    {
+        _ = LoadBackgroundAsync(png);
+    }
+
+    private async Task LoadBackgroundAsync(byte[] png)
+    {
+        try
+        {
+            var image = new BitmapImage();
+            // SetSourceAsync decodes before it returns, so the stream
+            // may be disposed right after (unlike SetSource, which
+            // decodes lazily and needs the stream to stay open).
+            using var stream = new MemoryStream(png).AsRandomAccessStream();
+            await image.SetSourceAsync(stream);
+            BackgroundImage.Source = image;
+        }
+        catch (Exception ex)
+        {
+            CrashLog.Write("RegionSelect.Background", ex);
+        }
     }
 
     private void OnPointerPressed(object sender, PointerRoutedEventArgs e)

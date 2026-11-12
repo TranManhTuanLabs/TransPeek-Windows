@@ -591,3 +591,55 @@ and ran 51. New round of fixes (next build):
   Windows OCR automatically when Tesseract fails. No PowerToys or
   language pack needed. Screenshot Copy (image to clipboard) and
   Screenshot OCR (text from screen) stay two separate features.
+
+## 0.1.3.54 test feedback (2026-11-12, evening)
+
+- **Dictionary bar scroll works now** (wheel + click-drag on links):
+  the `AddHandler(handledEventsToo: true)` fix from round 2 is
+  confirmed. No further action.
+- **OCR capture IS a flat grey board — root cause found.** The
+  OcrCapture diagnostic proved it: mean 222.2 stddev 2.9, mean 222.4
+  stddev 4.2, mean 255.0 stddev 0.0. Mean 222 is exactly white +
+  15% black dim + 13% white selection fill — the capture photographs
+  the overlay window itself, not the desktop. Two causes: (a) the
+  RegionSelectWindow renders OPAQUE (the Window's default background
+  is solid, the semi-transparent dim just darkens that to grey — the
+  user cannot see the desktop either, which is the 0.1.3.47 "grey
+  frame, no content" report; he was picking regions blind), and (b)
+  `Finish()` completes the selection task BEFORE `Close()`, so the
+  capture starts while the overlay is still up. Fix (screenshot-
+  background, the approach Snipping Tool / PowerToys use): App
+  captures the display BEFORE showing the overlay, the overlay
+  shows that screenshot as its background (so the user sees the real
+  desktop dimmed), and the region is cropped out of the same
+  screenshot (`ImageEncoding.CropPngAsync` + `RegionSelection`
+  record carrying rect + screenshot + display bounds). The live
+  region capture stays only as a fallback when the display capture
+  fails. Applies to all three region flows (OCR, Screenshot Copy,
+  Barcode scan — they share `SelectRegionAsync`).
+- **Panel stuck visible (gear + Esc both dead) — root cause: the
+  `_visible` guard.** HidePanel set `_visible = false` and then hid
+  the window; when the hide left the window up, every later
+  HidePanel was an early-return no-op. Fixed by always hiding (no
+  early return) and using the WinUI-native `AppWindow.Hide()`
+  instead of `ShowWindow(SW_HIDE)`.
+- **Esc dead in the no-activate paths — root cause: no keyboard
+  input.** The panel's Esc accelerator/KeyDown need a focused
+  element, but ShowPanelNear never activates the window, so Esc
+  goes to the user's app instead. Fixed with `EscapeKeyMonitor`
+  (WH_KEYBOARD_LL, same shape as ClickOutsideMonitor): it sees Esc
+  whatever window has focus, only while the panel is visible, and
+  only observes the key (it never swallows it — the key still
+  reaches the other app). Started/stopped with the click-outside
+  monitor; the accelerator + KeyDown stay as backups.
+- **Top bar drag only on the name text — root cause: no
+  background.** A StackPanel with no Background is only
+  hit-testable on the text glyphs, so a press on the empty area
+  beside/below the text never reached the drag handler. Fixed with
+  `Background="Transparent"` (+ explicit Stretch): the whole row,
+  full width, is now the drag handle.
+- **Tray right-click menu: no TrayMenu lines in the log Manh
+  pasted** — only the OcrCapture lines. Still undiagnosed: Manh
+  needs to click a menu item and check crash.log for
+  `TrayMenu: Clicked '...'` (the log in the doc ends with the three
+  OcrCapture lines from 22:18–22:19).

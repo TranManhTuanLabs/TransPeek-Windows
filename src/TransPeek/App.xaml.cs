@@ -272,10 +272,34 @@ public sealed partial class App : Application
 
     // ----- OCR region selection -----
 
-    private async Task<RectInt32?> SelectRegionAsync()
+    private async Task<RegionSelection> SelectRegionAsync()
     {
+        // Capture the display BEFORE the overlay appears (0.1.3.54):
+        // the overlay window renders opaque, so a capture taken while
+        // it is up photographs the overlay — a flat ~222 grey board
+        // with no text — instead of the desktop. The screenshot also
+        // becomes the overlay's background, so the user can actually
+        // see the desktop to pick a region (the 0.1.3.47 "grey frame,
+        // no content" report: he was picking blind).
+        var (cx, cy) = WindowHelpers.CursorPosition();
+        var bounds = WindowHelpers.MonitorBounds(cx, cy);
+        byte[]? screenshot = null;
+        try
+        {
+            screenshot = await new ScreenCaptureService().CaptureRegionPngAsync(bounds);
+        }
+        catch (Exception ex)
+        {
+            // Display capture failed: fall back to the old flow
+            // (overlay without a background + live region capture
+            // after it closes).
+            CrashLog.Write("SelectRegion.DisplayCapture", ex);
+        }
         var window = new RegionSelectWindow();
-        return await window.SelectRegionAsync();
+        if (screenshot is not null)
+            window.SetBackgroundImage(screenshot);
+        var region = await window.SelectRegionAsync();
+        return new RegionSelection(region, screenshot, bounds);
     }
 
     /// <summary>Quit for real. Application.Exit() did not terminate the

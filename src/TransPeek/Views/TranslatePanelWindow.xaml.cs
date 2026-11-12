@@ -38,6 +38,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     private readonly Func<string, Task<(string? Translation, string ProviderName)>> _translateAsync;
     private readonly Func<Task> _ocrRequested;
     private readonly ClickOutsideMonitor _clickOutside;
+    private readonly EscapeKeyMonitor _escapeKey;
     private string _sourceText = "";
     private string _translationText = "";
     /// <summary>Text currently selected inside the panel (source or
@@ -138,6 +139,19 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
                 if (epoch == _epoch)
                     HidePanel();
             });
+        // Esc while the panel is visible (0.1.3.54): the panel is a
+        // no-activate window, so its Esc accelerator is dead until the
+        // user clicks into it first — a low-level keyboard hook sees
+        // Esc whatever window has focus.
+        _escapeKey = new EscapeKeyMonitor(
+            Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread(),
+            isActive: () => _visible,
+            getEpoch: () => _epoch,
+            onEscape: epoch =>
+            {
+                if (epoch == _epoch)
+                    HidePanel();
+            });
         RefreshDictionaryBar(App.Settings.DictionaryLinks, App.Settings.DictionaryDisplayMode);
         // Title + footer (AppInfo is the single source for name,
         // slogan, repo URL and build number).
@@ -189,6 +203,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         WindowHelpers.ActivateWindow(this);
         _visible = true;
         _clickOutside.Start();
+        _escapeKey.Start();
         SourceTextBox.Focus(FocusState.Keyboard);
     }
 
@@ -251,6 +266,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         WindowHelpers.ShowWithoutActivation(this);
         _visible = true;
         _clickOutside.Start();
+        _escapeKey.Start();
         UpdateCopyButtons();
     }
 
@@ -305,11 +321,17 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
 
     private void HidePanel()
     {
-        if (!_visible)
-            return;
+        // No early return on !_visible (0.1.3.54): the panel got stuck
+        // visible — HidePanel had run (setting _visible = false) while
+        // the window stayed up, and every later HidePanel was then a
+        // no-op, so neither the gear nor Esc could close it. Always
+        // hide the window; the state flags are idempotent.
         _visible = false;
         _clickOutside.Stop();
-        WindowHelpers.Hide(this);
+        _escapeKey.Stop();
+        // AppWindow.Hide() (the WinUI-native hide) instead of
+        // ShowWindow(SW_HIDE): the HWND hide left this window up.
+        AppWindow.Hide();
     }
 
     public void RefreshDictionaryBar(IReadOnlyList<DictionaryLink> links, string displayMode)

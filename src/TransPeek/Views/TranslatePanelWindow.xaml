@@ -20,8 +20,14 @@
              2026-11-12). The whole title bar is the drag handle: the
              panel has no title bar of its own, so PointerPressed starts
              a system move (see OnTitleBarPointerPressed). Texts come
-             from AppInfo in code-behind. -->
+             from AppInfo in code-behind. Background="Transparent"
+             (0.1.3.54): without a background the StackPanel is only
+             hit-testable on the text glyphs, so only a press exactly on
+             the name started a drag — the empty area beside/below the
+             text received nothing. A transparent brush makes the whole
+             row (full width) the handle. -->
         <StackPanel x:Name="TitleBar" Grid.Row="0" Margin="0,0,0,6"
+                    Background="Transparent" HorizontalAlignment="Stretch"
                     PointerPressed="OnTitleBarPointerPressed"
                     PointerMoved="OnTitleBarPointerMoved"
                     PointerReleased="OnTitleBarPointerReleased">
