@@ -82,6 +82,7 @@ internal static class NativeMethods
     public const uint SWP_NOMOVE = 0x0002;
     public const uint SWP_NOSIZE = 0x0001;
     public const uint SWP_SHOWWINDOW = 0x0040;
+    public const uint SWP_FRAMECHANGED = 0x0020;
 
     [DllImport("user32.dll")]
     public static extern bool GetCursorPos(out POINT lpPoint);

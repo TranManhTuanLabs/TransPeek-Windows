@@ -424,3 +424,41 @@ LanguageBarView / Settings) với Windows, làm trước nhóm panel + từ đi�
   .../export?format=txt -o /tmp/transpeek-log.txt` (plain curl returns
   empty). Do NOT dump the whole doc into context and do NOT use the
   live browser.
+
+## 0.1.3.49 test feedback (2026-11-12)
+
+- **Quit**: `Application.Exit()` did not terminate the process on this
+  machine (tray Quit left 0.1.3.47/.49 running, so the user could not
+  tell the builds apart and feared overlapping instances). Quit now
+  disposes the tray icon (no ghost icon) and calls `Environment.Exit(0)`.
+- **Tray menu actions swallowed**: showing a window (Settings, panel)
+  synchronously from a `MenuFlyoutItem.Click` is swallowed while the
+  flyout is dismissing — the Settings item did nothing from the menu
+  (left-click on the icon worked), same for the panel actions. Every
+  menu action now runs on the next dispatcher tick, after the flyout
+  has closed. Menu clicks also log to crash.log on failure.
+- **Click-outside stale hide**: a hide enqueued by the click that opened
+  the panel (tray menu mouse-down) ran after the panel re-showed and
+  killed it. The monitor now captures a show-epoch at click time and
+  only hides when the epoch is unchanged.
+- **Ctrl+V in the panel**: `ShowWithoutActivation` sets `WS_EX_NOACTIVATE`
+  permanently on the window style, so keyboard shortcuts never reach
+  the source box (mouse paste worked, keyboard paste did not). A click
+  into the panel now clears the flag and activates the window
+  (`ActivateWindow`); Manual Translation activates on show. The panel
+  still does not steal focus when it first appears.
+- **Tray shortcut hints**: the two hotkey actions show their shortcut
+  dimmed on the right (`KeyboardAcceleratorTextOverride`, refreshed on
+  every menu open): Clipboard Translation = translate hotkey,
+  Screenshot OCR = OCR hotkey.
+- **Full shortcut set (DEFERRED, Manh 2026-11-12)**: when the app runs
+  all tray-menu features, add a hotkey for every menu action in
+  Settings. Currently only 2 shortcuts exist (translate + OCR).
+- **Panel chrome**: top bar has the app name + slogan (from `AppInfo`);
+  footer has the GitHub mark + GitHub link (repo URL) + dimmed build
+  number. The mark is the official GitHub-Mark.png embedded as base64
+  (`Assets/GitHubMark.cs`), same text-only trick as the app icon; the
+  About page shows the same mark + GitHub + repo link.
+- **Dictionary bar scrolling**: the horizontal ScrollViewer ignored the
+  mouse wheel — wheel now scrolls horizontally; mouse drag pans like a
+  touch swipe (plain click still opens the link).

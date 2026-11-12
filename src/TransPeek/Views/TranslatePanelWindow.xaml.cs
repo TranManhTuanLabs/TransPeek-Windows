@@ -19,6 +19,7 @@ using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using TransPeek.Assets;
 using TransPeek.Core.Dictionary;
 using TransPeek.Core.Settings;
 using TransPeek.Core.Translation;
@@ -32,7 +33,7 @@ namespace TransPeek.Views;
 public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
 {
     private const int PanelWidth = 440;
-    private const int PanelHeight = 440;
+    private const int PanelHeight = 480;
 
     private readonly Func<string, Task<(string? Translation, string ProviderName)>> _translateAsync;
     private readonly Func<Task> _ocrRequested;
@@ -46,6 +47,12 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     private bool _visible;
     private bool _ocrMode;
     private bool _syncingCombos;
+    /// <summary>Show generation: incremented on every ShowPanelNear /
+    /// ShowInputMode. The click-outside hook captures the epoch at
+    /// click time and only hides when it is unchanged — a hide enqueued
+    /// by the click that opened the panel (tray menu) must not kill
+    /// the panel that click re-showed.</summary>
+    private int _epoch;
 
     public TranslatePanelWindow(
         Func<string, Task<(string? Translation, string ProviderName)>> translateAsync,
@@ -65,6 +72,10 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
                 WindowHelpers.MakeBorderlessTopmost(this);
                 WindowHelpers.MakeToolWindow(this);
             };
+            // A click into the panel activates it (see ActivateWindow):
+            // until then the NOACTIVATE window never receives keyboard
+            // shortcuts like Ctrl+V in the source box.
+            contentRoot.PointerPressed += (_, _) => WindowHelpers.ActivateWindow(this);
             // WinUI 3 Window has no KeyDown event: Esc is a keyboard
             // accelerator on the root element instead. Same caveat as
             // RegionSelectWindow (v0.1.1): an accelerator needs a focused
@@ -88,6 +99,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         CloseButton.Click += (_, _) => HidePanel();
         CopyButton.Click += async (_, _) => await CopyWithFeedbackAsync(CopyButton, _translationText);
         CopySourceButton.Click += async (_, _) => await CopyWithFeedbackAsync(CopySourceButton, _sourceText);
+        CopySourceInlineButton.Click += async (_, _) => await CopyWithFeedbackAsync(CopySourceInlineButton, _sourceText);
         CopyTranslationButton.Click += async (_, _) => await CopyWithFeedbackAsync(CopyTranslationButton, _translationText);
         OcrButton.Click += (_, _) => { HidePanel(); _ = _ocrRequested(); };
         _clickOutside = new ClickOutsideMonitor(
@@ -102,8 +114,22 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
                 var size = AppWindow.Size;
                 return (pos.X, pos.Y, size.Width, size.Height);
             },
-            onClickOutside: HidePanel);
+            getEpoch: () => _epoch,
+            onClickOutside: epoch =>
+            {
+                if (epoch == _epoch)
+                    HidePanel();
+            });
         RefreshDictionaryBar(App.Settings.DictionaryLinks, App.Settings.DictionaryDisplayMode);
+        // Title + footer (AppInfo is the single source for name,
+        // slogan, repo URL and build number).
+        AppNameText.Text = AppInfo.Name;
+        TaglineText.Text = AppInfo.Tagline;
+        FooterBuildText.Text = AppInfo.CiBuildNumber > 0
+            ? $"{AppInfo.Version} (build {AppInfo.CiBuildNumber})"
+            : AppInfo.Version;
+        GithubMarkFooterImage.Source = GitHubMark.Image();
+        GithubLink.Click += async (_, _) => await Launcher.LaunchUriAsync(new Uri(AppInfo.RepositoryUrl));
     }
 
     // ----- selection flow (App calls this) -----
@@ -127,6 +153,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     public void ShowInputMode()
     {
         _ocrMode = false;
+        _epoch++;
         // Win32 only: DisplayArea.Primary.WorkArea threw on this machine
         // (same WinRT display bug as FindAll()) and the tray Manual
         // Translation click died silently — the panel never appeared.
@@ -139,7 +166,9 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         TranslationTextBox.Text = "";
         ProviderText.Text = "";
         UpdateCopyButtons();
-        Activate();
+        // Typing mode needs a real active window (Activate() alone does
+        // nothing on a NOACTIVATE window — Ctrl+V would not work).
+        WindowHelpers.ActivateWindow(this);
         _visible = true;
         _clickOutside.Start();
         SourceTextBox.Focus(FocusState.Keyboard);
@@ -196,6 +225,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
 
     private void ShowPanelNear(int x, int y)
     {
+        _epoch++;
         var work = WindowHelpers.DisplayWorkArea(x, y);
         var px = Math.Clamp(x + 8, work.X, work.X + work.Width - PanelWidth);
         var py = Math.Clamp(y + 8, work.Y, work.Y + work.Height - PanelHeight);

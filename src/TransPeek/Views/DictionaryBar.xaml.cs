@@ -8,6 +8,7 @@ using System.IO;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 using TransPeek.Core.Dictionary;
@@ -18,10 +19,56 @@ namespace TransPeek.Views;
 public sealed partial class DictionaryBar : UserControl
 {
     private string _sourceText = "";
+    private bool _dragging;
+    private bool _dragMoved;
+    private double _dragStartX;
+    private double _dragStartOffset;
 
     public DictionaryBar()
     {
         InitializeComponent();
+        // Mouse wheel: a horizontal ScrollViewer ignores the wheel by
+        // default, so translate it into horizontal scrolling (0.1.3.49
+        // test: the wheel did nothing on the dictionary bar).
+        BarScroll.PointerWheelChanged += (_, e) =>
+        {
+            BarScroll.ChangeView(BarScroll.HorizontalOffset - e.Delta, null, null);
+            e.Handled = true;
+        };
+        // Mouse drag pans like a touch swipe (0.1.3.49 test request):
+        // press and drag to scroll; a plain click still opens the link.
+        BarScroll.PointerPressed += (_, e) =>
+        {
+            if (!e.GetCurrentPoint(BarScroll).Properties.IsLeftButtonPressed)
+                return;
+            _dragging = true;
+            _dragMoved = false;
+            _dragStartX = e.GetCurrentPoint(BarScroll).Position.X;
+            _dragStartOffset = BarScroll.HorizontalOffset;
+            BarScroll.CapturePointer(e.Pointer);
+        };
+        BarScroll.PointerMoved += (_, e) =>
+        {
+            if (!_dragging)
+                return;
+            var dx = e.GetCurrentPoint(BarScroll).Position.X - _dragStartX;
+            if (Math.Abs(dx) > 4)
+                _dragMoved = true;
+            if (_dragMoved)
+                BarScroll.ChangeView(_dragStartOffset - dx, null, null);
+        };
+        void EndDrag(object _, PointerRoutedEventArgs e)
+        {
+            if (!_dragging)
+                return;
+            _dragging = false;
+            BarScroll.ReleasePointerCapture(e.Pointer);
+            // A real drag must not open the link under the pointer.
+            if (_dragMoved)
+                e.Handled = true;
+        }
+        BarScroll.PointerReleased += EndDrag;
+        BarScroll.PointerCanceled += EndDrag;
     }
 
     /// <summary>Rebuild the buttons for the current links + display mode.

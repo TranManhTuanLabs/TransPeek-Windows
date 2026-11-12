@@ -36,6 +36,26 @@ internal static class WindowHelpers
             NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_SHOWWINDOW);
     }
 
+    /// <summary>Activate a window that was shown with
+    /// ShowWithoutActivation: clears WS_EX_NOACTIVATE (which is sticky
+    /// — ShowWithoutActivation sets it on the window style, it is not
+    /// a one-time flag) and brings the window to the foreground. The
+    /// panel must not steal focus when it first appears, but once the
+    /// user clicks into it, keyboard shortcuts (Ctrl+V in the source
+    /// box) need a real active window — a NOACTIVATE window never gets
+    /// them (0.1.3.49 test: mouse paste worked, keyboard paste did
+    /// not).</summary>
+    public static void ActivateWindow(Window window)
+    {
+        var hwnd = WindowNative.GetWindowHandle(window);
+        var exStyle = NativeMethods.GetWindowLongPtr(hwnd, NativeMethods.GWL_EXSTYLE);
+        var next = new IntPtr(exStyle.ToInt64() & ~(long)NativeMethods.WS_EX_NOACTIVATE);
+        NativeMethods.SetWindowLongPtr(hwnd, NativeMethods.GWL_EXSTYLE, next);
+        NativeMethods.SetWindowPos(hwnd, NativeMethods.HWND_TOPMOST, 0, 0, 0, 0,
+            NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_FRAMECHANGED | NativeMethods.SWP_SHOWWINDOW);
+        window.Activate();
+    }
+
     public static void Hide(Window window)
     {
         var hwnd = WindowNative.GetWindowHandle(window);

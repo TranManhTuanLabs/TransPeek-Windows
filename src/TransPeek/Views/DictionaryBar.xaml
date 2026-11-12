@@ -5,7 +5,7 @@
 
     <!-- Horizontal scroll like the mac DictionaryBarView: many links scroll
          instead of overflowing / being cut off. -->
-    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+    <ScrollViewer x:Name="BarScroll" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
         <StackPanel x:Name="LinksPanel" Orientation="Horizontal" Spacing="6" />
     </ScrollViewer>
 </UserControl>

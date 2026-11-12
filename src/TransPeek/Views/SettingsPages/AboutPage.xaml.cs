@@ -11,6 +11,7 @@
 
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using TransPeek.Assets;
 using TransPeek.Core.Update;
 using TransPeek.Services;
 using Windows.System;
@@ -28,6 +29,7 @@ public sealed partial class AboutPage : Page
         {
             VersionText.Text = $"Version {AppInfo.Version} (build {AppInfo.BuildDisplay})";
             ReleaseNotesLink.Content = $"Release notes (v{AppInfo.Version})";
+            GithubMarkImage.Source = GitHubMark.Image();
         };
     }
 

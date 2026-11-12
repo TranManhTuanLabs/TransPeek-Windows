@@ -9,15 +9,24 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
+        <!-- Title: app name + slogan (mac parity: the panel shows what
+             app it is). Texts come from AppInfo in code-behind. -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" Margin="0,0,0,6" VerticalAlignment="Center">
+            <TextBlock x:Name="AppNameText" FontWeight="Bold" FontSize="13" />
+            <TextBlock x:Name="TaglineText" Foreground="Gray" FontSize="11" VerticalAlignment="Center" />
+        </StackPanel>
+
         <!-- Header: source/target pickers + swap + provider + close.
              Mac parity (LanguageBarView): changing a picker saves the
              setting and re-translates immediately. -->
-        <Grid Grid.Row="0" Margin="0,0,0,8">
+        <Grid Grid.Row="1" Margin="0,0,0,8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
@@ -34,23 +43,35 @@
         </Grid>
 
         <!-- Source text: editable like the mac SourceInputView.
-             Enter re-translates, Shift+Enter inserts a newline. -->
-        <TextBox x:Name="SourceTextBox" Grid.Row="1" TextWrapping="Wrap"
-                 AcceptsReturn="True" MaxHeight="120" Margin="0,0,0,4"
-                 TextChanged="OnSourceTextChanged" SelectionChanged="OnSourceSelectionChanged"
-                 KeyDown="OnSourceKeyDown" />
-        <TextBlock Grid.Row="2" x:Uid="Panel.Hint" Text="Enter: translate again • Select text in the panel to look it up in the dictionary"
+             Enter re-translates, Shift+Enter inserts a newline.
+             The small copy button beside it copies the source text
+             (its own control, not the bottom actions row). -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBox x:Name="SourceTextBox" TextWrapping="Wrap"
+                     AcceptsReturn="True" MaxHeight="120" Margin="0,0,0,4"
+                     TextChanged="OnSourceTextChanged" SelectionChanged="OnSourceSelectionChanged"
+                     KeyDown="OnSourceKeyDown" />
+            <Button x:Name="CopySourceInlineButton" Grid.Column="1" Padding="6,2" Margin="6,0,0,0"
+                    VerticalAlignment="Top" ToolTipService.ToolTip="Copy source">
+                <FontIcon Glyph="&#xE8C8;" FontSize="12" />
+            </Button>
+        </Grid>
+        <TextBlock Grid.Row="3" x:Uid="Panel.Hint" Text="Enter: translate again • Select text in the panel to look it up in the dictionary"
                    FontSize="11" Foreground="Gray" Margin="0,0,0,8" />
 
         <!-- Translation: read-only TextBox (not TextBlock) so the user can
              select words inside the translation to look them up, like mac. -->
-        <TextBox x:Name="TranslationTextBox" Grid.Row="3" IsReadOnly="True"
+        <TextBox x:Name="TranslationTextBox" Grid.Row="4" IsReadOnly="True"
                  TextWrapping="Wrap" AcceptsReturn="True" BorderThickness="0"
                  Background="Transparent" FontSize="14"
                  SelectionChanged="OnTranslationSelectionChanged" />
 
         <!-- Actions -->
-        <StackPanel Grid.Row="4" Orientation="Horizontal" Spacing="8" Margin="0,8,0,8">
+        <StackPanel Grid.Row="5" Orientation="Horizontal" Spacing="8" Margin="0,8,0,8">
             <Button x:Name="CopyButton" x:Uid="Panel.Copy" Content="Copy" />
             <Button x:Name="CopySourceButton" x:Uid="Panel.CopySource" Content="Copy source" />
             <Button x:Name="CopyTranslationButton" x:Uid="Panel.CopyTranslation" Content="Copy translation" Visibility="Collapsed" />
@@ -58,6 +79,24 @@
         </StackPanel>
 
         <!-- Dictionary links -->
-        <local:DictionaryBar x:Name="DictionaryBarControl" Grid.Row="5" />
+        <local:DictionaryBar x:Name="DictionaryBarControl" Grid.Row="6" />
+
+        <!-- Footer: GitHub repo link + dimmed build number. -->
+        <Grid Grid.Row="7" Margin="0,8,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <HyperlinkButton x:Name="GithubLink" Padding="0" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <Border Width="16" Height="16" CornerRadius="3" Background="White" VerticalAlignment="Center">
+                        <Image x:Name="GithubMarkFooterImage" Width="16" Height="16" Stretch="Uniform" />
+                    </Border>
+                    <TextBlock Text="GitHub" FontSize="11" VerticalAlignment="Center" />
+                </StackPanel>
+            </HyperlinkButton>
+            <TextBlock x:Name="FooterBuildText" Grid.Column="1" Foreground="Gray" FontSize="11"
+                       VerticalAlignment="Center" Opacity="0.7" />
+        </Grid>
     </Grid>
 </Window>

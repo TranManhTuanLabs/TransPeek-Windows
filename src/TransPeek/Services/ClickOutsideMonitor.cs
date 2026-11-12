@@ -15,7 +15,8 @@ public sealed class ClickOutsideMonitor : IDisposable
     private readonly DispatcherQueue _dispatcher;
     private readonly Func<bool> _isActive;
     private readonly Func<(int X, int Y, int Width, int Height)> _getRect;
-    private readonly Action _onClickOutside;
+    private readonly Func<int> _getEpoch;
+    private readonly Action<int> _onClickOutside;
     private readonly NativeMethods.HookProc _hookProc;
     private IntPtr _hook;
     private bool _disposed;
@@ -24,11 +25,13 @@ public sealed class ClickOutsideMonitor : IDisposable
         DispatcherQueue dispatcher,
         Func<bool> isActive,
         Func<(int X, int Y, int Width, int Height)> getRect,
-        Action onClickOutside)
+        Func<int> getEpoch,
+        Action<int> onClickOutside)
     {
         _dispatcher = dispatcher;
         _isActive = isActive;
         _getRect = getRect;
+        _getEpoch = getEpoch;
         _onClickOutside = onClickOutside;
         _hookProc = HookCallback; // kept alive as a field (native callback)
     }
@@ -61,10 +64,18 @@ public sealed class ClickOutsideMonitor : IDisposable
             var outside = pt.X < x || pt.X >= x + w || pt.Y < y || pt.Y >= y + h;
             if (outside)
             {
+                // Capture the epoch at CLICK time: a hide enqueued by
+                // this click must not kill a panel that was re-shown
+                // after it. The tray-menu case: the menu's mouse-down
+                // enqueues a hide for the open panel, the menu click
+                // re-shows it, and the queued hide then kills the new
+                // panel — the tray Manual/Clipboard/Selection actions
+                // looked dead in the 0.1.3.47 test.
+                var epoch = _getEpoch();
                 _dispatcher.TryEnqueue(() =>
                 {
                     if (_isActive())
-                        _onClickOutside();
+                        _onClickOutside(epoch);
                 });
             }
         }

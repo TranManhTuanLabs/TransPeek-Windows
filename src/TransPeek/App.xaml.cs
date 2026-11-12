@@ -111,7 +111,7 @@ public sealed partial class App : Application
             screenshotCopy: () => _ = _screenshotCopy!.RunAsync(),
             scanBarcodes: () => _ = ScanBarcodesAsync(),
             openSettings: ShowSettings,
-            quit: () => Exit());
+            quit: QuitApp);
 
         _selectionMonitor = new SelectionMonitor(OnSelectionChanged);
         if (Settings.WatchSelection)
@@ -276,6 +276,18 @@ public sealed partial class App : Application
     {
         var window = new RegionSelectWindow();
         return await window.SelectRegionAsync();
+    }
+
+    /// <summary>Quit for real. Application.Exit() did not terminate the
+    /// process on this machine (builds 0.1.3.47/.49: tray Quit left the
+    /// app running, so the user could not tell 47 from 49 and could not
+    /// test OCR for fear of overlapping instances). Dispose the tray
+    /// icon first (otherwise Windows keeps a ghost icon until hovered),
+    /// then kill the process — a tray-only app has no state to flush.</summary>
+    private void QuitApp()
+    {
+        try { _tray?.Dispose(); } catch { }
+        Environment.Exit(0);
     }
 
     // ----- hotkeys -----

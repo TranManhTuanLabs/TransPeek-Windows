@@ -36,7 +36,13 @@ namespace TransPeek.Services;
 public sealed class TrayIconService : IDisposable
 {
     private readonly TaskbarIcon _tray;
+    private readonly Microsoft.UI.Dispatching.DispatcherQueue _dispatcher;
     private bool _disposed;
+
+    // The two hotkey actions, so their shortcut hints can be refreshed
+    // on every menu open (see the Opening handler in the constructor).
+    private readonly MenuFlyoutItem _clipboardTranslationItem;
+    private readonly MenuFlyoutItem _screenshotOcrItem;
 
     // The .ico stream behind the tray Icon: Icon(Stream) needs the
     // stream to stay open while the Icon is used, so it lives here
@@ -54,6 +60,9 @@ public sealed class TrayIconService : IDisposable
         Action openSettings,
         Action quit)
     {
+        // The constructor runs on the UI thread: the menu actions are
+        // deferred onto this queue (see Item()).
+        _dispatcher = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
         var menu = new MenuFlyout();
         // Labels come from Resources.resw (English base) via AppStrings,
         // so a future translation file changes them without touching code.
@@ -63,10 +72,12 @@ public sealed class TrayIconService : IDisposable
         menu.Items.Add(new MenuFlyoutSeparator());
         menu.Items.Add(SectionItem(AppStrings.Get("Tray.Section.Capture", "Text Capture from Screen")));
         menu.Items.Add(Item("Tray.Menu.ManualTranslation", "Manual Translation", "\uE765", manualTranslation));
-        menu.Items.Add(Item("Tray.Menu.ScreenshotOcr", "Screenshot OCR", "\uE8FE", screenshotOcr));
+        _screenshotOcrItem = Item("Tray.Menu.ScreenshotOcr", "Screenshot OCR", "\uE8FE", screenshotOcr);
+        menu.Items.Add(_screenshotOcrItem);
         menu.Items.Add(Item("Tray.Menu.ClipboardOcr", "Clipboard OCR", "\uE8C8", clipboardOcr));
         menu.Items.Add(Item("Tray.Menu.SelectionTranslation", "Selection Translation", "\uE70F", selectionTranslation));
-        menu.Items.Add(Item("Tray.Menu.ClipboardTranslation", "Clipboard Translation", "\uE77F", clipboardTranslation));
+        _clipboardTranslationItem = Item("Tray.Menu.ClipboardTranslation", "Clipboard Translation", "\uE77F", clipboardTranslation);
+        menu.Items.Add(_clipboardTranslationItem);
         menu.Items.Add(Item("Tray.Menu.ScreenshotCopy", "Screenshot Copy", "\uE722", screenshotCopy));
         menu.Items.Add(new MenuFlyoutSeparator());
         menu.Items.Add(SectionItem(AppStrings.Get("Tray.Section.Barcodes", "Barcodes / QR Codes")));
@@ -75,6 +86,18 @@ public sealed class TrayIconService : IDisposable
         menu.Items.Add(Item("Tray.Menu.Settings", "Settings…", "\uE713", openSettings));
         menu.Items.Add(new MenuFlyoutSeparator());
         menu.Items.Add(Item("Tray.Menu.Quit", "Quit TransPeek", "\uE711", quit));
+
+        // Shortcut hints on the right of the two hotkey actions (mac
+        // menubar parity): refreshed every time the menu opens, so a
+        // hotkey changed in Settings shows up immediately. WinUI renders
+        // KeyboardAcceleratorTextOverride dimmed, like the mac labels.
+        // The other actions have no hotkey yet — when the full shortcut
+        // set lands in Settings (see docs/DECISIONS.md), add theirs here.
+        menu.Opening += (_, _) =>
+        {
+            _clipboardTranslationItem.KeyboardAcceleratorTextOverride = FormatHotkey(App.Settings.TranslateHotkey);
+            _screenshotOcrItem.KeyboardAcceleratorTextOverride = FormatHotkey(App.Settings.OcrHotkey);
+        };
 
         _tray = new TaskbarIcon
         {
@@ -118,16 +141,31 @@ public sealed class TrayIconService : IDisposable
         IsEnabled = false,
     };
 
-    private static MenuFlyoutItem Item(string key, string fallback, string glyph, Action onClick)
+    private MenuFlyoutItem Item(string key, string fallback, string glyph, Action onClick)
     {
         var item = new MenuFlyoutItem
         {
             Text = AppStrings.Get(key, fallback),
             Icon = new FontIcon { Glyph = glyph },
         };
-        item.Click += (_, _) => onClick();
+        // Run the action on the next dispatcher tick, AFTER the flyout
+        // has closed: showing a window (Settings, panel) synchronously
+        // from a MenuFlyoutItem.Click is swallowed while the flyout is
+        // dismissing — the Settings item did nothing from the menu
+        // (left-click on the icon worked) in the 0.1.3.47/.49 test.
+        // A throwing menu action must never die silently: log it so
+        // crash.log shows what happened.
+        item.Click += (_, _) => _dispatcher.TryEnqueue(() =>
+        {
+            try { onClick(); }
+            catch (Exception ex) { CrashLog.Write("TrayMenu", ex); }
+        });
         return item;
     }
+
+    /// <summary>"Control+Alt+T" → "Ctrl+Alt+T" for the menu hint.</summary>
+    private static string FormatHotkey(string spec)
+        => spec.Replace("Control", "Ctrl", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>Build the tray icon from the embedded .ico bytes — the
     /// mac app icon (S3), same artwork on both platforms. new

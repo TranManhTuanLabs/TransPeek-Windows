@@ -9,10 +9,12 @@
             <TextBlock x:Name="VersionText" FontSize="13" Foreground="Gray" />
             <TextBlock x:Uid="Settings.About.Tagline" Text="Translate anywhere, peek instantly." FontSize="13" />
 
-            <!-- Author + repo link -->
+            <!-- GitHub mark (cat) + GitHub + repo link -->
             <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                <FontIcon Glyph="&#xE71B;" FontSize="14" VerticalAlignment="Center" />
-                <TextBlock x:Uid="Settings.About.Author" Text="Author:" VerticalAlignment="Center" />
+                <Border Width="20" Height="20" CornerRadius="4" Background="White" VerticalAlignment="Center">
+                    <Image x:Name="GithubMarkImage" Width="20" Height="20" Stretch="Uniform" />
+                </Border>
+                <TextBlock Text="GitHub" VerticalAlignment="Center" />
                 <HyperlinkButton x:Name="RepoLink" Content="TranManhTuanLabs/TransPeek-Windows"
                                  Click="OnRepoLinkClick" Padding="0" />
             </StackPanel>
