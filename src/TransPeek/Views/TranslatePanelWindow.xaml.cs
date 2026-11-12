@@ -54,6 +54,10 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// the panel that click re-showed.</summary>
     private int _epoch;
     private readonly Action _openSettings;
+    /// <summary>Title-bar drag state: the press point, and whether the
+    /// system drag has started (only after moving past the threshold).</summary>
+    private Windows.Foundation.Point? _titleDragStart;
+    private bool _titleDragging;
 
     public TranslatePanelWindow(
         Func<string, Task<(string? Translation, string ProviderName)>> translateAsync,
@@ -78,7 +82,20 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
             // A click into the panel activates it (see ActivateWindow):
             // until then the NOACTIVATE window never receives keyboard
             // shortcuts like Ctrl+V in the source box.
-            contentRoot.PointerPressed += (_, _) => WindowHelpers.ActivateWindow(this);
+            // Activation runs on PointerRELEASED, not PointerPressed
+            // (0.1.3.53 test): activating mid-click — between the
+            // mouse-down and the mouse-up — swallowed the Button's
+            // Click, so the Settings gear did nothing in every
+            // ShowPanelNear path (trigger icon, translate hotkey,
+            // selection translation) but worked in Manual Translation,
+            // where the panel was already active. The Button's Click
+            // fires during its own release handling, before the event
+            // bubbles here, so release-activation runs after the Click.
+            // handledEventsToo: the Button may mark the release handled.
+            contentRoot.AddHandler(
+                UIElement.PointerReleasedEvent,
+                new PointerEventHandler((_, _) => WindowHelpers.ActivateWindow(this)),
+                handledEventsToo: true);
             // WinUI 3 Window has no KeyDown event: Esc is a keyboard
             // accelerator on the root element instead. Same caveat as
             // RegionSelectWindow (v0.1.1): an accelerator needs a focused
@@ -239,15 +256,52 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
 
     private void OnTitleBarPointerPressed(object sender, PointerRoutedEventArgs e)
     {
-        // The panel has no system title bar: dragging the title area
-        // starts a native window move (Manh 2026-11-12). Activate first
-        // so the panel keeps keyboard focus after the drag.
-        WindowHelpers.ActivateWindow(this);
-        WindowHelpers.BeginDrag(this);
-        e.Handled = true;
+        // Drag starts only after hold + move past a threshold
+        // (0.1.3.53 test): a plain click on the name/slogan must not
+        // move the panel. Record the start; the move handler below
+        // starts the system drag once the pointer has moved 4px.
+        // No traditional title bar (min/max/close) is needed for this:
+        // a borderless floating panel drags from its top bar exactly
+        // like a normal window drags from its title bar — the threshold
+        // is what tells a click apart from a drag.
+        _titleDragStart = e.GetCurrentPoint(TitleBar).Position;
+        _titleDragging = false;
+        TitleBar.CapturePointer(e.Pointer);
     }
 
-    private void OnOpenSettings(object sender, RoutedEventArgs e) => _openSettings();
+    private void OnTitleBarPointerMoved(object sender, PointerRoutedEventArgs e)
+    {
+        if (_titleDragStart is null || _titleDragging)
+            return;
+        var p = e.GetCurrentPoint(TitleBar).Position;
+        var dx = Math.Abs(p.X - _titleDragStart.Value.X);
+        var dy = Math.Abs(p.Y - _titleDragStart.Value.Y);
+        if (dx <= 4 && dy <= 4)
+            return; // still a click, not a drag yet
+        _titleDragging = true;
+        TitleBar.ReleasePointerCapture(e.Pointer);
+        // Activate first so the panel keeps keyboard focus after the drag.
+        WindowHelpers.ActivateWindow(this);
+        WindowHelpers.BeginDrag(this);
+    }
+
+    private void OnTitleBarPointerReleased(object sender, PointerRoutedEventArgs e)
+    {
+        // Plain click (no move past the threshold): nothing to do.
+        // A finished system drag may not deliver this event — the next
+        // press resets the state anyway.
+        _titleDragStart = null;
+        _titleDragging = false;
+        TitleBar.ReleasePointerCapture(e.Pointer);
+    }
+
+    private void OnOpenSettings(object sender, RoutedEventArgs e)
+    {
+        // Hide the panel first: it is topmost (HWND_TOPMOST), so a
+        // Settings window opened underneath it would be covered by it.
+        HidePanel();
+        _openSettings();
+    }
 
     private void HidePanel()
     {

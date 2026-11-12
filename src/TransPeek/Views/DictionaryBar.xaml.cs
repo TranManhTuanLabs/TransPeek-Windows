@@ -32,46 +32,63 @@ public sealed partial class DictionaryBar : UserControl
         // test: the wheel did nothing on the dictionary bar). WinUI has
         // no wheel-delta property on the event args — it lives on the
         // pointer point (MouseWheelDelta, 120 per notch).
-        BarScroll.PointerWheelChanged += (_, e) =>
-        {
-            var delta = e.GetCurrentPoint(BarScroll).Properties.MouseWheelDelta;
-            BarScroll.ChangeView(BarScroll.HorizontalOffset - delta, null, null);
-            e.Handled = true;
-        };
+        // AddHandler with handledEventsToo: the ScrollViewer's own wheel
+        // handling marks the event handled before a plain += handler on
+        // the same element ever runs (0.1.3.53 test: wheel still dead).
+        AddHandler(
+            UIElement.PointerWheelChangedEvent,
+            new PointerEventHandler((_, e) =>
+            {
+                var delta = e.GetCurrentPoint(BarScroll).Properties.MouseWheelDelta;
+                BarScroll.ChangeView(BarScroll.HorizontalOffset - delta, null, null);
+                e.Handled = true;
+            }),
+            handledEventsToo: true);
         // Mouse drag pans like a touch swipe (0.1.3.49 test request):
-        // press and drag to scroll; a plain click still opens the link.
-        BarScroll.PointerPressed += (_, e) =>
-        {
-            if (!e.GetCurrentPoint(BarScroll).Properties.IsLeftButtonPressed)
-                return;
-            _dragging = true;
-            _dragMoved = false;
-            _dragStartX = e.GetCurrentPoint(BarScroll).Position.X;
-            _dragStartOffset = BarScroll.HorizontalOffset;
-            BarScroll.CapturePointer(e.Pointer);
-        };
-        BarScroll.PointerMoved += (_, e) =>
-        {
-            if (!_dragging)
-                return;
-            var dx = e.GetCurrentPoint(BarScroll).Position.X - _dragStartX;
-            if (Math.Abs(dx) > 4)
-                _dragMoved = true;
-            if (_dragMoved)
-                BarScroll.ChangeView(_dragStartOffset - dx, null, null);
-        };
+        // press-and-hold, then move to scroll; a plain single click
+        // still opens the link. AddHandler with handledEventsToo: a
+        // press on a link button is marked handled by the Button, so a
+        // plain += handler on the parent ScrollViewer never sees it
+        // (0.1.3.53 test: holding a link did not scroll at all).
+        // No pointer capture here: capturing to BarScroll would steal
+        // the release from the Button and plain clicks would never
+        // open. The drag is recognised by movement alone; the link
+        // open is suppressed by the _dragMoved flag in the Click
+        // handler (the Button's Click fires before EndDrag resets it).
+        AddHandler(
+            UIElement.PointerPressedEvent,
+            new PointerEventHandler((_, e) =>
+            {
+                if (!e.GetCurrentPoint(BarScroll).Properties.IsLeftButtonPressed)
+                    return;
+                _dragging = true;
+                _dragMoved = false;
+                _dragStartX = e.GetCurrentPoint(BarScroll).Position.X;
+                _dragStartOffset = BarScroll.HorizontalOffset;
+            }),
+            handledEventsToo: true);
+        AddHandler(
+            UIElement.PointerMovedEvent,
+            new PointerEventHandler((_, e) =>
+            {
+                if (!_dragging)
+                    return;
+                var dx = e.GetCurrentPoint(BarScroll).Position.X - _dragStartX;
+                if (Math.Abs(dx) > 4)
+                    _dragMoved = true;
+                if (_dragMoved)
+                    BarScroll.ChangeView(_dragStartOffset - dx, null, null);
+            }),
+            handledEventsToo: true);
         void EndDrag(object _, PointerRoutedEventArgs e)
         {
             if (!_dragging)
                 return;
             _dragging = false;
-            BarScroll.ReleasePointerCapture(e.Pointer);
-            // A real drag must not open the link under the pointer.
-            if (_dragMoved)
-                e.Handled = true;
+            _dragMoved = false;
         }
-        BarScroll.PointerReleased += EndDrag;
-        BarScroll.PointerCanceled += EndDrag;
+        AddHandler(UIElement.PointerReleasedEvent, new PointerEventHandler(EndDrag), handledEventsToo: true);
+        AddHandler(UIElement.PointerCanceledEvent, new PointerEventHandler(EndDrag), handledEventsToo: true);
     }
 
     /// <summary>Rebuild the buttons for the current links + display mode.
@@ -135,6 +152,12 @@ public sealed partial class DictionaryBar : UserControl
         button.IsEnabled = url is not null;
         button.Click += async (_, _) =>
         {
+            // A drag that ends on a link must not open it (the Button's
+            // Click fires before EndDrag resets the flag, so this check
+            // sees the true drag state; setting e.Handled in EndDrag
+            // would be too late — the Click already fired).
+            if (_dragMoved)
+                return;
             var target = link.UrlFor(_sourceText);
             if (target is not null)
                 await Launcher.LaunchUriAsync(target);

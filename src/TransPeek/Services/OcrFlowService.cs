@@ -9,10 +9,13 @@
 // Tesseract is the default provider for Vietnamese; on failure the flow
 // falls back to Windows OCR (registry logic, see OcrProviderRegistry).
 
+using System.IO;
+using System.Runtime.InteropServices.WindowsRuntime;
 using TransPeek.Core.Ocr;
 using TransPeek.Core.Settings;
 using TransPeek.Core.Translation;
 using Windows.Graphics;
+using Windows.Graphics.Imaging;
 
 namespace TransPeek.Services;
 
@@ -145,6 +148,15 @@ public sealed class OcrFlowService
             return null;
         }
 
+        // Grey-OCR diagnostic (0.1.3.53 test: the region overlay shows
+        // grey and OCR finds nothing): save the captured image and log
+        // its brightness stats, so the next test can tell the two grey
+        // causes apart — a flat captured image (capture pipeline broken)
+        // vs a fine capture with a grey overlay (the window surface is
+        // opaque and hides the desktop). The file is
+        // %LOCALAPPDATA%\TransPeek\ocr-capture.png.
+        await LogCaptureDiagnosticsAsync(png, region.Value);
+
         // First run: download Tesseract language data if the user picked
         // Tesseract (the default) and it is missing, instead of silently
         // falling back to Windows OCR (English-only on most machines).
@@ -207,5 +219,49 @@ public sealed class OcrFlowService
             }
         }
         _toast.Show(AppStrings.Get("Ocr.DownloadDone", "OCR data downloaded."));
+    }
+
+    /// <summary>Grey-OCR diagnostic: save the captured region PNG and log
+    /// its brightness mean/stddev (sampled). A flat grey board has stddev
+    /// near zero; real screen content has a wide spread. The saved file
+    /// lets the user open the capture and see it with their own eyes.
+    /// Never throws — diagnostics must not break the OCR flow.</summary>
+    private static async Task LogCaptureDiagnosticsAsync(byte[] png, RectInt32 region)
+    {
+        try
+        {
+            var dir = TransPeek.Core.Dictionary.AppPaths.LocalDataDirectory;
+            Directory.CreateDirectory(dir);
+            var path = Path.Combine(dir, "ocr-capture.png");
+            await File.WriteAllBytesAsync(path, png);
+            using var stream = new MemoryStream(png).AsRandomAccessStream();
+            var decoder = await BitmapDecoder.CreateAsync(stream);
+            var pixelData = await decoder.GetPixelDataAsync(
+                BitmapPixelFormat.Bgra8, BitmapAlphaMode.Ignore,
+                new BitmapTransform(), ExifOrientationMode.IgnoreExifOrientation,
+                ColorManagementMode.DoNotColorManage);
+            var bytes = pixelData.DetachPixelData();
+            // Sample every 16th pixel (BGRA, 4 bytes each) — cheap and
+            // plenty for a flat-vs-content verdict.
+            double sum = 0, sumSq = 0;
+            var n = 0;
+            for (var i = 0; i + 2 < bytes.Length; i += 64)
+            {
+                var brightness = (bytes[i] + bytes[i + 1] + bytes[i + 2]) / 3.0;
+                sum += brightness;
+                sumSq += brightness * brightness;
+                n++;
+            }
+            var mean = n == 0 ? 0 : sum / n;
+            var stddev = n == 0 ? 0 : Math.Sqrt(Math.Max(0, sumSq / n - mean * mean));
+            CrashLog.WriteLine("OcrCapture",
+                $"region {region.Width}x{region.Height} at ({region.X},{region.Y}), " +
+                $"png {png.Length} bytes -> {path}, brightness mean {mean:F1} stddev {stddev:F1} " +
+                $"(stddev ~0 = flat grey capture; high = real content, overlay is the grey one)");
+        }
+        catch (Exception ex)
+        {
+            CrashLog.Write("OcrCapture", ex);
+        }
     }
 }

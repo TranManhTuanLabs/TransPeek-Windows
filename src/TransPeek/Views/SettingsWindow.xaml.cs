@@ -14,6 +14,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using TransPeek.Interop;
 using TransPeek.Views.SettingsPages;
+using WinRT.Interop;
 
 namespace TransPeek.Views;
 
@@ -61,6 +62,17 @@ public sealed partial class SettingsWindow : Window
                 // Positioning must never stop the window from opening.
             }
         }
+        // Bring it to the front as the focused window (0.1.3.53 test:
+        // tray left-click while Settings sat behind other windows did
+        // not focus it). Activate() alone does not restore a minimized
+        // window, and a background app cannot always steal the
+        // foreground — restore first, then force it forward (the tray
+        // click is user input aimed at this app, so the foreground
+        // grant applies).
+        var hwnd = WindowNative.GetWindowHandle(this);
+        if (NativeMethods.IsIconic(hwnd))
+            NativeMethods.ShowWindow(hwnd, NativeMethods.SW_RESTORE);
+        NativeMethods.SetForegroundWindow(hwnd);
         Activate();
     }
 

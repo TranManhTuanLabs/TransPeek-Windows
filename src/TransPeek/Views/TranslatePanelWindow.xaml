@@ -22,7 +22,9 @@
              a system move (see OnTitleBarPointerPressed). Texts come
              from AppInfo in code-behind. -->
         <StackPanel x:Name="TitleBar" Grid.Row="0" Margin="0,0,0,6"
-                    PointerPressed="OnTitleBarPointerPressed">
+                    PointerPressed="OnTitleBarPointerPressed"
+                    PointerMoved="OnTitleBarPointerMoved"
+                    PointerReleased="OnTitleBarPointerReleased">
             <TextBlock x:Name="AppNameText" FontWeight="Bold" FontSize="13" HorizontalAlignment="Center" />
             <TextBlock x:Name="TaglineText" Foreground="Gray" FontSize="11" HorizontalAlignment="Center" />
         </StackPanel>

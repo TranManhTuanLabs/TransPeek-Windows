@@ -524,3 +524,70 @@ and ran 51. New round of fixes (next build):
   is a screenshot-background overlay (capture first, show it behind
   the selection rect), because a WinUI window surface may be opaque
   regardless of the XAML background.
+
+## 0.1.3.53 test feedback, round 2 (2026-11-12, evening)
+
+- **Panel drag — no traditional title bar needed.** A plain click on
+  the name/slogan moved the panel because `OnTitleBarPointerPressed`
+  started the system drag on every press. Fixed with a 4px threshold:
+  press records the start point, the drag starts only after hold +
+  move past 4px. A borderless floating panel drags from its top bar
+  exactly like a normal window drags from its title bar; min/max/
+  close buttons are a separate UI choice (the panel closes via Esc /
+  click-outside) and are not required to make dragging work.
+- **Settings gear dead in 3 of 4 panel paths — root cause: mid-click
+  activation.** The panel's root `PointerPressed` handler called
+  `ActivateWindow` (style change + `window.Activate()`) between the
+  mouse-down and the mouse-up, which swallowed the Button's Click.
+  It worked only in Manual Translation, where the panel was already
+  active. Fixed by activating on `PointerReleased` instead (via
+  `AddHandler(..., handledEventsToo: true)` — the Button's Click
+  fires during its own release handling, before the event bubbles
+  to the root, so release-activation runs after the Click). The
+  title-bar drag keeps its own activation on press (a drag is not a
+  button click, nothing to swallow).
+- **Settings opened behind the topmost panel.** The panel is always
+  `HWND_TOPMOST`, so a Settings window opened from it was covered.
+  `OnOpenSettings` now hides the panel first. Separately, tray
+  left-click while Settings sat behind other windows did not focus
+  it: `Activate()` alone does not restore a minimized window.
+  `SettingsWindow.ShowSettings()` now restores if minimized
+  (`IsIconic` + `SW_RESTORE`) and calls `SetForegroundWindow` before
+  `Activate()` (the tray click is user input aimed at this app, so
+  the foreground grant applies).
+- **Dictionary bar scroll — `+=` handlers never fired.** A press on a
+  link button is marked handled by the Button, so a plain `+=`
+  handler on the parent ScrollViewer never saw it (same for the
+  wheel: the ScrollViewer's own handling marks it handled first).
+  Fixed with `AddHandler(..., handledEventsToo: true)` for wheel /
+  press / move / release / cancel, and NO pointer capture (capturing
+  to the ScrollViewer would steal the release from the Button and
+  break plain clicks). A drag is recognised by movement alone; the
+  link open is suppressed by checking `_dragMoved` in the Button's
+  Click handler — the Click fires before EndDrag resets the flag, so
+  setting `e.Handled` in EndDrag would be too late.
+- **OCR grey — diagnostic, not a fix yet.** After a successful
+  capture, the flow now saves the captured image to
+  `%LOCALAPPDATA%\TransPeek\ocr-capture.png` and logs brightness
+  mean/stddev to crash.log (`OcrCapture`). stddev ~0 = a flat grey
+  capture (capture pipeline broken); a wide spread = the capture is
+  fine and the grey is the overlay (next step then: a
+  screenshot-background overlay). `CrashLog` gained a `WriteLine`
+  (plain message) overload for diagnostics.
+- **Tray right-click menu "useless" — not yet diagnosed.** Every menu
+  Click is now logged to crash.log (`TrayMenu: Clicked '<key>'`),
+  so the next test shows whether Click fires at all. Manh: after
+  testing, send crash.log — if a click is logged but nothing
+  happens, the action is the problem; if nothing is logged, the
+  Click never fires (flyout/input problem).
+- **OCR providers (decided, already implemented):** Windows itself
+  gives screenshot copy (Snipping Tool, Win+Shift+S) and, with
+  PowerToys, text copy (Text Extractor, Win+Shift+T) — both are
+  Windows.Media.Ocr underneath, and Vietnamese needs the optional
+  "Vietnamese OCR" language pack that most machines lack. TransPeek
+  does NOT write its own OCR engine (multi-year ML work); it embeds
+  Tesseract (open source) as the default — the engine ships with the
+  app, language data downloads once on first run — and falls back to
+  Windows OCR automatically when Tesseract fails. No PowerToys or
+  language pack needed. Screenshot Copy (image to clipboard) and
+  Screenshot OCR (text from screen) stay two separate features.

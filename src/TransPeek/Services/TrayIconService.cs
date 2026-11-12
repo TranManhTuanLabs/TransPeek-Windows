@@ -167,6 +167,10 @@ public sealed class TrayIconService : IDisposable
         // crash.log shows what happened.
         item.Click += (_, _) =>
         {
+            // Diagnostic (0.1.3.53 test: the right-click menu is
+            // "useless" — items may not even fire): log every click, so
+            // the next crash.log tells whether Click fired at all.
+            CrashLog.WriteLine("TrayMenu", $"Clicked '{key}'");
             try
             {
                 if (_dispatcher is not null && _dispatcher.TryEnqueue(() => RunMenuAction(onClick)))
