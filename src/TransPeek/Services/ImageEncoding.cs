@@ -62,7 +62,7 @@ public static class ImageEncoding
             throw new ArgumentException("Crop rectangle is empty.");
         var cropped = new byte[w * h * 4];
         for (var row = 0; row < h; row++)
-            Buffer.BlockCopy(bgra, ((y + row) * width + x) * 4, cropped, row * w * 4, w * 4);
+            System.Buffer.BlockCopy(bgra, ((y + row) * width + x) * 4, cropped, row * w * 4, w * 4);
         return await EncodePngAsync(cropped, w, h);
     }
 
