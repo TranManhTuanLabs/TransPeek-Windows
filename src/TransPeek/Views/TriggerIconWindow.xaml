@@ -19,7 +19,12 @@
             <Grid>
                 <TextBlock x:Name="LetterMark" Text="A" FontSize="14" FontWeight="Bold" Foreground="#1A1A1A"
                            HorizontalAlignment="Center" VerticalAlignment="Center" />
-                <FontIcon x:Name="SpeakerMark" Glyph="&#xE7F5;" FontSize="16" Foreground="#1A1A1A"
+                <!-- Speaker mark (click = listen/TTS mode): E992 Volume0 —
+                     a plain speaker cone with NO sound waves, like the
+                     Windows 11 system speaker (Manh 2026-11-14). The old
+                     E7F5 "Speakers" had waves; Manh wants the cone alone.
+                     E767 "Volume" is the system icon WITH waves. -->
+                <FontIcon x:Name="SpeakerMark" Glyph="&#xE992;" FontSize="16" Foreground="#1A1A1A"
                           HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed" />
             </Grid>
         </Border>

@@ -87,15 +87,20 @@ public sealed class TrayIconService : IDisposable
         menu.Items.Add(new MenuFlyoutSeparator());
         menu.Items.Add(Item("Tray.Menu.Settings", "Settings…", "\uE713", openSettings));
         menu.Items.Add(new MenuFlyoutSeparator());
+        // Esc-pill diagnostic (Manh 2026-11-14): lists every visible
+        // top-level window with its owning process to windows.log, so a
+        // floating window's owner can be identified for certain. It was
+        // temporary (remove once the Esc pill's owner was known), but
+        // Manh keeps it — it proved its worth finding the PopupHost —
+        // and wants it above Restart.
+        menu.Items.Add(Item("Tray.Menu.DiagnoseWindows", "Diagnose: list windows", "\uE946", diagnoseWindows));
         // Restart (Manh 2026-11-14): recovery when the app misbehaves,
         // e.g. after an OCR engine switch that crashes it. Glyph E72C
         // is Refresh (no dedicated Restart glyph in Segoe MDL2).
+        // Manh 2026-11-14: Restart feels a bit meaningless now (the
+        // hotkey crash it worked around is fixed) — it sits below
+        // Diagnose; remove it entirely if he says so.
         menu.Items.Add(Item("Tray.Menu.Restart", "Restart TransPeek", "\uE72C", restart));
-        // Esc-pill diagnostic (Manh 2026-11-14, temporary): lists every
-        // visible top-level window with its owning process to
-        // windows.log, so the floating white "Esc" pill's owner can be
-        // identified for certain. Remove once the owner is known.
-        menu.Items.Add(Item("Tray.Menu.DiagnoseWindows", "Diagnose: list windows", "\uE946", diagnoseWindows));
         menu.Items.Add(Item("Tray.Menu.Quit", "Quit TransPeek", "\uE711", quit));
 
         // Diagnostic (0.1.3.59 test: right-click menu "chưa được"): log

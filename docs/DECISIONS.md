@@ -1253,3 +1253,27 @@ an OS limit.)
   `<local:CrosshairGrid x:Name="RootGrid">` instead of a plain Grid.
 - WMC9999 in the same build is a consequence of the two C# errors, not
   a separate error (same pattern as runs #46/#52/#55/#66/#73/#76/#77).
+
+## Settings pane resize + speaker glyph + tray order (Manh 2026-11-14, build 81 test)
+- Build 81 confirmed good: the float icon is now a round white circle
+  with just "A" (no square, no shadow) — the transparency fix works.
+- Settings pane resize: NavigationView exposes OpenPaneLength but has
+  no built-in grip. New Views/ResizeHandle.cs (a Grid subclass that sets
+  ProtectedCursor to SizeWe from inside — ProtectedCursor is protected,
+  same pattern as CrosshairGrid) overlays an 8 px strip centered on the
+  pane's right edge (Margin.Left = OpenPaneLength - 4, positioned in
+  code on Loaded and on every drag). Dragging updates OpenPaneLength
+  1:1 from the press point, clamped to 180–480. Session-only for now:
+  the Settings window is recreated on every open, so the width resets;
+  persist it in App.Settings if Manh asks.
+- Speaker glyph (click = listen mode): E7F5 "Speakers" replaced by E992
+  "Volume0" — a plain speaker cone with NO sound waves, like the
+  Windows 11 system speaker (Manh: waves not needed). E767 "Volume" is
+  the system icon WITH waves; E74F is Mute (speaker with X). If E992
+  ever renders blank, fall back to E767.
+- Tray menu order: "Diagnose: list windows" moved ABOVE "Restart
+  TransPeek" (Manh). Diagnose was temporary (remove once the Esc
+  pill's owner was known) but Manh keeps it — it found the PopupHost.
+  Restart stays for now below Diagnose; Manh says it feels a bit
+  meaningless (the hotkey crash it worked around is fixed in #64), so
+  remove it entirely if he says so.
