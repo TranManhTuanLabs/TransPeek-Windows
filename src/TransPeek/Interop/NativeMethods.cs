@@ -338,12 +338,6 @@ internal static class NativeMethods
 
     [DllImport("user32.dll", SetLastError = true)]
     public static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
-
-    public struct RECT
-    {
-        public int Left;
-        public int Top;
-        public int Right;
-        public int Bottom;
-    }
+    // (RECT is already defined above, line 261 — used by MONITORINFO /
+    // SystemParametersInfo — so it is NOT redefined here.)
 }
