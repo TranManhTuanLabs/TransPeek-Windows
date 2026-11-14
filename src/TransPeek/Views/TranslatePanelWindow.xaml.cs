@@ -112,17 +112,17 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
                         WindowHelpers.ActivateWindow(this);
                 }),
                 handledEventsToo: true);
-            // WinUI 3 Window has no KeyDown event: Esc is a keyboard
-            // accelerator on the root element instead. Same caveat as
-            // RegionSelectWindow (v0.1.1): an accelerator needs a focused
-            // element, so KeyDown on the root is the primary Esc path.
-            var esc = new KeyboardAccelerator { Key = VirtualKey.Escape };
-            esc.Invoked += (_, args) =>
-            {
-                HidePanel();
-                args.Handled = true;
-            };
-            contentRoot.KeyboardAccelerators.Add(esc);
+            // WinUI 3 Window has no KeyDown event, so Esc is handled by
+            // KeyDown on the root element (below) plus the low-level
+            // EscapeKeyMonitor hook (which sees Esc whatever window has
+            // focus). There used to be a KeyboardAccelerator for Esc here
+            // as well, but it is REMOVED (2026-11-14): WinUI renders a
+            // KeyboardAccelerator's key as a floating "Esc" key-tip pill
+            // (a PopupHost window, 46x41 px) whenever the mouse hovers
+            // the element — that pill is the "Esc" hint Manh kept seeing
+            // above the panel and in the capture screen. The accelerator
+            // was only a backup (it needs a focused element); KeyDown +
+            // the hook already cover Esc.
             contentRoot.KeyDown += (_, e) =>
             {
                 if (e.Key == VirtualKey.Escape)

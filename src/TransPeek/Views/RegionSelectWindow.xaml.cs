@@ -58,18 +58,16 @@ public sealed partial class RegionSelectWindow : Window
                 // the accelerator) actually reaches this window.
                 RootGrid.Focus(FocusState.Programmatic);
             };
-            // WinUI 3 Window has no KeyDown event: Esc is a keyboard
-            // accelerator on the root element instead. The accelerator
-            // alone is NOT reliable (it needs a focused element), so
-            // KeyDown on the focused grid is the primary Esc path and
-            // the accelerator stays only as a backup.
-            var esc = new KeyboardAccelerator { Key = VirtualKey.Escape };
-            esc.Invoked += (_, args) =>
-            {
-                Cancel();
-                args.Handled = true;
-            };
-            contentRoot.KeyboardAccelerators.Add(esc);
+            // WinUI 3 Window has no KeyDown event, so Esc is handled by
+            // KeyDown on the focused grid (below) — the primary Esc path.
+            // There used to be a KeyboardAccelerator for Esc here as
+            // well, but it is REMOVED (2026-11-14): WinUI renders a
+            // KeyboardAccelerator's key as a floating "Esc" key-tip pill
+            // (a PopupHost window, 46x41 px) whenever the mouse hovers
+            // the element — that pill is the "Esc" hint Manh kept seeing
+            // in the capture screen (and above the panel). The accelerator
+            // was only a backup (it needs a focused element); the grid is
+            // explicitly focused on Loaded/Activated, so KeyDown covers Esc.
             contentRoot.KeyDown += (_, e) =>
             {
                 if (e.Key == VirtualKey.Escape)
