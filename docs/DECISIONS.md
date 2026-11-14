@@ -1364,3 +1364,13 @@ an OS limit.)
   App.OnSettingsSaved, so a change applies live even while the panel
   is open. The XAML FontSize values (13/12) stay as the design-time
   fallback matching the default.
+
+## Top-bar font size buttons in the panel (Manh 2026-11-14)
+- The Font Size slider lives in Settings -> General, but Manh also
+  wants to adjust it right in the panel. Two small buttons sit in the
+  actions row, before Pin: "A-" (smaller) and "A+" (larger). They step
+  the SAME setting (PopupTopBarFontSize) by 1 pt, clamped to the 12-24
+  slider range, save immediately, and re-apply live — so Settings
+  shows the new value next time it opens. The tagline stays 1 pt
+  smaller (RefreshTopBarFontSize). The smaller "A-" / bolder "A+" hint
+  at the direction; tooltips say "Smaller/Larger top-bar font".
