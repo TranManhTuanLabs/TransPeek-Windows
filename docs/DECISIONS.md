@@ -966,3 +966,13 @@ hotkey recording) are DONE. Three things left:
    still safe). The left-click already worked because
    LeftClickCommand is a Command too. The Opening log stays as a
    diagnostic. (SecondWindow mode was rejected — it is still preview.)
+
+## CI #66 red — SetRegionRects takes RectInt32, not Rect (Manh, 2026-11-14)
+`InputNonClientPointerSource.SetRegionRects` takes
+`Windows.Graphics.RectInt32[]` (PHYSICAL pixels), not
+`Windows.Foundation.Rect[]` (DIPs) — CS1503. The WMC9999 next to it
+is a consequence of the C# error, not a separate error (same pattern
+as runs #46/#52/#55). Fixed by scaling the title-bar bounds by
+`WindowHelpers.DpiScale` into a RectInt32. (The CS8619 warning in
+TesseractLanguageDataManager is pre-existing and does not fail the
+build.)

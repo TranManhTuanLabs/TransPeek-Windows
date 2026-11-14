@@ -291,8 +291,9 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// is the WinUI 3 native way to declare a drag region on a
     /// borderless window. The title bar holds only text (the gear button
     /// is in the header row below it), so the whole row is the region.
-    /// Recomputed when the row's size changes (font size) — the region
-    /// is in window coordinates (effective pixels).</summary>
+    /// Recomputed when the row's size changes (font size). SetRegionRects
+    /// takes RectInt32 (PHYSICAL pixels, not DIPs — CS1503 in CI #66),
+    /// so the bounds are scaled by the window's DPI factor.</summary>
     private void UpdateCaptionRegion()
     {
         if (TitleBar.ActualWidth <= 0 || TitleBar.ActualHeight <= 0)
@@ -301,8 +302,14 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
             return;
         var bounds = TitleBar.TransformToVisual(root).TransformBounds(
             new Windows.Foundation.Rect(0, 0, TitleBar.ActualWidth, TitleBar.ActualHeight));
+        var scale = WindowHelpers.DpiScale(this);
+        var physical = new Windows.Graphics.RectInt32(
+            (int)Math.Round(bounds.X * scale),
+            (int)Math.Round(bounds.Y * scale),
+            Math.Max(1, (int)Math.Round(bounds.Width * scale)),
+            Math.Max(1, (int)Math.Round(bounds.Height * scale)));
         var source = InputNonClientPointerSource.GetForWindowId(AppWindow.Id);
-        source.SetRegionRects(NonClientRegionKind.Caption, new[] { bounds });
+        source.SetRegionRects(NonClientRegionKind.Caption, new[] { physical });
     }
 
     private void OnOpenSettings(object sender, RoutedEventArgs e)
