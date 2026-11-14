@@ -47,7 +47,13 @@ public sealed partial class SettingsWindow : Window
             {
                 NavView.SelectedItem = NavView.MenuItems[0];
                 SelectPage("General");
-                PositionPaneResizeHandle();
+                // Watch the pane toggle: when the user collapses the
+                // pane to icons, the handle must hide too (see
+                // UpdatePaneResizeHandle).
+                NavView.RegisterPropertyChangedCallback(
+                    NavigationView.IsPaneOpenProperty,
+                    (_, _) => UpdatePaneResizeHandle());
+                UpdatePaneResizeHandle();
             };
         }
     }
@@ -109,7 +115,7 @@ public sealed partial class SettingsWindow : Window
         // Clamp: keep the nav items readable, leave room for content.
         var length = Math.Clamp(_paneResizeStartLength + (x - _paneResizeStartX), 180, 480);
         NavView.OpenPaneLength = length;
-        PositionPaneResizeHandle();
+        UpdatePaneResizeHandle();
         e.Handled = true;
     }
 
@@ -121,8 +127,23 @@ public sealed partial class SettingsWindow : Window
         PaneResizeHandle.ReleasePointerCapture(e.Pointer);
     }
 
-    private void PositionPaneResizeHandle()
+    private void UpdatePaneResizeHandle()
     {
+        // The handle only makes sense while the pane is open. When the
+        // user collapses the pane with the built-in toggle, the pane
+        // shrinks to icons-only (CompactPaneLength, 48 px) — but the
+        // handle is positioned by OpenPaneLength, so if it stays visible
+        // it floats in the content as a stray vertical stripe at the old
+        // dragged position (Manh 2026-11-14, 0.1.3.85 test). Hide it
+        // while collapsed; expanding the pane brings it back at the
+        // remembered OpenPaneLength (which is preserved across
+        // collapse/expand, so the dragged width is not lost).
+        if (!NavView.IsPaneOpen)
+        {
+            PaneResizeHandle.Visibility = Visibility.Collapsed;
+            return;
+        }
+        PaneResizeHandle.Visibility = Visibility.Visible;
         // Center the 8 px handle on the pane's right edge.
         PaneResizeHandle.Margin = new Thickness(NavView.OpenPaneLength - 4, 0, 0, 0);
     }

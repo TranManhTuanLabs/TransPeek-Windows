@@ -1320,3 +1320,16 @@ an OS limit.)
   build yet; the latest working pre-release is still v0.1.3.81 (old
   E7F5 speaker). #82's failure was the SizeWe error too (ResizeHandle
   was added in that commit).
+
+## Settings resize handle floats as a stray stripe when pane is collapsed (Manh 2026-11-14, 0.1.3.85 test)
+- The drag works, but the built-in NavigationView toggle collapses the
+  pane to icons-only (CompactPaneLength, 48 px) while the handle stays
+  positioned by OpenPaneLength — so it floats in the content as a
+  vertical stripe at the old dragged position.
+- FIX: UpdatePaneResizeHandle() now hides the handle (Visibility
+  Collapsed) while IsPaneOpen is false and shows it again on expand.
+  It watches IsPaneOpen via RegisterPropertyChangedCallback on
+  NavigationView.IsPaneOpenProperty (there is no dedicated
+  pane-toggle event to hook). OpenPaneLength is preserved across
+  collapse/expand, so the dragged width is not lost when the pane
+  comes back.
