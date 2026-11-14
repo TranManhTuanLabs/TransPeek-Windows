@@ -5,44 +5,9 @@
 
     <ScrollViewer>
         <StackPanel Spacing="12" MaxWidth="560" HorizontalAlignment="Left">
-            <ToggleSwitch x:Name="WatchSelectionToggle" x:Uid="Settings.General.WatchSelection" Header="Watch selection automatically"
-                          OnContent="On" OffContent="Off"
-                          Toggled="OnWatchSelectionToggled" />
-            <TextBlock x:Uid="Settings.General.WatchSelectionHint" Text="When on, the trigger icon appears whenever you select text. When off, the app only responds to hotkeys and the tray menu."
-                       FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
-
-            <ComboBox x:Name="HoverDelayCombo" x:Uid="Settings.General.HoverDelay" Header="How long to hover before the panel opens"
-                      SelectionChanged="OnHoverDelayChanged">
-                <ComboBoxItem Content="300 ms" Tag="300" />
-                <ComboBoxItem Content="500 ms" Tag="500" />
-            </ComboBox>
-
-            <NumberBox x:Name="AutoHideBox" x:Uid="Settings.General.AutoHide" Header="Trigger icon hides after (seconds)"
-                       Minimum="1" Maximum="30" SpinButtonPlacementMode="Compact"
-                       ValueChanged="OnAutoHideChanged" />
-
-            <!-- Appearance (Manh 2026-11-15): a section INSIDE General,
-                 NOT a separate tab — like mac's Sections in
-                 GeneralSettingsView (Section "Appearance" with Text
-                 Size, Section "Popup Panel" with AppName & Slogan Font
-                 Size). The main Text Size slider (the panel content
-                 font size — source + translation text, mac popupFontSize,
-                 default 14) was missing, so "Text Size" was only a
-                 header with no slider under it; it is the slider itself
-                 now. The slider sets the content size; the tagline is
-                 always 1 pt smaller than the app name (applied by the
-                 panel). Mac parity: same sliders 12-24. -->
-            <TextBlock x:Uid="Settings.General.Appearance" Text="Appearance" FontSize="16" FontWeight="SemiBold" Margin="0,8,0,0" />
-            <Slider x:Name="MainFontSizeSlider" x:Uid="Settings.General.MainFontSize" Header="Text Size"
-                    Minimum="12" Maximum="24" StepFrequency="1"
-                    ValueChanged="OnMainFontSizeChanged" />
-            <TextBlock x:Name="MainFontSizeValueText" FontSize="12" Foreground="Gray" />
-            <TextBlock x:Uid="Settings.General.PopupPanel" Text="Popup Panel" FontWeight="SemiBold" Margin="0,8,0,0" />
-            <Slider x:Name="FontSizeSlider" x:Uid="Settings.General.FontSize" Header="App name &amp; Slogan Font Size"
-                    Minimum="12" Maximum="24" StepFrequency="1"
-                    ValueChanged="OnFontSizeChanged" />
-            <TextBlock x:Name="FontSizeValueText" FontSize="12" Foreground="Gray" />
-
+            <!-- Hotkeys FIRST (Manh 2026-11-15): the most-used settings,
+                 so they sit at the top of General instead of buried
+                 below Appearance. -->
             <TextBlock x:Uid="Settings.General.HotkeyHint" Text="Click a hotkey box, then press the key combination — no typing needed. Esc cancels."
                        FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
 
@@ -87,12 +52,54 @@
                      LostFocus="OnSettingsHotkeyLostFocus" />
             <TextBlock x:Name="SettingsHotkeyErrorText" FontSize="12" Foreground="Red" Visibility="Collapsed" />
 
+            <!-- Watch selection + Launch with Windows together (Manh
+                 2026-11-15): both are app-behaviour toggles, so Launch
+                 sits right under Watch selection instead of at the
+                 bottom of the page. -->
+            <ToggleSwitch x:Name="WatchSelectionToggle" x:Uid="Settings.General.WatchSelection" Header="Watch selection automatically"
+                          OnContent="On" OffContent="Off"
+                          Toggled="OnWatchSelectionToggled" />
+            <TextBlock x:Uid="Settings.General.WatchSelectionHint" Text="When on, the trigger icon appears whenever you select text. When off, the app only responds to hotkeys and the tray menu."
+                       FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
+
             <ToggleSwitch x:Name="LaunchAtLoginToggle" x:Uid="Settings.General.LaunchAtLogin" Header="Launch with Windows"
                           OnContent="On" OffContent="Off"
                           Toggled="OnLaunchAtLoginToggled" />
             <TextBlock x:Uid="Settings.General.RunKeyNote" Text="Writes to the Windows Run key (HKCU\Software\Microsoft\Windows\CurrentVersion\Run). No admin rights needed."
                        FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
             <TextBlock x:Name="LaunchErrorText" FontSize="12" Foreground="Red" Visibility="Collapsed" />
+
+            <ComboBox x:Name="HoverDelayCombo" x:Uid="Settings.General.HoverDelay" Header="How long to hover before the panel opens"
+                      SelectionChanged="OnHoverDelayChanged">
+                <ComboBoxItem Content="300 ms" Tag="300" />
+                <ComboBoxItem Content="500 ms" Tag="500" />
+            </ComboBox>
+
+            <NumberBox x:Name="AutoHideBox" x:Uid="Settings.General.AutoHide" Header="Trigger icon hides after (seconds)"
+                       Minimum="1" Maximum="30" SpinButtonPlacementMode="Compact"
+                       ValueChanged="OnAutoHideChanged" />
+
+            <!-- Appearance (Manh 2026-11-15): a section INSIDE General,
+                 NOT a separate tab — like mac's Sections in
+                 GeneralSettingsView (Section "Appearance" with Text
+                 Size, Section "Popup Panel" with AppName & Slogan Font
+                 Size). The main Text Size slider (the panel content
+                 font size — source + translation text, mac popupFontSize,
+                 default 14) was missing, so "Text Size" was only a
+                 header with no slider under it; it is the slider itself
+                 now. The slider sets the content size; the tagline is
+                 always 1 pt smaller than the app name (applied by the
+                 panel). Mac parity: same sliders 12-24. -->
+            <TextBlock x:Uid="Settings.General.Appearance" Text="Appearance" FontSize="16" FontWeight="SemiBold" Margin="0,8,0,0" />
+            <Slider x:Name="MainFontSizeSlider" x:Uid="Settings.General.MainFontSize" Header="Text Size"
+                    Minimum="12" Maximum="24" StepFrequency="1"
+                    ValueChanged="OnMainFontSizeChanged" />
+            <TextBlock x:Name="MainFontSizeValueText" FontSize="12" Foreground="Gray" />
+            <TextBlock x:Uid="Settings.General.PopupPanel" Text="Popup Panel" FontWeight="SemiBold" Margin="0,8,0,0" />
+            <Slider x:Name="FontSizeSlider" x:Uid="Settings.General.FontSize" Header="App name &amp; Slogan Font Size"
+                    Minimum="12" Maximum="24" StepFrequency="1"
+                    ValueChanged="OnFontSizeChanged" />
+            <TextBlock x:Name="FontSizeValueText" FontSize="12" Foreground="Gray" />
 
             <TextBlock x:Uid="Settings.General.SettingsPath" Text="Settings are stored in %LOCALAPPDATA%\TransPeek\settings.json"
                        FontSize="12" Foreground="Gray" TextWrapping="Wrap" Margin="0,12,0,0" />

@@ -1553,3 +1553,19 @@ an OS limit.)
   height actually changed, so a resize never re-triggers itself.
   The initial size stays 480 px (PanelHeight) until the deferred
   resize runs right after showing.
+
+## General page order: hotkeys first, Launch with Watch selection (Manh 2026-11-15)
+
+- Hotkeys moved to the TOP of Settings -> General (they were buried
+  below Appearance): the hint + all 8 hotkey boxes now come first,
+  since they are the most-used settings.
+- "Launch with Windows" moved up next to "Watch selection
+  automatically" (it was at the bottom of the page): both are
+  app-behaviour toggles, so they sit together — Watch selection
+  toggle + hint, then Launch toggle + Run-key note + error text.
+- Pure XAML reorder (no code-behind change): control names are
+  unchanged, so OnNavigatedTo and the handlers still find them. The
+  slider ValueChanged guard still holds — each value label still
+  comes right after its slider in XAML, so a ValueChanged firing
+  during InitializeComponent still sees a null label and returns
+  early (the General-blank bug, 2026-11-15).
