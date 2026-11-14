@@ -103,7 +103,7 @@
     <value>Copy translation</value>
   </data>
   <data name="Panel.CaptureOcr.Content" xml:space="preserve">
-    <value>Capture OCR (Ctrl+Shift+S)</value>
+    <value>Capture OCR</value>
   </data>
   <data name="Ocr.CaptureFailed" xml:space="preserve">
     <value>Could not capture the screen: {0}</value>

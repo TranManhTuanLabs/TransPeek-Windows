@@ -1057,3 +1057,42 @@ an OS limit.)
   the duplicate error now reads "Already used by OCR from Screen.").
   Internal identifiers (resw keys, settings properties, hotkey ids,
   log labels) are unchanged.
+
+## Test 70 feedback — provider above, Capture OCR label, speaker/click, mac bubble, Esc pill (Manh, 2026-11-14)
+- "via Google Translate": moved ABOVE the language pickers (it was below
+  them in 0.1.3.70, Manh wants it above). Row 1 is now [ProviderText,
+  pickers row].
+- Panel button "Capture OCR (Ctrl+Shift+S)" -> "Capture OCR": the
+  hotkey in parentheses is dropped (resw Panel.CaptureOcr.Content + XAML
+  fallback). The button still runs the same OCR flow.
+- Click icon -> speaker, hover/click conflict (0.1.3.70 test: the speaker
+  never appeared): ROOT CAUSE — the click raised OpenRequested, opening
+  the panel hid the icon in the same tick, so the speaker was never
+  visible; and hover (300 ms) and click both opened the panel, so only
+  one function ever ran. Fixed by porting the mac model
+  (TriggerIconController): click = listen mode — it cancels the hover
+  timer, switches the mark to the speaker and does NOT open the panel;
+  while speaking, hover is blocked (guard !isSpeaking); a second click
+  turns the speaker back off. Hover (past the delay) still opens the
+  translate panel. TTS audio is NOT built yet, so the click is only the
+  speaker visual for now; the speaker auto-hides after the auto-hide
+  duration (the mac keeps it until playback stops — here there is no
+  playback, so a stuck speaker would be worse).
+- Icon: the plain "A" in the circle still looked wrong, so the mac icon
+  was ported (Manh's fallback): the mark is now the mac SF Symbol
+  "character.bubble" drawn as a XAML Path (bubble outline + "A" inside),
+  on the WHITE circle background as it is now (not the mac's
+  controlBackgroundColor).
+- "Esc" pill (floating white "Esc" above the panel, and in the OCR
+  capture screen when moving the mouse): RE-CHECKED the doc link/images
+  and the whole codebase — TransPeek has NO "Esc" button, tooltip or
+  label anywhere. RegionSelectWindow.xaml is only BackgroundImage +
+  SelectionRect; its code-behind has no mouse-move UI at all (only
+  keyboard Esc + right-click to cancel). The panel has no Esc pill
+  either (only the hint text line). Conclusion stands: the pill is NOT
+  drawn by TransPeek — it must come from another app/tool overlay on
+  Manh's machine. Possible: an old TransPeek build still running in the
+  background (its capture screen still had the hint chip / Cancel
+  button) — check Task Manager for a second TransPeek.exe and quit it.
+  Decisive test for Manh: with TransPeek fully quit, move the mouse on
+  the desktop — if the pill still appears, it is another app.
