@@ -68,10 +68,10 @@
              TTS audio is NOT wired yet — decor for now (tooltip says
              so); speaking comes after the mac side is stable. -->
         <Button x:Name="SpeakSourceButton" Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Bottom"
-                Margin="0,0,6,8" Padding="6,2"
+                Margin="0,0,6,8" Padding="8,4"
                 ToolTipService.ToolTip="Listen to source text (coming soon)"
                 Click="OnSpeakSourceClicked">
-            <FontIcon Glyph="&#xE767;" FontSize="12" />
+            <FontIcon Glyph="&#xE767;" FontSize="16" />
         </Button>
         <TextBlock x:Uid="Panel.Hint" Grid.Row="2" Text="Enter: translate again • Esc: close • Select text in the panel to look it up in the dictionary"
                    FontSize="11" Foreground="Gray" TextWrapping="Wrap" Margin="0,0,0,8" />
@@ -133,10 +133,10 @@
                          Background="Transparent" FontSize="14" MaxHeight="260"
                          SelectionChanged="OnTranslationSelectionChanged" />
                 <StackPanel x:Name="ProviderCardSpeakerRow" Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="8,2,8,6">
-                    <Button x:Name="SpeakTranslationButton" Padding="6,2"
+                    <Button x:Name="SpeakTranslationButton" Padding="8,4"
                             ToolTipService.ToolTip="Listen to translation (coming soon)"
                             Click="OnSpeakTranslationClicked">
-                        <FontIcon Glyph="&#xE767;" FontSize="12" />
+                        <FontIcon Glyph="&#xE767;" FontSize="16" />
                     </Button>
                 </StackPanel>
             </Grid>

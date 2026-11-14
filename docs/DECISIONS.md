@@ -1583,3 +1583,21 @@ an OS limit.)
   ("luôn bên trong input"). The hint row is now just the hint
   TextBlock. Same glyph (E767 Volume) as the output speaker; still
   decor only, TTS not wired yet.
+
+## Speaker icons bigger (Manh 2026-11-15)
+
+- Both panel speaker icons (input + output) were a bit small at
+  FontSize 12 / Padding 6,2. Bumped to FontSize 16 / Padding 8,4 —
+  the glyph is now a touch larger than the 14 pt content text, like
+  mac's Speak button (icon a bit larger than the text). Manh: "cho
+  to hơn chút hơi bé (có thể là padding hay gì đó tuỳ em)".
+
+## Output expand covering the bottom — no fix needed (Manh 2026-11-15)
+
+- Manh first reported the expanding output "che luôn cả bottom"
+  (covered the bottom rows), then re-tested and said it works on
+  the 2nd try ("không che bottom"). Likely the first open measured
+  before layout settled (ResizeToFitContent runs deferred via the
+  dispatcher; the very first measure can lag one frame). No code
+  change — keep watching; if it recurs on first open, the fix is to
+  re-run the fit after the first layout pass.
