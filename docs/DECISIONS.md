@@ -1780,3 +1780,15 @@ an OS limit.)
   appearance and the extra header was redundant. The orphaned resw
   entry Settings.General.SettingsWindow.Text is removed too. XAML
   order only; no slider logic or setting changed.
+
+## CI #113/#114 red: local function cannot have two '_' parameters (CS0100, 2026-11-15)
+
+- Both runs failed at Build with CS0100 "The parameter name '_' is
+  a duplicate" in SettingsWindow.xaml.cs:152 — the one-time Loaded
+  handler was declared `void OnLoaded(object _, RoutedEventArgs _)`.
+  A lambda CAN have two '_' parameters (discards), but a named local
+  function cannot: its parameters must have distinct names. (The
+  WMC9999 is the usual consequence.) Fix: rename to
+  `void OnLoaded(object sender, RoutedEventArgs e)`. Lesson: use
+  distinct names in any named function; '_' twice is only legal in
+  lambdas.

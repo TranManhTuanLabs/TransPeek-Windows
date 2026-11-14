@@ -148,8 +148,11 @@ public sealed partial class SettingsWindow : Window
         // navigation). Loaded fires once it is, so the walk sees the
         // full tree. Reads the live setting at fire time, not the
         // captured size, so a slider drag that happened while the
-        // page was loading still lands the newest value.
-        void OnLoaded(object _, RoutedEventArgs _)
+        // page was loading still lands the newest value. (The
+        // parameters need distinct names — a local function cannot
+        // have two '_' parameters, CS0100; lambdas can, named
+        // functions cannot. CI #113/#114 red on this.)
+        void OnLoaded(object sender, RoutedEventArgs e)
         {
             page.Loaded -= OnLoaded;
             ApplySettingsFontSize(page, App.Settings.AppTextSize);
