@@ -54,10 +54,14 @@
                  buttons. The QR stays behind a button so About stays
                  compact; the account number can be copied directly. -->
             <TextBlock x:Uid="Settings.About.Support" Text="Support TransPeek" FontSize="15" FontWeight="SemiBold" Margin="0,8,0,0" />
-            <TextBlock x:Uid="Settings.About.Support.Message" Text="If this app is useful to you, you can support the project by buying me a coffee!"
-                       FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
-            <TextBlock x:Uid="Settings.About.Support.MessageVi" Text="Nếu ứng dụng này hữu ích với bạn, bạn có thể ủng hộ dự án bằng một ly cà phê!"
-                       FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
+            <!-- The English + Vietnamese lines are one message: keep them
+                 tight (Spacing 2), not a full line apart (0.1.3.64 test). -->
+            <StackPanel Spacing="2">
+                <TextBlock x:Uid="Settings.About.Support.Message" Text="If this app is useful to you, you can support the project by buying me a coffee!"
+                           FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
+                <TextBlock x:Uid="Settings.About.Support.MessageVi" Text="Nếu ứng dụng này hữu ích với bạn, bạn có thể ủng hộ dự án bằng một ly cà phê!"
+                           FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
+            </StackPanel>
             <TextBlock x:Name="SupportAccountText" FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
             <StackPanel Orientation="Horizontal" Spacing="8">
                 <Button x:Name="ShowQrButton" Click="OnShowQrClick">

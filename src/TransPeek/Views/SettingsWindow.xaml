@@ -6,11 +6,34 @@
     <NavigationView x:Name="NavView" IsSettingsVisible="False" IsBackButtonVisible="Collapsed"
                     SelectionChanged="OnSelectionChanged" PaneDisplayMode="Left">
         <NavigationView.MenuItems>
-            <NavigationViewItem x:Uid="Settings.Nav.General" Content="General" Tag="General" />
-            <NavigationViewItem x:Uid="Settings.Nav.Translation" Content="Translation" Tag="Translation" />
-            <NavigationViewItem x:Uid="Settings.Nav.Dictionary" Content="Dictionary" Tag="Dictionary" />
-            <NavigationViewItem x:Uid="Settings.Nav.Ocr" Content="OCR" Tag="OCR" />
-            <NavigationViewItem x:Uid="Settings.Nav.About" Content="About" Tag="About" />
+            <!-- Icons (Segoe Fluent Icons, like Windows 11 Settings):
+                 General = Settings gear, Translation = Edit,
+                 Dictionary = Dictionary/book, OCR = Scan, About = Info. -->
+            <NavigationViewItem x:Uid="Settings.Nav.General" Content="General" Tag="General">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE713;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+            <NavigationViewItem x:Uid="Settings.Nav.Translation" Content="Translation" Tag="Translation">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE70F;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+            <NavigationViewItem x:Uid="Settings.Nav.Dictionary" Content="Dictionary" Tag="Dictionary">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE8D2;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+            <NavigationViewItem x:Uid="Settings.Nav.Ocr" Content="OCR" Tag="OCR">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE8FE;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+            <NavigationViewItem x:Uid="Settings.Nav.About" Content="About" Tag="About">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE946;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
         </NavigationView.MenuItems>
         <Frame x:Name="ContentFrame" Margin="16" />
     </NavigationView>

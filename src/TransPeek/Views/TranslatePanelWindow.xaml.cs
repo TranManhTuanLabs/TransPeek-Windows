@@ -91,7 +91,18 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
             // handledEventsToo: the Button may mark the release handled.
             contentRoot.AddHandler(
                 UIElement.PointerReleasedEvent,
-                new PointerEventHandler((_, _) => WindowHelpers.ActivateWindow(this)),
+                new PointerEventHandler((_, _) =>
+                {
+                    // Do not re-activate a hidden panel (0.1.3.64 test):
+                    // the gear's Click hides the panel first, and this
+                    // handler runs after the Click (the comment above),
+                    // so activating here showed the panel again right
+                    // after HidePanel hid it. Click-outside and Esc hide
+                    // without a pointer release, so they were never
+                    // affected.
+                    if (_visible)
+                        WindowHelpers.ActivateWindow(this);
+                }),
                 handledEventsToo: true);
             // WinUI 3 Window has no KeyDown event: Esc is a keyboard
             // accelerator on the root element instead. Same caveat as
@@ -266,23 +277,51 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         UpdateCopyButtons();
     }
 
+    // Manual drag state: pointer position (effective pixels) and window
+    // position (physical pixels) at the moment the drag started.
+    private Windows.Foundation.Point _dragStart;
+    private Windows.Graphics.PointInt32 _dragWindowStart;
+    private bool _dragging;
+
     private void OnTitleBarPointerPressed(object sender, PointerRoutedEventArgs e)
     {
-        // Standard Windows title-bar drag: press-and-hold, then move.
-        // BeginDrag is called on PRESS, not after a move threshold:
-        // the old threshold + pointer-capture pattern broke the system
-        // drag — SendMessage(WM_NCLBUTTONDOWN) while a XAML element
-        // holds pointer capture does not engage the move loop until
-        // capture is released, so the panel only started following the
-        // mouse AFTER the click was released (0.1.3.59 test). A plain
-        // click (press + release, no move) still does not move the
-        // window: the system move loop ends on release without movement.
-        // No traditional title bar (min/max/close) is needed for this:
-        // a borderless floating panel drags from its top bar exactly
-        // like a normal window drags from its title bar.
-        // Activate first so the panel keeps keyboard focus after the drag.
-        WindowHelpers.ActivateWindow(this);
-        WindowHelpers.BeginDrag(this);
+        // Manual drag (0.1.3.64 test): press-and-hold the top bar, move,
+        // release to stop — exactly like a normal window title bar. The
+        // system move (SendMessage WM_NCLBUTTONDOWN, both the 4px-threshold
+        // version and the press version) did NOT do this: the panel only
+        // started following the mouse AFTER the click was released — the
+        // old comment blamed pointer capture, but the press version had
+        // no capture and still behaved the same, so the system move is
+        // simply unreliable for this no-activate window. Moving the window
+        // ourselves (AppWindow.Move by the pointer delta) is deterministic:
+        // it follows the mouse only while the button is held. A plain
+        // click (no move) generates no Moved events, so the window stays
+        // put. CapturePointer keeps Moved firing even when the pointer
+        // leaves the title bar mid-drag.
+        _dragStart = e.GetCurrentPoint(TitleBar).Position;
+        _dragWindowStart = AppWindow.Position;
+        _dragging = true;
+        TitleBar.CapturePointer(e.Pointer);
+    }
+
+    private void OnTitleBarPointerMoved(object sender, PointerRoutedEventArgs e)
+    {
+        if (!_dragging)
+            return;
+        var p = e.GetCurrentPoint(TitleBar).Position;
+        // Pointer coords are effective pixels (DIPs); AppWindow.Position
+        // is physical pixels — scale the delta by the window's DPI factor.
+        var scale = WindowHelpers.DpiScale(this);
+        var dx = (int)Math.Round((p.X - _dragStart.X) * scale);
+        var dy = (int)Math.Round((p.Y - _dragStart.Y) * scale);
+        AppWindow.Move(new Windows.Graphics.PointInt32(
+            _dragWindowStart.X + dx, _dragWindowStart.Y + dy));
+    }
+
+    private void OnTitleBarPointerReleased(object sender, PointerRoutedEventArgs e)
+    {
+        _dragging = false;
+        TitleBar.ReleasePointerCapture(e.Pointer);
     }
 
     private void OnOpenSettings(object sender, RoutedEventArgs e)

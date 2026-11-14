@@ -153,6 +153,9 @@
   <data name="Settings.General.WatchSelectionHint.Text" xml:space="preserve">
     <value>When on, the trigger icon appears whenever you select text. When off, the app only responds to hotkeys and the tray menu.</value>
   </data>
+  <data name="Settings.General.HotkeyHint.Text" xml:space="preserve">
+    <value>Click a hotkey box, then press the key combination — no typing needed. Esc cancels.</value>
+  </data>
   <data name="Settings.General.HoverDelay.Header" xml:space="preserve">
     <value>How long to hover before the panel opens</value>
   </data>

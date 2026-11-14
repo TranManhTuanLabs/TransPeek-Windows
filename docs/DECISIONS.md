@@ -863,3 +863,63 @@ service for that window handle, via a static
 MessageLoop after CreateWindowEx and removed after DestroyWindow.
 No API change; App.xaml.cs untouched. The Restart button added in
 #63 stays as a general recovery path.
+
+## Test 64 feedback (Manh, 2026-11-14) — round 2
+
+Manh tested build 64 and reported 6 items. IMPORTANT: he still sees the
+OCR Cancel button and the panel trigger icon — both were REMOVED in #63
+(the button is gone from the XAML, the icon is excluded by process id).
+A removed XAML element cannot appear, so he is almost certainly still
+running #59 (or clicking the ghost tray icon of the crashed #59 instance
+— a FailFast crash leaves a tray icon that does not respond until it is
+hovered). Before re-testing, he must quit the old version (Task Manager
+→ TransPeek.exe → End task if the tray Quit does not work) and check
+About: the version line must read "Release 0.1.3 (Build CI #<new run>)".
+
+1. **Panel drag STILL release-then-track in #64.** The press-version of
+   the system move (SendMessage WM_NCLBUTTONDOWN on PointerPressed) did
+   not fix it either — the old comment blamed pointer capture, but the
+   press version had no capture and behaved the same, so the system move
+   is simply unreliable for this no-activate window. FIX: manual drag —
+   PointerPressed records the pointer + window position and captures the
+   pointer, PointerMoved calls AppWindow.Move by the pointer delta
+   (DIPs scaled by DpiScale to physical pixels), PointerReleased stops.
+   It follows the mouse only while the button is held; a plain click
+   (no move) generates no Moved events, so the window stays put.
+2. **Settings gear shows Settings but does not hide the panel.** Cause:
+   the panel root's PointerReleased handler (added in 0.1.3.53 to
+   activate the panel after a click) runs AFTER the gear's Click — and
+   the Click calls HidePanel first. So the handler re-activated (and
+   re-showed) the panel right after HidePanel hid it. Click-outside and
+   Esc hide without a pointer release, so they were never affected. FIX:
+   the handler now skips activation when `_visible` is false.
+3. **Settings left menu: icons.** NavigationViewItems were text-only.
+   Added FontIcon (Segoe Fluent Icons, like Windows 11 Settings):
+   General E713 (Settings), Translation E70F (Edit), Dictionary E8D2
+   (Dictionary/book), OCR E8FE (Scan), About E946 (Info).
+4. **About: bilingual slogan lines.** The English + Vietnamese support
+   sentences were a full line apart (outer StackPanel Spacing 12).
+   They are now wrapped in a StackPanel with Spacing 2, so the pair
+   reads as one message.
+5. **Hotkey boxes required typing the spec by hand.** Now: click a
+   hotkey box, then press the combination — the box records it
+   (KeyDown handler, e.Handled so nothing is typed). Modifiers alone
+   show "Control+Alt+…"; a bare key shows "T (needs a modifier…)"
+   (a modifier-less global hotkey would hijack normal typing); Esc
+   cancels and restores the old text; a half-recorded "…" text is
+   restored silently on LostFocus. The recorded spec goes through the
+   existing TrySaveHotkey (format + duplicate check). A hint line above
+   the boxes explains it.
+6. **Float icon link.** The trigger icon is not an image file — it is
+   XAML (TriggerIconWindow: 30x30 white circle, 1px #C8C8C8 border,
+   "A" 13pt bold + "文" 10pt, #1A1A1A). A render at 1x/2x/4x was shared
+   with Manh by link (a render with DejaVu/Noto fonts, NOT a
+   screenshot — the real font on Windows is Segoe UI with a CJK
+   fallback). Manh will propose a size/style change from it.
+
+## Tray icon not responding (Manh, 2026-11-14)
+Clicking the tray icon "shows nothing". Most likely the ghost icon of
+the crashed #59 instance (see the note at the top of the Test 64
+section). If #65's tray still does not respond after a clean launch,
+send crash.log: #63/#64 log "TrayMenu: Menu opening" on right-click,
+so the log tells whether the menu opens at all.

@@ -2,11 +2,15 @@
 // translate hotkey, launch at login (registry Run key — the standard
 // approach for unpackaged apps; no admin rights needed).
 
+using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.Win32;
 using TransPeek.Core.Settings;
 using TransPeek.Services;
+using Windows.System;
+using Windows.UI.Core;
 
 namespace TransPeek.Views.SettingsPages;
 
@@ -106,6 +110,121 @@ public sealed partial class GeneralPage : Page
         => TrySaveHotkey(SettingsHotkeyBox, SettingsHotkeyErrorText, "Settings",
             s => App.Settings.SettingsHotkey = s, () => App.Settings.SettingsHotkey);
 
+    // Hotkey recording (Manh 2026-11-14): click a hotkey box, then press
+    // the key combination — the box records it, no typing "Control+Alt+T"
+    // by hand. The text before recording is restored if the user cancels
+    // (Esc) or clicks away mid-combination.
+    private string _recordingOriginal = "";
+
+    private void OnHotkeyBoxGotFocus(object sender, RoutedEventArgs e)
+    {
+        if (sender is TextBox box)
+            _recordingOriginal = box.Text;
+    }
+
+    private void OnHotkeyBoxKeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (sender is not TextBox box)
+            return;
+        // Never type into the box: the keys ARE the hotkey.
+        e.Handled = true;
+        if (e.Key == VirtualKey.Escape)
+        {
+            box.Text = _recordingOriginal;
+            Focus(FocusState.Programmatic);
+            return;
+        }
+        var modifiers = HeldModifiers();
+        if (IsModifierKey(e.Key))
+        {
+            // Modifier(s) only so far: show them + "…" and keep recording.
+            box.Text = modifiers.Count == 0 ? "…" : string.Join("+", modifiers) + "+…";
+            return;
+        }
+        if (modifiers.Count == 0)
+        {
+            // A bare key with no modifier would hijack normal typing as a
+            // global hotkey — require at least one modifier, keep recording.
+            box.Text = KeyToken(e.Key) + " (needs a modifier…)";
+            return;
+        }
+        box.Text = string.Join("+", modifiers) + "+" + KeyToken(e.Key);
+        // Save via the box's own LostFocus path (validates, checks
+        // duplicates, restores on failure), then move focus away so the
+        // next keypress does not start a new recording.
+        SaveHotkeyForBox(box);
+        Focus(FocusState.Programmatic);
+    }
+
+    private void SaveHotkeyForBox(TextBox box)
+    {
+        if (box == TranslateHotkeyBox)
+            TrySaveHotkey(box, HotkeyErrorText, "Translate",
+                s => App.Settings.TranslateHotkey = s, () => App.Settings.TranslateHotkey);
+        else if (box == OcrHotkeyBox)
+            TrySaveHotkey(box, OcrHotkeyErrorText, "OCR",
+                s => App.Settings.OcrHotkey = s, () => App.Settings.OcrHotkey);
+        else if (box == ManualHotkeyBox)
+            TrySaveHotkey(box, ManualHotkeyErrorText, "Manual Translation",
+                s => App.Settings.ManualHotkey = s, () => App.Settings.ManualHotkey);
+        else if (box == ClipboardOcrHotkeyBox)
+            TrySaveHotkey(box, ClipboardOcrHotkeyErrorText, "Clipboard OCR",
+                s => App.Settings.ClipboardOcrHotkey = s, () => App.Settings.ClipboardOcrHotkey);
+        else if (box == SelectionHotkeyBox)
+            TrySaveHotkey(box, SelectionHotkeyErrorText, "Selection Translation",
+                s => App.Settings.SelectionHotkey = s, () => App.Settings.SelectionHotkey);
+        else if (box == ScreenshotCopyHotkeyBox)
+            TrySaveHotkey(box, ScreenshotCopyHotkeyErrorText, "Screenshot Copy",
+                s => App.Settings.ScreenshotCopyHotkey = s, () => App.Settings.ScreenshotCopyHotkey);
+        else if (box == ScanHotkeyBox)
+            TrySaveHotkey(box, ScanHotkeyErrorText, "Scan Barcodes",
+                s => App.Settings.ScanHotkey = s, () => App.Settings.ScanHotkey);
+        else if (box == SettingsHotkeyBox)
+            TrySaveHotkey(box, SettingsHotkeyErrorText, "Settings",
+                s => App.Settings.SettingsHotkey = s, () => App.Settings.SettingsHotkey);
+    }
+
+    private static bool IsModifierKey(VirtualKey key) => key is VirtualKey.Control
+        or VirtualKey.LeftControl or VirtualKey.RightControl
+        or VirtualKey.Shift or VirtualKey.LeftShift or VirtualKey.RightShift
+        or VirtualKey.Menu or VirtualKey.LeftMenu or VirtualKey.RightMenu
+        or VirtualKey.LeftWindows or VirtualKey.RightWindows;
+
+    private static List<string> HeldModifiers()
+    {
+        var list = new List<string>();
+        if (IsDown(VirtualKey.Control)) list.Add("Control");
+        if (IsDown(VirtualKey.Shift)) list.Add("Shift");
+        if (IsDown(VirtualKey.Menu)) list.Add("Alt");
+        if (IsDown(VirtualKey.LeftWindows) || IsDown(VirtualKey.RightWindows)) list.Add("Win");
+        return list;
+    }
+
+    private static bool IsDown(VirtualKey key)
+        => InputKeyboardSource.GetKeyStateForCurrentThread(key).HasFlag(CoreVirtualKeyStates.Down);
+
+    /// <summary>VirtualKey to the token GlobalHotkeyService.Parse accepts
+    /// (A-Z, 0-9, F1-F24, Space, Enter, Tab; anything else falls back to
+    /// the key name and Parse rejects it with a clear error).</summary>
+    private static string KeyToken(VirtualKey key)
+    {
+        if (key is >= VirtualKey.A and <= VirtualKey.Z)
+            return ((char)key).ToString();
+        if (key is >= VirtualKey.Number0 and <= VirtualKey.Number9)
+            return ((char)('0' + (key - VirtualKey.Number0))).ToString();
+        if (key is >= VirtualKey.NumberPad0 and <= VirtualKey.NumberPad9)
+            return ((char)('0' + (key - VirtualKey.NumberPad0))).ToString();
+        if (key is >= VirtualKey.F1 and <= VirtualKey.F24)
+            return "F" + ((int)key - (int)VirtualKey.F1 + 1);
+        return key switch
+        {
+            VirtualKey.Space => "Space",
+            VirtualKey.Enter => "Enter",
+            VirtualKey.Tab => "Tab",
+            _ => key.ToString(),
+        };
+    }
+
     /// <summary>Validate one hotkey box (format + not already used by
     /// another action — Win32 would silently drop the second registration),
     /// save it, or show the error and restore the old text.</summary>
@@ -113,6 +232,15 @@ public sealed partial class GeneralPage : Page
         Action<string> set, Func<string> get)
     {
         var spec = box.Text.Trim();
+        // A half-recorded combination ("Control+…" / "T (needs a
+        // modifier…)") is not a spec: restore the old text silently,
+        // no error.
+        if (spec.Contains('…'))
+        {
+            error.Visibility = Visibility.Collapsed;
+            box.Text = get();
+            return;
+        }
         try
         {
             var parsed = GlobalHotkeyService.Parse(spec);

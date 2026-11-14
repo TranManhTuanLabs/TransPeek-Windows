@@ -19,7 +19,7 @@
         <!-- Title: app name centered, slogan on the line below (Manh
              2026-11-12). The whole title bar is the drag handle: the
              panel has no title bar of its own, so PointerPressed starts
-             a system move (see OnTitleBarPointerPressed) — press-and-hold
+             a manual drag (see OnTitleBarPointerPressed) — press-and-hold
              then move, like any Windows title bar. Texts come from
              AppInfo in code-behind. Background="Transparent"
              (0.1.3.54): without a background the StackPanel is only
@@ -29,7 +29,9 @@
              row (full width) the handle. -->
         <StackPanel x:Name="TitleBar" Grid.Row="0" Margin="0,0,0,6"
                     Background="Transparent" HorizontalAlignment="Stretch"
-                    PointerPressed="OnTitleBarPointerPressed">
+                    PointerPressed="OnTitleBarPointerPressed"
+                    PointerMoved="OnTitleBarPointerMoved"
+                    PointerReleased="OnTitleBarPointerReleased">
             <TextBlock x:Name="AppNameText" FontWeight="Bold" FontSize="13" HorizontalAlignment="Center" />
             <TextBlock x:Name="TaglineText" Foreground="Gray" FontSize="11" HorizontalAlignment="Center" />
         </StackPanel>
