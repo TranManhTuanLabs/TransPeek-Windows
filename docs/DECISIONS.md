@@ -1430,3 +1430,16 @@ an OS limit.)
   narrower left pane. Native NavigationView, still no drag resize —
   this is a fixed width, not a handle. Revert to 320 (remove the
   attribute) if 280 feels cramped.
+
+## Appearance is a SECTION inside General, not a separate tab (Manh 2026-11-15)
+- Correction: Muse first made Appearance a separate NavigationView
+  tab (after General). Manh: no — like mac's Sections in
+  GeneralSettingsView, Appearance is a section INSIDE the General
+  page. The separate tab + AppearancePage are removed.
+- General page now carries the section, in Manh's hierarchy:
+    Appearance
+      Text Size
+        Popup Panel
+          App name & Slogan Font Size [slider 12-24]
+  (Same setting PopupTopBarFontSize, default 13, tagline -1 pt.)
+  Placed after the auto-hide setting, with the other panel settings.

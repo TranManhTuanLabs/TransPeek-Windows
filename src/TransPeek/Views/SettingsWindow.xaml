@@ -16,14 +16,6 @@
                     <FontIcon Glyph="&#xE713;" />
                 </NavigationViewItem.Icon>
             </NavigationViewItem>
-            <!-- Appearance (Manh 2026-11-14): text size and other look
-                 settings live here, not in General. Icon: Personalize
-                 E771 (Microsoft Learn, Segoe Fluent Icons). -->
-            <NavigationViewItem x:Uid="Settings.Nav.Appearance" Content="Appearance" Tag="Appearance">
-                <NavigationViewItem.Icon>
-                    <FontIcon Glyph="&#xE771;" />
-                </NavigationViewItem.Icon>
-            </NavigationViewItem>
             <NavigationViewItem x:Uid="Settings.Nav.Translation" Content="Translation" Tag="Translation">
                 <NavigationViewItem.Icon>
                     <FontIcon Glyph="&#xE70F;" />

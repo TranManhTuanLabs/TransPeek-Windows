@@ -135,9 +135,6 @@
   <data name="Settings.Nav.General.Content" xml:space="preserve">
     <value>General</value>
   </data>
-  <data name="Settings.Nav.Appearance.Content" xml:space="preserve">
-    <value>Appearance</value>
-  </data>
   <data name="Settings.Nav.Translation.Content" xml:space="preserve">
     <value>Translation</value>
   </data>
@@ -150,13 +147,16 @@
   <data name="Settings.Nav.About.Content" xml:space="preserve">
     <value>About</value>
   </data>
-  <data name="Settings.Appearance.TextSize.Text" xml:space="preserve">
+  <data name="Settings.General.Appearance.Text" xml:space="preserve">
+    <value>Appearance</value>
+  </data>
+  <data name="Settings.General.TextSize.Text" xml:space="preserve">
     <value>Text Size</value>
   </data>
-  <data name="Settings.Appearance.PopupPanel.Text" xml:space="preserve">
+  <data name="Settings.General.PopupPanel.Text" xml:space="preserve">
     <value>Popup Panel</value>
   </data>
-  <data name="Settings.Appearance.FontSize.Header" xml:space="preserve">
+  <data name="Settings.General.FontSize.Header" xml:space="preserve">
     <value>App name &amp; Slogan Font Size</value>
   </data>
   <data name="Settings.General.WatchSelection.Header" xml:space="preserve">
