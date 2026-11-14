@@ -1792,3 +1792,15 @@ an OS limit.)
   `void OnLoaded(object sender, RoutedEventArgs e)`. Lesson: use
   distinct names in any named function; '_' twice is only legal in
   lambdas.
+
+## Setting Text Size moved BEFORE the Popup Panel header (Manh 2026-11-15)
+
+- After the regroup, Setting Text Size sat after the two panel
+  sliders, with no header between them — so it LOOKED like a third
+  Popup Panel item even though it was meant as an Appearance-level
+  item (Manh: "nó đang nằm trong popup panel"). Fix: move the
+  Setting Text Size slider up to sit directly under the Appearance
+  header, FIRST, before the Popup Panel sub-header. New order:
+  Appearance -> Setting Text Size -> Popup Panel -> Source &
+  Translation Text Size -> App name & Slogan Font Size. XAML order
+  only; no slider logic or setting changed.
