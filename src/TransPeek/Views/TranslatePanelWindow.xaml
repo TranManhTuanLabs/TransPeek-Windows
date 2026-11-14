@@ -93,10 +93,20 @@
                 <Button x:Name="CopyTranslationButton" x:Uid="Panel.CopyTranslation" Content="Copy translation" Visibility="Collapsed" />
                 <Button x:Name="OcrButton" x:Uid="Panel.CaptureOcr" Content="Capture OCR" />
             </StackPanel>
-            <Button x:Name="SettingsButton" Grid.Column="1" Padding="6,2" Margin="8,0,0,0"
-                    ToolTipService.ToolTip="Settings" Click="OnOpenSettings">
-                <FontIcon Glyph="&#xE713;" FontSize="12" />
-            </Button>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                <!-- Pin (Manh 2026-11-14): keep the panel fixed and always
+                     visible — while pinned, click-outside and Esc do NOT
+                     hide it. Toggle again to unpin. Segoe MDL2 Pin E718. -->
+                <ToggleButton x:Name="PinButton" Padding="6,2"
+                              ToolTipService.ToolTip="Pin panel (keep it visible)"
+                              Click="OnPinToggled">
+                    <FontIcon Glyph="&#xE718;" FontSize="12" />
+                </ToggleButton>
+                <Button x:Name="SettingsButton" Padding="6,2" Margin="8,0,0,0"
+                        ToolTipService.ToolTip="Settings" Click="OnOpenSettings">
+                    <FontIcon Glyph="&#xE713;" FontSize="12" />
+                </Button>
+            </StackPanel>
         </Grid>
 
         <!-- Dictionary links -->

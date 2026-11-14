@@ -1147,3 +1147,28 @@ an OS limit.)
   v0.1.3.74 verified. The "Diagnose: list windows" tray item is in
   that build — Manh still needs to run it while the Esc pill is visible
   and send windows.log.
+
+## .exe icon + pin button (Manh, 2026-11-14)
+- TransPeek.exe now has its own icon: Assets/TransPeek.ico decoded from
+  EmbeddedIcon.IcoBase64 (multi-size 16/32/48/256, 109130 bytes) +
+  <ApplicationIcon>Assets\TransPeek.ico</ApplicationIcon> in the csproj.
+  The .ico is binary, so it was uploaded via the browser (connector
+  cannot push binary) BEFORE the csproj change, so no commit references
+  a missing file and CI never goes red in between.
+- Pin button (next to the Settings gear in the panel footer, Segoe MDL2
+  Pin E718, ToggleButton): while pinned, click-outside and Esc do NOT
+  hide the panel — it stays fixed and visible until unpinned. The panel
+  is already topmost, so pin is about not auto-hiding, not z-order.
+  Explicit hides (Capture OCR button) still hide it; the pin state
+  persists until the user toggles it off.
+- Esc hint locations (Manh confirms): exactly 2 places — the panel
+  (input/output area, the Row 3 hint "Enter: translate again • Esc:
+  close • ...") and the OCR capture screen (restored hint chip). The
+  floating white "Esc" PILL is a separate thing; the window-list
+  diagnostic (build 74) did not catch it because Manh ran it while the
+  panel/capture were closed — the pill only shows when one of them is
+  open. Next step: run "Diagnose: list windows" WHILE the pill is
+  visible (panel open), then send windows.log.
+- CI #75 (hint restore + icon revert, 35429bb) was CANCELLED for an
+  unknown reason — no newer push at the time (same as #71). Its changes
+  are already in main, so the next build (#76) covers them.

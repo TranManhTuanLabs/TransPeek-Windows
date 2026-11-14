@@ -5,6 +5,11 @@
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     <RootNamespace>TransPeek</RootNamespace>
     <AssemblyName>TransPeek</AssemblyName>
+    <!-- App icon for TransPeek.exe (Manh 2026-11-14): the .ico is the
+         same artwork as the tray icon (EmbeddedIcon.cs base64, decoded
+         to Assets/TransPeek.ico — the connector cannot push binary
+         files, so the .ico itself was uploaded via the browser). -->
+    <ApplicationIcon>Assets\TransPeek.ico</ApplicationIcon>
     <!-- Version shown in Settings > About and in the tray menu header
          (AppInfo.Version reads the assembly version). Bump per release —
          keep in step with Package.appxmanifest, which the manifest-only

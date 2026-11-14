@@ -39,6 +39,9 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     private readonly Func<Task> _ocrRequested;
     private readonly ClickOutsideMonitor _clickOutside;
     private readonly EscapeKeyMonitor _escapeKey;
+    /// <summary>True while the panel is pinned (PinButton): click-outside
+    /// and Esc do NOT hide it. Only the pin toggle turns it off.</summary>
+    private bool _pinned;
     private string _sourceText = "";
     private string _translationText = "";
     /// <summary>Text currently selected inside the panel (source or
@@ -148,7 +151,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
             getEpoch: () => _epoch,
             onClickOutside: epoch =>
             {
-                if (epoch == _epoch)
+                if (epoch == _epoch && !_pinned)
                     HidePanel();
             });
         // Esc while the panel is visible (0.1.3.54): the panel is a
@@ -161,7 +164,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
             getEpoch: () => _epoch,
             onEscape: epoch =>
             {
-                if (epoch == _epoch)
+                if (epoch == _epoch && !_pinned)
                     HidePanel();
             });
         RefreshDictionaryBar(App.Settings.DictionaryLinks, App.Settings.DictionaryDisplayMode);
@@ -310,6 +313,17 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
             Math.Max(1, (int)Math.Round(bounds.Height * scale)));
         var source = InputNonClientPointerSource.GetForWindowId(AppWindow.Id);
         source.SetRegionRects(NonClientRegionKind.Caption, new[] { physical });
+    }
+
+    /// <summary>Pin toggle: while pinned the panel stays put — click-outside
+    /// and Esc do not hide it. Toggle again to unpin. (The panel is
+    /// already topmost; pin is about not auto-hiding, not z-order.)</summary>
+    private void OnPinToggled(object sender, RoutedEventArgs e)
+    {
+        _pinned = PinButton.IsChecked == true;
+        ToolTipService.SetToolTip(PinButton, _pinned
+            ? "Unpin panel"
+            : "Pin panel (keep it visible)");
     }
 
     private void OnOpenSettings(object sender, RoutedEventArgs e)
