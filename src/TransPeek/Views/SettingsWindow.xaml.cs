@@ -12,6 +12,7 @@
 
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
 using TransPeek.Interop;
 using TransPeek.Views.SettingsPages;
 using WinRT.Interop;
@@ -30,6 +31,9 @@ public sealed partial class SettingsWindow : Window
     {
         InitializeComponent();
         Title = "TransPeek Settings";
+        // Apply the Settings font size whenever a page is navigated to
+        // (a fresh page has the XAML sizes until this runs).
+        ContentFrame.Navigated += (_, _) => RefreshSettingsFontSize();
         // WinUI 3 Window has no Loaded event (Loaded lives on
         // FrameworkElement): attach to the root content element instead.
         if (Content is FrameworkElement contentRoot)
@@ -44,6 +48,7 @@ public sealed partial class SettingsWindow : Window
 
     public void ShowSettings()
     {
+        RefreshSettingsFontSize();
         if (!_positioned)
         {
             _positioned = true;
@@ -98,4 +103,54 @@ public sealed partial class SettingsWindow : Window
     }
 
     private void NotifySaved() => SettingsSaved?.Invoke();
+
+    /// <summary>Apply the Settings window font size (AppTextSize, mac
+    /// appTextSize, Manh 2026-11-15 — "Setting Text Size (chỉnh cả
+    /// font chính + mô tả (-1)"). Sets FontSize on the NavigationView,
+    /// which controls inherit (toggle/combo/textbox/slider labels and
+    /// the nav pane text), then fixes up TextBlocks that set an
+    /// explicit size: brand titles (>= 20 pt, e.g. the About
+    /// "TransPeek" 24 pt) are left alone; grey/red description text
+    /// goes 1 pt below the main size (the -1 rule); semibold/bold
+    /// headers go 2 pt above; other text takes the main size. Called
+    /// on show, on page navigation, and whenever settings are saved
+    /// (App.OnSettingsSaved). Stable across calls: the base size is
+    /// captured once in TextBlock.Tag (free on these TextBlocks), the
+    /// role comes from Foreground/FontWeight (never changed here), and
+    /// sizes are always set from the setting, never scaled from the
+    /// current size, so repeated calls never compound or stick.</summary>
+    public void RefreshSettingsFontSize()
+    {
+        var size = App.Settings.AppTextSize;
+        NavView.FontSize = size;
+        if (ContentFrame.Content is DependencyObject content)
+            ApplySettingsFontSize(content, size);
+    }
+
+    private static void ApplySettingsFontSize(DependencyObject element, double size)
+    {
+        if (element is TextBlock tb
+            && tb.ReadLocalValue(TextBlock.FontSizeProperty) != DependencyProperty.UnsetValue)
+        {
+            if (tb.Tag is not double baseSize)
+            {
+                baseSize = tb.FontSize;
+                tb.Tag = baseSize;
+            }
+            if (baseSize < 20)
+            {
+                var isDescription = tb.Foreground is SolidColorBrush brush
+                    && (brush.Color == Microsoft.UI.Colors.Gray
+                        || brush.Color == Microsoft.UI.Colors.Red);
+                tb.FontSize = isDescription
+                    ? Math.Max(8, size - 1)
+                    : tb.FontWeight == FontWeights.SemiBold || tb.FontWeight == FontWeights.Bold
+                        ? size + 2
+                        : size;
+            }
+        }
+        var count = VisualTreeHelper.GetChildrenCount(element);
+        for (var i = 0; i < count; i++)
+            ApplySettingsFontSize(VisualTreeHelper.GetChild(element, i), size);
+    }
 }

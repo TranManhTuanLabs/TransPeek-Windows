@@ -91,13 +91,17 @@
                  always 1 pt smaller than the app name (applied by the
                  panel). Mac parity: same sliders 12-24. -->
             <TextBlock x:Uid="Settings.General.Appearance" Text="Appearance" FontSize="16" FontWeight="SemiBold" Margin="0,8,0,0" />
-            <Slider x:Name="MainFontSizeSlider" Header="Text Size"
+            <Slider x:Name="MainFontSizeSlider" Header="Source &amp; Translation Text Size"
                     Minimum="12" Maximum="24" StepFrequency="1"
                     ValueChanged="OnMainFontSizeChanged" />
             <TextBlock x:Uid="Settings.General.PopupPanel" Text="Popup Panel" FontWeight="SemiBold" Margin="0,8,0,0" />
             <Slider x:Name="FontSizeSlider" Header="App name &amp; Slogan Font Size"
                     Minimum="12" Maximum="24" StepFrequency="1"
                     ValueChanged="OnFontSizeChanged" />
+            <TextBlock x:Uid="Settings.General.SettingsWindow" Text="Settings Window" FontWeight="SemiBold" Margin="0,8,0,0" />
+            <Slider x:Name="AppTextSizeSlider" Header="Setting Text Size"
+                    Minimum="12" Maximum="24" StepFrequency="1"
+                    ValueChanged="OnAppTextSizeChanged" />
 
             <TextBlock x:Uid="Settings.General.SettingsPath" Text="Settings are stored in %LOCALAPPDATA%\TransPeek\settings.json"
                        FontSize="12" Foreground="Gray" TextWrapping="Wrap" Margin="0,12,0,0" />

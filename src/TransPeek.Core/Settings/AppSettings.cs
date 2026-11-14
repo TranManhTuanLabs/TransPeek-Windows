@@ -47,6 +47,13 @@ public sealed class AppSettings
     /// uses a 2 pt gap while Windows uses 1 pt. Slider 12-24 in
     /// Settings -&gt; General.</summary>
     public double PopupTopBarFontSize { get; set; } = 17;
+    /// <summary>Settings window font size in points (the Settings UI
+    /// text itself). Mac parity: same setting name (appTextSize).
+    /// The main Settings text is this size; description/hint text is
+    /// 1 pt smaller (Manh 2026-11-15 — "Setting Text Size (chỉnh cả
+    /// font chính + mô tả (-1)"). Slider 12-24 in Settings -&gt;
+    /// General -&gt; Appearance -&gt; Setting Text Size.</summary>
+    public double AppTextSize { get; set; } = 14;
     /// <summary>How long the trigger icon stays after the selection changes, in seconds.</summary>
     public int TriggerIconAutoHideSeconds { get; set; } = 3;
     /// <summary>Global hotkey that shows the panel for the current selection.

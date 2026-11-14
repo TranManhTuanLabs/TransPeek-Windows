@@ -47,6 +47,8 @@ public sealed partial class GeneralPage : Page
         MainFontSizeSlider.Header = MainFontSizeLabel(s.PopupFontSize);
         FontSizeSlider.Value = s.PopupTopBarFontSize;
         FontSizeSlider.Header = FontSizeLabel(s.PopupTopBarFontSize);
+        AppTextSizeSlider.Value = s.AppTextSize;
+        AppTextSizeSlider.Header = AppTextSizeLabel(s.AppTextSize);
         TranslateHotkeyBox.Text = s.TranslateHotkey;
         OcrHotkeyBox.Text = s.OcrHotkey;
         ManualHotkeyBox.Text = s.ManualHotkey;
@@ -108,7 +110,23 @@ public sealed partial class GeneralPage : Page
     }
 
     private static string MainFontSizeLabel(double size)
-        => $"Text Size: {size:0} pt";
+        => $"Source & Translation Text Size: {size:0} pt";
+
+    // Settings window font size (Manh 2026-11-15): the Settings UI
+    // text itself (mac appTextSize). The main Settings text is this
+    // size; description/hint text is 1 pt smaller (the -1 rule, shown
+    // in the Header like the top-bar slogan). Same _loading guard.
+    private void OnAppTextSizeChanged(object sender, Microsoft.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
+    {
+        if (_loading)
+            return;
+        App.Settings.AppTextSize = e.NewValue;
+        AppTextSizeSlider.Header = AppTextSizeLabel(e.NewValue);
+        Save();
+    }
+
+    private static string AppTextSizeLabel(double size)
+        => $"Setting Text Size: {size:0} pt — description {Math.Max(8, size - 1):0} pt";
 
     // Top-bar font size (Manh 2026-11-15): the slider sets the app-name
     // size; the tagline follows at 1 pt smaller (applied by the panel).

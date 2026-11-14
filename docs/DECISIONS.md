@@ -1672,3 +1672,26 @@ an OS limit.)
   the "Esc" key-tip pill (PopupHost 46x41) that the accelerator drew
   in 0.1.3.79. The hook is only installed while the capture is open
   and only intercepts Esc then; it always calls the next hook.
+
+## Rename Text Size + new Setting Text Size (Manh 2026-11-15)
+
+- Manh: keep the panel content slider as-is, but rename it — "Text
+  Size" is now "Source & Translation Text Size" (the source + target
+  text in the panel, mac popupFontSize, default 14). Name chosen by
+  Muse (Manh: "tuỳ em chọn").
+- New "Setting Text Size" slider (General -> Appearance -> Settings
+  Window): the Settings window's OWN text size (mac appTextSize,
+  new setting AppTextSize, default 14, slider 12-24). Main Settings
+  text is this size; description/hint text is 1 pt smaller (the -1
+  rule, shown in the Header: "Setting Text Size: 14 pt —
+  description 13 pt", like the top-bar slogan).
+- Applied by SettingsWindow.RefreshSettingsFontSize(): FontSize on the
+  NavigationView (inherited by toggle/combo/textbox/slider labels
+  and the nav pane), plus a visual-tree walk fixing TextBlocks that
+  set an explicit size — brand titles (>= 20 pt, About "TransPeek"
+  24 pt) untouched; grey/red description text -> size - 1;
+  semibold/bold headers -> size + 2; other text -> size. Base size
+  is captured once in TextBlock.Tag (free on these TextBlocks) and
+  sizes are always set from the setting, so repeated calls never
+  compound or stick. Called on show, on page navigation
+  (ContentFrame.Navigated), and from App.OnSettingsSaved.
