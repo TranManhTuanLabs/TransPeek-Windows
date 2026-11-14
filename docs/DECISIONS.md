@@ -1621,3 +1621,11 @@ an OS limit.)
   only one is visible at a time. The Actions row keeps only Pin +
   Settings. Pure XAML move: names and Click handlers unchanged, so
   no code-behind change was needed.
+
+## Settings nav pane width 250 (Manh 2026-11-15)
+
+- OpenPaneLength 280 -> 250 (WinUI default is 320). Manh: "set
+  panel trái Settings rộng 250 (hẹp hơn mặc định 320)". The 280 was
+  a try-out from 2026-11-15; 250 is narrower still. If it feels
+  cramped, drop OpenPaneLength entirely to return to the 320
+  default.
