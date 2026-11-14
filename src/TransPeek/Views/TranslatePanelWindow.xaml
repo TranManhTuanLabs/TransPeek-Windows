@@ -105,19 +105,6 @@
                 <Button x:Name="OcrButton" x:Uid="Panel.CaptureOcr" Content="Capture OCR" />
             </StackPanel>
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                <!-- Top-bar font size, right in the panel (Manh 2026-11-14):
-                     same setting as Settings -> General
-                     (PopupTopBarFontSize); A- / A+ step it by 1 pt,
-                     clamped to the 12-24 slider range. The tagline stays
-                     1 pt smaller. The smaller "A-" / bolder "A+" hint at
-                     the direction. Saved immediately, so Settings shows
-                     the new value next time it opens. -->
-                <Button x:Name="DecreaseFontButton" Content="A-" FontSize="11" Padding="6,2"
-                        ToolTipService.ToolTip="Smaller top-bar font"
-                        Click="OnDecreaseTopBarFont" />
-                <Button x:Name="IncreaseFontButton" Content="A+" FontSize="13" FontWeight="Bold" Padding="6,2"
-                        ToolTipService.ToolTip="Larger top-bar font"
-                        Click="OnIncreaseTopBarFont" />
                 <!-- Pin (Manh 2026-11-14): keep the panel fixed and always
                      visible — while pinned, click-outside and Esc do NOT
                      hide it. Toggle again to unpin. Segoe MDL2 Pin E718. -->

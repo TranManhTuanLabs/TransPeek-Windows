@@ -347,24 +347,6 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         _openSettings();
     }
 
-    // Top-bar font size, adjusted from the panel (Manh 2026-11-14):
-    // same setting as Settings -> General (PopupTopBarFontSize),
-    // stepped by 1 pt and clamped to the 12-24 slider range. Saved
-    // immediately so Settings shows the new value next time it opens.
-    private void OnDecreaseTopBarFont(object sender, RoutedEventArgs e)
-    {
-        App.Settings.PopupTopBarFontSize = Math.Clamp(App.Settings.PopupTopBarFontSize - 1, 12, 24);
-        SettingsStore.Save(App.Settings);
-        RefreshTopBarFontSize();
-    }
-
-    private void OnIncreaseTopBarFont(object sender, RoutedEventArgs e)
-    {
-        App.Settings.PopupTopBarFontSize = Math.Clamp(App.Settings.PopupTopBarFontSize + 1, 12, 24);
-        SettingsStore.Save(App.Settings);
-        RefreshTopBarFontSize();
-    }
-
     private void HidePanel()
     {
         // No early return on !_visible (0.1.3.54): the panel got stuck

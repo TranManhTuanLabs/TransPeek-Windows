@@ -135,6 +135,9 @@
   <data name="Settings.Nav.General.Content" xml:space="preserve">
     <value>General</value>
   </data>
+  <data name="Settings.Nav.Appearance.Content" xml:space="preserve">
+    <value>Appearance</value>
+  </data>
   <data name="Settings.Nav.Translation.Content" xml:space="preserve">
     <value>Translation</value>
   </data>
@@ -146,6 +149,15 @@
   </data>
   <data name="Settings.Nav.About.Content" xml:space="preserve">
     <value>About</value>
+  </data>
+  <data name="Settings.Appearance.TextSize.Text" xml:space="preserve">
+    <value>Text Size</value>
+  </data>
+  <data name="Settings.Appearance.PopupPanel.Text" xml:space="preserve">
+    <value>Popup Panel</value>
+  </data>
+  <data name="Settings.Appearance.FontSize.Header" xml:space="preserve">
+    <value>App name &amp; Slogan Font Size</value>
   </data>
   <data name="Settings.General.WatchSelection.Header" xml:space="preserve">
     <value>Watch selection automatically</value>
@@ -167,9 +179,6 @@
   </data>
   <data name="Settings.General.AutoHide.Header" xml:space="preserve">
     <value>Trigger icon hides after (seconds)</value>
-  </data>
-  <data name="Settings.General.FontSize.Header" xml:space="preserve">
-    <value>Font Size</value>
   </data>
   <data name="Settings.General.TranslateHotkey.Header" xml:space="preserve">
     <value>Hotkey to open the translate panel (e.g. Control+Alt+T)</value>

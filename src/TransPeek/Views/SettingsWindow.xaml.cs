@@ -153,6 +153,7 @@ public sealed partial class SettingsWindow : Window
         Type? pageType = tag switch
         {
             "General" => typeof(GeneralPage),
+            "Appearance" => typeof(AppearancePage),
             "Translation" => typeof(TranslationPage),
             "Dictionary" => typeof(DictionaryPage),
             "OCR" => typeof(OcrPage),

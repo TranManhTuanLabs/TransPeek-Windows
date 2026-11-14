@@ -21,16 +21,6 @@
                        Minimum="1" Maximum="30" SpinButtonPlacementMode="Compact"
                        ValueChanged="OnAutoHideChanged" />
 
-            <!-- Top-bar font size (Manh 2026-11-14): the panel's app name
-                 takes this size, the tagline is always 1 pt smaller.
-                 Mac parity: same slider 12-24 as mac's Text Size (mac
-                 default 17, Windows default 13). The value label below
-                 shows the app-name size; the tagline follows at -1. -->
-            <Slider x:Name="FontSizeSlider" x:Uid="Settings.General.FontSize" Header="Font Size"
-                    Minimum="12" Maximum="24" StepFrequency="1"
-                    ValueChanged="OnFontSizeChanged" />
-            <TextBlock x:Name="FontSizeValueText" FontSize="12" Foreground="Gray" />
-
             <TextBlock x:Uid="Settings.General.HotkeyHint" Text="Click a hotkey box, then press the key combination — no typing needed. Esc cancels."
                        FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
 

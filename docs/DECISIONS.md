@@ -1374,3 +1374,22 @@ an OS limit.)
   shows the new value next time it opens. The tagline stays 1 pt
   smaller (RefreshTopBarFontSize). The smaller "A-" / bolder "A+" hint
   at the direction; tooltips say "Smaller/Larger top-bar font".
+
+## Font size lives in Settings -> Appearance, NOT in the panel (Manh 2026-11-14)
+- Correction: Muse first put A- / A+ buttons in the panel (commit
+  3b4642a, CI #89 green). Manh: the panel must have NO font buttons
+  at all. Reverted the buttons (XAML + handlers) in the next commit.
+- The right home is Settings -> Appearance (new NavigationView section,
+  icon Personalize E771 per Microsoft Learn Segoe Fluent Icons), with
+  the hierarchy Manh sketched:
+    Appearance
+      Text Size
+        Popup Panel
+          App name & Slogan Font Size [slider 12-24]
+  The slider sets PopupTopBarFontSize (default 13, app name); the
+  tagline stays 1 pt smaller (max 8 pt floor). Same setting name as
+  mac (popupTopBarFontSize); mac default 17, gap 2 pt.
+- The slider moved out of GeneralPage into the new AppearancePage
+  (same save-immediately pattern, same value label). The panel still
+  applies the size via RefreshTopBarFontSize() — only the buttons are
+  gone, the setting and the apply logic stay.
