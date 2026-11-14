@@ -1290,3 +1290,14 @@ an OS limit.)
   non-breaking space (U+00A0) so it keeps a full line's height and is
   never trimmed away; a Margin would do the same job, the blank line
   is the literal thing Manh asked for.
+
+## CI #83 RED — InputSystemCursorShape.SizeWe does not exist (2026-11-14)
+- CS0117 ResizeHandle.cs: the horizontal-resize shape is NOT SizeWe
+  in WinUI 3. SizeWe / SizeWE is the WPF name (System.Windows.Input
+  CursorType). WinUI 3 (Microsoft.UI.Input.InputSystemCursorShape)
+  uses the full words: SizeEastWest (horizontal), SizeNorthSouth
+  (vertical), SizeNortheastSouthwest, SizeNorthwestSoutheast.
+  FIX: SizeWe -> SizeEastWest in ResizeHandle.cs. (Cross, used by
+  CrosshairGrid, exists in both — that is why CI #81 was green.)
+- WMC9999 in the same build is a consequence of the C# error, not a
+  separate error (same pattern as runs #80 and earlier).
