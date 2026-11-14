@@ -1443,3 +1443,25 @@ an OS limit.)
           App name & Slogan Font Size [slider 12-24]
   (Same setting PopupTopBarFontSize, default 13, tagline -1 pt.)
   Placed after the auto-hide setting, with the other panel settings.
+
+## Float icon missed on first launch — Settings excluded from the own-window guard (Manh 2026-11-15)
+- Symptom: the trigger icon often missed on first launch; it only
+  started recognizing selections after Settings was closed/minimized
+  or reopened. It worked before (pre-0.1.3.65).
+- Cause: IsPointInsideOwnWindow (added 0.1.3.65) suppresses the icon
+  whenever the selection point falls inside ANY own window's rect.
+  But Settings opens on launch (960x640, centered) as a NORMAL
+  window, and the rect check cannot tell "behind" from "on top" — so
+  a selection in another app, inside that big centered rect, was
+  swallowed. Closing/minimizing Settings cleared the guard, which is
+  exactly the workaround Manh found.
+- Fix: drop Settings from the guard list. The panel, trigger icon and
+  capture overlay are topmost/fullscreen, so a point inside their
+  rect really is on top of them. Selecting text inside Settings is
+  already skipped by the monitor's process-id check (only the pid-0
+  edge case slips through, and an icon over Settings is a minor
+  annoyance, not a missed core feature).
+- Note: the two AppearancePage delete commits (c6fd51c, 58a8dd5) had
+  no [build-app] marker, and run #95 (the Appearance-in-General
+  commit) was cancelled by them — so no pre-release existed for the
+  Appearance-in-General change until this commit's build.

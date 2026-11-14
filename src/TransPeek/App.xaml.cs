@@ -204,7 +204,20 @@ public sealed partial class App : Application
 
     private bool IsPointInsideOwnWindow((int X, int Y) point)
     {
-        foreach (var window in new Window?[] { _panel, _settingsWindow, _triggerIcon, _regionSelectWindow })
+        // Settings is deliberately NOT in this list (Manh 2026-11-15):
+        // it is a normal window, not topmost, so on launch it sits open
+        // (960x640, centered) BEHIND whatever app the user works in —
+        // and this rect check cannot tell "behind" from "on top", so any
+        // selection inside that big centered rect was swallowed and the
+        // icon missed on first launch until Settings was closed or
+        // minimized. The panel, trigger icon and capture overlay ARE
+        // topmost/fullscreen, so a point inside their rect really is on
+        // top of them and the guard is correct there. Selecting text
+        // inside Settings itself is already skipped by the monitor's
+        // process-id check (it only misses when the element reports
+        // pid 0, and an icon over Settings is a minor annoyance, not a
+        // missed core feature).
+        foreach (var window in new Window?[] { _panel, _triggerIcon, _regionSelectWindow })
         {
             if (window is null || !window.AppWindow.IsVisible)
                 continue;
