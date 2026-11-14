@@ -39,18 +39,22 @@
             <TextBlock x:Name="TaglineText" Foreground="Gray" FontSize="11" HorizontalAlignment="Center" />
         </StackPanel>
 
-        <!-- Header: source/target pickers + swap + provider.
+        <!-- Header: source/target pickers + swap. The provider
+             attribution ("via Google Translate") sits on its OWN line
+             below the pickers (Manh 2026-11-14), not on the same row.
              Mac parity (LanguageBarView): changing a picker saves the
              setting and re-translates immediately. No close (X) button:
              Esc and click-outside already close the panel (Manh
              2026-11-12). -->
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" Margin="0,0,0,8">
-            <ComboBox x:Name="SourceLangCombo" Width="128"
-                      SelectionChanged="OnSourceLangChanged" />
-            <Button x:Name="SwapButton" Content="⇄" Padding="6,2" Click="OnSwapLanguages" />
-            <ComboBox x:Name="TargetLangCombo" Width="128"
-                      SelectionChanged="OnTargetLangChanged" />
-            <TextBlock x:Name="ProviderText" Foreground="Gray" FontSize="12" VerticalAlignment="Center" />
+        <StackPanel Grid.Row="1" Orientation="Vertical" Spacing="2" Margin="0,0,0,8">
+            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <ComboBox x:Name="SourceLangCombo" Width="128"
+                          SelectionChanged="OnSourceLangChanged" />
+                <Button x:Name="SwapButton" Content="⇄" Padding="6,2" Click="OnSwapLanguages" />
+                <ComboBox x:Name="TargetLangCombo" Width="128"
+                          SelectionChanged="OnTargetLangChanged" />
+            </StackPanel>
+            <TextBlock x:Name="ProviderText" Foreground="Gray" FontSize="12" />
         </StackPanel>
 
         <!-- Source text: editable like the mac SourceInputView.

@@ -1016,3 +1016,8 @@ look) is NOT ported yet — later.
   phải của TransPeek, khả năng từ app/tool overlay khác trên máy Manh.
   Cần Manh kiểm chứng: thoát hẳn TransPeek (tray → Quit) xem pill
   còn hiện không, và cho biết đang chạy tool chụp màn hình/overlay nào.
+
+## Provider text on its own line (Manh, 2026-11-14)
+"via Google Translate" was inline on the language-picker row. Moved to
+its own line below the pickers (Row 1 is now a vertical StackPanel:
+pickers row + ProviderText under it). No other layout change.
