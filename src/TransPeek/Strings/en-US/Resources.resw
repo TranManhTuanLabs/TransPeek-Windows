@@ -25,7 +25,7 @@
     <value>OCR from Screen</value>
   </data>
   <data name="Tray.Menu.ClipboardOcr" xml:space="preserve">
-    <value>OCR to clipboard</value>
+    <value>OCR to Clipboards</value>
   </data>
   <data name="Tray.Menu.SelectionTranslation" xml:space="preserve">
     <value>Selection Translation</value>
@@ -187,7 +187,7 @@
     <value>Hotkey for Manual Translation (e.g. Control+Alt+M)</value>
   </data>
   <data name="Settings.General.ClipboardOcrHotkey.Header" xml:space="preserve">
-    <value>Hotkey for OCR to clipboard (e.g. Control+Alt+C)</value>
+    <value>Hotkey for OCR to Clipboards (e.g. Control+Alt+C)</value>
   </data>
   <data name="Settings.General.SelectionHotkey.Header" xml:space="preserve">
     <value>Hotkey for Selection Translation (e.g. Control+Alt+S)</value>

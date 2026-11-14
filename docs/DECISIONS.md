@@ -1695,3 +1695,12 @@ an OS limit.)
   sizes are always set from the setting, so repeated calls never
   compound or stick. Called on show, on page navigation
   (ContentFrame.Navigated), and from App.OnSettingsSaved.
+
+## Tray menu: "OCR to Clipboards" (Manh 2026-11-15)
+
+- Manh: the Windows spelling is "OCR to Clipboards" (plural, capital
+  C) — the tray menu item was "OCR to clipboard" (singular, lowercase).
+  Renamed in resw (Tray.Menu.ClipboardOcr) + the TrayIconService
+  fallback, and the matching hotkey label in Settings ("Hotkey for OCR
+  to Clipboards") for consistency. The mac forward already said
+  "OCR to Clipboards", so both sides now match.

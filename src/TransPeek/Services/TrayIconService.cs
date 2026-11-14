@@ -76,7 +76,7 @@ public sealed class TrayIconService : IDisposable
         menu.Items.Add(Item("Tray.Menu.ManualTranslation", "Manual Translation", "\uE765", manualTranslation));
         _screenshotOcrItem = Item("Tray.Menu.ScreenshotOcr", "OCR from Screen", "\uE8FE", screenshotOcr);
         menu.Items.Add(_screenshotOcrItem);
-        menu.Items.Add(Item("Tray.Menu.ClipboardOcr", "OCR to clipboard", "\uE8C8", clipboardOcr));
+        menu.Items.Add(Item("Tray.Menu.ClipboardOcr", "OCR to Clipboards", "\uE8C8", clipboardOcr));
         menu.Items.Add(Item("Tray.Menu.SelectionTranslation", "Selection Translation", "\uE70F", selectionTranslation));
         _clipboardTranslationItem = Item("Tray.Menu.ClipboardTranslation", "Clipboard Translation", "\uE77F", clipboardTranslation);
         menu.Items.Add(_clipboardTranslationItem);
