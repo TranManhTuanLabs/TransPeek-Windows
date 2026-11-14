@@ -821,3 +821,45 @@ exception: build on every fix while the app is broken):
    distinguishes: no "Menu opening" = menu never opens; opening
    but no "Clicked" = items don't fire. Ask Manh: does the menu
    appear at all on right-click?
+
+## OCR-switch crash — ROOT CAUSE FOUND in the #59 log (Manh, 2026-11-14)
+
+Manh pasted the Event Viewer log into the test doc ("LOG TransSpeek
+TEST"). It shows the crash is NOT about OCR at all:
+
+- .NET Runtime Event 1025, FailFast, several times on 2026-11-14
+  (15:50, 16:06, ...), TransPeek.exe 0.1.3.59:
+  "A callback was made on a garbage collected delegate of type
+  'TransPeek!TransPeek.Services.GlobalHotkeyService+WndProc::Invoke'",
+  stack: DestroyWindow -> DestroyWindow -> GlobalHotkeyService.MessageLoop().
+- The OcrCapture lines in the same log all have HIGH stddev (25-60):
+  the screenshot-background capture works, real content, not grey.
+- NO "TrayMenu" lines in the doc at all (menu clicks never logged —
+  still unknown whether the menu opens; the #63 "Menu opening" log
+  will tell).
+
+**Mechanism:** the hotkey message-only window class
+("TransPeekHotkeyWindow") is registered ONCE per process
+(RegisterClassEx fails if the name is taken; the class is never
+unregistered), with the FIRST service's WndProc function pointer.
+Every Settings save re-creates the service (OnSettingsSaved ->
+StartHotkeys -> Dispose old + new service), but the class keeps
+pointing at the FIRST service's delegate. The old service becomes
+unreachable, the GC collects it AND its `_wndProc` field (the field
+only kept it alive while the service was reachable) — then Windows
+calls the class WndProc (hotkey message, or DestroyWindow on the
+next dispose) and the runtime FailFasts the process. That is why the
+app "exits suddenly" when switching the OCR engine: the switch is
+just the first Settings save after launch, and any save would do it.
+(The same bug family does NOT apply to EscapeKeyMonitor /
+ClickOutsideMonitor: their Stop() calls UnhookWindowsHookEx before
+the instance can be dropped, so no callback can arrive after
+collection.)
+
+**Fix (commit after #63):** the WndProc is now STATIC (a static
+field lives for the process lifetime) and forwards to the CURRENT
+service for that window handle, via a static
+`ConcurrentDictionary<IntPtr, GlobalHotkeyService>` registered in
+MessageLoop after CreateWindowEx and removed after DestroyWindow.
+No API change; App.xaml.cs untouched. The Restart button added in
+#63 stays as a general recovery path.

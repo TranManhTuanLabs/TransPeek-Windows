@@ -4,9 +4,19 @@
 // Runs a message-only window on a dedicated thread with a GetMessage loop
 // (WinUI has no built-in global-hotkey API). Hotkeys are (re)registered
 // when the service starts; changing them in Settings restarts the service.
-// Keep the WndProc delegate alive as a field — the GC must never collect
-// a delegate passed to native code.
+//
+// The window class ("TransPeekHotkeyWindow") is registered ONCE per
+// process: RegisterClassEx fails if the name is taken, and the class is
+// never unregistered — so its WndProc must live for the PROCESS lifetime,
+// not the service lifetime. A per-instance delegate dies with its service
+// (the field only keeps it alive while the service is reachable), but the
+// class keeps calling it: FailFast "callback on a garbage collected
+// delegate" (0.1.3.59 test, Event Viewer 1025, after every Settings save
+// re-created the service — e.g. switching the OCR engine). The WndProc
+// is therefore STATIC; it forwards to the CURRENT service for that
+// window handle, so a re-created service still receives its hotkeys.
 
+using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 using TransPeek.Interop;
 
@@ -31,19 +41,25 @@ public sealed class GlobalHotkeyService : IDisposable
     private uint _threadId; // native id of the message-loop thread (for WM_QUIT)
     private bool _disposed;
 
-    // Kept alive for the lifetime of the service (native callback).
+    // Process-lifetime WndProc (see the file header): the window class
+    // is registered once and never unregistered, so the delegate it
+    // points to must never be collected. Static fields live for the
+    // process lifetime. The registry routes each window to the service
+    // that owns it, so a re-created service gets its own hotkeys.
+    private static readonly WndProc _staticWndProc = OnWindowMessageStatic;
+    private static readonly ConcurrentDictionary<IntPtr, GlobalHotkeyService> _servicesByHwnd = new();
+
+    // The class registration (a struct holding the function pointer).
     private NativeMethods.WNDCLASSEX _wndClass;
-    private readonly WndProc _wndProc;
 
     private delegate IntPtr WndProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
 
     public GlobalHotkeyService()
     {
-        _wndProc = OnWindowMessage;
         _wndClass = new NativeMethods.WNDCLASSEX
         {
             cbSize = (uint)Marshal.SizeOf<NativeMethods.WNDCLASSEX>(),
-            lpfnWndProc = Marshal.GetFunctionPointerForDelegate(_wndProc),
+            lpfnWndProc = Marshal.GetFunctionPointerForDelegate(_staticWndProc),
             hInstance = NativeMethods.GetModuleHandle(null),
             lpszClassName = "TransPeekHotkeyWindow",
         };
@@ -85,6 +101,10 @@ public sealed class GlobalHotkeyService : IDisposable
             _ready.Set();
             return;
         }
+        // Route this window's messages to this service (the static
+        // WndProc looks it up here). Registered before the loop starts
+        // so no message can arrive unrouted.
+        _servicesByHwnd[_hwnd] = this;
 
         foreach (var (id, (modifiers, vk, _)) in _hotkeys)
             NativeMethods.RegisterHotKey(_hwnd, id, modifiers, vk);
@@ -100,7 +120,19 @@ public sealed class GlobalHotkeyService : IDisposable
         foreach (var id in _hotkeys.Keys)
             NativeMethods.UnregisterHotKey(_hwnd, id);
         NativeMethods.DestroyWindow(_hwnd);
+        // The window is gone: no more messages will arrive for it.
+        _servicesByHwnd.TryRemove(_hwnd, out _);
         _stopped.Set();
+    }
+
+    /// <summary>Process-lifetime entry point for the window class:
+    /// forwards to the service that owns the window handle, or to
+    /// DefWindowProc when the window has no service (already destroyed).</summary>
+    private static IntPtr OnWindowMessageStatic(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam)
+    {
+        if (_servicesByHwnd.TryGetValue(hWnd, out var service))
+            return service.OnWindowMessage(hWnd, msg, wParam, lParam);
+        return NativeMethods.DefWindowProc(hWnd, msg, wParam, lParam);
     }
 
     private IntPtr OnWindowMessage(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam)
