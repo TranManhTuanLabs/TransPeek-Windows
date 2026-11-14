@@ -1716,3 +1716,34 @@ an OS limit.)
   `using Microsoft.UI.Text;` and DictionaryBar.xaml.cs uses the
   fully-qualified Microsoft.UI.Text.FontWeights.Bold. Fix: add the
   using to SettingsWindow.xaml.cs (1 line).
+
+## Setting Text Size: default 15, "(default: X pt)", all tabs (Manh 2026-11-15)
+
+- Default AppTextSize 14 -> 15 (description 14, the -1 rule). The
+  three font slider labels now show the default next to the current
+  value so it is visible at a glance: "Source & Translation Text
+  Size: N pt (default: 14 pt)", "App name & Slogan Font Size: N pt
+  — slogan M pt (default: 17 pt)", "Setting Text Size: N pt —
+  description M pt (default: 15 pt)". Note: a value already saved in
+  settings.json wins over the new default until the slider is moved
+  once (same as the earlier PopupTopBarFontSize 13 -> 17 change).
+- Bug: Setting Text Size only adjusted the General tab. Cause: the
+  TextBlock walk in RefreshSettingsFontSize ran synchronously from
+  ContentFrame.Navigated, when the new page was not in the visual
+  tree yet, so the walk found nothing — only General (present at
+  show time) ever got sized. Fix: NavView.FontSize is still set
+  immediately (inheritance), but the walk is deferred with
+  this.DispatcherQueue.TryEnqueue so it runs after navigation/layout
+  completes and sees the new page's tree. Idempotent, so queued
+  repeats from a fast slider drag are harmless (FIFO order, last
+  wins). Uses this.DispatcherQueue (Window instance property) to
+  avoid the CS0176 ambiguity with the Microsoft.UI.Dispatching
+  type (cf. TranslatePanelWindow).
+
+## Panel: slogan spaced exactly 1 line from the input (Manh 2026-11-15)
+
+- The TitleBar's bottom margin was a fixed 6 px, so the slogan sat
+  too close to the input. Now the margin is set to the tagline
+  (slogan) font size in RefreshTopBarFontSize, so the gap is exactly
+  1 line and scales with the top-bar font size (default 16 px).
+  XAML default margin updated to 16 to match.

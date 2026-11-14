@@ -124,8 +124,22 @@ public sealed partial class SettingsWindow : Window
     {
         var size = App.Settings.AppTextSize;
         NavView.FontSize = size;
-        if (ContentFrame.Content is DependencyObject content)
-            ApplySettingsFontSize(content, size);
+        // Defer the TextBlock walk: when called from Navigated, the new
+        // page is not in the visual tree yet, so the walk finds nothing
+        // and only the General tab (the one present at show time) ever
+        // got sized — Manh 2026-11-15 ("mới chỉnh đc mỗi tab general").
+        // Enqueueing runs after the navigation/layout completes, so the
+        // walk sees the new page's tree. Idempotent (sizes are always
+        // set from the setting, never scaled), so queued repeats from a
+        // fast slider drag are harmless and run in order. (this.
+        // DispatcherQueue — the Window instance property, not the
+        // Microsoft.UI.Dispatching type, cf. TranslatePanelWindow's
+        // CS0176 note.)
+        this.DispatcherQueue.TryEnqueue(() =>
+        {
+            if (ContentFrame.Content is DependencyObject content)
+                ApplySettingsFontSize(content, size);
+        });
     }
 
     private static void ApplySettingsFontSize(DependencyObject element, double size)

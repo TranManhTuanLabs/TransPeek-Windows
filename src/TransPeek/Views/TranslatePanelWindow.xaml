@@ -33,7 +33,7 @@
              row (full width) the handle. The row holds only text (the
              gear button is in the header row below it), so the whole
              row is the drag region. -->
-        <StackPanel x:Name="TitleBar" Grid.Row="0" Margin="0,0,0,6"
+        <StackPanel x:Name="TitleBar" Grid.Row="0" Margin="0,0,0,16"
                     Background="Transparent" HorizontalAlignment="Stretch">
             <TextBlock x:Name="AppNameText" FontWeight="Bold" FontSize="13" HorizontalAlignment="Center" />
             <!-- Tagline (slogan): 12 pt — exactly 1 size smaller than the

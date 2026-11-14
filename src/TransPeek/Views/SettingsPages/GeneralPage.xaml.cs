@@ -110,7 +110,7 @@ public sealed partial class GeneralPage : Page
     }
 
     private static string MainFontSizeLabel(double size)
-        => $"Source & Translation Text Size: {size:0} pt";
+        => $"Source & Translation Text Size: {size:0} pt (default: 14 pt)";
 
     // Settings window font size (Manh 2026-11-15): the Settings UI
     // text itself (mac appTextSize). The main Settings text is this
@@ -126,7 +126,7 @@ public sealed partial class GeneralPage : Page
     }
 
     private static string AppTextSizeLabel(double size)
-        => $"Setting Text Size: {size:0} pt — description {Math.Max(8, size - 1):0} pt";
+        => $"Setting Text Size: {size:0} pt — description {Math.Max(8, size - 1):0} pt (default: 15 pt)";
 
     // Top-bar font size (Manh 2026-11-15): the slider sets the app-name
     // size; the tagline follows at 1 pt smaller (applied by the panel).
@@ -145,7 +145,7 @@ public sealed partial class GeneralPage : Page
     }
 
     private static string FontSizeLabel(double size)
-        => $"App name & Slogan Font Size: {size:0} pt — slogan {Math.Max(8, size - 1):0} pt";
+        => $"App name & Slogan Font Size: {size:0} pt — slogan {Math.Max(8, size - 1):0} pt (default: 17 pt)";
 
     private void OnTranslateHotkeyLostFocus(object sender, RoutedEventArgs e)
         => TrySaveHotkey(TranslateHotkeyBox, HotkeyErrorText, "Translate",

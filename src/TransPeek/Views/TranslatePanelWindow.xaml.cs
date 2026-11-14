@@ -187,14 +187,20 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
 
     /// <summary>Apply the top-bar font size from settings: the app name
     /// takes the setting, the tagline is always 1 pt smaller (Manh
-    /// 2026-11-14). Called on open and whenever settings are saved
+    /// 2026-11-14). The gap between the tagline (slogan) and the input
+    /// is exactly 1 line: the TitleBar's bottom margin is set to the
+    /// tagline size, so the space scales with the font instead of
+    /// staying a fixed 6 px (Manh 2026-11-15 — "slogan chưa cách 1
+    /// line với input"). Called on open and whenever settings are saved
     /// (App.OnSettingsSaved). The 8 pt floor mirrors mac's slogan floor;
     /// with the 12 pt slider minimum it never triggers in practice.</summary>
     public void RefreshTopBarFontSize()
     {
         var size = App.Settings.PopupTopBarFontSize;
         AppNameText.FontSize = size;
-        TaglineText.FontSize = Math.Max(8, size - 1);
+        var taglineSize = Math.Max(8, size - 1);
+        TaglineText.FontSize = taglineSize;
+        TitleBar.Margin = new Thickness(0, 0, 0, taglineSize);
         RequestResizeToFit();
     }
 
