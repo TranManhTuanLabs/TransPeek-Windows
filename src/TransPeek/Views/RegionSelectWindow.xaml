@@ -7,8 +7,12 @@
          window: v0.1 relied only on a KeyboardAccelerator, but a plain
          Grid never takes keyboard focus, so Esc did nothing and the user
          was trapped fullscreen with no button to click. There are now
-         four independent ways out: Esc, right-click, the Cancel button,
-         and Alt+F4 (window Closed completes the selection task).
+         three independent ways out: Esc, right-click, and Alt+F4
+         (window Closed completes the selection task). The Cancel button
+         was removed (2026-11-14, 0.1.3.59 test): it sat top-right near
+         the mouse and an accidental click on it exited the capture; Esc
+         on the keyboard, right-click and Alt+F4 already cover the exit,
+         and the grid keeps keyboard focus so Esc is reliable.
          NO dim layer (removed 2026-11-13, Manh): the 15% dim was
          suspected of filling color instead of dimming (the user picks
          blind when the overlay renders opaque); no dim is needed to
@@ -31,11 +35,8 @@
         </Canvas>
         <Border HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,16,0,0"
                 Background="#CC000000" CornerRadius="6" Padding="10,4">
-            <TextBlock x:Uid="RegionSelect.Hint" Text="Drag to select the region to OCR — Esc / right-click / Cancel to exit"
+            <TextBlock x:Uid="RegionSelect.Hint" Text="Drag to select the region to OCR — Esc / right-click to exit"
                        Foreground="White" FontSize="15" FontWeight="SemiBold" />
         </Border>
-        <Button x:Name="CancelButton" x:Uid="RegionSelect.Cancel" Content="✕ Cancel (Esc)"
-                HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,16,16,0"
-                Padding="12,6" />
     </Grid>
 </Window>

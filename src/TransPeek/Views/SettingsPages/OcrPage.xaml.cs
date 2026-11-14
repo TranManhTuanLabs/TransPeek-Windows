@@ -58,6 +58,10 @@ public sealed partial class OcrPage : Page
     {
         if (OcrProviderCombo.SelectedItem is ComboBoxItem item && item.Tag is string id)
         {
+            // Diagnostic (0.1.3.59 test: switching Tesseract -> Windows
+            // OCR exits the app): timestamp the switch in crash.log, so
+            // the next log shows whether the exit follows the switch.
+            CrashLog.WriteLine("OcrProvider", $"Switched to '{id}'");
             App.Settings.OcrProviderId = id;
             Save();
         }

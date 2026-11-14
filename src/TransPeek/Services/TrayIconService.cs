@@ -58,6 +58,7 @@ public sealed class TrayIconService : IDisposable
         Action screenshotCopy,
         Action scanBarcodes,
         Action openSettings,
+        Action restart,
         Action quit)
     {
         // The constructor runs on the UI thread: the menu actions are
@@ -85,7 +86,19 @@ public sealed class TrayIconService : IDisposable
         menu.Items.Add(new MenuFlyoutSeparator());
         menu.Items.Add(Item("Tray.Menu.Settings", "Settings…", "\uE713", openSettings));
         menu.Items.Add(new MenuFlyoutSeparator());
+        // Restart (Manh 2026-11-14): recovery when the app misbehaves,
+        // e.g. after an OCR engine switch that crashes it. Glyph E72C
+        // is Refresh (no dedicated Restart glyph in Segoe MDL2).
+        menu.Items.Add(Item("Tray.Menu.Restart", "Restart TransPeek", "\uE72C", restart));
         menu.Items.Add(Item("Tray.Menu.Quit", "Quit TransPeek", "\uE711", quit));
+
+        // Diagnostic (0.1.3.59 test: right-click menu "chưa được"): log
+        // every menu open, so the next crash.log tells whether the menu
+        // opens at all (no "Menu opening" = it never opens; opening but
+        // no "Clicked" = items don't fire). Logging only — the earlier
+        // Opening handler that refreshed accelerators was suspected of
+        // breaking the menu, so this one never touches the items.
+        menu.Opening += (_, _) => CrashLog.WriteLine("TrayMenu", "Menu opening");
 
         // Shortcut hints on the right of the two hotkey actions (mac
         // menubar parity). Set once here and refreshed when Settings are

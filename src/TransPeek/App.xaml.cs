@@ -12,6 +12,7 @@
 
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
+using System.Diagnostics;
 using TransPeek.Core.Barcode;
 using TransPeek.Core.Dictionary;
 using TransPeek.Core.Ocr;
@@ -111,6 +112,7 @@ public sealed partial class App : Application
             screenshotCopy: () => _ = _screenshotCopy!.RunAsync(),
             scanBarcodes: () => _ = ScanBarcodesAsync(),
             openSettings: ShowSettings,
+            restart: RestartApp,
             quit: QuitApp);
 
         _selectionMonitor = new SelectionMonitor(OnSelectionChanged);
@@ -300,6 +302,37 @@ public sealed partial class App : Application
             window.SetBackgroundImage(screenshot);
         var region = await window.SelectRegionAsync();
         return new RegionSelection(region, screenshot, bounds);
+    }
+
+    /// <summary>Quit and relaunch the app (recovery when the app
+    /// misbehaves — e.g. after an OCR engine switch that crashes it,
+    /// Manh 2026-11-14). Starts the new process first; only exits when
+    /// the start succeeded, so a failed relaunch leaves the app
+    /// running instead of quitting with nothing to come back to.</summary>
+    internal static void Restart()
+    {
+        if (Application.Current is App app)
+            app.RestartApp();
+    }
+
+    private void RestartApp()
+    {
+        try
+        {
+            var path = Environment.ProcessPath;
+            if (!string.IsNullOrEmpty(path))
+            {
+                Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+                QuitApp();
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            CrashLog.Write("RestartApp", ex);
+        }
+        // Relaunch failed (or no process path): stay running — quitting
+        // would leave the user with no app at all.
     }
 
     /// <summary>Quit for real. Application.Exit() did not terminate the

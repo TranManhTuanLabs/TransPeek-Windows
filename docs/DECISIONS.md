@@ -759,3 +759,65 @@ and ran 51. New round of fixes (next build):
   on Windows About, so nothing else to delete. The tray header
   ("TransPeek 0.1.3 (36)") is unchanged — that is the tray, not
   About.
+
+## Test 59 feedback round (Manh, 2026-11-14) — 5 issues, one build
+
+Manh tested build 59: OCR works with BOTH engines + QR scan works.
+Remaining issues, all fixed in one [build-app] commit (debugging
+exception: build on every fix while the app is broken):
+
+1. **Floating Esc button on the capture screen.** The Cancel button
+   ("✕ Cancel (Esc)", top-right) sat near the mouse and an accidental
+   click exited the capture. FIX: button REMOVED (XAML + code-behind +
+   resw key). Exits left: keyboard Esc (KeyDown + accelerator, grid
+   keeps focus), right-click, Alt+F4. Hint now reads "Esc /
+   right-click to exit".
+2. **Floating thing in the translate panel on hover/select of
+   input/output text.** Root cause: SelectionMonitor had NO own-window
+   exclusion — selecting text inside TransPeek's own windows (panel,
+   Settings) showed the floating trigger icon under the mouse. FIX:
+   TryGetSelection skips the focused element when its process id is
+   ours (FlaUI `element.Properties.ProcessId`, fail open on pid 0).
+   (Could not find any element literally saying "Esc" in the panel —
+   the trigger icon is the only floating element there; if it still
+   appears, ask Manh for a screenshot.)
+3. **Panel drag: press-and-hold did not move the panel; it only
+   started following the mouse AFTER the click was released.**
+   Root cause: the threshold + pointer-capture pattern —
+   SendMessage(WM_NCLBUTTONDOWN) while a XAML element holds pointer
+   capture does not engage the system move loop until capture is
+   released. FIX: BeginDrag on PointerPressed directly (standard
+   WinUI 3 pattern); a press without movement still does not move
+   the window (the move loop ends on release). Threshold fields and
+   Moved/Released handlers removed.
+4. **About > Show QR: text only, NO card image.** Root cause:
+   `Assets/DonateCard.png` was NEVER in the published zip (checked
+   the 0.1.3.59 zip): `<Content Include>` alone does not copy to the
+   publish folder. FIX: `CopyToOutputDirectory="PreserveNewest"` on
+   the Content item + load the image from the file path
+   (`AppContext.BaseDirectory/Assets/DonateCard.png`) with ms-appx
+   as fallback (logs to crash.log when the file is missing). Verify
+   by checking the next build's zip contains Assets/DonateCard.png.
+   ALSO in About: removed the duplicate "GitHub" TextBlock next to
+   the cat icon — cat + repo link only (Manh).
+5. **Switching OCR Tesseract -> Windows OCR exits the app suddenly.**
+   NOT identified from code: the switch itself only sets the setting
+   + saves (OnSettingsSaved rebuilds translation providers only,
+   never touches OCR), and the OCR flow catches provider exceptions
+   into a toast. FIX (fallback, Manh's words: "nếu k sửa được phải
+   có nút quit & reluanch"): **Restart TransPeek** — tray menu item
+   (before Quit) + a button at the bottom of Settings > About.
+   `App.Restart()` starts a new process of the current exe, then
+   exits only when the start succeeded (a failed relaunch leaves
+   the app running). Diagnostics added: `OcrProvider: Switched to
+   '<id>'` in crash.log at switch time — the next crash.log (the
+   "Application.UnhandledException" lines) is needed to find the
+   real cause; ask Manh to paste it after the crash.
+6. **Tray right-click menu still does not work (unresolved since
+   build 53/54).** Diagnostics added: `menu.Opening` now logs
+   "TrayMenu: Menu opening" (logging ONLY — the earlier Opening
+   handler that refreshed accelerators was suspected of breaking
+   the menu, so this one never touches the items). Next crash.log
+   distinguishes: no "Menu opening" = menu never opens; opening
+   but no "Clicked" = items don't fire. Ask Manh: does the menu
+   appear at all on right-click?

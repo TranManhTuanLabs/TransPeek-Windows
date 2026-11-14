@@ -89,6 +89,16 @@ public sealed class SelectionMonitor : IDisposable
         var element = automation.FocusedElement();
         if (element is null)
             return (null, (0, 0));
+        // Own windows (panel, Settings) must never trigger the icon:
+        // selecting text inside TransPeek itself popped the floating
+        // icon right under the mouse (0.1.3.59 test — hovering /
+        // selecting text in the panel showed it). FlaUI reports the
+        // focused element's process id; skip when it is ours. Fail open
+        // (pid 0 = unknown): a missed exclusion only shows the icon,
+        // a wrong one would hide the core feature.
+        var pid = element.Properties.ProcessId.ValueOrDefault;
+        if (pid != 0 && pid == Environment.ProcessId)
+            return (null, (0, 0));
         var pattern = element.Patterns.Text.PatternOrDefault;
         if (pattern is null)
             return (null, (0, 0));

@@ -55,10 +55,6 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// the panel that click re-showed.</summary>
     private int _epoch;
     private readonly Action _openSettings;
-    /// <summary>Title-bar drag state: the press point, and whether the
-    /// system drag has started (only after moving past the threshold).</summary>
-    private Windows.Foundation.Point? _titleDragStart;
-    private bool _titleDragging;
 
     public TranslatePanelWindow(
         Func<string, Task<(string? Translation, string ProviderName)>> translateAsync,
@@ -272,43 +268,21 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
 
     private void OnTitleBarPointerPressed(object sender, PointerRoutedEventArgs e)
     {
-        // Drag starts only after hold + move past a threshold
-        // (0.1.3.53 test): a plain click on the name/slogan must not
-        // move the panel. Record the start; the move handler below
-        // starts the system drag once the pointer has moved 4px.
+        // Standard Windows title-bar drag: press-and-hold, then move.
+        // BeginDrag is called on PRESS, not after a move threshold:
+        // the old threshold + pointer-capture pattern broke the system
+        // drag — SendMessage(WM_NCLBUTTONDOWN) while a XAML element
+        // holds pointer capture does not engage the move loop until
+        // capture is released, so the panel only started following the
+        // mouse AFTER the click was released (0.1.3.59 test). A plain
+        // click (press + release, no move) still does not move the
+        // window: the system move loop ends on release without movement.
         // No traditional title bar (min/max/close) is needed for this:
         // a borderless floating panel drags from its top bar exactly
-        // like a normal window drags from its title bar — the threshold
-        // is what tells a click apart from a drag.
-        _titleDragStart = e.GetCurrentPoint(TitleBar).Position;
-        _titleDragging = false;
-        TitleBar.CapturePointer(e.Pointer);
-    }
-
-    private void OnTitleBarPointerMoved(object sender, PointerRoutedEventArgs e)
-    {
-        if (_titleDragStart is null || _titleDragging)
-            return;
-        var p = e.GetCurrentPoint(TitleBar).Position;
-        var dx = Math.Abs(p.X - _titleDragStart.Value.X);
-        var dy = Math.Abs(p.Y - _titleDragStart.Value.Y);
-        if (dx <= 4 && dy <= 4)
-            return; // still a click, not a drag yet
-        _titleDragging = true;
-        TitleBar.ReleasePointerCapture(e.Pointer);
+        // like a normal window drags from its title bar.
         // Activate first so the panel keeps keyboard focus after the drag.
         WindowHelpers.ActivateWindow(this);
         WindowHelpers.BeginDrag(this);
-    }
-
-    private void OnTitleBarPointerReleased(object sender, PointerRoutedEventArgs e)
-    {
-        // Plain click (no move past the threshold): nothing to do.
-        // A finished system drag may not deliver this event — the next
-        // press resets the state anyway.
-        _titleDragStart = null;
-        _titleDragging = false;
-        TitleBar.ReleasePointerCapture(e.Pointer);
     }
 
     private void OnOpenSettings(object sender, RoutedEventArgs e)

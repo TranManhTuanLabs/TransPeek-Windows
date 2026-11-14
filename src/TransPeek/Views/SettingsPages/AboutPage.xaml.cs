@@ -101,7 +101,7 @@ public sealed partial class AboutPage : Page
     {
         var image = new Image
         {
-            Source = new BitmapImage(new Uri(AppInfo.DonateCardUri)),
+            Source = DonateCardImage(),
             Width = 280,
             Stretch = Stretch.Uniform,
         };
@@ -140,4 +140,21 @@ public sealed partial class AboutPage : Page
         };
         timer.Start();
     }
+
+    /// <summary>Load the donate card image. File path first (unpackaged
+    /// app: the card ships as a loose file next to the exe): ms-appx
+    /// only resolves when the Content file actually reached the publish
+    /// folder — in 0.1.3.59 it did not (no CopyToOutputDirectory), so
+    /// the dialog showed text only. Log a missing file so the next
+    /// crash.log tells whether the file shipped.</summary>
+    private static BitmapImage DonateCardImage()
+    {
+        var path = Path.Combine(AppContext.BaseDirectory, "Assets", "DonateCard.png");
+        if (File.Exists(path))
+            return new BitmapImage(new Uri(path));
+        CrashLog.WriteLine("DonateCard", $"Card file missing at {path}; falling back to ms-appx.");
+        return new BitmapImage(new Uri(AppInfo.DonateCardUri));
+    }
+
+    private void OnRestartClick(object sender, RoutedEventArgs e) => App.Restart();
 }

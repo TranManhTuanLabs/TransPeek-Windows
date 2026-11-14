@@ -2,8 +2,7 @@
 // contains the cursor, dims it, and lets the user drag a rectangle.
 // Returns the rectangle in PHYSICAL pixels (capture APIs work in physical
 // pixels; XAML layout uses effective pixels, so the result is scaled by
-// the window's DPI factor). Esc, right-click, the Cancel button, or
-// Alt+F4 cancels (null).
+// the window's DPI factor). Esc, right-click, or Alt+F4 cancels (null).
 //
 // v0.1.1 fix — the v0.1 overlay could trap the user fullscreen: Esc was
 // only a KeyboardAccelerator on the root Grid, and a Grid never takes
@@ -11,9 +10,12 @@
 // button at all; and Finish() only hid the window, so closing it with
 // Alt+F4 left the TaskCompletionSource uncompleted and the OCR flow
 // awaiting forever. Now: the grid is focusable and focused on show,
-// KeyDown handles Esc directly, RightTapped handles right-click, the
-// Cancel button is clickable, Closed completes the task, and Finish()
-// closes (not just hides) the window exactly once.
+// KeyDown handles Esc directly, RightTapped handles right-click, Closed
+// completes the task, and Finish() closes (not just hides) the window
+// exactly once. The Cancel button added then is gone again (2026-11-14,
+// 0.1.3.59 test): it sat top-right near the mouse and an accidental
+// click exited the capture; Esc on the keyboard, right-click and Alt+F4
+// are the exits, and the grid keeps focus so Esc is reliable.
 
 using System.IO;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -83,7 +85,6 @@ public sealed partial class RegionSelectWindow : Window
         // Alt+F4 / taskbar close must complete the selection instead of
         // hanging the OCR flow forever awaiting a result that never comes.
         Closed += (_, _) => Cancel();
-        CancelButton.Click += (_, _) => Cancel();
         RootGrid.PointerPressed += OnPointerPressed;
         RootGrid.PointerMoved += OnPointerMoved;
         RootGrid.PointerReleased += OnPointerReleased;

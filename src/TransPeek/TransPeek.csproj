@@ -79,10 +79,13 @@
   <ItemGroup>
     <!-- Donate card ("Buy me a coffee", Manh 2026-11-12): the full
          BIDV VietQR card, shipped as Content next to the exe and
-         loaded via ms-appx:///Assets/DonateCard.png. Binary asset —
+         loaded from the file path (ms-appx as fallback). Binary asset —
          pushed via the browser (the connector cannot push binaries);
-         the app icon stays base64 in Assets/EmbeddedIcon.cs. -->
-    <Content Include="Assets\DonateCard.png" />
+         the app icon stays base64 in Assets/EmbeddedIcon.cs.
+         CopyToOutputDirectory is REQUIRED: without it the file never
+         reached the publish folder, so the QR dialog showed text only
+         (0.1.3.59 test). -->
+    <Content Include="Assets\DonateCard.png" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <!-- Unpackaged publish fix (WinUI 3 startup crash 0xC000027B):
