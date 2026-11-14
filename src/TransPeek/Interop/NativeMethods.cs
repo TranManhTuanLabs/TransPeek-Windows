@@ -341,4 +341,76 @@ internal static class NativeMethods
     public static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
     // (RECT is already defined above, line 261 — used by MONITORINFO /
     // SystemParametersInfo — so it is NOT redefined here.)
+
+    // ----- dwmapi / comctl32: truly transparent floating window -----
+    // WinUI 3 has no built-in transparent window background: a "Transparent"
+    // XAML background renders as an opaque box (white in Light mode), so the
+    // 30 px trigger-icon circle was invisible against its own window and the
+    // icon looked like a white square with a shadow (Manh 2026-11-14, build
+    // 78). The fix that actually works (Action-Wheel pattern, a WinUI 3 radial
+    // menu with real per-pixel alpha) needs ALL of these together:
+    //   * a custom SystemBackdrop holding a transparent composition brush,
+    //   * DwmEnableBlurBehindWindow(fEnable: true, null region) so DWM
+    //     composites the window with alpha,
+    //   * the native client surface cleared to BLACK (WinUI clears it with
+    //     the theme background first; black + alpha composition = fully
+    //     transparent pixels), via a window subclass on WM_ERASEBKGND,
+    //   * the frame bits stripped (RemoveWindowFrame) — SetBorderAndTitleBar
+    //     leaves WS_DLGFRAME, which is what the white outline/shadow came
+    //     from. Drop any one of these and the window is an opaque box.
+    public const int GWL_STYLE = -16;
+    public const uint WS_CAPTION = 0x00C00000;
+    public const uint WS_BORDER = 0x00800000;
+    public const uint WS_DLGFRAME = 0x00400000;
+    public const uint WS_THICKFRAME = 0x00040000;
+    public const uint WS_EX_WINDOWEDGE = 0x00000100;
+    public const uint WS_EX_CLIENTEDGE = 0x00000200;
+    public const uint WS_EX_STATICEDGE = 0x00020000;
+    public const uint WS_EX_DLGMODALFRAME = 0x00000001;
+    public const uint SWP_NOACTIVATE = 0x0010;
+
+    [DllImport("dwmapi.dll")]
+    public static extern int DwmEnableBlurBehindWindow(IntPtr hWnd, ref DWM_BLURBEHIND pBlurBehind);
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct DWM_BLURBEHIND
+    {
+        public uint dwFlags;
+        [MarshalAs(UnmanagedType.Bool)] public bool fEnable;
+        public IntPtr hRgnBlur;
+        [MarshalAs(UnmanagedType.Bool)] public bool fTransitionOnMaximized;
+    }
+    public const uint DWM_BB_ENABLE = 0x1;
+
+    [DllImport("dwmapi.dll")]
+    public static extern int DwmSetWindowAttribute(IntPtr hWnd, int dwAttribute, ref int pvAttribute, int cbAttribute);
+    public const int DWMWA_BORDER_COLOR = 34;
+    public const int DWMWA_COLOR_NONE = unchecked((int)0xFFFFFFFE);
+    public const int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
+    public const int DWMWCP_DONOTROUND = 1;
+
+    [DllImport("user32.dll")]
+    public static extern bool GetClientRect(IntPtr hWnd, out RECT lpRect);
+
+    [DllImport("user32.dll")]
+    public static extern int FillRect(IntPtr hDC, ref RECT lprc, IntPtr hbr);
+
+    [DllImport("gdi32.dll")]
+    public static extern IntPtr CreateSolidBrush(uint crColor);
+
+    public delegate IntPtr WindowSubclassProc(
+        IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam, UIntPtr uIdSubclass, UIntPtr dwRefData);
+
+    [DllImport("comctl32.dll")]
+    public static extern bool SetWindowSubclass(
+        IntPtr hWnd, WindowSubclassProc pfnSubclass, UIntPtr uIdSubclass, UIntPtr dwRefData);
+
+    [DllImport("comctl32.dll")]
+    public static extern bool RemoveWindowSubclass(
+        IntPtr hWnd, WindowSubclassProc pfnSubclass, UIntPtr uIdSubclass);
+
+    [DllImport("comctl32.dll")]
+    public static extern IntPtr DefSubclassProc(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam);
+
+    public const uint WM_ERASEBKGND = 0x0014;
 }

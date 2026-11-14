@@ -19,6 +19,7 @@
 
 using System.IO;
 using System.Runtime.InteropServices.WindowsRuntime;
+using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
@@ -46,6 +47,15 @@ public sealed partial class RegionSelectWindow : Window
     public RegionSelectWindow()
     {
         InitializeComponent();
+        // Crosshair (+) cursor while picking a region (Manh 2026-11-14):
+        // the capture screen shows a screenshot, so the user needs a
+        // clear "drag to select" affordance — a + cursor, like Snipping
+        // Tool. ProtectedCursor is the WinUI 3 way to set it (the old
+        // CoreWindow.PointerCursor does not reach secondary windows).
+        // Set on the grid, so it covers the whole screen including the
+        // hint chip (which is hit-test invisible and passes the pointer
+        // through to the grid anyway).
+        RootGrid.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.Cross);
         // WinUI 3 Window has no Loaded event (Loaded lives on
         // FrameworkElement): attach to the root content element instead.
         if (Content is FrameworkElement contentRoot)

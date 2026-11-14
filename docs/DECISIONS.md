@@ -1195,3 +1195,44 @@ an OS limit.)
   accelerator was only a backup (it needs a focused element), so
   removing it loses nothing. The diagnostic ("Diagnose: list windows")
   stays in the app for now — it proved its worth here.
+
+## Float icon: white square + shadow — ROOT CAUSE (build 78, Manh 2026-11-14)
+- Build 78 (icon revert to "A" + MakeToolWindow/SWP_FRAMECHANGED shadow
+  fix) did NOT fix it: Manh reports the icon is still a white square
+  with a drop shadow, and the doc screenshot confirms it.
+- ROOT CAUSE: WinUI 3 has NO built-in transparent window background.
+  A "Transparent" XAML background renders as an opaque box (white in
+  Light mode), so the 30 px white circle is invisible against its own
+  window and the icon looks like a white square. And WS_EX_TOOLWINDOW +
+  SWP_FRAMECHANGED does NOT remove the shadow in WinUI 3 — the
+  shadow/outline comes from the frame bits (WS_DLGFRAME, which
+  OverlappedPresenter.SetBorderAndTitleBar leaves behind) and the opaque
+  background. The 0.1.3.75 comment claiming the shadow was "the stale
+  frame" was wrong; corrected in WindowHelpers.
+- FIX (Action-Wheel pattern — a WinUI 3 radial menu with real per-pixel
+  alpha; all parts required, drop any one and the window is an opaque
+  box): new Interop/TransparentWindow.cs — presenter attached FIRST,
+  WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE, RemoveWindowFrame (strip
+  WS_CAPTION | WS_BORDER | WS_DLGFRAME | WS_THICKFRAME + edge bits,
+  DWMWA_WINDOW_CORNER_PREFERENCE = DONOTROUND, DWMWA_BORDER_COLOR =
+  COLOR_NONE), DwmEnableBlurBehindWindow(fEnable: true, null region),
+  a custom SystemBackdrop holding a transparent composition brush
+  (TransparentSystemBackdrop + WindowsSystemDispatcherQueueHelper),
+  and the native client surface cleared to BLACK via a window subclass
+  on WM_ERASEBKGND (WinUI clears it theme-white first; black + DWM
+  alpha = fully transparent pixels). The brush + subclass delegate are
+  rooted per-HWND so they cannot be GC'd. TriggerIconWindow now calls
+  TransparentWindow.MakeTransparent on Loaded instead of
+  MakeBorderlessTopmost + MakeToolWindow. Panel/toast stay opaque
+  (they are cards; a shadow is fine there).
+
+## OCR capture: crosshair (+) cursor (Manh 2026-11-14)
+- The capture screen shows a screenshot, so the user needs a clear
+  "drag to select" affordance: a + (crosshair) cursor, like Snipping
+  Tool. The old XAML comment already claimed "the cursor changes to
+  the capture shape while dragging" but no code ever set it.
+- FIX: RootGrid.ProtectedCursor = InputSystemCursor.Create(
+  InputSystemCursorShape.Cross) in the RegionSelectWindow constructor
+  (ProtectedCursor is the WinUI 3 way; CoreWindow.PointerCursor does
+  not reach secondary windows). Set on the grid so it covers the whole
+  screen, including the hit-test-invisible hint chip.

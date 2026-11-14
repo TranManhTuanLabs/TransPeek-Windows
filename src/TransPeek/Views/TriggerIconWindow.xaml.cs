@@ -48,8 +48,17 @@ public sealed partial class TriggerIconWindow : Window
         {
             contentRoot.Loaded += (_, _) =>
             {
-                WindowHelpers.MakeBorderlessTopmost(this);
-                WindowHelpers.MakeToolWindow(this);
+                // Truly transparent + frameless (TransparentWindow,
+                // Action-Wheel pattern): the old MakeBorderlessTopmost +
+                // MakeToolWindow left the window opaque white with a
+                // shadow, so the 30 px circle was invisible and the icon
+                // looked like a white square (Manh 2026-11-14, build 78).
+                // MakeTransparent does the presenter, the frame strip,
+                // DWM blur-behind, the transparent backdrop and the black
+                // native clear in one place. Loaded runs while the window
+                // is first shown, so the handle is ready; MakeTransparent
+                // is idempotent per HWND.
+                TransparentWindow.MakeTransparent(this);
             };
         }
         IconBorder.PointerEntered += OnPointerEntered;
