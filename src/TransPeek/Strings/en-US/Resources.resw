@@ -106,10 +106,10 @@
     <value>Copy</value>
   </data>
   <data name="Panel.CopySource.Content" xml:space="preserve">
-    <value>Copy source</value>
+    <value>Copy</value>
   </data>
   <data name="Panel.CopyTranslation.Content" xml:space="preserve">
-    <value>Copy translation</value>
+    <value>Copy</value>
   </data>
   <data name="Panel.CaptureOcr.Content" xml:space="preserve">
     <value>Capture OCR</value>

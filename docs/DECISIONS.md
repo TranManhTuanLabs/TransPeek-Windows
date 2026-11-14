@@ -1601,3 +1601,23 @@ an OS limit.)
   dispatcher; the very first measure can lag one frame). No code
   change — keep watching; if it recurs on first open, the fix is to
   re-run the fit after the first layout pass.
+
+## Panel: Capture OCR to the language row, Copy next to the speakers (Manh 2026-11-15)
+
+- Capture OCR moved from the Actions row to the language picker
+  row, at the right (pickers left, OCR right) — same row as the
+  language selection.
+- Copy buttons moved to the mac position (Speak + Copy together on
+  the right, Speak first, Copy second): the source Copy (renamed
+  from "Copy source" to just "Copy", resw updated too) sits next to
+  the input speaker inside the input box; the translation Copy sits
+  next to the output speaker in the card's speaker row. Both Copy
+  buttons are now labelled just "Copy" (input copies the source,
+  output copies the translation — like mac, where each side has its
+  own "Copy").
+- The translation Copy is two buttons toggling by mode
+  (CopyButton in normal mode, CopyTranslationButton in OCR mode,
+  UpdateCopyButtons) — both now live in the output speaker row, so
+  only one is visible at a time. The Actions row keeps only Pin +
+  Settings. Pure XAML move: names and Click handlers unchanged, so
+  no code-behind change was needed.

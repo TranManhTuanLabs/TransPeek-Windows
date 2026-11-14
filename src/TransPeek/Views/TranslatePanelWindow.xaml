@@ -58,40 +58,50 @@
                  AcceptsReturn="False" MaxHeight="120" Margin="0,0,0,4"
                  TextChanged="OnSourceTextChanged" SelectionChanged="OnSourceSelectionChanged"
                  KeyDown="OnSourceKeyDown" SizeChanged="OnSourceTextBoxSizeChanged" />
-        <!-- Source speaker INSIDE the input box (Manh 2026-11-15): it
-             was in the hint row below the input, so it did not look
-             like the output speaker, which sits inside the output
-             card. Now it overlays the input's bottom-right corner —
-             same cell as the TextBox, after it in XAML so it paints on
-             top — and stays there as the input grows ("luôn bên trong
-             input"). Same glyph as the output speaker (E767 Volume).
-             TTS audio is NOT wired yet — decor for now (tooltip says
-             so); speaking comes after the mac side is stable. -->
-        <Button x:Name="SpeakSourceButton" Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Bottom"
-                Margin="0,0,6,8" Padding="8,4"
-                ToolTipService.ToolTip="Listen to source text (coming soon)"
-                Click="OnSpeakSourceClicked">
-            <FontIcon Glyph="&#xE767;" FontSize="16" />
-        </Button>
+        <!-- Source speaker + Copy INSIDE the input box (Manh
+             2026-11-15): the speaker overlays the input's
+             bottom-right corner; the Copy button (renamed from "Copy
+             source" to just "Copy", like mac's SourceInputView where
+             Speak + Copy sit together on the right below the text)
+             sits next to it. Both are in one StackPanel in the same
+             cell as the TextBox, after it in XAML so they paint on
+             top, and stay there as the input grows. Speak is first,
+             Copy second (mac order). TTS audio is NOT wired yet —
+             decor for now (tooltip says so). -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="4"
+                    HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,6,8">
+            <Button x:Name="SpeakSourceButton" Padding="8,4"
+                    ToolTipService.ToolTip="Listen to source text (coming soon)"
+                    Click="OnSpeakSourceClicked">
+                <FontIcon Glyph="&#xE767;" FontSize="16" />
+            </Button>
+            <Button x:Name="CopySourceButton" x:Uid="Panel.CopySource" Content="Copy" Padding="8,4" />
+        </StackPanel>
         <TextBlock x:Uid="Panel.Hint" Grid.Row="2" Text="Enter: translate again • Esc: close • Select text in the panel to look it up in the dictionary"
                    FontSize="11" Foreground="Gray" TextWrapping="Wrap" Margin="0,0,0,8" />
 
-        <!-- Language pickers (Manh 2026-11-15): ABOVE the output, like
-             mac's LanguageBarView (input -> language bar -> provider
-             results). They used to sit under the title, above the
-             input; the blank line and the "via Google Translate" line
-             that lived with them are gone (the provider name now heads
-             the output card below). Changing a picker saves the setting
-             and re-translates immediately, like mac. No close (X)
-             button: Esc and click-outside already close the panel
+        <!-- Language pickers + Capture OCR (Manh 2026-11-15): ABOVE
+             the output, like mac's LanguageBarView (input -> language
+             bar -> provider results). The Capture OCR button sits on
+             the same row, at the right (it used to live in the
+             Actions row at the bottom). Changing a picker saves the
+             setting and re-translates immediately, like mac. No close
+             (X) button: Esc and click-outside already close the panel
              (Manh 2026-11-12). -->
-        <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" Margin="0,0,0,8">
-            <ComboBox x:Name="SourceLangCombo" Width="128"
-                      SelectionChanged="OnSourceLangChanged" />
-            <Button x:Name="SwapButton" Content="⇄" Padding="6,2" Click="OnSwapLanguages" />
-            <ComboBox x:Name="TargetLangCombo" Width="128"
-                      SelectionChanged="OnTargetLangChanged" />
-        </StackPanel>
+        <Grid Grid.Row="3" Margin="0,0,0,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <ComboBox x:Name="SourceLangCombo" Width="128"
+                          SelectionChanged="OnSourceLangChanged" />
+                <Button x:Name="SwapButton" Content="⇄" Padding="6,2" Click="OnSwapLanguages" />
+                <ComboBox x:Name="TargetLangCombo" Width="128"
+                          SelectionChanged="OnTargetLangChanged" />
+            </StackPanel>
+            <Button x:Name="OcrButton" Grid.Column="1" x:Uid="Panel.CaptureOcr" Content="Capture OCR" VerticalAlignment="Center" />
+        </Grid>
 
         <!-- Translation output (Manh 2026-11-15): one card per provider,
              like mac's ProviderResultCard. The header line IS the
@@ -132,44 +142,45 @@
                          TextWrapping="Wrap" AcceptsReturn="True" BorderThickness="0"
                          Background="Transparent" FontSize="14" MaxHeight="260"
                          SelectionChanged="OnTranslationSelectionChanged" />
-                <StackPanel x:Name="ProviderCardSpeakerRow" Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="8,2,8,6">
+                <!-- Speak + Copy on the right, like mac's
+                     ProviderResultCard (Speak + Copy below the result,
+                     right-aligned). The Copy here is the translation
+                     copy; CopyButton shows in normal mode and
+                     CopyTranslationButton in OCR mode (UpdateCopyButtons
+                     toggles them, only one visible at a time) — both
+                     labelled just "Copy". Speak first, Copy second
+                     (mac order). -->
+                <StackPanel x:Name="ProviderCardSpeakerRow" Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="8,2,8,6" Spacing="4">
                     <Button x:Name="SpeakTranslationButton" Padding="8,4"
                             ToolTipService.ToolTip="Listen to translation (coming soon)"
                             Click="OnSpeakTranslationClicked">
                         <FontIcon Glyph="&#xE767;" FontSize="16" />
                     </Button>
+                    <Button x:Name="CopyButton" x:Uid="Panel.Copy" Content="Copy" Padding="8,4" />
+                    <Button x:Name="CopyTranslationButton" x:Uid="Panel.CopyTranslation" Content="Copy" Padding="8,4" Visibility="Collapsed" />
                 </StackPanel>
             </Grid>
         </Border>
 
-        <!-- Actions: copy buttons left, Settings gear on the right
-             (Manh 2026-11-12). -->
-        <Grid Grid.Row="5" Margin="0,8,0,8">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                <Button x:Name="CopyButton" x:Uid="Panel.Copy" Content="Copy" />
-                <Button x:Name="CopySourceButton" x:Uid="Panel.CopySource" Content="Copy source" />
-                <Button x:Name="CopyTranslationButton" x:Uid="Panel.CopyTranslation" Content="Copy translation" Visibility="Collapsed" />
-                <Button x:Name="OcrButton" x:Uid="Panel.CaptureOcr" Content="Capture OCR" />
-            </StackPanel>
-            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                <!-- Pin (Manh 2026-11-14): keep the panel fixed and always
-                     visible — while pinned, click-outside and Esc do NOT
-                     hide it. Toggle again to unpin. Segoe MDL2 Pin E718. -->
-                <ToggleButton x:Name="PinButton" Padding="6,2"
-                              ToolTipService.ToolTip="Pin panel (keep it visible)"
-                              Click="OnPinToggled">
-                    <FontIcon Glyph="&#xE718;" FontSize="12" />
-                </ToggleButton>
-                <Button x:Name="SettingsButton" Padding="6,2"
-                        ToolTipService.ToolTip="Settings" Click="OnOpenSettings">
-                    <FontIcon Glyph="&#xE713;" FontSize="12" />
-                </Button>
-            </StackPanel>
-        </Grid>
+        <!-- Actions (Manh 2026-11-15): only Pin + Settings remain
+             here — the copy buttons moved next to their speaker icons
+             (input Copy inside the input, translation Copy inside the
+             output card) and Capture OCR moved up to the language row,
+             like mac. -->
+        <StackPanel Grid.Row="5" Orientation="Horizontal" Spacing="4" HorizontalAlignment="Right" Margin="0,8,0,8">
+            <!-- Pin (Manh 2026-11-14): keep the panel fixed and always
+                 visible — while pinned, click-outside and Esc do NOT
+                 hide it. Toggle again to unpin. Segoe MDL2 Pin E718. -->
+            <ToggleButton x:Name="PinButton" Padding="6,2"
+                          ToolTipService.ToolTip="Pin panel (keep it visible)"
+                          Click="OnPinToggled">
+                <FontIcon Glyph="&#xE718;" FontSize="12" />
+            </ToggleButton>
+            <Button x:Name="SettingsButton" Padding="6,2"
+                    ToolTipService.ToolTip="Settings" Click="OnOpenSettings">
+                <FontIcon Glyph="&#xE713;" FontSize="12" />
+            </Button>
+        </StackPanel>
 
         <!-- Dictionary links -->
         <local:DictionaryBar x:Name="DictionaryBarControl" Grid.Row="6" />
