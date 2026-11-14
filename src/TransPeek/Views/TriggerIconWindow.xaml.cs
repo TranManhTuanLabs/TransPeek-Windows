@@ -38,13 +38,10 @@ public sealed partial class TriggerIconWindow : Window
     public TriggerIconWindow()
     {
         InitializeComponent();
-        // Fixed 32x32 DIP size (mac parity): the window sizes itself to
-        // content otherwise, and on a scaled display the content (30 DIP
-        // circle) can end up off-size against the window frame. ShowAt
-        // still resizes in physical pixels (32 * DpiScale) for the exact
-        // screen position.
-        Width = WidthPx;
-        Height = HeightPx;
+        // NOTE: WinUI 3 Window has NO Width/Height properties (unlike
+        // WPF) — setting them is a compile error (CS0103, runs 76/77).
+        // The size comes from ShowAt, which resizes via AppWindow
+        // MoveAndResize in physical pixels (32 * DpiScale).
         // WinUI 3 Window has no Loaded event (Loaded lives on
         // FrameworkElement): attach to the root content element instead.
         if (Content is FrameworkElement contentRoot)
