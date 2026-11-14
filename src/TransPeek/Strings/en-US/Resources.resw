@@ -168,6 +168,9 @@
   <data name="Settings.General.AutoHide.Header" xml:space="preserve">
     <value>Trigger icon hides after (seconds)</value>
   </data>
+  <data name="Settings.General.FontSize.Header" xml:space="preserve">
+    <value>Font Size</value>
+  </data>
   <data name="Settings.General.TranslateHotkey.Header" xml:space="preserve">
     <value>Hotkey to open the translate panel (e.g. Control+Alt+T)</value>
   </data>

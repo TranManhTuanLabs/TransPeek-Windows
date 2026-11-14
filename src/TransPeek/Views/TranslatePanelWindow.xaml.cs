@@ -172,11 +172,24 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         // slogan, repo URL and build number).
         AppNameText.Text = AppInfo.Name;
         TaglineText.Text = AppInfo.Tagline;
+        RefreshTopBarFontSize();
         FooterBuildText.Text = AppInfo.CiBuildNumber > 0
             ? $"{AppInfo.Version} (build {AppInfo.CiBuildNumber})"
             : AppInfo.Version;
         GithubMarkFooterImage.Source = GitHubMark.Image();
         GithubLink.Click += async (_, _) => await Launcher.LaunchUriAsync(new Uri(AppInfo.RepositoryUrl));
+    }
+
+    /// <summary>Apply the top-bar font size from settings: the app name
+    /// takes the setting, the tagline is always 1 pt smaller (Manh
+    /// 2026-11-14). Called on open and whenever settings are saved
+    /// (App.OnSettingsSaved). The 8 pt floor mirrors mac's slogan floor;
+    /// with the 12 pt slider minimum it never triggers in practice.</summary>
+    public void RefreshTopBarFontSize()
+    {
+        var size = App.Settings.PopupTopBarFontSize;
+        AppNameText.FontSize = size;
+        TaglineText.FontSize = Math.Max(8, size - 1);
     }
 
     // ----- selection flow (App calls this) -----

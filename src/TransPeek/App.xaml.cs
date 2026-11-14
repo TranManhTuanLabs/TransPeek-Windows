@@ -466,6 +466,7 @@ public sealed partial class App : Application
         if (Settings.WatchSelection)
             _selectionMonitor.Start();
         _panel?.RefreshDictionaryBar(Settings.DictionaryLinks, Settings.DictionaryDisplayMode);
+        _panel?.RefreshTopBarFontSize();
         _toast?.Show(AppStrings.Get("App.Toast.SettingsSaved", "Settings saved."));
     }
 }

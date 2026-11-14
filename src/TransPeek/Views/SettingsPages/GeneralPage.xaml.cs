@@ -36,6 +36,8 @@ public sealed partial class GeneralPage : Page
         WatchSelectionToggle.IsOn = s.WatchSelection;
         HoverDelayCombo.SelectedIndex = s.HoverDelayMs == 500 ? 1 : 0;
         AutoHideBox.Value = s.TriggerIconAutoHideSeconds;
+        FontSizeSlider.Value = s.PopupTopBarFontSize;
+        FontSizeValueText.Text = FontSizeLabel(s.PopupTopBarFontSize);
         TranslateHotkeyBox.Text = s.TranslateHotkey;
         OcrHotkeyBox.Text = s.OcrHotkey;
         ManualHotkeyBox.Text = s.ManualHotkey;
@@ -77,6 +79,19 @@ public sealed partial class GeneralPage : Page
         App.Settings.TriggerIconAutoHideSeconds = Math.Max(1, (int)args.NewValue);
         Save();
     }
+
+    // Top-bar font size (Manh 2026-11-14): the slider sets the app-name
+    // size; the tagline follows at 1 pt smaller (applied by the panel).
+    // The label shows both so the -1 rule is visible in Settings.
+    private void OnFontSizeChanged(object sender, Microsoft.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
+    {
+        App.Settings.PopupTopBarFontSize = e.NewValue;
+        FontSizeValueText.Text = FontSizeLabel(e.NewValue);
+        Save();
+    }
+
+    private static string FontSizeLabel(double size)
+        => $"{size:0} pt — app name; tagline {Math.Max(8, size - 1):0} pt";
 
     private void OnTranslateHotkeyLostFocus(object sender, RoutedEventArgs e)
         => TrySaveHotkey(TranslateHotkeyBox, HotkeyErrorText, "Translate",

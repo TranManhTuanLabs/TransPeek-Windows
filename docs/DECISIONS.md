@@ -1345,3 +1345,22 @@ an OS limit.)
   App.Settings, so a slider in Settings -> General plus applying it
   on panel load follows the existing pattern (mac already has a Text
   Size slider 12-24, default 17). Not built yet — only when Manh asks.
+
+## Panel top-bar font size setting (Manh 2026-11-14)
+- Rule (Manh): the tagline (slogan) is always exactly 1 pt smaller
+  than the app-name font. The hardcoded 11 pt tagline read too small
+  next to the 13 pt name, so 12 pt was the interim fix; now it is a
+  setting instead of a magic number.
+- Setting: AppSettings.PopupTopBarFontSize (double, default 13 — the
+  current app-name size, so the look is unchanged). Same setting NAME
+  as mac (popupTopBarFontSize) for cross-platform comparability; mac
+  default is 17 and mac uses a 2 pt gap, Windows uses a 1 pt gap.
+- UI: Settings -> General, Slider 12-24 (mac parity) with a value
+  label "13 pt — app name; tagline 12 pt" so the -1 rule is visible.
+  Saves immediately like every other setting (Save() + SettingsSaved).
+- Apply: TranslatePanelWindow.RefreshTopBarFontSize() sets
+  AppNameText.FontSize = size and TaglineText.FontSize =
+  max(8, size - 1). Called in the panel constructor and from
+  App.OnSettingsSaved, so a change applies live even while the panel
+  is open. The XAML FontSize values (13/12) stay as the design-time
+  fallback matching the default.

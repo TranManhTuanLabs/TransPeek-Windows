@@ -32,6 +32,14 @@ public sealed class AppSettings
     // --- Trigger icon / float panel ---
     /// <summary>Hover delay before the panel opens, in milliseconds (300 or 500).</summary>
     public int HoverDelayMs { get; set; } = 300;
+    /// <summary>Panel top-bar font size in points (the app name). The
+    /// tagline (slogan) is always 1 pt smaller (Manh 2026-11-14 — the
+    /// 11 pt tagline read too small next to the 13 pt name). Mac
+    /// parity: same setting name (popupTopBarFontSize); mac default is
+    /// 17, Windows default is 13 (the Windows panel is smaller), and
+    /// mac uses a 2 pt gap while Windows uses 1 pt. Slider 12-24 in
+    /// Settings -&gt; General.</summary>
+    public double PopupTopBarFontSize { get; set; } = 13;
     /// <summary>How long the trigger icon stays after the selection changes, in seconds.</summary>
     public int TriggerIconAutoHideSeconds { get; set; } = 3;
     /// <summary>Global hotkey that shows the panel for the current selection.
