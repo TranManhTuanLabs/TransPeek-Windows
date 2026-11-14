@@ -976,3 +976,15 @@ as runs #46/#52/#55). Fixed by scaling the title-bar bounds by
 `WindowHelpers.DpiScale` into a RectInt32. (The CS8619 warning in
 TesseractLanguageDataManager is pre-existing and does not fail the
 build.)
+
+## Float icon: mac source + size (Manh, 2026-11-14)
+Mac source: `Sources/UI/TriggerIcon/TriggerIconPanel.swift`
+(https://github.com/TranManhTuanLabs/TransPeek/blob/main/Sources/UI/TriggerIcon/TriggerIconPanel.swift).
+Mac: 32 pt panel, 30 pt circle (inset 1 pt), 0.5 pt border, SF Symbol
+"character.bubble" 14 pt medium (labelColor) — "speaker.wave.2.fill"
+(controlAccentColor) while TTS plays; background controlBackgroundColor,
+border separatorColor. The mac does NOT use text at all. Windows already
+matches the size (32 px window, 30 px circle), so no size change was
+needed. Manh 2026-11-14: keep the letter "A", drop the Chinese character
+(文) — done in TriggerIconWindow.xaml. The full mac icon (SF Symbol
+look) is NOT ported yet — later.
