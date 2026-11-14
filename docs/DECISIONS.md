@@ -1236,3 +1236,20 @@ an OS limit.)
   (ProtectedCursor is the WinUI 3 way; CoreWindow.PointerCursor does
   not reach secondary windows). Set on the grid so it covers the whole
   screen, including the hit-test-invisible hint chip.
+
+## CI #80 RED — two compile errors in the transparency + cursor change (2026-11-14)
+- CS0234 TransparentWindow.cs: `Windows.UI.Colors` does not exist in
+  this project (net8.0-windows10.0.22000.0 + WinAppSDK 1.8). FIX: build
+  the transparent color directly with `Color.FromArgb(0, 0, 0, 0)`
+  (alias `using Color = Windows.UI.Color;`, the Action-Wheel pattern
+  that also avoids the Microsoft.UI vs Windows.UI Colors ambiguity).
+  `Windows.UI.Color` itself resolves fine (CreateColorBrush needs it);
+  only the `Colors` static class does not.
+- CS0122 RegionSelectWindow.xaml.cs: `UIElement.ProtectedCursor` is
+  protected — a plain Grid cannot set it from outside. FIX: new
+  Views/CrosshairGrid.cs, a Grid subclass that sets ProtectedCursor
+  from inside (on Loaded — it cannot be set until the visual tree is
+  loaded, winui-api#112). RegionSelectWindow.xaml now uses
+  `<local:CrosshairGrid x:Name="RootGrid">` instead of a plain Grid.
+- WMC9999 in the same build is a consequence of the two C# errors, not
+  a separate error (same pattern as runs #46/#52/#55/#66/#73/#76/#77).

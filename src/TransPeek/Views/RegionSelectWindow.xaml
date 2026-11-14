@@ -1,7 +1,8 @@
 <Window
     x:Class="TransPeek.Views.RegionSelectWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:TransPeek.Views">
 
     <!-- RootGrid is focusable (IsTabStop) so keyboard input reaches this
          window: v0.1 relied only on a KeyboardAccelerator, but a plain
@@ -33,8 +34,12 @@
          overlay, not the desktop. The display screenshot (captured
          before the overlay appears) is the background instead, so the
          user sees the real desktop, and the region is cropped
-         out of that same screenshot. -->
-    <Grid x:Name="RootGrid" IsTabStop="True">
+         out of that same screenshot.
+         RootGrid is a CrosshairGrid, not a plain Grid: it shows a +
+         cursor while picking a region (Manh 2026-11-14), like Snipping
+         Tool. UIElement.ProtectedCursor is protected, so a plain Grid
+         cannot set it from outside — the subclass sets it from inside. -->
+    <local:CrosshairGrid x:Name="RootGrid" IsTabStop="True">
         <Image x:Name="BackgroundImage" Stretch="Fill" />
         <Canvas x:Name="SelectionCanvas">
             <Rectangle x:Name="SelectionRect" Stroke="White" StrokeThickness="2"
@@ -48,5 +53,5 @@
             <TextBlock x:Uid="RegionSelect.Hint" Foreground="White" FontSize="13"
                        Text="Drag to select the region to OCR — Esc / right-click to exit" />
         </Border>
-    </Grid>
+    </local:CrosshairGrid>
 </Window>

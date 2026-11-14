@@ -44,6 +44,13 @@ using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
 using WinRT.Interop;
+// Alias rather than "using Windows.UI": both Microsoft.UI and Windows.UI
+// declare a Colors class, and importing the whole namespace makes every
+// Colors.X reference ambiguous (Action-Wheel). And Windows.UI.Colors
+// itself does not resolve in this project (net8.0-windows10.0.22000.0 +
+// WinAppSDK 1.8, CS0234 in CI #80) — so the transparent color is built
+// directly with Color.FromArgb instead of Colors.Transparent.
+using Color = Windows.UI.Color;
 
 namespace TransPeek.Interop;
 
@@ -216,7 +223,10 @@ internal static class TransparentWindow
             _dispatcherQueueHelper = new WindowsSystemDispatcherQueueHelper();
             _dispatcherQueueHelper.EnsureWindowsSystemDispatcherQueueController();
             _compositor = new Windows.UI.Composition.Compositor();
-            connectedTarget.SystemBackdrop = _compositor.CreateColorBrush(Windows.UI.Colors.Transparent);
+            // Fully transparent (A=0). Built with FromArgb, not
+            // Colors.Transparent — Windows.UI.Colors does not resolve in
+            // this project (CS0234, CI #80).
+            connectedTarget.SystemBackdrop = _compositor.CreateColorBrush(Color.FromArgb(0, 0, 0, 0));
         }
 
         protected override void OnTargetDisconnected(
