@@ -1424,3 +1424,9 @@ an OS limit.)
   11 system speaker WITH waves, and the waves fill the right side so
   the glyph reads centered in the circle. (E992 stays documented as
   the no-waves variant; E74F is Mute, not this.)
+
+## Settings nav pane width 280 (Manh 2026-11-15, try-out)
+- OpenPaneLength set to 280 (WinUI default is 320) so Manh can try a
+  narrower left pane. Native NavigationView, still no drag resize —
+  this is a fixed width, not a handle. Revert to 320 (remove the
+  attribute) if 280 feels cramped.
