@@ -1569,3 +1569,17 @@ an OS limit.)
   comes right after its slider in XAML, so a ValueChanged firing
   during InitializeComponent still sees a null label and returns
   early (the General-blank bug, 2026-11-15).
+
+## Input speaker inside the input box, like the output speaker (Manh 2026-11-15)
+
+- The input speaker was in the hint row BELOW the input box, so it
+  did not look like the output speaker, which sits inside the output
+  card. Manh (on build 100): "loa ô input chưa giống ô output —
+  nằm luôn bên trong input".
+- Moved SpeakSourceButton into the input cell itself (Grid.Row 1,
+  same cell as SourceTextBox, after it in XAML so it paints on top),
+  anchored bottom-right with a small margin — it overlays the
+  TextBox's bottom-right corner and stays there as the input grows
+  ("luôn bên trong input"). The hint row is now just the hint
+  TextBlock. Same glyph (E767 Volume) as the output speaker; still
+  decor only, TTS not wired yet.

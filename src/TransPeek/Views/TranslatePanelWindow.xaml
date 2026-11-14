@@ -58,27 +58,23 @@
                  AcceptsReturn="False" MaxHeight="120" Margin="0,0,0,4"
                  TextChanged="OnSourceTextChanged" SelectionChanged="OnSourceSelectionChanged"
                  KeyDown="OnSourceKeyDown" SizeChanged="OnSourceTextBoxSizeChanged" />
-        <!-- Hint + source speaker (Manh 2026-11-15, decor first): the
-             speaker sits at the bottom-right of the input area, under
-             the source text — mirroring mac's SourceInputView, where
-             Speak + Copy sit on the right below the text. Same glyph
-             as the float icon's speaker state (E767 Volume), so input
-             and output match. TTS audio is NOT wired yet — the button
-             is decor for now (tooltip says so); speaking comes after
-             the mac side is stable. -->
-        <Grid Grid.Row="2" Margin="0,0,0,8">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <TextBlock x:Uid="Panel.Hint" Text="Enter: translate again • Esc: close • Select text in the panel to look it up in the dictionary"
-                       FontSize="11" Foreground="Gray" VerticalAlignment="Center" TextWrapping="Wrap" />
-            <Button x:Name="SpeakSourceButton" Grid.Column="1" Padding="6,2" Margin="8,0,0,0"
-                    ToolTipService.ToolTip="Listen to source text (coming soon)"
-                    Click="OnSpeakSourceClicked">
-                <FontIcon Glyph="&#xE767;" FontSize="12" />
-            </Button>
-        </Grid>
+        <!-- Source speaker INSIDE the input box (Manh 2026-11-15): it
+             was in the hint row below the input, so it did not look
+             like the output speaker, which sits inside the output
+             card. Now it overlays the input's bottom-right corner —
+             same cell as the TextBox, after it in XAML so it paints on
+             top — and stays there as the input grows ("luôn bên trong
+             input"). Same glyph as the output speaker (E767 Volume).
+             TTS audio is NOT wired yet — decor for now (tooltip says
+             so); speaking comes after the mac side is stable. -->
+        <Button x:Name="SpeakSourceButton" Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                Margin="0,0,6,8" Padding="6,2"
+                ToolTipService.ToolTip="Listen to source text (coming soon)"
+                Click="OnSpeakSourceClicked">
+            <FontIcon Glyph="&#xE767;" FontSize="12" />
+        </Button>
+        <TextBlock x:Uid="Panel.Hint" Grid.Row="2" Text="Enter: translate again • Esc: close • Select text in the panel to look it up in the dictionary"
+                   FontSize="11" Foreground="Gray" TextWrapping="Wrap" Margin="0,0,0,8" />
 
         <!-- Language pickers (Manh 2026-11-15): ABOVE the output, like
              mac's LanguageBarView (input -> language bar -> provider
