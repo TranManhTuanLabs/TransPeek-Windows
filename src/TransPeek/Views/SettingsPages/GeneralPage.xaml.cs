@@ -83,7 +83,7 @@ public sealed partial class GeneralPage : Page
             s => App.Settings.TranslateHotkey = s, () => App.Settings.TranslateHotkey);
 
     private void OnOcrHotkeyLostFocus(object sender, RoutedEventArgs e)
-        => TrySaveHotkey(OcrHotkeyBox, OcrHotkeyErrorText, "OCR",
+        => TrySaveHotkey(OcrHotkeyBox, OcrHotkeyErrorText, "OCR from Screen",
             s => App.Settings.OcrHotkey = s, () => App.Settings.OcrHotkey);
 
     private void OnManualHotkeyLostFocus(object sender, RoutedEventArgs e)
@@ -91,7 +91,7 @@ public sealed partial class GeneralPage : Page
             s => App.Settings.ManualHotkey = s, () => App.Settings.ManualHotkey);
 
     private void OnClipboardOcrHotkeyLostFocus(object sender, RoutedEventArgs e)
-        => TrySaveHotkey(ClipboardOcrHotkeyBox, ClipboardOcrHotkeyErrorText, "Clipboard OCR",
+        => TrySaveHotkey(ClipboardOcrHotkeyBox, ClipboardOcrHotkeyErrorText, "OCR to clipboard",
             s => App.Settings.ClipboardOcrHotkey = s, () => App.Settings.ClipboardOcrHotkey);
 
     private void OnSelectionHotkeyLostFocus(object sender, RoutedEventArgs e)
@@ -162,13 +162,13 @@ public sealed partial class GeneralPage : Page
             TrySaveHotkey(box, HotkeyErrorText, "Translate",
                 s => App.Settings.TranslateHotkey = s, () => App.Settings.TranslateHotkey);
         else if (box == OcrHotkeyBox)
-            TrySaveHotkey(box, OcrHotkeyErrorText, "OCR",
+            TrySaveHotkey(box, OcrHotkeyErrorText, "OCR from Screen",
                 s => App.Settings.OcrHotkey = s, () => App.Settings.OcrHotkey);
         else if (box == ManualHotkeyBox)
             TrySaveHotkey(box, ManualHotkeyErrorText, "Manual Translation",
                 s => App.Settings.ManualHotkey = s, () => App.Settings.ManualHotkey);
         else if (box == ClipboardOcrHotkeyBox)
-            TrySaveHotkey(box, ClipboardOcrHotkeyErrorText, "Clipboard OCR",
+            TrySaveHotkey(box, ClipboardOcrHotkeyErrorText, "OCR to clipboard",
                 s => App.Settings.ClipboardOcrHotkey = s, () => App.Settings.ClipboardOcrHotkey);
         else if (box == SelectionHotkeyBox)
             TrySaveHotkey(box, SelectionHotkeyErrorText, "Selection Translation",
@@ -275,9 +275,9 @@ public sealed partial class GeneralPage : Page
     private static (string Name, Func<string> Get)[] AllHotkeys() =>
     [
         ("Translate", () => App.Settings.TranslateHotkey),
-        ("OCR", () => App.Settings.OcrHotkey),
+        ("OCR from Screen", () => App.Settings.OcrHotkey),
         ("Manual Translation", () => App.Settings.ManualHotkey),
-        ("Clipboard OCR", () => App.Settings.ClipboardOcrHotkey),
+        ("OCR to clipboard", () => App.Settings.ClipboardOcrHotkey),
         ("Selection Translation", () => App.Settings.SelectionHotkey),
         ("Screenshot Copy", () => App.Settings.ScreenshotCopyHotkey),
         ("Scan Barcodes", () => App.Settings.ScanHotkey),

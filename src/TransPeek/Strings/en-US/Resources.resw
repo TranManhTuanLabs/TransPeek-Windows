@@ -22,10 +22,10 @@
     <value>Manual Translation</value>
   </data>
   <data name="Tray.Menu.ScreenshotOcr" xml:space="preserve">
-    <value>Screenshot OCR</value>
+    <value>OCR from Screen</value>
   </data>
   <data name="Tray.Menu.ClipboardOcr" xml:space="preserve">
-    <value>Clipboard OCR</value>
+    <value>OCR to clipboard</value>
   </data>
   <data name="Tray.Menu.SelectionTranslation" xml:space="preserve">
     <value>Selection Translation</value>
@@ -163,13 +163,13 @@
     <value>Hotkey to open the translate panel (e.g. Control+Alt+T)</value>
   </data>
   <data name="Settings.General.OcrHotkey.Header" xml:space="preserve">
-    <value>Hotkey to capture a region for OCR (e.g. Control+Shift+S)</value>
+    <value>Hotkey for OCR from Screen (e.g. Control+Shift+S)</value>
   </data>
   <data name="Settings.General.ManualHotkey.Header" xml:space="preserve">
     <value>Hotkey for Manual Translation (e.g. Control+Alt+M)</value>
   </data>
   <data name="Settings.General.ClipboardOcrHotkey.Header" xml:space="preserve">
-    <value>Hotkey for Clipboard OCR (e.g. Control+Alt+C)</value>
+    <value>Hotkey for OCR to clipboard (e.g. Control+Alt+C)</value>
   </data>
   <data name="Settings.General.SelectionHotkey.Header" xml:space="preserve">
     <value>Hotkey for Selection Translation (e.g. Control+Alt+S)</value>

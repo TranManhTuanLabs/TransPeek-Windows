@@ -29,7 +29,7 @@
                      LostFocus="OnTranslateHotkeyLostFocus" />
             <TextBlock x:Name="HotkeyErrorText" FontSize="12" Foreground="Red" Visibility="Collapsed" />
 
-            <TextBox x:Name="OcrHotkeyBox" x:Uid="Settings.General.OcrHotkey" Header="Hotkey to capture a region for OCR (e.g. Control+Shift+S)"
+            <TextBox x:Name="OcrHotkeyBox" x:Uid="Settings.General.OcrHotkey" Header="Hotkey for OCR from Screen (e.g. Control+Shift+S)"
                      GotFocus="OnHotkeyBoxGotFocus" KeyDown="OnHotkeyBoxKeyDown"
                      LostFocus="OnOcrHotkeyLostFocus" />
             <TextBlock x:Name="OcrHotkeyErrorText" FontSize="12" Foreground="Red" Visibility="Collapsed" />
@@ -40,7 +40,7 @@
                      LostFocus="OnManualHotkeyLostFocus" />
             <TextBlock x:Name="ManualHotkeyErrorText" FontSize="12" Foreground="Red" Visibility="Collapsed" />
 
-            <TextBox x:Name="ClipboardOcrHotkeyBox" x:Uid="Settings.General.ClipboardOcrHotkey" Header="Hotkey for Clipboard OCR (e.g. Control+Alt+C)"
+            <TextBox x:Name="ClipboardOcrHotkeyBox" x:Uid="Settings.General.ClipboardOcrHotkey" Header="Hotkey for OCR to clipboard (e.g. Control+Alt+C)"
                      GotFocus="OnHotkeyBoxGotFocus" KeyDown="OnHotkeyBoxKeyDown"
                      LostFocus="OnClipboardOcrHotkeyLostFocus" />
             <TextBlock x:Name="ClipboardOcrHotkeyErrorText" FontSize="12" Foreground="Red" Visibility="Collapsed" />

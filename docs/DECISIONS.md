@@ -1021,3 +1021,39 @@ look) is NOT ported yet — later.
 "via Google Translate" was inline on the language-picker row. Moved to
 its own line below the pickers (Row 1 is now a vertical StackPanel:
 pickers row + ProviderText under it). No other layout change.
+
+## Exe file icon — queued for the next round (Manh, 2026-11-14)
+Manh wants the published TransPeek.exe to carry the app icon so it is
+easy to find in Explorer/Downloads. Currently the exe has no icon:
+the csproj has no <ApplicationIcon> and the repo has no .ico file —
+the icon only exists as base64 in src/TransPeek/Assets/EmbeddedIcon.cs
+(multi-size ICO 16/32/48/256, converted from the mac TransPeek.png).
+Next round: decode the base64 to Assets/TransPeek.ico and add
+<ApplicationIcon>Assets\TransPeek.ico</ApplicationIcon> to the csproj.
+NOTE: the connector cannot push binary files (.ico) — push the .ico
+via the browser (like DonateCard.png), or push the csproj via the
+connector and the .ico via the browser in one commit.
+
+## Settings pane resize — queued for the next round (Manh, 2026-11-14)
+Manh wants a draggable resize between the left nav pane and the right
+content pane in the Settings window. Windows/WinUI ALLOWS it: the
+NavigationView's left pane width is the settable OpenPaneLength
+(currently unset — default). NavigationView has NO built-in drag
+splitter, so the next round adds a custom thin drag handle at the
+pane's right edge that updates OpenPaneLength while dragging. (The
+Windows 11 Settings app keeps its pane fixed — a design choice, not
+an OS limit.)
+
+## Tray + hotkey renames (Manh, 2026-11-14)
+- "Screenshot OCR" -> "OCR from Screen": it captures a screen region,
+  OCRs it and shows the panel (original + translation).
+- "Clipboard OCR" -> "OCR to clipboard": it captures a screen region,
+  OCRs it and copies the recognised TEXT to the clipboard, panel-less
+  (toast only). Note this is NOT the same as "Screenshot Copy", which
+  copies the captured IMAGE (bitmap) to the clipboard — that name stays.
+- Renamed in both places: tray menu (resw values + fallbacks in
+  TrayIconService) and the hotkey labels (GeneralPage headers in resw +
+  XAML fallbacks, and the display names in TrySaveHotkey/AllHotkeys —
+  the duplicate error now reads "Already used by OCR from Screen.").
+  Internal identifiers (resw keys, settings properties, hotkey ids,
+  log labels) are unchanged.
