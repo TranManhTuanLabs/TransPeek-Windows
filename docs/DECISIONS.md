@@ -1333,3 +1333,15 @@ an OS limit.)
   pane-toggle event to hook). OpenPaneLength is preserved across
   collapse/expand, so the dragged width is not lost when the pane
   comes back.
+
+## Panel tagline font: 11 -> 12 pt (Manh 2026-11-14)
+- The tagline (slogan) at 11 pt read too small next to the 13 pt app
+  name. Manh wants it exactly 1 size smaller than the main font, not
+  2 — so 12 pt. (Mac uses a 2 pt gap, 17/15, but Manh wants 1 pt on
+  Windows.) The other small texts (provider line 12 pt, hint 11 pt,
+  footer 11 pt) are unchanged.
+- Font-size setting (Manh asks, for later): easy to add. The panel
+  fonts live in a few XAML spots + code-behind already reads
+  App.Settings, so a slider in Settings -> General plus applying it
+  on panel load follows the existing pattern (mac already has a Text
+  Size slider 12-24, default 17). Not built yet — only when Manh asks.

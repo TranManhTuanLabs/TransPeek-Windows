@@ -36,7 +36,12 @@
         <StackPanel x:Name="TitleBar" Grid.Row="0" Margin="0,0,0,6"
                     Background="Transparent" HorizontalAlignment="Stretch">
             <TextBlock x:Name="AppNameText" FontWeight="Bold" FontSize="13" HorizontalAlignment="Center" />
-            <TextBlock x:Name="TaglineText" Foreground="Gray" FontSize="11" HorizontalAlignment="Center" />
+            <!-- Tagline (slogan): 12 pt — exactly 1 size smaller than the
+                 app name (13 pt), not 2 (Manh 2026-11-14). At 11 pt it
+                 read too small next to the name; the 1 pt gap keeps the
+                 hierarchy without the sizes drifting far apart. (Mac
+                 uses a 2 pt gap — 17/15 — but Manh wants 1 pt here.) -->
+            <TextBlock x:Name="TaglineText" Foreground="Gray" FontSize="12" HorizontalAlignment="Center" />
         </StackPanel>
 
         <!-- Header: a BLANK line on top, then the pickers, then the
