@@ -1,8 +1,7 @@
 <Window
     x:Class="TransPeek.Views.SettingsWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:TransPeek.Views">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <Grid x:Name="RootGrid">
         <NavigationView x:Name="NavView" IsSettingsVisible="False" IsBackButtonVisible="Collapsed"
@@ -47,22 +46,5 @@
         </NavigationView.MenuItems>
         <Frame x:Name="ContentFrame" Margin="16" />
         </NavigationView>
-        <!-- Drag handle on the pane's right edge (Manh 2026-11-14):
-             NavigationView exposes OpenPaneLength but has no built-in
-             grip, so this 8 px strip sits centered on the pane boundary
-             and updates OpenPaneLength as it is dragged (see code-behind).
-             Positioned by Margin.Left = OpenPaneLength - 4. The 2 px
-             inner strip is the visible mark; the 8 px hit area plus the
-             horizontal-resize cursor make it easy to grab. -->
-        <local:ResizeHandle x:Name="PaneResizeHandle" Width="8"
-                            HorizontalAlignment="Left" VerticalAlignment="Stretch"
-                            Background="Transparent"
-                            PointerPressed="OnPaneResizePressed"
-                            PointerMoved="OnPaneResizeMoved"
-                            PointerReleased="OnPaneResizeReleased"
-                            PointerCanceled="OnPaneResizeReleased">
-            <Border Width="2" HorizontalAlignment="Center" VerticalAlignment="Stretch"
-                    Background="#33000000" />
-        </local:ResizeHandle>
     </Grid>
 </Window>

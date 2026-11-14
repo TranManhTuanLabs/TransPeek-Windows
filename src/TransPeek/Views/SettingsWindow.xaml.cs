@@ -12,7 +12,6 @@
 
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Input;
 using TransPeek.Interop;
 using TransPeek.Views.SettingsPages;
 using WinRT.Interop;
@@ -27,14 +26,6 @@ public sealed partial class SettingsWindow : Window
 
     private bool _positioned;
 
-    // Pane resize drag (Manh 2026-11-14): the overlay strip drags
-    // NavigationView.OpenPaneLength. Start X + start length are captured
-    // on press so the pane follows the pointer 1:1 from where the drag
-    // began, instead of jumping to the pointer.
-    private bool _paneResizing;
-    private double _paneResizeStartX;
-    private double _paneResizeStartLength;
-
     public SettingsWindow()
     {
         InitializeComponent();
@@ -47,13 +38,6 @@ public sealed partial class SettingsWindow : Window
             {
                 NavView.SelectedItem = NavView.MenuItems[0];
                 SelectPage("General");
-                // Watch the pane toggle: when the user collapses the
-                // pane to icons, the handle must hide too (see
-                // UpdatePaneResizeHandle).
-                NavView.RegisterPropertyChangedCallback(
-                    NavigationView.IsPaneOpenProperty,
-                    (_, _) => UpdatePaneResizeHandle());
-                UpdatePaneResizeHandle();
             };
         }
     }
@@ -96,56 +80,6 @@ public sealed partial class SettingsWindow : Window
     {
         if (args.SelectedItem is NavigationViewItem item && item.Tag is string tag)
             SelectPage(tag);
-    }
-
-    private void OnPaneResizePressed(object sender, PointerRoutedEventArgs e)
-    {
-        _paneResizing = true;
-        _paneResizeStartX = e.GetCurrentPoint(RootGrid).Position.X;
-        _paneResizeStartLength = NavView.OpenPaneLength;
-        PaneResizeHandle.CapturePointer(e.Pointer);
-        e.Handled = true;
-    }
-
-    private void OnPaneResizeMoved(object sender, PointerRoutedEventArgs e)
-    {
-        if (!_paneResizing)
-            return;
-        var x = e.GetCurrentPoint(RootGrid).Position.X;
-        // Clamp: keep the nav items readable, leave room for content.
-        var length = Math.Clamp(_paneResizeStartLength + (x - _paneResizeStartX), 180, 480);
-        NavView.OpenPaneLength = length;
-        UpdatePaneResizeHandle();
-        e.Handled = true;
-    }
-
-    private void OnPaneResizeReleased(object sender, PointerRoutedEventArgs e)
-    {
-        if (!_paneResizing)
-            return;
-        _paneResizing = false;
-        PaneResizeHandle.ReleasePointerCapture(e.Pointer);
-    }
-
-    private void UpdatePaneResizeHandle()
-    {
-        // The handle only makes sense while the pane is open. When the
-        // user collapses the pane with the built-in toggle, the pane
-        // shrinks to icons-only (CompactPaneLength, 48 px) — but the
-        // handle is positioned by OpenPaneLength, so if it stays visible
-        // it floats in the content as a stray vertical stripe at the old
-        // dragged position (Manh 2026-11-14, 0.1.3.85 test). Hide it
-        // while collapsed; expanding the pane brings it back at the
-        // remembered OpenPaneLength (which is preserved across
-        // collapse/expand, so the dragged width is not lost).
-        if (!NavView.IsPaneOpen)
-        {
-            PaneResizeHandle.Visibility = Visibility.Collapsed;
-            return;
-        }
-        PaneResizeHandle.Visibility = Visibility.Visible;
-        // Center the 8 px handle on the pane's right edge.
-        PaneResizeHandle.Margin = new Thickness(NavView.OpenPaneLength - 4, 0, 0, 0);
     }
 
     private void SelectPage(string tag)

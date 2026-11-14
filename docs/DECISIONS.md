@@ -1393,3 +1393,21 @@ an OS limit.)
   (same save-immediately pattern, same value label). The panel still
   applies the size via RefreshTopBarFontSize() — only the buttons are
   gone, the setting and the apply logic stay.
+
+## Settings pane resize: custom handle REMOVED, native NavigationView only (Manh 2026-11-14)
+- The custom ResizeHandle (drag strip + ResizeHandle.cs + drag logic
+  in SettingsWindow) caused repeated trouble: a stray vertical stripe
+  when the pane collapsed (0.1.3.85), then in 0.1.3.89 the General tab
+  showed empty and resize stopped working. Manh: use native, do not
+  custom-build it.
+- NavigationView has NO built-in drag-to-resize (Microsoft Learn:
+  OpenPaneLength is a property set in code; the pane is toggled with
+  the built-in button). So "native" means: fixed pane width (default
+  OpenPaneLength 320), expand/collapse via the built-in toggle only.
+  The whole custom handle is gone — XAML element, drag handlers,
+  UpdatePaneResizeHandle, the property-changed callback, and
+  ResizeHandle.cs itself (deleted).
+- General tab: in 0.1.3.90 the Font Size slider had already moved out
+  of GeneralPage into AppearancePage, so General is back to its plain
+  pre-slider content. If General is still empty in the new build, the
+  cause is elsewhere and needs a fresh look, not another custom fix.
