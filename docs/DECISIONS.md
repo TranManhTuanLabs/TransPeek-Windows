@@ -1411,3 +1411,16 @@ an OS limit.)
   of GeneralPage into AppearancePage, so General is back to its plain
   pre-slider content. If General is still empty in the new build, the
   cause is elsewhere and needs a fresh look, not another custom fix.
+
+## Speaker icon: E992 (no waves) -> E767 (with waves) for balance (Manh 2026-11-14)
+- The float icon's speaker state used E992 "Volume0" (plain cone, no
+  waves — Manh's first pick). In the 30 px circle it renders off-center:
+  the cone sits left with empty space on the right where the waves
+  would be, so it looks unbalanced next to the centered "A". The
+  FontIcon itself IS centered (same Grid, same Center alignment as the
+  "A"); the imbalance is in the glyph's own side bearings, not the
+  layout — shifting it by hand would be guesswork.
+- Manh prefers the waves in for balance: E767 "Volume" is the Windows
+  11 system speaker WITH waves, and the waves fill the right side so
+  the glyph reads centered in the circle. (E992 stays documented as
+  the no-waves variant; E74F is Mute, not this.)
