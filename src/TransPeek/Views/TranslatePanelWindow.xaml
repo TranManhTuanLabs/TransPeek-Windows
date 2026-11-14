@@ -10,7 +10,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -57,7 +57,7 @@
         <TextBox x:Name="SourceTextBox" Grid.Row="1" TextWrapping="Wrap"
                  AcceptsReturn="False" MaxHeight="120" Margin="0,0,0,4"
                  TextChanged="OnSourceTextChanged" SelectionChanged="OnSourceSelectionChanged"
-                 KeyDown="OnSourceKeyDown" />
+                 KeyDown="OnSourceKeyDown" SizeChanged="OnSourceTextBoxSizeChanged" />
         <!-- Hint + source speaker (Manh 2026-11-15, decor first): the
              speaker sits at the bottom-right of the input area, under
              the source text — mirroring mac's SourceInputView, where
@@ -134,7 +134,7 @@
                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Margin="8,0" />
                 <TextBox x:Name="TranslationTextBox" Grid.Row="2" IsReadOnly="True" Margin="8,6,8,0"
                          TextWrapping="Wrap" AcceptsReturn="True" BorderThickness="0"
-                         Background="Transparent" FontSize="14"
+                         Background="Transparent" FontSize="14" MaxHeight="260"
                          SelectionChanged="OnTranslationSelectionChanged" />
                 <StackPanel x:Name="ProviderCardSpeakerRow" Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="8,2,8,6">
                     <Button x:Name="SpeakTranslationButton" Padding="6,2"

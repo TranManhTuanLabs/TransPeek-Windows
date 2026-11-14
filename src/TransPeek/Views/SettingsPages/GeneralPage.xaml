@@ -25,13 +25,18 @@
                  NOT a separate tab — like mac's Sections in
                  GeneralSettingsView (Section "Appearance" with Text
                  Size, Section "Popup Panel" with AppName & Slogan Font
-                 Size). Text Size > Popup Panel > App name & Slogan
-                 Font Size. The slider sets the app-name size; the
-                 tagline is always 1 pt smaller (applied by the panel).
-                 Mac parity: same slider 12-24 (mac default 17,
-                 Windows default 13). -->
+                 Size). The main Text Size slider (the panel content
+                 font size — source + translation text, mac popupFontSize,
+                 default 14) was missing, so "Text Size" was only a
+                 header with no slider under it; it is the slider itself
+                 now. The slider sets the content size; the tagline is
+                 always 1 pt smaller than the app name (applied by the
+                 panel). Mac parity: same sliders 12-24. -->
             <TextBlock x:Uid="Settings.General.Appearance" Text="Appearance" FontSize="16" FontWeight="SemiBold" Margin="0,8,0,0" />
-            <TextBlock x:Uid="Settings.General.TextSize" Text="Text Size" FontWeight="SemiBold" Margin="0,8,0,0" />
+            <Slider x:Name="MainFontSizeSlider" x:Uid="Settings.General.MainFontSize" Header="Text Size"
+                    Minimum="12" Maximum="24" StepFrequency="1"
+                    ValueChanged="OnMainFontSizeChanged" />
+            <TextBlock x:Name="MainFontSizeValueText" FontSize="12" Foreground="Gray" />
             <TextBlock x:Uid="Settings.General.PopupPanel" Text="Popup Panel" FontWeight="SemiBold" Margin="0,8,0,0" />
             <Slider x:Name="FontSizeSlider" x:Uid="Settings.General.FontSize" Header="App name &amp; Slogan Font Size"
                     Minimum="12" Maximum="24" StepFrequency="1"

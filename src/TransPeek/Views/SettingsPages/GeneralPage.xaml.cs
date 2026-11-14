@@ -36,6 +36,8 @@ public sealed partial class GeneralPage : Page
         WatchSelectionToggle.IsOn = s.WatchSelection;
         HoverDelayCombo.SelectedIndex = s.HoverDelayMs == 500 ? 1 : 0;
         AutoHideBox.Value = s.TriggerIconAutoHideSeconds;
+        MainFontSizeSlider.Value = s.PopupFontSize;
+        MainFontSizeValueText.Text = MainFontSizeLabel(s.PopupFontSize);
         FontSizeSlider.Value = s.PopupTopBarFontSize;
         FontSizeValueText.Text = FontSizeLabel(s.PopupTopBarFontSize);
         TranslateHotkeyBox.Text = s.TranslateHotkey;
@@ -79,6 +81,26 @@ public sealed partial class GeneralPage : Page
         App.Settings.TriggerIconAutoHideSeconds = Math.Max(1, (int)args.NewValue);
         Save();
     }
+
+    // Main content font size (Manh 2026-11-15): the panel's source +
+    // translation text size (mac popupFontSize, default 14). Like mac,
+    // the slider drags the main size and the label shows the current
+    // size; the top-bar slogan stays 1 pt below the app name (see
+    // FontSizeLabel). Same guard as OnFontSizeChanged — ValueChanged
+    // fires during InitializeComponent (Minimum coerces Value 0 -> 12)
+    // before the value label exists, so skip while loading or while
+    // it is null.
+    private void OnMainFontSizeChanged(object sender, Microsoft.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
+    {
+        if (_loading || MainFontSizeValueText is null)
+            return;
+        App.Settings.PopupFontSize = e.NewValue;
+        MainFontSizeValueText.Text = MainFontSizeLabel(e.NewValue);
+        Save();
+    }
+
+    private static string MainFontSizeLabel(double size)
+        => $"{size:0} pt";
 
     // Top-bar font size (Manh 2026-11-15): the slider sets the app-name
     // size; the tagline follows at 1 pt smaller (applied by the panel).

@@ -177,6 +177,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         AppNameText.Text = AppInfo.Name;
         TaglineText.Text = AppInfo.Tagline;
         RefreshTopBarFontSize();
+        RefreshPopupFontSize();
         FooterBuildText.Text = AppInfo.CiBuildNumber > 0
             ? $"{AppInfo.Version} (build {AppInfo.CiBuildNumber})"
             : AppInfo.Version;
@@ -194,6 +195,17 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         var size = App.Settings.PopupTopBarFontSize;
         AppNameText.FontSize = size;
         TaglineText.FontSize = Math.Max(8, size - 1);
+    }
+
+    /// <summary>Apply the main content font size from settings (the
+    /// source + translation text, mac popupFontSize, default 14).
+    /// Called on open and whenever settings are saved
+    /// (App.OnSettingsSaved), like RefreshTopBarFontSize.</summary>
+    public void RefreshPopupFontSize()
+    {
+        var size = App.Settings.PopupFontSize;
+        SourceTextBox.FontSize = size;
+        TranslationTextBox.FontSize = size;
     }
 
     // ----- selection flow (App calls this) -----
@@ -238,6 +250,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         _visible = true;
         _clickOutside.Start();
         _escapeKey.Start();
+        RequestResizeToFit();
         SourceTextBox.Focus(FocusState.Keyboard);
     }
 
@@ -265,6 +278,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         ProviderStatusText.Text = "";
         SetProviderCardExpanded(true);
         UpdateCopyButtons();
+        RequestResizeToFit();
     }
 
     // ----- internals -----
@@ -317,6 +331,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         ProviderCardBorder.VerticalAlignment = expanded
             ? VerticalAlignment.Stretch
             : VerticalAlignment.Top;
+        RequestResizeToFit();
     }
 
     // ----- speaker buttons (decor first, Manh 2026-11-15) -----
@@ -352,6 +367,51 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         _clickOutside.Start();
         _escapeKey.Start();
         UpdateCopyButtons();
+        RequestResizeToFit();
+    }
+
+    /// <summary>Grow/shrink the window to fit its content, like mac's
+    /// PopupPanelSizing.frameToFit (Manh 2026-11-15 — the output looked
+    /// small in the fixed 480 px window). All rows are Auto and the
+    /// translation box is capped by MaxHeight, so the desired height is
+    /// bounded; beyond the screen the text scrolls instead of the
+    /// window growing off-screen. The top stays where ShowPanelNear /
+    /// ShowInputMode put it; if the bottom would run off-screen the
+    /// whole window shifts up. Deferred via the dispatcher so layout
+    /// has finished before measuring. Only resizes when the height
+    /// actually changed, so a resize never re-triggers itself.</summary>
+    private void RequestResizeToFit()
+    {
+        DispatcherQueue.TryEnqueue(ResizeToFitContent);
+    }
+
+    private void ResizeToFitContent()
+    {
+        if (!_visible || Content is not FrameworkElement root)
+            return;
+        root.Measure(new Windows.Foundation.Size(PanelWidth, double.PositiveInfinity));
+        var desired = root.DesiredSize.Height;
+        if (desired <= 0 || double.IsNaN(desired) || double.IsInfinity(desired))
+            return;
+        var pos = AppWindow.Position;
+        var work = WindowHelpers.DisplayWorkArea(pos.X, pos.Y);
+        var maxHeight = Math.Max(260, work.Height - 16);
+        var height = (int)Math.Clamp(Math.Ceiling(desired), 260, maxHeight);
+        var y = pos.Y;
+        if (y + height > work.Y + work.Height)
+            y = Math.Max(work.Y, work.Y + work.Height - height);
+        if (AppWindow.Size.Height != height || pos.Y != y)
+            WindowHelpers.MoveAndResize(this, pos.X, y, PanelWidth, height);
+    }
+
+    /// <summary>The input box grows as the user types (up to MaxHeight):
+    /// grow the window with it, like the input side (Manh 2026-11-15).
+    /// The box width is fixed and its height is content-driven, so a
+    /// window resize never changes it back — no loop.</summary>
+    private void OnSourceTextBoxSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (e.NewSize.Height != e.PreviousSize.Height)
+            RequestResizeToFit();
     }
 
     /// <summary>Declare the title bar a NATIVE caption (drag) region

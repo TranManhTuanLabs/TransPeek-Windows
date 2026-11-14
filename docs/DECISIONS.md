@@ -1509,3 +1509,47 @@ an OS limit.)
   text scrolling when long. Collapsing the card shrinks it to its
   header (border stops stretching) but the window does not shrink
   yet — that comes with the resize work if Manh wants it.
+
+## Main Text Size slider + top-bar default 17/16 (Manh 2026-11-15)
+
+- The main "Text Size" slider was MISSING: under Appearance > Text
+  Size there was only a header with no slider under it (the only
+  slider was App name & Slogan in the Popup Panel subsection). Added
+  it as the slider itself (mac LabeledContent style): a Slider with
+  Header "Text Size" + a value label showing the current size.
+- It controls the panel CONTENT font size (source + translation
+  text) — a new setting PopupFontSize (double, default 14, mac
+  popupFontSize, same name, same default 14, slider 12-24). Applied
+  by TranslatePanelWindow.RefreshPopupFontSize(), called on open and
+  from App.OnSettingsSaved, next to RefreshTopBarFontSize(). Like mac,
+  dragging it changes the main size and the label shows the current
+  size ("14 pt").
+- App name & Slogan Font Size default changed 13 -> 17 (Manh: "set
+  mặc định 17, slogan 16"). The 1 pt Windows gap stays (tagline 16),
+  mac uses a 2 pt gap (17/15). The label shows both ("17 pt — app
+  name; tagline 16 pt") so the -1 rule is visible in Settings.
+  Existing installs that already saved 13 keep 13 until the slider
+  is dragged once (a saved value beats the new default).
+
+## Window resize-to-fit like mac frameToFit (Manh 2026-11-15)
+
+- The output looked small in the fixed 440x480 window: the card sat
+  in a `*` row and the text just scrolled in whatever space was
+  left. Now the window grows/shrinks to fit its content, like mac's
+  PopupPanelSizing.frameToFit and like the input box grows as you
+  type (MaxHeight 120).
+- All outer Grid rows are Auto now (the output card row was `*`);
+  the translation box is capped by MaxHeight 260, so a long result
+  scrolls instead of growing the window without bound.
+- TranslatePanelWindow.ResizeToFitContent() measures the root Grid
+  with infinite height, clamps the result to [260, work-area height
+  - 16], and shifts the window up if the bottom would run
+  off-screen. RequestResizeToFit() defers it via the dispatcher so
+  layout has finished before measuring. Called from ShowPanelNear,
+  ShowInputMode, ShowResult, SetProviderCardExpanded, and when the
+  source box changes height (OnSourceTextBoxSizeChanged) — the box
+  width is fixed and its height is content-driven, so a window
+  resize never changes it back (no loop). It only resizes when the
+  height actually changed, so a resize never re-triggers itself.
+  The initial size stays 480 px (PanelHeight) until the deferred
+  resize runs right after showing.

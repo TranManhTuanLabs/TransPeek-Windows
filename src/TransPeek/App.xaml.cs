@@ -480,6 +480,7 @@ public sealed partial class App : Application
             _selectionMonitor.Start();
         _panel?.RefreshDictionaryBar(Settings.DictionaryLinks, Settings.DictionaryDisplayMode);
         _panel?.RefreshTopBarFontSize();
+        _panel?.RefreshPopupFontSize();
         _toast?.Show(AppStrings.Get("App.Toast.SettingsSaved", "Settings saved."));
     }
 }

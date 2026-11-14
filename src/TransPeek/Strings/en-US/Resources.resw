@@ -150,7 +150,7 @@
   <data name="Settings.General.Appearance.Text" xml:space="preserve">
     <value>Appearance</value>
   </data>
-  <data name="Settings.General.TextSize.Text" xml:space="preserve">
+  <data name="Settings.General.MainFontSize.Header" xml:space="preserve">
     <value>Text Size</value>
   </data>
   <data name="Settings.General.PopupPanel.Text" xml:space="preserve">
