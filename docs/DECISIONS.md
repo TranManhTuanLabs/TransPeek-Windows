@@ -1465,3 +1465,20 @@ an OS limit.)
   no [build-app] marker, and run #95 (the Appearance-in-General
   commit) was cancelled by them — so no pre-release existed for the
   Appearance-in-General change until this commit's build.
+
+## General tab blank since the font slider — ValueChanged during InitializeComponent (Manh 2026-11-15)
+- Symptom: the General tab showed nothing at all, starting when the
+  font slider was added (build #89). Removing the resize handle did
+  NOT bring it back — the handle was a red herring.
+- Cause: Slider.ValueChanged fires during InitializeComponent:
+  setting Minimum=12 coerces the default Value 0 up to 12, and the
+  handler touched FontSizeValueText, which does not exist yet (it
+  comes after the Slider in XAML). The NullReferenceException escaped
+  the page constructor, so the frame navigation failed and General
+  showed blank. Other controls are safe: their handlers only touch
+  themselves or App.Settings, never a later-named control.
+- Fix: OnFontSizeChanged returns early while _loading or while
+  FontSizeValueText is null. OnNavigatedTo sets the value and the
+  label directly, so nothing is lost. Rule for new controls: a
+  ValueChanged/SelectionChanged handler must never touch another
+  named control that comes later in the XAML — guard it or reorder.

@@ -83,8 +83,20 @@ public sealed partial class GeneralPage : Page
     // Top-bar font size (Manh 2026-11-15): the slider sets the app-name
     // size; the tagline follows at 1 pt smaller (applied by the panel).
     // The label shows both so the -1 rule is visible in Settings.
+    //
+    // Guard (Manh 2026-11-15, General tab went blank): ValueChanged
+    // fires during InitializeComponent — setting Minimum=12 coerces the
+    // default Value 0 up to 12 — while FontSizeValueText does not exist
+    // yet (it comes after the Slider in XAML). Touching it threw a
+    // NullReferenceException out of the page constructor, so the frame
+    // navigation failed and General showed nothing at all. That is why
+    // the tab went blank as soon as the font slider was added, and why
+    // removing the resize handle did not bring it back. Skip while
+    // loading too: OnNavigatedTo sets the value and the label directly.
     private void OnFontSizeChanged(object sender, Microsoft.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
     {
+        if (_loading || FontSizeValueText is null)
+            return;
         App.Settings.PopupTopBarFontSize = e.NewValue;
         FontSizeValueText.Text = FontSizeLabel(e.NewValue);
         Save();
