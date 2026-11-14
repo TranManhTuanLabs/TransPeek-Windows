@@ -105,9 +105,6 @@
   <data name="Panel.CaptureOcr.Content" xml:space="preserve">
     <value>Capture OCR (Ctrl+Shift+S)</value>
   </data>
-  <data name="RegionSelect.Hint.Text" xml:space="preserve">
-    <value>Drag to select the region to OCR — Esc / right-click to exit</value>
-  </data>
   <data name="Ocr.CaptureFailed" xml:space="preserve">
     <value>Could not capture the screen: {0}</value>
   </data>

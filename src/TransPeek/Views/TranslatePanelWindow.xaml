@@ -18,20 +18,23 @@
 
         <!-- Title: app name centered, slogan on the line below (Manh
              2026-11-12). The whole title bar is the drag handle: the
-             panel has no title bar of its own, so PointerPressed starts
-             a manual drag (see OnTitleBarPointerPressed) — press-and-hold
-             then move, like any Windows title bar. Texts come from
+             panel has no title bar of its own, so the row is declared a
+             NATIVE caption region (see UpdateCaptionRegion) — the OS
+             moves the window itself, left button only, smooth, exactly
+             like the Settings window's title bar. The manual
+             AppWindow.Move drag was jerky and fired for right/middle
+             buttons too; the system move (SendMessage WM_NCLBUTTONDOWN)
+             never engaged for this no-activate window. Texts come from
              AppInfo in code-behind. Background="Transparent"
              (0.1.3.54): without a background the StackPanel is only
              hit-testable on the text glyphs, so only a press exactly on
              the name started a drag — the empty area beside/below the
              text received nothing. A transparent brush makes the whole
-             row (full width) the handle. -->
+             row (full width) the handle. The row holds only text (the
+             gear button is in the header row below it), so the whole
+             row is the drag region. -->
         <StackPanel x:Name="TitleBar" Grid.Row="0" Margin="0,0,0,6"
-                    Background="Transparent" HorizontalAlignment="Stretch"
-                    PointerPressed="OnTitleBarPointerPressed"
-                    PointerMoved="OnTitleBarPointerMoved"
-                    PointerReleased="OnTitleBarPointerReleased">
+                    Background="Transparent" HorizontalAlignment="Stretch">
             <TextBlock x:Name="AppNameText" FontWeight="Bold" FontSize="13" HorizontalAlignment="Center" />
             <TextBlock x:Name="TaglineText" Foreground="Gray" FontSize="11" HorizontalAlignment="Center" />
         </StackPanel>

@@ -923,3 +923,46 @@ the crashed #59 instance (see the note at the top of the Test 64
 section). If #65's tray still does not respond after a clean launch,
 send crash.log: #63/#64 log "TrayMenu: Menu opening" on right-click,
 so the log tells whether the menu opens at all.
+
+## Test 65 feedback (Manh, 2026-11-14) — round 3
+
+Items 2, 3, 4, 5 (gear hides panel, Settings icons, About slogan,
+hotkey recording) are DONE. Three things left:
+
+1. **Panel drag: almost right, but jerky and fires for right/middle
+   buttons too.** The manual AppWindow.Move drag is a hack — Manh is
+   right, it must behave like the Settings window's title bar (native
+   OS drag). FIX: the title bar is now a NATIVE caption region via
+   InputNonClientPointerSource.SetRegionRects(NonClientRegionKind.Caption)
+   — the OS moves the window itself: left button only, smooth, exactly
+   like a real title bar. (The system move via SendMessage
+   WM_NCLBUTTONDOWN never engaged for this no-activate window, and the
+   manual move was jerky.) The title bar holds only text (the gear is
+   in the header row below it), so the whole row is the region; it is
+   recomputed on Loaded + TitleBar.SizeChanged. The manual drag code
+   and WindowHelpers.BeginDrag are now unused (BeginDrag stays as a
+   helper; it documents the failed approach).
+2. **The "esc" icon still shows in the panel and in the OCR capture
+   screen; hovering it exits the capture.** Two causes, both fixed:
+   (a) the floating hint chip in the capture screen ("Drag to select
+   the region to OCR — Esc / right-click to exit") sat top-center
+   where the mouse works — REMOVED. Esc on the keyboard, right-click
+   and Alt+F4 already cover the exit. (b) the trigger icon still
+   appeared over our own windows: the UIA ProcessId exclusion in
+   SelectionMonitor misses it when the focused element reports pid 0
+   (fail open). ADDED a second guard in App.OnSelectionChanged: the
+   icon is not shown when the selection point lies inside one of our
+   visible windows (panel, Settings, trigger icon, capture overlay —
+   App tracks the RegionSelectWindow in a field while it is open).
+3. **Tray: left-click works, right-click menu opens but NO item does
+   anything.** ROOT CAUSE (found by web search, H.NotifyIcon docs):
+   the default ContextMenuMode builds a Win32 PopupMenu from the
+   MenuFlyout and calls the items' COMMANDS — a Click handler is never
+   invoked. Our items only had Click, so the menu rendered but every
+   click went nowhere (and no "TrayMenu: Clicked" line ever appeared,
+   which is why the log was empty). FIX: each MenuFlyoutItem now
+   carries a RelayCommand (the same defer-to-next-dispatcher-tick
+   pattern as before, so showing a window while the menu dismisses is
+   still safe). The left-click already worked because
+   LeftClickCommand is a Command too. The Opening log stays as a
+   diagnostic. (SecondWindow mode was rejected — it is still preview.)

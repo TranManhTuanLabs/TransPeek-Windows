@@ -38,6 +38,7 @@ public sealed partial class App : Application
     private GlobalHotkeyService? _hotkeys;
     private TriggerIconWindow? _triggerIcon;
     private TranslatePanelWindow? _panel;
+    private RegionSelectWindow? _regionSelectWindow;
     private ToastWindow? _toast;
     private SettingsWindow? _settingsWindow;
     private OcrFlowService? _ocrFlow;
@@ -182,8 +183,33 @@ public sealed partial class App : Application
         // WRONG queue — it must be the one captured in OnLaunched).
         _uiQueue.TryEnqueue(() =>
         {
+            // Never summon the icon over our own windows (0.1.3.65 test):
+            // selecting text inside the translate panel still showed the
+            // icon — the UIA ProcessId exclusion in SelectionMonitor
+            // misses it when the focused element reports pid 0 (fail
+            // open). The same guard keeps the icon out of the fullscreen
+            // capture overlay, where it sat under the mouse and broke the
+            // region drag. AppWindow rects are physical pixels, same as
+            // the UIA point.
+            if (IsPointInsideOwnWindow(point))
+                return;
             _triggerIcon?.ShowAt(point.X, point.Y);
         });
+    }
+
+    private bool IsPointInsideOwnWindow((int X, int Y) point)
+    {
+        foreach (var window in new Window?[] { _panel, _settingsWindow, _triggerIcon, _regionSelectWindow })
+        {
+            if (window is null || !window.AppWindow.IsVisible)
+                continue;
+            var pos = window.AppWindow.Position;
+            var size = window.AppWindow.Size;
+            if (point.X >= pos.X && point.X < pos.X + size.Width &&
+                point.Y >= pos.Y && point.Y < pos.Y + size.Height)
+                return true;
+        }
+        return false;
     }
 
     private void OnTriggerIconOpenRequested()
@@ -300,8 +326,20 @@ public sealed partial class App : Application
         var window = new RegionSelectWindow();
         if (screenshot is not null)
             window.SetBackgroundImage(screenshot);
-        var region = await window.SelectRegionAsync();
-        return new RegionSelection(region, screenshot, bounds);
+        // Track the overlay while it is open so the trigger icon stays
+        // out of it (see IsPointInsideOwnWindow).
+        _regionSelectWindow = window;
+        RegionSelection selection;
+        try
+        {
+            var region = await window.SelectRegionAsync();
+            selection = new RegionSelection(region, screenshot, bounds);
+        }
+        finally
+        {
+            _regionSelectWindow = null;
+        }
+        return selection;
     }
 
     /// <summary>Quit and relaunch the app (recovery when the app

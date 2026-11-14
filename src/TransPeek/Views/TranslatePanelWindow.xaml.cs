@@ -75,6 +75,11 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
             {
                 WindowHelpers.MakeBorderlessTopmost(this);
                 WindowHelpers.MakeToolWindow(this);
+                // Native drag region (see UpdateCaptionRegion): set once
+                // the layout is known, and again whenever the title bar
+                // resizes (font size change).
+                UpdateCaptionRegion();
+                TitleBar.SizeChanged += (_, _) => UpdateCaptionRegion();
             };
             // A click into the panel activates it (see ActivateWindow):
             // until then the NOACTIVATE window never receives keyboard
@@ -277,51 +282,27 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         UpdateCopyButtons();
     }
 
-    // Manual drag state: pointer position (effective pixels) and window
-    // position (physical pixels) at the moment the drag started.
-    private Windows.Foundation.Point _dragStart;
-    private Windows.Graphics.PointInt32 _dragWindowStart;
-    private bool _dragging;
-
-    private void OnTitleBarPointerPressed(object sender, PointerRoutedEventArgs e)
+    /// <summary>Declare the title bar a NATIVE caption (drag) region
+    /// (0.1.3.65 test): the OS moves the window itself — left button
+    /// only, smooth, exactly like the Settings window's title bar. The
+    /// manual AppWindow.Move drag was jerky and fired for right/middle
+    /// buttons too; the system move (SendMessage WM_NCLBUTTONDOWN) never
+    /// engaged for this no-activate window. InputNonClientPointerSource
+    /// is the WinUI 3 native way to declare a drag region on a
+    /// borderless window. The title bar holds only text (the gear button
+    /// is in the header row below it), so the whole row is the region.
+    /// Recomputed when the row's size changes (font size) — the region
+    /// is in window coordinates (effective pixels).</summary>
+    private void UpdateCaptionRegion()
     {
-        // Manual drag (0.1.3.64 test): press-and-hold the top bar, move,
-        // release to stop — exactly like a normal window title bar. The
-        // system move (SendMessage WM_NCLBUTTONDOWN, both the 4px-threshold
-        // version and the press version) did NOT do this: the panel only
-        // started following the mouse AFTER the click was released — the
-        // old comment blamed pointer capture, but the press version had
-        // no capture and still behaved the same, so the system move is
-        // simply unreliable for this no-activate window. Moving the window
-        // ourselves (AppWindow.Move by the pointer delta) is deterministic:
-        // it follows the mouse only while the button is held. A plain
-        // click (no move) generates no Moved events, so the window stays
-        // put. CapturePointer keeps Moved firing even when the pointer
-        // leaves the title bar mid-drag.
-        _dragStart = e.GetCurrentPoint(TitleBar).Position;
-        _dragWindowStart = AppWindow.Position;
-        _dragging = true;
-        TitleBar.CapturePointer(e.Pointer);
-    }
-
-    private void OnTitleBarPointerMoved(object sender, PointerRoutedEventArgs e)
-    {
-        if (!_dragging)
+        if (TitleBar.ActualWidth <= 0 || TitleBar.ActualHeight <= 0)
             return;
-        var p = e.GetCurrentPoint(TitleBar).Position;
-        // Pointer coords are effective pixels (DIPs); AppWindow.Position
-        // is physical pixels — scale the delta by the window's DPI factor.
-        var scale = WindowHelpers.DpiScale(this);
-        var dx = (int)Math.Round((p.X - _dragStart.X) * scale);
-        var dy = (int)Math.Round((p.Y - _dragStart.Y) * scale);
-        AppWindow.Move(new Windows.Graphics.PointInt32(
-            _dragWindowStart.X + dx, _dragWindowStart.Y + dy));
-    }
-
-    private void OnTitleBarPointerReleased(object sender, PointerRoutedEventArgs e)
-    {
-        _dragging = false;
-        TitleBar.ReleasePointerCapture(e.Pointer);
+        if (Content is not UIElement root)
+            return;
+        var bounds = TitleBar.TransformToVisual(root).TransformBounds(
+            new Windows.Foundation.Rect(0, 0, TitleBar.ActualWidth, TitleBar.ActualHeight));
+        var source = InputNonClientPointerSource.GetForWindowId(AppWindow.Id);
+        source.SetRegionRects(NonClientRegionKind.Caption, new[] { bounds });
     }
 
     private void OnOpenSettings(object sender, RoutedEventArgs e)

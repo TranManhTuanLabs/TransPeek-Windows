@@ -166,31 +166,29 @@ public sealed class TrayIconService : IDisposable
         {
             Text = AppStrings.Get(key, fallback),
             Icon = new FontIcon { Glyph = glyph },
-        };
-        // Run the action on the next dispatcher tick, AFTER the flyout
-        // has closed: showing a window (Settings, panel) synchronously
-        // from a MenuFlyoutItem.Click is swallowed while the flyout is
-        // dismissing — the Settings item did nothing from the menu
-        // (left-click on the icon worked) in the 0.1.3.47/.49 test.
-        // Fall back to a direct call if the dispatcher is unavailable:
-        // a dead menu is worse than a swallowed action (0.1.3.51: the
-        // whole menu went unclickable, cause still unproven — the
-        // Opening handler is gone too, see RefreshAccelerators).
-        // A throwing menu action must never die silently: log it so
-        // crash.log shows what happened.
-        item.Click += (_, _) =>
-        {
-            // Diagnostic (0.1.3.53 test: the right-click menu is
-            // "useless" — items may not even fire): log every click, so
-            // the next crash.log tells whether Click fired at all.
-            CrashLog.WriteLine("TrayMenu", $"Clicked '{key}'");
-            try
+            // The action lives on COMMAND, not Click (0.1.3.65 test):
+            // H.NotifyIcon's default ContextMenuMode builds a Win32
+            // PopupMenu from this MenuFlyout and calls the items'
+            // COMMANDS — a Click handler is never invoked. That is why
+            // the menu opened but no item did anything, and no
+            // "TrayMenu: Clicked" line ever appeared in crash.log.
+            // (The left-click already worked because LeftClickCommand is
+            // a Command too.) The Command still defers the action to the
+            // next dispatcher tick: showing a window synchronously while
+            // the menu is dismissing gets swallowed.
+            Command = new RelayCommand(() =>
             {
-                if (_dispatcher is not null && _dispatcher.TryEnqueue(() => RunMenuAction(onClick)))
-                    return;
-            }
-            catch { }
-            RunMenuAction(onClick);
+                // Diagnostic: log every activation, so the next crash.log
+                // tells whether the Command fired at all.
+                CrashLog.WriteLine("TrayMenu", $"Clicked '{key}'");
+                try
+                {
+                    if (_dispatcher is not null && _dispatcher.TryEnqueue(() => RunMenuAction(onClick)))
+                        return;
+                }
+                catch { }
+                RunMenuAction(onClick);
+            }),
         };
         return item;
     }
