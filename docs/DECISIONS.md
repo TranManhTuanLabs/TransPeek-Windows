@@ -1096,3 +1096,30 @@ an OS limit.)
   button) — check Task Manager for a second TransPeek.exe and quit it.
   Decisive test for Manh: with TransPeek fully quit, move the mouse on
   the desktop — if the pill still appears, it is another app.
+
+## "Esc" pill — exhaustive code search + window-list diagnostic (Manh, 2026-11-14)
+- Manh insists the floating white "Esc" pill is from the app and asked
+  to trace "Esc" in the code. FULL search (all .cs/.xaml/.resw):
+  the ONLY "Esc" strings are comments (Esc keyboard handling) and two
+  hint texts INSIDE windows — the panel hint "Enter: translate again •
+  Esc: close • ..." (Row 3, inside the panel) and the Settings hotkey
+  hint "Esc cancels." No "Esc" button, tooltip, label or pill exists.
+  "Cancel": only comments — the Cancel button was removed in 0.1.3.63.
+  "Hint": only the panel hint and Settings hints. ToolTips in the app:
+  tray icon (long text), dictionary link names, gear button "Settings"
+  — none is "Esc". The toast is a DARK pill at the bottom-right and no
+  toast call ever passes "Esc". RegionSelectWindow has no mouse-move UI
+  at all (only keyboard Esc + right-click to cancel). EscapeKeyMonitor
+  is a bare WH_KEYBOARD_LL hook with no UI. The app has exactly 5
+  windows (TriggerIcon, Panel, RegionSelect, Toast, Settings) — none
+  renders a white "Esc" pill.
+- Because the code alone cannot settle it, a DIAGNOSTIC was added
+  (temporary, remove once the owner is known): Tray menu ->
+  "Diagnose: list windows" enumerates every visible top-level window
+  (HWND, title, rect, owning process) into
+  %LOCALAPPDATA%\TransPeek\windows.log (WindowDiagnostics.cs +
+  EnumWindows P/Invokes in NativeMethods.cs). When the pill is visible,
+  run it and send windows.log — the pill's window will be the small
+  (~40x28 px) one near the top-center, and its process name settles
+  whether it is TransPeek.exe or another app (screenshot tool, Edge
+  fullscreen hint, old TransPeek build still running, ...).

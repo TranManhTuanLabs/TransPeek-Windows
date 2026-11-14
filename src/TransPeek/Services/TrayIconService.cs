@@ -59,6 +59,7 @@ public sealed class TrayIconService : IDisposable
         Action scanBarcodes,
         Action openSettings,
         Action restart,
+        Action diagnoseWindows,
         Action quit)
     {
         // The constructor runs on the UI thread: the menu actions are
@@ -90,6 +91,11 @@ public sealed class TrayIconService : IDisposable
         // e.g. after an OCR engine switch that crashes it. Glyph E72C
         // is Refresh (no dedicated Restart glyph in Segoe MDL2).
         menu.Items.Add(Item("Tray.Menu.Restart", "Restart TransPeek", "\uE72C", restart));
+        // Esc-pill diagnostic (Manh 2026-11-14, temporary): lists every
+        // visible top-level window with its owning process to
+        // windows.log, so the floating white "Esc" pill's owner can be
+        // identified for certain. Remove once the owner is known.
+        menu.Items.Add(Item("Tray.Menu.DiagnoseWindows", "Diagnose: list windows", "\uE946", diagnoseWindows));
         menu.Items.Add(Item("Tray.Menu.Quit", "Quit TransPeek", "\uE711", quit));
 
         // Diagnostic (0.1.3.59 test: right-click menu "chưa được"): log

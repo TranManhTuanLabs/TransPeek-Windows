@@ -114,6 +114,11 @@ public sealed partial class App : Application
             scanBarcodes: () => _ = ScanBarcodesAsync(),
             openSettings: ShowSettings,
             restart: RestartApp,
+            diagnoseWindows: () =>
+            {
+                WindowDiagnostics.Write();
+                _toast?.Show(AppStrings.Get("App.Toast.WindowsListed", "Window list saved to windows.log — send that file to diagnose the floating 'Esc' pill."));
+            },
             quit: QuitApp);
 
         _selectionMonitor = new SelectionMonitor(OnSelectionChanged);
