@@ -15,13 +15,24 @@ internal static class WindowHelpers
 {
     /// <summary>Make a WinUI window invisible to the taskbar and Alt+Tab
     /// (tool window). The translate panel / trigger icon / toast must not
-    /// appear as separate apps.</summary>
+    /// appear as separate apps. A tool window also gets NO drop shadow
+    /// from the window manager — but only after the frame is told to
+    /// re-evaluate (SetWindowPos + SWP_FRAMECHANGED): changing the
+    /// extended style alone leaves the old shadow in place, which is
+    /// why the 32 px trigger icon looked "shadowed" (Manh 2026-11-14).
+    /// Windows does NOT forbid small windows — the icon shows fine at
+    /// 32 px; the shadow was the stale frame, not a minimum size.</summary>
     public static void MakeToolWindow(Window window)
     {
         var hwnd = WindowNative.GetWindowHandle(window);
         var exStyle = NativeMethods.GetWindowLongPtr(hwnd, NativeMethods.GWL_EXSTYLE);
         var next = new IntPtr(exStyle.ToInt64() | (long)NativeMethods.WS_EX_TOOLWINDOW);
         NativeMethods.SetWindowLongPtr(hwnd, NativeMethods.GWL_EXSTYLE, next);
+        // Force the frame to re-evaluate so the tool-window style (and
+        // its no-shadow) actually takes effect.
+        NativeMethods.SetWindowPos(hwnd, IntPtr.Zero, 0, 0, 0, 0,
+            NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOZORDER |
+            NativeMethods.SWP_FRAMECHANGED);
     }
 
     /// <summary>Show a window without stealing keyboard focus (the panel

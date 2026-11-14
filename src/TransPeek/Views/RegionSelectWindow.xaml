@@ -18,11 +18,15 @@
          blind when the overlay renders opaque); no dim is needed to
          signal capture mode — the cursor changes to the capture shape
          while dragging. The selection rectangle keeps its light fill
-         (#22FFFFFF) so the picked region stays visible. NO hint chip
-         (removed 2026-11-14, 0.1.3.65 test): the floating "Esc" chip sat
-         top-center where the mouse works, and hovering it exited the
-         capture — Esc on the keyboard, right-click and Alt+F4 already
-         cover the exit, and Manh knows them.
+         (#22FFFFFF) so the picked region stays visible.
+         Hint chip (restored 2026-11-14, Manh): the instruction text
+         ("Drag to select the region to OCR — Esc / right-click to
+         exit") was removed in 0.1.3.65 because the floating chip sat
+         top-center where the mouse works and hovering it exited the
+         capture; Manh wants the instruction back. It is restored with
+         IsHitTestVisible="False" so it can never take mouse input —
+         the pointer passes straight through to the grid below, so the
+         hover-exits bug cannot come back.
          BackgroundImage (0.1.3.54): the window renders opaque, so the
          dim alone shows only a flat grey board — the user picks blind
          and a capture taken while the overlay is up photographs the
@@ -36,5 +40,13 @@
             <Rectangle x:Name="SelectionRect" Stroke="White" StrokeThickness="2"
                        Fill="#22FFFFFF" Visibility="Collapsed" />
         </Canvas>
+        <!-- Instruction chip, top-center. Hit-test invisible: it is
+             text only, the mouse passes through to the grid. -->
+        <Border HorizontalAlignment="Center" VerticalAlignment="Top"
+                Margin="0,16,0,0" Background="#CC000000" CornerRadius="6"
+                Padding="12,6" IsHitTestVisible="False">
+            <TextBlock x:Uid="RegionSelect.Hint" Foreground="White" FontSize="13"
+                       Text="Drag to select the region to OCR — Esc / right-click to exit" />
+        </Border>
     </Grid>
 </Window>

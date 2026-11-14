@@ -1123,3 +1123,27 @@ an OS limit.)
   (~40x28 px) one near the top-center, and its process name settles
   whether it is TransPeek.exe or another app (screenshot tool, Edge
   fullscreen hint, old TransPeek build still running, ...).
+
+## Restore capture hint + revert float icon to plain "A" + shadow/size fix (Manh, 2026-11-14)
+- Capture screen lost its instruction text (removed in 0.1.3.65): RESTORED
+  as before — dark chip #CC000000, top-center, "Drag to select the
+  region to OCR — Esc / right-click to exit" (resw RegionSelect.Hint.Text
+  restored). This time with IsHitTestVisible="False" so the chip can
+  never take mouse input — the pointer passes through to the grid, so
+  the 0.1.3.65 bug (hovering the chip exited the capture) cannot return.
+- Float icon: the mac bubble port (0.1.3.72, XAML Path bubble + "A")
+  looked bad, so REVERTED to the plain "A" (14 pt, white circle) as in
+  0.1.3.70. Shadow + off-size, both still present with the plain "A":
+  (a) SHADOW — the window is a tool window (WS_EX_TOOLWINDOW, which
+  gets no window-manager drop shadow), but MakeToolWindow only changed
+  the extended style and never told the frame to re-evaluate, so the old
+  shadow stayed. FIXED: SetWindowPos + SWP_FRAMECHANGED after the style
+  change (added SWP_NOZORDER = 0x0004). (b) SIZE — the window sized
+  itself to content; FIXED by setting Width/Height = 32 DIP in the
+  constructor (ShowAt still resizes in physical pixels, 32 * DpiScale).
+  Windows does NOT forbid small windows: the icon already shows at
+  32 px, so there is no minimum-size rule in the way.
+- CI #74 (diagnostic build, RECT fix) went GREEN; pre-release
+  v0.1.3.74 verified. The "Diagnose: list windows" tray item is in
+  that build — Manh still needs to run it while the Esc pill is visible
+  and send windows.log.

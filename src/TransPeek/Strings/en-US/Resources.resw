@@ -99,6 +99,9 @@
   <data name="Panel.Hint.Text" xml:space="preserve">
     <value>Enter: translate again • Esc: close • Select text in the panel to look it up in the dictionary</value>
   </data>
+  <data name="RegionSelect.Hint.Text" xml:space="preserve">
+    <value>Drag to select the region to OCR — Esc / right-click to exit</value>
+  </data>
   <data name="Panel.Copy.Content" xml:space="preserve">
     <value>Copy</value>
   </data>

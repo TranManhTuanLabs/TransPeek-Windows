@@ -38,6 +38,13 @@ public sealed partial class TriggerIconWindow : Window
     public TriggerIconWindow()
     {
         InitializeComponent();
+        // Fixed 32x32 DIP size (mac parity): the window sizes itself to
+        // content otherwise, and on a scaled display the content (30 DIP
+        // circle) can end up off-size against the window frame. ShowAt
+        // still resizes in physical pixels (32 * DpiScale) for the exact
+        // screen position.
+        Width = WidthPx;
+        Height = HeightPx;
         // WinUI 3 Window has no Loaded event (Loaded lives on
         // FrameworkElement): attach to the root content element instead.
         if (Content is FrameworkElement contentRoot)
@@ -123,14 +130,14 @@ public sealed partial class TriggerIconWindow : Window
     }
 
     /// <summary>Switch the mark to the speaker glyph (click = listen
-    /// mode) or back to the bubble. TTS audio is not built yet — this
+    /// mode) or back to the "A". TTS audio is not built yet — this
     /// is only the icon state for now.</summary>
     private void SetSpeaking(bool speaking)
     {
         if (_isSpeaking == speaking)
             return;
         _isSpeaking = speaking;
-        BubbleMark.Visibility = speaking ? Visibility.Collapsed : Visibility.Visible;
+        LetterMark.Visibility = speaking ? Visibility.Collapsed : Visibility.Visible;
         SpeakerMark.Visibility = speaking ? Visibility.Visible : Visibility.Collapsed;
     }
 
