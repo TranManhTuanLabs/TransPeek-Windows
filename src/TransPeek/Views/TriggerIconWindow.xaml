@@ -8,13 +8,21 @@
          for: Sources/UI/TriggerIcon/TriggerIconPanel.swift). The mac
          shows the SF Symbol "character.bubble", not text — Windows has
          no SF Symbols, so the mark is the letter "A" (Manh 2026-11-14:
-         keep "A", drop the Chinese character). The full mac icon (SF
-         Symbol look) is NOT ported yet — later. -->
+         keep "A", drop the Chinese character), 14 pt like the mac
+         symbol. Clicking the icon switches the mark to a speaker glyph
+         (Manh 2026-11-14) — the visual state for the listen/TTS mode;
+         TTS audio itself is NOT built yet (planned M2, after mac is
+         stable), so the speaker is only the icon state for now. The
+         full mac icon (SF Symbol look) is NOT ported yet — later. -->
     <Grid Background="Transparent">
         <Border x:Name="IconBorder" Width="30" Height="30" CornerRadius="15"
                 Background="White" BorderBrush="#C8C8C8" BorderThickness="1">
-            <TextBlock Text="A" FontSize="13" FontWeight="Bold" Foreground="#1A1A1A"
-                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+            <Grid>
+                <TextBlock x:Name="LetterMark" Text="A" FontSize="14" FontWeight="Bold" Foreground="#1A1A1A"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                <FontIcon x:Name="SpeakerMark" Glyph="&#xE7F5;" FontSize="16" Foreground="#1A1A1A"
+                          HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed" />
+            </Grid>
         </Border>
     </Grid>
 </Window>

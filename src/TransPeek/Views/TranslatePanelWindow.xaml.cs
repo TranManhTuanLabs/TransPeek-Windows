@@ -368,7 +368,20 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         var shiftDown = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Shift)
             .HasFlag(CoreVirtualKeyStates.Down);
         if (shiftDown)
-            return; // Shift+Enter: newline (AcceptsReturn handles it).
+        {
+            // Shift+Enter: insert a newline at the caret. AcceptsReturn
+            // is False (see XAML), so the box never inserts one itself.
+            e.Handled = true;
+            var pos = SourceTextBox.SelectionStart;
+            var length = SourceTextBox.SelectionLength;
+            SourceTextBox.Text = SourceTextBox.Text.Remove(pos, length).Insert(pos, "\n");
+            SourceTextBox.SelectionStart = pos + 1;
+            SourceTextBox.SelectionLength = 0;
+            return;
+        }
+        // Plain Enter: translate again. (With AcceptsReturn=True the
+        // TextBox consumed Enter in its own OnKeyDown and this handler
+        // never fired — Enter only made a newline, 0.1.3.68.)
         e.Handled = true;
         if (string.IsNullOrWhiteSpace(_sourceText))
             return;

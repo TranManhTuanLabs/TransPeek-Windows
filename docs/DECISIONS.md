@@ -988,3 +988,31 @@ matches the size (32 px window, 30 px circle), so no size change was
 needed. Manh 2026-11-14: keep the letter "A", drop the Chinese character
 (文) — done in TriggerIconWindow.xaml. The full mac icon (SF Symbol
 look) is NOT ported yet — later.
+
+## Test 68 feedback — Enter, icon size, speaker on click (Manh, 2026-11-14)
+- Kéo panel (native caption region): DONE — Manh xác nhận bản 68.
+- Tray menu chuột phải: DONE — bấm món nào cũng chạy (RelayCommand fix #66).
+- Icon lúc hiện lúc không khi select text: Manh test thêm, hiện đang hiện
+  tốt — để kiểm tra sau, báo lại nếu lỗi thật. Không sửa gì lúc này.
+- Enter ở ô input panel: BUG — Enter chỉ xuống dòng, không dịch lại.
+  Nguyên nhân: với AcceptsReturn=True, TextBox tự nuốt Enter trong
+  OnKeyDown của nó (chèn newline, đánh dấu handled) TRƯỚC khi handler
+  KeyDown của app chạy, nên handler không bao giờ được gọi. Sửa:
+  AcceptsReturn=False + Shift+Enter tự chèn "\n" tại vị trí con trỏ
+  (OnSourceKeyDown), Enter thường = dịch lại.
+- Size icon "bất thường": cửa sổ trigger icon được resize bằng
+  AppWindow.MoveAndResize (PIXEL VẬT LÝ) với số 32, trong khi nội dung
+  (vòng tròn 30) tính bằng DIP — trên màn hình có scale, vòng tròn tràn
+  ra khỏi cửa sổ (bị cắt). Sửa: nhân 32 DIP với DpiScale ra pixel vật
+  lý trong ShowAt. Chữ "A" lên 14pt (bằng symbol 14pt bên mac).
+- Float icon click → hiện icon loa: Tapped đổi mark sang FontIcon
+  speaker (Segoe MDL2 E7F5), ShowAt/HideIcon trả lại chữ "A". Đây mới
+  là TRẠNG THÁI VISUAL — TTS audio chưa có (M2, sau khi mac ổn).
+- Ảnh trong Google Doc (đã đọc được qua export docx, 3 ảnh): ảnh 1 là
+  float icon "A"; ảnh 2/3 là nút "Esc" trắng nổi phía trên panel.
+  Đã soát toàn bộ code: TransPeek KHÔNG có nút/pill "Esc" nào — chỉ
+  còn dòng hint trong panel ("Enter: translate again • Esc: close")
+  và chip hint màn chụp (đã bỏ ở #66). Kết luận: pill "Esc" đó KHÔNG
+  phải của TransPeek, khả năng từ app/tool overlay khác trên máy Manh.
+  Cần Manh kiểm chứng: thoát hẳn TransPeek (tray → Quit) xem pill
+  còn hiện không, và cho biết đang chạy tool chụp màn hình/overlay nào.

@@ -1,7 +1,8 @@
-// Trigger icon (SPEC §3.1): the small "A 文" tile that appears near the
+// Trigger icon (SPEC §3.1): the small "A" tile that appears near the
 // text selection. Hover (~300 ms, configurable) or click opens the float
 // panel. v0.1: click opens the panel (original MoePeek behaviour) — there
 // is NO click-to-read / TTS yet (see README: TTS comes after mac is stable).
+// The click switches the mark to a speaker glyph (visual state only).
 
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
@@ -38,7 +39,11 @@ public sealed partial class TriggerIconWindow : Window
         }
         IconBorder.PointerEntered += OnPointerEntered;
         IconBorder.PointerExited += OnPointerExited;
-        IconBorder.Tapped += (_, _) => OpenRequested?.Invoke();
+        IconBorder.Tapped += (_, _) =>
+        {
+            ShowSpeaker(); // click = listen mode: show the speaker mark.
+            OpenRequested?.Invoke();
+        };
         _hoverTimer.Tick += (_, _) =>
         {
             _hoverTimer.Stop();
@@ -52,13 +57,22 @@ public sealed partial class TriggerIconWindow : Window
     }
 
     /// <summary>Show the icon just below-right of the selection point
-    /// (physical pixels), clamped to the display work area.</summary>
+    /// (physical pixels), clamped to the display work area. The window
+    /// is sized in PHYSICAL pixels (AppWindow.MoveAndResize) but the
+    /// content is laid out in effective pixels (DIPs): the 32 DIP
+    /// window is scaled by the display DPI, or the 30 DIP circle
+    /// overflows (is clipped by) the window on a scaled display — the
+    /// "abnormal size" Manh saw in 0.1.3.68.</summary>
     public void ShowAt(int x, int y)
     {
+        ShowLetter(); // fresh selection: back to the "A" mark.
+        var scale = WindowHelpers.DpiScale(this);
+        var w = Math.Max(1, (int)Math.Round(WidthPx * scale));
+        var h = Math.Max(1, (int)Math.Round(HeightPx * scale));
         var work = WindowHelpers.DisplayWorkArea(x, y);
-        var px = Math.Clamp(x + 8, work.X, work.X + work.Width - WidthPx);
-        var py = Math.Clamp(y + 8, work.Y, work.Y + work.Height - HeightPx);
-        WindowHelpers.MoveAndResize(this, px, py, WidthPx, HeightPx);
+        var px = Math.Clamp(x + 8, work.X, work.X + work.Width - w);
+        var py = Math.Clamp(y + 8, work.Y, work.Y + work.Height - h);
+        WindowHelpers.MoveAndResize(this, px, py, w, h);
         WindowHelpers.ShowWithoutActivation(this);
         _visible = true;
         _hoverTimer.Interval = TimeSpan.FromMilliseconds(App.Settings.HoverDelayMs);
@@ -73,7 +87,24 @@ public sealed partial class TriggerIconWindow : Window
         _visible = false;
         _hoverTimer.Stop();
         _autoHideTimer.Stop();
+        ShowLetter();
         WindowHelpers.Hide(this);
+    }
+
+    /// <summary>Switch the mark to the speaker glyph (click = listen
+    /// mode). TTS audio is not built yet — this is only the icon
+    /// state for now.</summary>
+    public void ShowSpeaker()
+    {
+        LetterMark.Visibility = Visibility.Collapsed;
+        SpeakerMark.Visibility = Visibility.Visible;
+    }
+
+    /// <summary>Back to the "A" mark (new selection / icon hidden).</summary>
+    public void ShowLetter()
+    {
+        SpeakerMark.Visibility = Visibility.Collapsed;
+        LetterMark.Visibility = Visibility.Visible;
     }
 
     private void OnPointerEntered(object sender, PointerRoutedEventArgs e)

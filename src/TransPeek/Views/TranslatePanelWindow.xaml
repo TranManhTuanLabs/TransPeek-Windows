@@ -57,8 +57,14 @@
              Enter re-translates, Shift+Enter inserts a newline.
              No inline copy button here (Manh 2026-11-12): the actions
              row already has Copy source. -->
+        <!-- AcceptsReturn is False on purpose: with AcceptsReturn the
+             TextBox consumes Enter in its own OnKeyDown (inserts a
+             newline, marks the event handled) BEFORE the app's KeyDown
+             handler runs, so Enter only made a newline and never
+             re-translated (0.1.3.68). Enter = translate again,
+             Shift+Enter = newline — both handled in OnSourceKeyDown. -->
         <TextBox x:Name="SourceTextBox" Grid.Row="2" TextWrapping="Wrap"
-                 AcceptsReturn="True" MaxHeight="120" Margin="0,0,0,4"
+                 AcceptsReturn="False" MaxHeight="120" Margin="0,0,0,4"
                  TextChanged="OnSourceTextChanged" SelectionChanged="OnSourceSelectionChanged"
                  KeyDown="OnSourceKeyDown" />
         <TextBlock Grid.Row="3" x:Uid="Panel.Hint" Text="Enter: translate again • Esc: close • Select text in the panel to look it up in the dictionary"
