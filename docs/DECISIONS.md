@@ -1704,3 +1704,15 @@ an OS limit.)
   fallback, and the matching hotkey label in Settings ("Hotkey for OCR
   to Clipboards") for consistency. The mac forward already said
   "OCR to Clipboards", so both sides now match.
+
+## CI #110 red: FontWeights needs Microsoft.UI.Text (2026-11-15)
+
+- Run #110 (162da8c) failed at Build: CS0103 "The name
+  'FontWeights' does not exist in the current context" in
+  SettingsWindow.xaml.cs:147 (the WMC9999 was a consequence, as
+  usual). Cause: RefreshSettingsFontSize used FontWeights.SemiBold /
+  Bold but the file had no `using Microsoft.UI.Text;`. The namespace
+  is proven by the repo itself — TrayIconService.cs already has
+  `using Microsoft.UI.Text;` and DictionaryBar.xaml.cs uses the
+  fully-qualified Microsoft.UI.Text.FontWeights.Bold. Fix: add the
+  using to SettingsWindow.xaml.cs (1 line).

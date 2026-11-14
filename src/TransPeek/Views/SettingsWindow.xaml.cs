@@ -13,6 +13,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Text;
 using TransPeek.Interop;
 using TransPeek.Views.SettingsPages;
 using WinRT.Interop;
