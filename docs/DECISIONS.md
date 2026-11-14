@@ -1769,3 +1769,14 @@ an OS limit.)
   that reads the LIVE setting at fire time (so a slider drag while
   the page was loading still lands the newest value). Navigated,
   ShowSettings and OnSettingsSaved all go through this one path.
+
+## Appearance regrouped: Popup Panel holds the panel sliders, no "Settings Window" (Manh 2026-11-15)
+
+- "Source & Translation Text Size" moved under the "Popup Panel"
+  sub-header (it controls the translate panel's text, so it belongs
+  there, next to "App name & Slogan Font Size"). "Setting Text Size"
+  now sits directly under "Appearance" — the "Settings Window"
+  sub-header is removed, because Appearance IS the Settings window's
+  appearance and the extra header was redundant. The orphaned resw
+  entry Settings.General.SettingsWindow.Text is removed too. XAML
+  order only; no slider logic or setting changed.
