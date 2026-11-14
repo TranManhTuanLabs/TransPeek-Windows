@@ -51,6 +51,10 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     private bool _visible;
     private bool _ocrMode;
     private bool _syncingCombos;
+    /// <summary>Whether the provider output card body is expanded
+    /// (Manh 2026-11-15, mac ProviderResultCard). A new translation
+    /// always re-expands it.</summary>
+    private bool _providerCardExpanded = true;
     /// <summary>Show generation: incremented on every ShowPanelNear /
     /// ShowInputMode. The click-outside hook captures the epoch at
     /// click time and only hides when it is unchanged — a hide enqueued
@@ -201,7 +205,8 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         ShowPanelNear(x, y);
         SetSource(text);
         TranslationTextBox.Text = AppStrings.Get("Panel.Translating", "Translating…");
-        ProviderText.Text = "";
+        ProviderStatusText.Text = "";
+        SetProviderCardExpanded(true);
         _ = TranslateAndShowAsync(text);
     }
 
@@ -224,7 +229,8 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         SetSource("");
         _translationText = "";
         TranslationTextBox.Text = "";
-        ProviderText.Text = "";
+        ProviderStatusText.Text = "";
+        SetProviderCardExpanded(true);
         UpdateCopyButtons();
         // Typing mode needs a real active window (Activate() alone does
         // nothing on a NOACTIVATE window — Ctrl+V would not work).
@@ -244,7 +250,8 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         ShowPanelNear(cx, cy);
         SetSource(sourceText);
         TranslationTextBox.Text = AppStrings.Get("Panel.Translating", "Translating…");
-        ProviderText.Text = "";
+        ProviderStatusText.Text = "";
+        SetProviderCardExpanded(true);
     }
 
     public void ShowResult(string sourceText, string? translation, string providerName)
@@ -252,7 +259,11 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         SetSource(sourceText);
         _translationText = translation ?? "";
         TranslationTextBox.Text = _translationText;
-        ProviderText.Text = string.IsNullOrEmpty(providerName) ? "" : $"via {providerName}";
+        // The provider name heads the output card (the old "via …" line
+        // under the pickers is gone, Manh 2026-11-15).
+        ProviderNameText.Text = string.IsNullOrEmpty(providerName) ? "Google Translate" : providerName;
+        ProviderStatusText.Text = "";
+        SetProviderCardExpanded(true);
         UpdateCopyButtons();
     }
 
@@ -282,6 +293,51 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         // Copy source is always available (mac has it in the source area).
         CopySourceButton.Visibility = Visibility.Visible;
         CopyTranslationButton.Visibility = _ocrMode ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    // ----- provider output card (mac ProviderResultCard) -----
+
+    /// <summary>Expand/collapse the provider card body. Collapsed, the
+    /// card shrinks to its header (the border stops stretching so it
+    /// does not sit as a tall empty card in the * row); expanded, it
+    /// stretches again so the translation fills the remaining space.
+    /// The window itself stays fixed for now — the mac-style window
+    /// resize-to-fit comes later.</summary>
+    private void OnProviderCardHeaderClicked(object sender, RoutedEventArgs e)
+        => SetProviderCardExpanded(!_providerCardExpanded);
+
+    private void SetProviderCardExpanded(bool expanded)
+    {
+        _providerCardExpanded = expanded;
+        var bodyVisibility = expanded ? Visibility.Visible : Visibility.Collapsed;
+        ProviderCardBodyDivider.Visibility = bodyVisibility;
+        TranslationTextBox.Visibility = bodyVisibility;
+        ProviderCardSpeakerRow.Visibility = bodyVisibility;
+        ProviderChevronText.Text = expanded ? "⌄" : "›";
+        ProviderCardBorder.VerticalAlignment = expanded
+            ? VerticalAlignment.Stretch
+            : VerticalAlignment.Top;
+    }
+
+    // ----- speaker buttons (decor first, Manh 2026-11-15) -----
+
+    /// <summary>Speaker icons (E767 Volume, same glyph as the float
+    /// icon's speaker state): one at the bottom-right of the input
+    /// area, one at the bottom-right of the output card body — both
+    /// mirroring mac, where Speak + Copy sit on the right below the
+    /// text in SourceInputView and in ProviderResultCard. Decor only
+    /// for now: TTS audio is NOT wired yet (it comes after the mac
+    /// side is stable), so the buttons do nothing when clicked.</summary>
+    private void OnSpeakSourceClicked(object sender, RoutedEventArgs e)
+    {
+        // TTS not wired yet (decor). See the float-icon click-to-listen
+        // direction in DECISIONS.md.
+    }
+
+    private void OnSpeakTranslationClicked(object sender, RoutedEventArgs e)
+    {
+        // TTS not wired yet (decor). See the float-icon click-to-listen
+        // direction in DECISIONS.md.
     }
 
     private void ShowPanelNear(int x, int y)
@@ -414,7 +470,8 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
             return;
         _lookupText = null;
         TranslationTextBox.Text = AppStrings.Get("Panel.Translating", "Translating…");
-        ProviderText.Text = "";
+        ProviderStatusText.Text = "";
+        SetProviderCardExpanded(true);
         _ = TranslateAndShowAsync(_sourceText);
     }
 
@@ -497,7 +554,8 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
             return;
         _lookupText = null;
         TranslationTextBox.Text = AppStrings.Get("Panel.Translating", "Translating…");
-        ProviderText.Text = "";
+        ProviderStatusText.Text = "";
+        SetProviderCardExpanded(true);
         _ = TranslateAndShowAsync(_sourceText);
     }
 

@@ -1482,3 +1482,30 @@ an OS limit.)
   label directly, so nothing is lost. Rule for new controls: a
   ValueChanged/SelectionChanged handler must never touch another
   named control that comes later in the XAML — guard it or reorder.
+
+## Panel: provider card + language bar above output + speaker decor (Manh 2026-11-15)
+- Mac reference (checked 2026-11-15): the panel window EXPANDS to fit
+  content up to a max height, then the result ScrollView scrolls
+  (PopupPanelSizing.frameToFit); the input also grows up to a max
+  with a draggable divider. Each provider is a ProviderResultCard:
+  a header row (chevron + provider icon + display name + status,
+  click toggles expand) over a body with the result text and a
+  Speak + Copy row on the right below it. The input (SourceInputView)
+  mirrors it: Speak + Copy on the right below the source text.
+- Windows, this round: output is one card per provider ("Google
+  Translate" header + chevron expand, body = read-only TextBox so
+  words stay selectable). The language pickers moved ABOVE the
+  output (input -> language bar -> results, like mac's
+  LanguageBarView); the old header under the title (blank line +
+  pickers + "via Google Translate") is gone — the provider name now
+  heads the card, so "via google" is removed.
+- Speaker icons (decor first): E767 Volume, same glyph as the float
+  icon's speaker state. Input: bottom-right of the input area (in
+  the hint row, right-aligned). Output: bottom-right of the card
+  body. TTS audio is NOT wired yet — the buttons do nothing on
+  click; speaking comes after the mac side is stable.
+- Window resize-to-fit (mac frameToFit) is NOT in this round: the
+  panel stays 440x480 and the card fills the remaining space, the
+  text scrolling when long. Collapsing the card shrinks it to its
+  header (border stops stretching) but the window does not shrink
+  yet — that comes with the resize work if Manh wants it.

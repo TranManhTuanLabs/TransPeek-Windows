@@ -44,29 +44,6 @@
             <TextBlock x:Name="TaglineText" Foreground="Gray" FontSize="12" HorizontalAlignment="Center" />
         </StackPanel>
 
-        <!-- Header: a BLANK line on top, then the pickers, then the
-             provider attribution BELOW them (Manh 2026-11-14). The
-             attribution was above the pickers since 0.1.3.72; Manh wants
-             it back below, and the blank line where it sat to stay open
-             — he wants the app name + slogan further from the pickers
-             for a cleaner look. The blank line is a non-breaking space
-             so it keeps a full line's height and is never trimmed away.
-             Mac parity (LanguageBarView): changing a picker saves the
-             setting and re-translates immediately. No close (X) button:
-             Esc and click-outside already close the panel (Manh
-             2026-11-12). -->
-        <StackPanel Grid.Row="1" Orientation="Vertical" Spacing="2" Margin="0,0,0,8">
-            <TextBlock FontSize="12" Text="&#x00A0;" />
-            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                <ComboBox x:Name="SourceLangCombo" Width="128"
-                          SelectionChanged="OnSourceLangChanged" />
-                <Button x:Name="SwapButton" Content="⇄" Padding="6,2" Click="OnSwapLanguages" />
-                <ComboBox x:Name="TargetLangCombo" Width="128"
-                          SelectionChanged="OnTargetLangChanged" />
-            </StackPanel>
-            <TextBlock x:Name="ProviderText" Foreground="Gray" FontSize="12" />
-        </StackPanel>
-
         <!-- Source text: editable like the mac SourceInputView.
              Enter re-translates, Shift+Enter inserts a newline.
              No inline copy button here (Manh 2026-11-12): the actions
@@ -77,19 +54,97 @@
              handler runs, so Enter only made a newline and never
              re-translated (0.1.3.68). Enter = translate again,
              Shift+Enter = newline — both handled in OnSourceKeyDown. -->
-        <TextBox x:Name="SourceTextBox" Grid.Row="2" TextWrapping="Wrap"
+        <TextBox x:Name="SourceTextBox" Grid.Row="1" TextWrapping="Wrap"
                  AcceptsReturn="False" MaxHeight="120" Margin="0,0,0,4"
                  TextChanged="OnSourceTextChanged" SelectionChanged="OnSourceSelectionChanged"
                  KeyDown="OnSourceKeyDown" />
-        <TextBlock Grid.Row="3" x:Uid="Panel.Hint" Text="Enter: translate again • Esc: close • Select text in the panel to look it up in the dictionary"
-                   FontSize="11" Foreground="Gray" Margin="0,0,0,8" />
+        <!-- Hint + source speaker (Manh 2026-11-15, decor first): the
+             speaker sits at the bottom-right of the input area, under
+             the source text — mirroring mac's SourceInputView, where
+             Speak + Copy sit on the right below the text. Same glyph
+             as the float icon's speaker state (E767 Volume), so input
+             and output match. TTS audio is NOT wired yet — the button
+             is decor for now (tooltip says so); speaking comes after
+             the mac side is stable. -->
+        <Grid Grid.Row="2" Margin="0,0,0,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock x:Uid="Panel.Hint" Text="Enter: translate again • Esc: close • Select text in the panel to look it up in the dictionary"
+                       FontSize="11" Foreground="Gray" VerticalAlignment="Center" TextWrapping="Wrap" />
+            <Button x:Name="SpeakSourceButton" Grid.Column="1" Padding="6,2" Margin="8,0,0,0"
+                    ToolTipService.ToolTip="Listen to source text (coming soon)"
+                    Click="OnSpeakSourceClicked">
+                <FontIcon Glyph="&#xE767;" FontSize="12" />
+            </Button>
+        </Grid>
 
-        <!-- Translation: read-only TextBox (not TextBlock) so the user can
-             select words inside the translation to look them up, like mac. -->
-        <TextBox x:Name="TranslationTextBox" Grid.Row="4" IsReadOnly="True"
-                 TextWrapping="Wrap" AcceptsReturn="True" BorderThickness="0"
-                 Background="Transparent" FontSize="14"
-                 SelectionChanged="OnTranslationSelectionChanged" />
+        <!-- Language pickers (Manh 2026-11-15): ABOVE the output, like
+             mac's LanguageBarView (input -> language bar -> provider
+             results). They used to sit under the title, above the
+             input; the blank line and the "via Google Translate" line
+             that lived with them are gone (the provider name now heads
+             the output card below). Changing a picker saves the setting
+             and re-translates immediately, like mac. No close (X)
+             button: Esc and click-outside already close the panel
+             (Manh 2026-11-12). -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" Margin="0,0,0,8">
+            <ComboBox x:Name="SourceLangCombo" Width="128"
+                      SelectionChanged="OnSourceLangChanged" />
+            <Button x:Name="SwapButton" Content="⇄" Padding="6,2" Click="OnSwapLanguages" />
+            <ComboBox x:Name="TargetLangCombo" Width="128"
+                      SelectionChanged="OnTargetLangChanged" />
+        </StackPanel>
+
+        <!-- Translation output (Manh 2026-11-15): one card per provider,
+             like mac's ProviderResultCard. The header line IS the
+             provider ("Google Translate") with a chevron button that
+             expands/collapses the body — later providers each get their
+             own card the same way. The body is a read-only TextBox (not
+             TextBlock) so the user can select words inside the
+             translation to look them up, like mac. The card fills the
+             remaining panel space (the * row) and the text scrolls when
+             it is long (mac grows the window to fit, then scrolls —
+             see PopupPanelSizing.frameToFit; the window resize comes
+             later, the card + scroll is the shape first). The speaker
+             sits at the bottom-right of the card body, mirroring mac's
+             result card (Speak + Copy on the right below the result) —
+             decor for now, TTS audio comes later. -->
+        <Border x:Name="ProviderCardBorder" Grid.Row="4" Margin="0,0,0,8" CornerRadius="6" BorderThickness="1"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Button x:Name="ProviderCardHeaderButton" Grid.Row="0" Click="OnProviderCardHeaderClicked"
+                        Background="Transparent" BorderThickness="0" Padding="8,6"
+                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
+                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                        <TextBlock x:Name="ProviderChevronText" Text="⌄" FontSize="12" Foreground="Gray" VerticalAlignment="Center" />
+                        <TextBlock x:Name="ProviderNameText" Text="Google Translate" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        <TextBlock x:Name="ProviderStatusText" FontSize="12" Foreground="Gray" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Border x:Name="ProviderCardBodyDivider" Grid.Row="1" BorderThickness="0,1,0,0"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Margin="8,0" />
+                <TextBox x:Name="TranslationTextBox" Grid.Row="2" IsReadOnly="True" Margin="8,6,8,0"
+                         TextWrapping="Wrap" AcceptsReturn="True" BorderThickness="0"
+                         Background="Transparent" FontSize="14"
+                         SelectionChanged="OnTranslationSelectionChanged" />
+                <StackPanel x:Name="ProviderCardSpeakerRow" Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="8,2,8,6">
+                    <Button x:Name="SpeakTranslationButton" Padding="6,2"
+                            ToolTipService.ToolTip="Listen to translation (coming soon)"
+                            Click="OnSpeakTranslationClicked">
+                        <FontIcon Glyph="&#xE767;" FontSize="12" />
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
 
         <!-- Actions: copy buttons left, Settings gear on the right
              (Manh 2026-11-12). -->
