@@ -1277,3 +1277,16 @@ an OS limit.)
   Restart stays for now below Diagnose; Manh says it feels a bit
   meaningless (the hotkey crash it worked around is fixed in #64), so
   remove it entirely if he says so.
+
+## Panel polish: pin spacing + via Google Translate back below pickers (Manh 2026-11-14)
+- Pin button: it sat 12 px from the Settings gear (StackPanel Spacing 4
+  + SettingsButton Margin 8,0,0,0). Manh wants it tight against the
+  gear — the 8 px left margin is removed, so the gap is just the
+  StackPanel's 4 px spacing.
+- "via Google Translate" (ProviderText) moves back BELOW the language
+  pickers (it was above them since 0.1.3.72). Where it sat, a blank
+  line stays open — Manh wants the app name + slogan further from the
+  pickers for a cleaner look. The blank line is a TextBlock holding a
+  non-breaking space (U+00A0) so it keeps a full line's height and is
+  never trimmed away; a Margin would do the same job, the blank line
+  is the literal thing Manh asked for.
