@@ -37,6 +37,15 @@ public sealed partial class RegionSelectWindow : Window
     private Point _start;
     private bool _dragging;
     private bool _finished;
+    // Low-level Esc hook (same EscapeKeyMonitor the panel uses): this
+    // is a tool window and may never get keyboard focus, so the KeyDown
+    // handler below is unreliable — Esc did nothing while right-click
+    // worked (Manh 2026-11-15). The hook sees Esc whatever window has
+    // focus. NOT a KeyboardAccelerator (that drew the "Esc" pill), so
+    // the pill cannot come back. Only installed while the capture is
+    // open; Finish() stops it. Double Esc (hook + KeyDown) is safe —
+    // Finish() is exactly-once.
+    private EscapeKeyMonitor? _escapeMonitor;
     // Origin of the display this window covers (set in
     // SelectRegionAsync): the pointer math offsets by it, and it must
     // be the same display the window was placed on.
@@ -110,6 +119,15 @@ public sealed partial class RegionSelectWindow : Window
         WindowHelpers.MoveAndResize(this, bounds.X, bounds.Y, bounds.Width, bounds.Height);
         Activate();
         RootGrid.Focus(FocusState.Programmatic);
+        // Esc via the low-level hook (see the field comment): the
+        // grid's KeyDown is the backup, but a tool window may never
+        // get keyboard focus, so Esc was dead until this hook.
+        _escapeMonitor = new EscapeKeyMonitor(
+            DispatcherQueue,
+            () => !_finished,
+            () => 0,
+            _ => Cancel());
+        _escapeMonitor.Start();
         return _result.Task;
     }
 
@@ -211,6 +229,8 @@ public sealed partial class RegionSelectWindow : Window
         if (_finished)
             return;
         _finished = true;
+        _escapeMonitor?.Dispose();
+        _escapeMonitor = null;
         var result = _result;
         _result = null;
         result?.TrySetResult(rect);

@@ -1654,3 +1654,21 @@ an OS limit.)
   InitializeComponent (Minimum coerces 0 -> 12) would overwrite the
   saved size with 12 on every page construction. OnNavigatedTo
   still sets it false at the end.
+
+## Esc on the OCR capture screen — low-level hook, not an accelerator (Manh 2026-11-15)
+
+- Manh: pressing Esc on the capture screen did nothing, while
+  right-click exited. The code already had a KeyDown handler for Esc
+  (grid focused on show), but a tool window may never get keyboard
+  focus, so KeyDown was dead — the same reason the panel needed its
+  hook (0.1.3.54). Right-click worked because pointer input needs
+  no focus.
+- Fix: RegionSelectWindow now uses the same EscapeKeyMonitor (low-level
+  WH_KEYBOARD_LL hook) the panel already uses — it sees Esc whatever
+  window has focus. Started in SelectRegionAsync, stopped in Finish().
+  The KeyDown handler stays as a backup; double Esc (hook + KeyDown)
+  is safe because Finish() is exactly-once.
+- This does NOT add a KeyboardAccelerator, so it cannot bring back
+  the "Esc" key-tip pill (PopupHost 46x41) that the accelerator drew
+  in 0.1.3.79. The hook is only installed while the capture is open
+  and only intercepts Esc then; it always calls the next hook.
