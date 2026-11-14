@@ -195,17 +195,23 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         var size = App.Settings.PopupTopBarFontSize;
         AppNameText.FontSize = size;
         TaglineText.FontSize = Math.Max(8, size - 1);
+        RequestResizeToFit();
     }
 
     /// <summary>Apply the main content font size from settings (the
     /// source + translation text, mac popupFontSize, default 14).
     /// Called on open and whenever settings are saved
-    /// (App.OnSettingsSaved), like RefreshTopBarFontSize.</summary>
+    /// (App.OnSettingsSaved), like RefreshTopBarFontSize. Resizes the
+    /// window to fit the new text size, so dragging the Text Size
+    /// slider shows the change live instead of clipping the bigger
+    /// text (Manh 2026-11-15 — dragging Text Size showed no change
+    /// inside the panel).</summary>
     public void RefreshPopupFontSize()
     {
         var size = App.Settings.PopupFontSize;
         SourceTextBox.FontSize = size;
         TranslationTextBox.FontSize = size;
+        RequestResizeToFit();
     }
 
     // ----- selection flow (App calls this) -----

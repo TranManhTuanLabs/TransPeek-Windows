@@ -1629,3 +1629,28 @@ an OS limit.)
   a try-out from 2026-11-15; 250 is narrower still. If it feels
   cramped, drop OpenPaneLength entirely to return to the 320
   default.
+
+## Text Size: size on the same line + live resize (Manh 2026-11-15)
+
+- Manh: "Text Size: (hiện current size cùng line)" and "vuốt không
+  thấy thay đổi size trong" — dragging Text Size showed no change
+  inside the panel. Two fixes, both in this round:
+- (1) The size now shows ON THE SAME LINE as the label, like mac's
+  LabeledContent: the Slider Header itself is set in code to
+  "Text Size: 14 pt" (main) and "App name & Slogan Font Size:
+  17 pt — slogan 16 pt" (top bar, -1 rule visible). The separate
+  value TextBlock below each slider is gone, and the sliders no
+  longer use x:Uid Headers (resw entries removed).
+- (2) RefreshPopupFontSize() and RefreshTopBarFontSize() now call
+  RequestResizeToFit(), so the window grows/shrinks to fit the new
+  text size — dragging the slider shows the change live instead of
+  the bigger text being clipped by a fixed-height window. (The
+  panel may be hidden behind Settings while dragging; the size
+  applies when it is next shown, via the constructor refresh.)
+- Guard change: _loading now starts true (field initializer). The
+  old null-check guard relied on the value label sitting AFTER its
+  slider in XAML; with the size in the Header there is no later
+  control to check, so without this the ValueChanged firing during
+  InitializeComponent (Minimum coerces 0 -> 12) would overwrite the
+  saved size with 12 on every page construction. OnNavigatedTo
+  still sets it false at the end.

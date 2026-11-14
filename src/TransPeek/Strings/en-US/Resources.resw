@@ -150,14 +150,8 @@
   <data name="Settings.General.Appearance.Text" xml:space="preserve">
     <value>Appearance</value>
   </data>
-  <data name="Settings.General.MainFontSize.Header" xml:space="preserve">
-    <value>Text Size</value>
-  </data>
   <data name="Settings.General.PopupPanel.Text" xml:space="preserve">
     <value>Popup Panel</value>
-  </data>
-  <data name="Settings.General.FontSize.Header" xml:space="preserve">
-    <value>App name &amp; Slogan Font Size</value>
   </data>
   <data name="Settings.General.WatchSelection.Header" xml:space="preserve">
     <value>Watch selection automatically</value>

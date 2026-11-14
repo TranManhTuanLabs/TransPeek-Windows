@@ -20,7 +20,14 @@ public sealed partial class GeneralPage : Page
     private const string RunValueName = "TransPeek";
 
     private Action? _onSaved;
-    private bool _loading;
+    // Starts true: Slider ValueChanged fires during InitializeComponent
+    // (Minimum coerces Value 0 -> 12) before OnNavigatedTo runs, so a
+    // false default would let a handler overwrite the saved size with
+    // 12 on every page construction. OnNavigatedTo sets it false at
+    // the end, after loading the controls. (Manh 2026-11-15 — the
+    // Text Size header now carries the size, so there is no later
+    // value label for the handler to null-check against.)
+    private bool _loading = true;
 
     public GeneralPage()
     {
@@ -37,9 +44,9 @@ public sealed partial class GeneralPage : Page
         HoverDelayCombo.SelectedIndex = s.HoverDelayMs == 500 ? 1 : 0;
         AutoHideBox.Value = s.TriggerIconAutoHideSeconds;
         MainFontSizeSlider.Value = s.PopupFontSize;
-        MainFontSizeValueText.Text = MainFontSizeLabel(s.PopupFontSize);
+        MainFontSizeSlider.Header = MainFontSizeLabel(s.PopupFontSize);
         FontSizeSlider.Value = s.PopupTopBarFontSize;
-        FontSizeValueText.Text = FontSizeLabel(s.PopupTopBarFontSize);
+        FontSizeSlider.Header = FontSizeLabel(s.PopupTopBarFontSize);
         TranslateHotkeyBox.Text = s.TranslateHotkey;
         OcrHotkeyBox.Text = s.OcrHotkey;
         ManualHotkeyBox.Text = s.ManualHotkey;
@@ -83,49 +90,44 @@ public sealed partial class GeneralPage : Page
     }
 
     // Main content font size (Manh 2026-11-15): the panel's source +
-    // translation text size (mac popupFontSize, default 14). Like mac,
-    // the slider drags the main size and the label shows the current
-    // size; the top-bar slogan stays 1 pt below the app name (see
-    // FontSizeLabel). Same guard as OnFontSizeChanged — ValueChanged
-    // fires during InitializeComponent (Minimum coerces Value 0 -> 12)
-    // before the value label exists, so skip while loading or while
-    // it is null.
+    // translation text size (mac popupFontSize, default 14). Like mac's
+    // LabeledContent, the current size shows on the SAME line as the
+    // label — the Slider Header itself reads "Text Size: 14 pt" (set
+    // in code, no separate value label below). The top-bar slogan
+    // stays 1 pt below the app name (see FontSizeLabel). Guard: _loading
+    // starts true (field initializer) so ValueChanged firing during
+    // InitializeComponent (Minimum coerces Value 0 -> 12) returns
+    // early instead of overwriting the saved size.
     private void OnMainFontSizeChanged(object sender, Microsoft.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
     {
-        if (_loading || MainFontSizeValueText is null)
+        if (_loading)
             return;
         App.Settings.PopupFontSize = e.NewValue;
-        MainFontSizeValueText.Text = MainFontSizeLabel(e.NewValue);
+        MainFontSizeSlider.Header = MainFontSizeLabel(e.NewValue);
         Save();
     }
 
     private static string MainFontSizeLabel(double size)
-        => $"{size:0} pt";
+        => $"Text Size: {size:0} pt";
 
     // Top-bar font size (Manh 2026-11-15): the slider sets the app-name
     // size; the tagline follows at 1 pt smaller (applied by the panel).
-    // The label shows both so the -1 rule is visible in Settings.
-    //
-    // Guard (Manh 2026-11-15, General tab went blank): ValueChanged
-    // fires during InitializeComponent — setting Minimum=12 coerces the
-    // default Value 0 up to 12 — while FontSizeValueText does not exist
-    // yet (it comes after the Slider in XAML). Touching it threw a
-    // NullReferenceException out of the page constructor, so the frame
-    // navigation failed and General showed nothing at all. That is why
-    // the tab went blank as soon as the font slider was added, and why
-    // removing the resize handle did not bring it back. Skip while
-    // loading too: OnNavigatedTo sets the value and the label directly.
+    // Like the main Text Size, the current size shows on the SAME line
+    // as the label — the Header reads "App name & Slogan Font Size:
+    // 17 pt — slogan 16 pt", so the -1 rule is visible in Settings.
+    // Guard: _loading starts true, so ValueChanged firing during
+    // InitializeComponent returns early (see OnMainFontSizeChanged).
     private void OnFontSizeChanged(object sender, Microsoft.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
     {
-        if (_loading || FontSizeValueText is null)
+        if (_loading)
             return;
         App.Settings.PopupTopBarFontSize = e.NewValue;
-        FontSizeValueText.Text = FontSizeLabel(e.NewValue);
+        FontSizeSlider.Header = FontSizeLabel(e.NewValue);
         Save();
     }
 
     private static string FontSizeLabel(double size)
-        => $"{size:0} pt — app name; tagline {Math.Max(8, size - 1):0} pt";
+        => $"App name & Slogan Font Size: {size:0} pt — slogan {Math.Max(8, size - 1):0} pt";
 
     private void OnTranslateHotkeyLostFocus(object sender, RoutedEventArgs e)
         => TrySaveHotkey(TranslateHotkeyBox, HotkeyErrorText, "Translate",
