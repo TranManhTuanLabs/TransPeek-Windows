@@ -107,39 +107,54 @@ public sealed partial class SettingsWindow : Window
 
     /// <summary>Apply the Settings window font size (AppTextSize, mac
     /// appTextSize, Manh 2026-11-15 — "Setting Text Size (chỉnh cả
-    /// font chính + mô tả (-1)"). Sets FontSize on the NavigationView,
-    /// which controls inherit (toggle/combo/textbox/slider labels and
-    /// the nav pane text), then fixes up TextBlocks that set an
-    /// explicit size: brand titles (>= 20 pt, e.g. the About
-    /// "TransPeek" 24 pt) are left alone; grey/red description text
-    /// goes 1 pt below the main size (the -1 rule); semibold/bold
-    /// headers go 2 pt above; other text takes the main size. Called
-    /// on show, on page navigation, and whenever settings are saved
-    /// (App.OnSettingsSaved). Stable across calls: the base size is
-    /// captured once in TextBlock.Tag (free on these TextBlocks), the
-    /// role comes from Foreground/FontWeight (never changed here), and
-    /// sizes are always set from the setting, never scaled from the
-    /// current size, so repeated calls never compound or stick.</summary>
+    /// font chính + mô tả (-1)"). Sets FontSize on the NavigationView
+    /// AND the content Frame, which controls inherit (toggle/combo/
+    /// textbox/slider labels and the nav pane text), then fixes up
+    /// TextBlocks that set an explicit size: brand titles (>= 20 pt,
+    /// e.g. the About "TransPeek" 24 pt) are left alone; grey/red
+    /// description text goes 1 pt below the main size (the -1 rule);
+    /// semibold/bold headers go 2 pt above; other text takes the main
+    /// size. Called on show, on page navigation, and whenever settings
+    /// are saved (App.OnSettingsSaved). Stable across calls: the base
+    /// size is captured once in TextBlock.Tag (free on these
+    /// TextBlocks), the role comes from Foreground/FontWeight (never
+    /// changed here), and sizes are always set from the setting, never
+    /// scaled from the current size, so repeated calls never compound
+    /// or stick. Timing (Manh 2026-11-15 — "chỉ đc 1 tab"): a fresh
+    /// page is walked only once it is Loaded, i.e. actually in the
+    /// visual tree. Navigated + a dispatcher enqueue was not enough —
+    /// the enqueue could still run before the new page's tree existed,
+    /// so only General (present at show time) ever got sized. Loaded
+    /// is the reliable signal; an already-loaded page is walked
+    /// immediately.</summary>
     public void RefreshSettingsFontSize()
     {
         var size = App.Settings.AppTextSize;
         NavView.FontSize = size;
-        // Defer the TextBlock walk: when called from Navigated, the new
-        // page is not in the visual tree yet, so the walk finds nothing
-        // and only the General tab (the one present at show time) ever
-        // got sized — Manh 2026-11-15 ("mới chỉnh đc mỗi tab general").
-        // Enqueueing runs after the navigation/layout completes, so the
-        // walk sees the new page's tree. Idempotent (sizes are always
-        // set from the setting, never scaled), so queued repeats from a
-        // fast slider drag are harmless and run in order. (this.
-        // DispatcherQueue — the Window instance property, not the
-        // Microsoft.UI.Dispatching type, cf. TranslatePanelWindow's
-        // CS0176 note.)
-        this.DispatcherQueue.TryEnqueue(() =>
+        ContentFrame.FontSize = size;
+        ApplyToCurrentPage(size);
+    }
+
+    private void ApplyToCurrentPage(double size)
+    {
+        if (ContentFrame.Content is not FrameworkElement page)
+            return;
+        if (page.IsLoaded)
         {
-            if (ContentFrame.Content is DependencyObject content)
-                ApplySettingsFontSize(content, size);
-        });
+            ApplySettingsFontSize(page, size);
+            return;
+        }
+        // One-time: the page is not in the visual tree yet (fresh
+        // navigation). Loaded fires once it is, so the walk sees the
+        // full tree. Reads the live setting at fire time, not the
+        // captured size, so a slider drag that happened while the
+        // page was loading still lands the newest value.
+        void OnLoaded(object _, RoutedEventArgs _)
+        {
+            page.Loaded -= OnLoaded;
+            ApplySettingsFontSize(page, App.Settings.AppTextSize);
+        }
+        page.Loaded += OnLoaded;
     }
 
     private static void ApplySettingsFontSize(DependencyObject element, double size)

@@ -1747,3 +1747,25 @@ an OS limit.)
   (slogan) font size in RefreshTopBarFontSize, so the gap is exactly
   1 line and scales with the top-bar font size (default 16 px).
   XAML default margin updated to 16 to match.
+
+## Setting Text Size still only 1 tab: Navigated + enqueue ran too early (Manh 2026-11-15)
+
+- Investigation (Manh: "điều tra đi xem gắn đủ hết chưa"): all 5
+  pages DO have TextBlocks with explicit FontSize (General 16,
+  About 14, Ocr 6, Translation 4, Dictionary 4) and the Navigated
+  hook IS wired (ContentFrame.Navigated -> RefreshSettingsFontSize).
+  So the setting was "attached" everywhere — the walk just never
+  saw the other pages' trees. Root cause: Navigated fires before
+  the new page is in the visual tree, and a single dispatcher
+  enqueue can still run before the page's tree exists, so the walk
+  found nothing and only General (present at show time) ever got
+  sized. The #112 enqueue fix did not cure it.
+- Fix: walk a fresh page only once it is Loaded (guaranteed in the
+  visual tree). RefreshSettingsFontSize now sets FontSize on BOTH
+  NavView and ContentFrame (the Frame is the Page's direct parent,
+  so inheritance reaches the page even if the NavigationView
+  template ever blocks it), then ApplyToCurrentPage walks the page
+  immediately if IsLoaded, else attaches a one-time Loaded handler
+  that reads the LIVE setting at fire time (so a slider drag while
+  the page was loading still lands the newest value). Navigated,
+  ShowSettings and OnSettingsSaved all go through this one path.
