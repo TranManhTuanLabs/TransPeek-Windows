@@ -8,9 +8,13 @@
 // in the XAML, and the drag logic lives in SettingsWindow (it owns the
 // NavigationView whose OpenPaneLength is being changed).
 //
-// NOTE: the horizontal-resize shape is SizeEastWest in WinUI 3
-// (Microsoft.UI.Input.InputSystemCursorShape). The WPF name SizeWe /
-// SizeWE does NOT exist here — CI #83 failed with CS0117 on it.
+// NOTE: the horizontal-resize shape is SizeWestEast in WinUI 3
+// (Microsoft.UI.Input.InputSystemCursorShape, value 10 — "a dual arrow
+// pointing left and right, typically used for horizontal sizing").
+// It is NOT SizeWe (that is the WPF name, CS0117 in CI #83) and NOT
+// SizeEastWest (that was a guess from a third-party site, CS0117 in
+// CI #84). The order is West-East, per the Microsoft Learn API
+// reference for InputSystemCursorShape.
 
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml.Controls;
@@ -21,6 +25,6 @@ public sealed class ResizeHandle : Grid
 {
     public ResizeHandle()
     {
-        Loaded += (_, _) => ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.SizeEastWest);
+        Loaded += (_, _) => ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.SizeWestEast);
     }
 }

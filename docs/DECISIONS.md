@@ -1301,3 +1301,22 @@ an OS limit.)
   CrosshairGrid, exists in both — that is why CI #81 was green.)
 - WMC9999 in the same build is a consequence of the C# error, not a
   separate error (same pattern as runs #80 and earlier).
+
+## CI #84 RED — SizeEastWest also does not exist; the real name is SizeWestEast (2026-11-14)
+- CS0117 ResizeHandle.cs(24,95) again, same as #83: the SizeEastWest
+  "fix" in 6afb8e6 came from a third-party site (copyprogramming) and
+  is wrong too. The authoritative Microsoft Learn API reference for
+  InputSystemCursorShape lists the horizontal-resize shape as
+  SizeWestEast (value 10, "a dual arrow pointing left and right,
+  typically used for horizontal sizing") — West first, then East.
+  FIX: SizeEastWest -> SizeWestEast. Lesson: for enum member names,
+  read the Microsoft Learn API reference, not a third-party roundup.
+  (Full member list, WinAppSDK: Arrow, Cross, Hand, Help, IBeam,
+  SizeAll, SizeNortheastSouthwest, SizeNorthSouth,
+  SizeNorthwestSoutheast, SizeWestEast, UniversalNo, UpArrow, Wait,
+  Pin, Person, AppStarting. No SizeWe, no SizeEastWest.)
+- Note: CI #82 (8f30734, speaker E992 + Settings resize + tray order)
+  also FAILED — so the speaker E992 change has not reached any green
+  build yet; the latest working pre-release is still v0.1.3.81 (old
+  E7F5 speaker). #82's failure was the SizeWe error too (ResizeHandle
+  was added in that commit).
