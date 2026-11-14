@@ -12,7 +12,13 @@
                 </Border>
                 <StackPanel Spacing="2" VerticalAlignment="Center">
                     <TextBlock Text="TransPeek" FontSize="24" FontWeight="Bold" />
-                    <TextBlock x:Uid="Settings.About.Tagline" Text="Translate anywhere, peek instantly." FontSize="13" Foreground="Gray" />
+                    <TextBlock x:Uid="Settings.About.Tagline" Text="Translate anywhere, Peek instantly!" FontSize="13" Foreground="Gray" />
+                    <!-- Hint (Manh 2026-11-15, mirrors mac): third line
+                         under the slogan. Smaller than the slogan and
+                         dimmer (tertiary); the Settings font-size walk
+                         sizes it to AppTextSize - 4 (see
+                         SettingsWindow.ApplySettingsFontSize). -->
+                    <TextBlock x:Name="HintText" x:Uid="Settings.About.Hint" Text="Hover icon to translate, Click to listen" FontSize="10" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
                 </StackPanel>
             </StackPanel>
 

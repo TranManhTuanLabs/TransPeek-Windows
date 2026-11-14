@@ -172,14 +172,26 @@ public sealed partial class SettingsWindow : Window
             }
             if (baseSize < 20)
             {
-                var isDescription = tb.Foreground is SolidColorBrush brush
-                    && (brush.Color == Microsoft.UI.Colors.Gray
-                        || brush.Color == Microsoft.UI.Colors.Red);
-                tb.FontSize = isDescription
-                    ? Math.Max(8, size - 1)
-                    : tb.FontWeight == FontWeights.SemiBold || tb.FontWeight == FontWeights.Bold
-                        ? size + 2
-                        : size;
+                // Hint line (About page, Name "HintText"): a few pt
+                // smaller than the slogan (size - 1), i.e. size - 4 —
+                // mac puts the hint 4 pt below the app name, and the
+                // panel does the same (PopupTopBarFontSize - 4). The
+                // colour is already dimmer (tertiary brush in XAML);
+                // the size here is independent of the Foreground /
+                // FontWeight role, so it is checked first.
+                if (tb.Name == "HintText")
+                    tb.FontSize = Math.Max(8, size - 4);
+                else
+                {
+                    var isDescription = tb.Foreground is SolidColorBrush brush
+                        && (brush.Color == Microsoft.UI.Colors.Gray
+                            || brush.Color == Microsoft.UI.Colors.Red);
+                    tb.FontSize = isDescription
+                        ? Math.Max(8, size - 1)
+                        : tb.FontWeight == FontWeights.SemiBold || tb.FontWeight == FontWeights.Bold
+                            ? size + 2
+                            : size;
+                }
             }
         }
         var count = VisualTreeHelper.GetChildrenCount(element);

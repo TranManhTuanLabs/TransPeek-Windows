@@ -173,9 +173,10 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
             });
         RefreshDictionaryBar(App.Settings.DictionaryLinks, App.Settings.DictionaryDisplayMode);
         // Title + footer (AppInfo is the single source for name,
-        // slogan, repo URL and build number).
+        // slogan, hint, repo URL and build number).
         AppNameText.Text = AppInfo.Name;
         TaglineText.Text = AppInfo.Tagline;
+        HintText.Text = AppInfo.Hint;
         RefreshTopBarFontSize();
         RefreshPopupFontSize();
         FooterBuildText.Text = AppInfo.CiBuildNumber > 0
@@ -187,20 +188,25 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
 
     /// <summary>Apply the top-bar font size from settings: the app name
     /// takes the setting, the tagline is always 1 pt smaller (Manh
-    /// 2026-11-14). The gap between the tagline (slogan) and the input
-    /// is exactly 1 line: the TitleBar's bottom margin is set to the
-    /// tagline size, so the space scales with the font instead of
-    /// staying a fixed 6 px (Manh 2026-11-15 — "slogan chưa cách 1
-    /// line với input"). Called on open and whenever settings are saved
-    /// (App.OnSettingsSaved). The 8 pt floor mirrors mac's slogan floor;
-    /// with the 12 pt slider minimum it never triggers in practice.</summary>
+    /// 2026-11-14), and the hint line is 4 pt smaller than the app
+    /// name (Manh 2026-11-15, mirrors mac — a few pt smaller than the
+    /// slogan and dimmer). The gap between the hint (now the last line)
+    /// and the input is exactly 1 line: the TitleBar's bottom margin
+    /// is set to the hint size, so the space scales with the font
+    /// instead of staying a fixed 6 px (Manh 2026-11-15 — "slogan chưa
+    /// cách 1 line với input"). Called on open and whenever settings
+    /// are saved (App.OnSettingsSaved). The 8 pt floor mirrors mac's
+    /// slogan floor; with the 12 pt slider minimum it never triggers
+    /// in practice.</summary>
     public void RefreshTopBarFontSize()
     {
         var size = App.Settings.PopupTopBarFontSize;
         AppNameText.FontSize = size;
         var taglineSize = Math.Max(8, size - 1);
         TaglineText.FontSize = taglineSize;
-        TitleBar.Margin = new Thickness(0, 0, 0, taglineSize);
+        var hintSize = Math.Max(8, size - 4);
+        HintText.FontSize = hintSize;
+        TitleBar.Margin = new Thickness(0, 0, 0, hintSize);
         RequestResizeToFit();
     }
 

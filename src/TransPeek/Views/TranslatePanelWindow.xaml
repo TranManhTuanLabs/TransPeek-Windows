@@ -42,6 +42,12 @@
                  hierarchy without the sizes drifting far apart. (Mac
                  uses a 2 pt gap — 17/15 — but Manh wants 1 pt here.) -->
             <TextBlock x:Name="TaglineText" Foreground="Gray" FontSize="12" HorizontalAlignment="Center" />
+            <!-- Hint (Manh 2026-11-15, mirrors mac): third line under
+                 the slogan — "Hover icon to translate, Click to
+                 listen". A few pt smaller than the slogan and dimmer
+                 (tertiary); the size is set in RefreshTopBarFontSize
+                 (app name - 4 pt, like mac). -->
+            <TextBlock x:Name="HintText" Foreground="{ThemeResource TextFillColorTertiaryBrush}" FontSize="12" HorizontalAlignment="Center" />
         </StackPanel>
 
         <!-- Source text: editable like the mac SourceInputView.

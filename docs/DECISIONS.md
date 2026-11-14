@@ -1804,3 +1804,32 @@ an OS limit.)
   Appearance -> Setting Text Size -> Popup Panel -> Source &
   Translation Text Size -> App name & Slogan Font Size. XAML order
   only; no slider logic or setting changed.
+
+## Third line under the slogan: "Hover icon to translate, Click to listen" (Manh 2026-11-15, mirrors mac)
+
+- Three lines, top to bottom: (1) app name "TransPeek", (2) slogan
+  "Translate anywhere, Peek instantly!" — Manh intentionally
+  capitalises only T and P (start of each clause), never every word;
+  (3) new hint "Hover icon to translate, Click to listen" — only
+  "Hover" and "Click" capitalised (start of each clause), "listen"
+  lowercase like "translate". The hint is a few pt smaller than the
+  slogan and dimmer (tertiary): panel = app name - 4 pt (13 at the
+  17 default), About = AppTextSize - 4 (11 at the 15 default).
+- Panel: HintText added to the TitleBar under TaglineText, text from
+  AppInfo.Hint, size set in RefreshTopBarFontSize. The 1-line gap to
+  the input is now measured from the hint (TitleBar bottom margin =
+  hint size), since the hint is the last line.
+- About: HintText added under the slogan (x:Uid Settings.About.Hint,
+  resw entry added); the Settings font-size walk sizes it by Name
+  (size - 4) because the normal grey-description rule (size - 1)
+  would make it the same size as the slogan.
+- Slogan itself changed from "Translate anywhere, peek instantly."
+  to "Translate anywhere, Peek instantly!" (capital P, "!") — the
+  pending change from 2026-11-15, now applied in AppInfo.Tagline,
+  the About resw entry, and README.md. README (English only on
+  Windows) adds the hint line under the slogan.
+- Standing rule (Manh 2026-11-15): from now on, if Manh misspells
+  something, correct the spelling when putting it into the app —
+  never apply the misspelling as-is; watch capitalisation too.
+  The slogan's T/P capitalisation above is the exception (as Manh
+  specified).

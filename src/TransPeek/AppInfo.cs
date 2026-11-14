@@ -11,7 +11,12 @@ namespace TransPeek;
 public static class AppInfo
 {
     public const string Name = "TransPeek";
-    public const string Tagline = "Translate anywhere, peek instantly.";
+    public const string Tagline = "Translate anywhere, Peek instantly!";
+    /// <summary>Third line under the slogan, in the panel top bar and
+    /// Settings &gt; About (Manh 2026-11-15, mirrors mac). "Hover" and
+    /// "Click" are capitalised (start of each clause); "listen" stays
+    /// lowercase like "translate".</summary>
+    public const string Hint = "Hover icon to translate, Click to listen";
     public const string RepositoryUrl = "https://github.com/TranManhTuanLabs/TransPeek-Windows";
     public const string Author = "TranManhTuanLabs";
 

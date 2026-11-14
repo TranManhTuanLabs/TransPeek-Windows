@@ -367,7 +367,10 @@
     <value>Download failed: {0}</value>
   </data>
   <data name="Settings.About.Tagline.Text" xml:space="preserve">
-    <value>Translate anywhere, peek instantly.</value>
+    <value>Translate anywhere, Peek instantly!</value>
+  </data>
+  <data name="Settings.About.Hint.Text" xml:space="preserve">
+    <value>Hover icon to translate, Click to listen</value>
   </data>
   <data name="Settings.About.Author.Text" xml:space="preserve">
     <value>Author:</value>

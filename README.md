@@ -1,6 +1,8 @@
 # TransPeek for Windows
 
-**Translate anywhere, peek instantly.** — Windows edition.
+**Translate anywhere, Peek instantly!** — Windows edition.
+
+Hover icon to translate, Click to listen.
 
 TransPeek is a floating translator: select text anywhere, hover the
 trigger icon, and the translation appears in a small panel — without
