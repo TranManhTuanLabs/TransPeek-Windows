@@ -2162,3 +2162,17 @@ an OS limit.)
   show the resize cursor there; the grip just signals that the corner
   drags diagonally. It sits in the root Grid's 12 px padding, below the
   footer, covering no interactive content.
+
+## Hotkey hint back at the TOP; Run key note is about Launch, not shortcuts (Manh 2026-11-15)
+
+- The how-to hint ("Click a hotkey box, then press the key combination
+  ...") goes back to the TOP of the Keyboard shortcuts list, right under
+  the header — this corrects the previous move that put it below the
+  last box. The hint introduces the list; it is not a footer note.
+- The "Writes to the Windows Run key (HKCU\...). No admin rights
+  needed." line STAYS under the Launch with Windows toggle. It is NOT
+  about keyboard shortcuts: the Windows Run key is the registry
+  location (HKCU\Software\Microsoft\Windows\CurrentVersion\Run) where
+  Windows records which apps start automatically at login, so the note
+  explains what the Launch toggle does. The word "Run" here is the
+  registry key's name, not "run a shortcut". It belongs with Launch.
