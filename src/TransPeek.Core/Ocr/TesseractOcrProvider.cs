@@ -17,7 +17,7 @@ public sealed class TesseractOcrProvider : IOcrProvider
     public bool NeedsApiKey => false;
 
     public IReadOnlyList<string> SupportedLanguages =>
-        TesseractLanguageDataManager.InstalledCodes()
+        TesseractLanguageDataManager.AvailableCodes()
             .Select(TesseractLanguageDataManager.Bcp47ForTessCode)
             .ToList();
 
@@ -25,17 +25,21 @@ public sealed class TesseractOcrProvider : IOcrProvider
     {
         get
         {
-            var installed = TesseractLanguageDataManager.InstalledCodes();
-            if (installed.Count == 0)
+            // Available = bundled with the app OR downloaded: eng+vie
+            // ship with the app, so the status reads "Ready" on first
+            // run instead of "not downloaded".
+            var available = TesseractLanguageDataManager.AvailableCodes();
+            if (available.Count == 0)
                 return "Language data not downloaded — open Settings → OCR to download vie+eng.";
-            return "Ready (" + string.Join(", ", installed) + ")";
+            return "Ready (" + string.Join(", ", available) + ")";
         }
     }
 
     /// <summary>Whether the engine can run right now: at least one language
-    /// file is installed. The native DLLs ship with the NuGet package.</summary>
+    /// file is available (bundled with the app or downloaded). The native
+    /// DLLs ship with the NuGet package.</summary>
     public static bool IsEngineAvailable
-        => TesseractLanguageDataManager.InstalledCodes().Count > 0;
+        => TesseractLanguageDataManager.AvailableCodes().Count > 0;
 
     public async Task<string> RecognizeTextAsync(byte[] pngBytes, IReadOnlyList<string> languages,
         CancellationToken cancellationToken = default)

@@ -1927,3 +1927,33 @@ an OS limit.)
   gained a StatusCode property (set by ApiError/RateLimited) so the
   coordinator can tell a 429 from any other failure. Test:
   TranslateAsync_RateLimited_DoesNotFallBack.
+
+## Tesseract eng+vie bundled with the app (Manh 2026-11-15)
+
+- Manh: "Nhúng nhé". eng (15,400,601 byte, 14.7 MB) + vie
+  (12,435,550 byte, 11.9 MB) from tessdata_best, ~27 MB total — the
+  app goes from ~133 MB to ~160 MB. OCR must work out of the box, no
+  first-run download, no "OCR doesn't work yet" gap for a new user.
+- CI (`build.yml`, step after Publish) downloads eng+vie from
+  tessdata_best into `publish/tessdata/` (next to the exe). The step
+  fails the build if either file is under 1 MB (a 404 HTML page would
+  be a few KB) — the bundle must never silently ship a broken file.
+- Provider: `TesseractLanguageDataManager` gained
+  `BundledTessdataDirectory` (tessdata next to the exe, via
+  `AppContext.BaseDirectory`), `BundledCodes()` and `AvailableCodes()`
+  (bundled OR local). `DownloadAsync` prefers the bundled copy (local
+  file copy, no network) and only downloads from tessdata_best when
+  the app does not bundle that language. The engine still reads from
+  ONE directory (`TessdataDirectory` = %LOCALAPPDATA%) — a bundled
+  file is copied there on first use, so a mixed bundle/local split
+  can never confuse the engine.
+- `IsInstalled` / `InstalledCodes` stay local-only (the engine's
+  missing check and the copy/download decision must see the local
+  dir). Status display uses `AvailableCodes()` instead, so Settings
+  → OCR and the provider status read "Ready (eng, vie)" on first run
+  instead of "not downloaded" — `TesseractOcrProvider.Status`,
+  `SupportedLanguages`, `IsEngineAvailable`, and
+  `OcrPage.RefreshTesseractStatus` all use it.
+- Extra languages still download on demand to the local dir (the
+  all-languages picker is a separate session, after the 2026-11-16
+  token reset). The old "never bundled" comment is removed.

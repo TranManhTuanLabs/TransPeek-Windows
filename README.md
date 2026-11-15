@@ -39,10 +39,12 @@ edition, rewritten from scratch. The macOS edition (Swift) lives at
   dịch]** buttons and auto-copy of the translation (default on), or
   **copy-only mode** (OCR → copy source text, toast "Đã copy").
   Engines: **Tesseract (default for Vietnamese)** — language data
-  (`vie`/`eng`) downloads on demand from tessdata_best into
-  `%LOCALAPPDATA%\TransPeek\tessdata` — and built-in **Windows OCR**
-  as the fallback. Capture uses Windows.Graphics.Capture with a GDI
-  BitBlt fallback.
+  (`vie`/`eng`) ships with the app (CI seeds it from tessdata_best
+  into a `tessdata` folder next to the exe; the app copies it to
+  `%LOCALAPPDATA%\TransPeek\tessdata` on first use, no download) —
+  and built-in **Windows OCR** as the fallback. Extra languages
+  download on demand into `%LOCALAPPDATA%\TransPeek\tessdata`.
+  Capture uses Windows.Graphics.Capture with a GDI BitBlt fallback.
 - **Settings + tray icon**: Settings window (General / Translation /
   Dictionary / OCR / About), tray icon with menu (Settings, Translate
   selection, Capture & OCR, Quit), launch at login (registry Run key).

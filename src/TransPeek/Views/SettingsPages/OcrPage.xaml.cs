@@ -48,7 +48,9 @@ public sealed partial class OcrPage : Page
     {
         var provider = new TesseractOcrProvider();
         TesseractStatusText.Text = provider.Status;
-        var installed = TesseractLanguageDataManager.InstalledCodes();
+        // Available = bundled with the app OR downloaded, so eng+vie
+        // show up here on first run (they ship with the app).
+        var installed = TesseractLanguageDataManager.AvailableCodes();
         InstalledCodesText.Text = installed.Count == 0
             ? AppStrings.Get("Settings.Ocr.NoLanguagesInstalled", "No languages installed.")
             : AppStrings.Get("Settings.Ocr.InstalledLanguages", "Installed: {0}", string.Join(", ", installed));

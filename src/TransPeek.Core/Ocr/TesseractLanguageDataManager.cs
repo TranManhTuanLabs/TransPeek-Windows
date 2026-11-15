@@ -1,8 +1,11 @@
 // Owns Tesseract *.traineddata files (SPEC §3.3).
 // Mirrors the mac app's TesseractLanguageDataManager: languages download
 // on demand from tessdata_best (most accurate) into
-// %LOCALAPPDATA%\TransPeek\tessdata — never bundled with the app, so the
-// installed size stays small. v0.1 languages: vie + eng.
+// %LOCALAPPDATA%\TransPeek\tessdata. Since 2026-11-15 (Manh) eng + vie
+// are BUNDLED with the app (CI seeds them from tessdata_best into a
+// tessdata folder next to the exe), so OCR works out of the box — the
+// provider copies a bundled file into the local dir on first use, no
+// download. Extra languages still download on demand to the local dir.
 
 using TransPeek.Core.Dictionary;
 
@@ -15,6 +18,47 @@ public static class TesseractLanguageDataManager
         => new($"https://github.com/tesseract-ocr/tessdata_best/raw/main/{code}.traineddata");
 
     public static string TessdataDirectory => AppPaths.TessdataDirectory;
+
+    /// <summary>Language data bundled with the app: the tessdata folder
+    /// next to the exe (CI seeds eng + vie from tessdata_best at build
+    /// time). The engine never reads from here directly — a bundled file
+    /// is copied into <see cref="TessdataDirectory"/> on first use (see
+    /// <see cref="DownloadAsync"/>), so the engine always has one
+    /// directory to read from.</summary>
+    public static string BundledTessdataDirectory
+        => Path.Combine(AppContext.BaseDirectory, "tessdata");
+
+    /// <summary>Language codes bundled with the app (tessdata next to
+    /// the exe). Empty when the app was built without the bundle.</summary>
+    public static IReadOnlyList<string> BundledCodes()
+    {
+        var codes = new SortedSet<string>(StringComparer.Ordinal);
+        try
+        {
+            var dir = BundledTessdataDirectory;
+            if (!Directory.Exists(dir))
+                return [];
+            foreach (var file in Directory.EnumerateFiles(dir, "*.traineddata"))
+                codes.Add(Path.GetFileNameWithoutExtension(file));
+        }
+        catch
+        {
+            // A directory we cannot list means "nothing bundled".
+        }
+        return codes.ToList();
+    }
+
+    /// <summary>Language codes usable right now: bundled with the app OR
+    /// already in the local tessdata dir. For status display only — the
+    /// engine reads from <see cref="TessdataDirectory"/>, and a bundled
+    /// file is copied there on first use.</summary>
+    public static IReadOnlyList<string> AvailableCodes()
+    {
+        var codes = new SortedSet<string>(StringComparer.Ordinal);
+        codes.UnionWith(BundledCodes());
+        codes.UnionWith(InstalledCodes());
+        return codes.ToList();
+    }
 
     /// <summary>Installed language codes ("vie", "eng", ...) in the tessdata dir.</summary>
     public static IReadOnlyList<string> InstalledCodes()
@@ -37,20 +81,33 @@ public static class TesseractLanguageDataManager
     public static bool IsInstalled(string code)
         => InstalledCodes().Contains(code, StringComparer.Ordinal);
 
-    /// <summary>Download one language file into the tessdata dir (atomic
-    /// replace of any previous download).</summary>
+    /// <summary>Make one language file available in the tessdata dir
+    /// (atomic replace of any previous file). Prefers the copy bundled
+    /// with the app (eng + vie, no network — OCR works out of the box)
+    /// and downloads from tessdata_best only when the app does not
+    /// bundle that language.</summary>
     public static async Task DownloadAsync(string code, CancellationToken cancellationToken = default)
     {
         Directory.CreateDirectory(TessdataDirectory);
         var destination = Path.Combine(TessdataDirectory, code + ".traineddata");
+        var bundled = Path.Combine(BundledTessdataDirectory, code + ".traineddata");
+        if (File.Exists(bundled))
+        {
+            // Bundled with the app (CI seeds eng+vie): copy locally
+            // instead of downloading — same atomic replace, no network.
+            var temp = destination + ".download";
+            File.Copy(bundled, temp, overwrite: true);
+            File.Move(temp, destination, overwrite: true);
+            return;
+        }
         using var http = new HttpClient { Timeout = TimeSpan.FromMinutes(2) };
         using var response = await http.GetAsync(DownloadUrl(code), cancellationToken).ConfigureAwait(false);
         if (!response.IsSuccessStatusCode)
             throw OcrException.EngineFailed($"Could not download {code} language data (HTTP {(int)response.StatusCode}).");
-        var temp = destination + ".download";
-        await using (var file = File.Create(temp))
+        var tempDownload = destination + ".download";
+        await using (var file = File.Create(tempDownload))
             await response.Content.CopyToAsync(file, cancellationToken).ConfigureAwait(false);
-        File.Move(temp, destination, overwrite: true);
+        File.Move(tempDownload, destination, overwrite: true);
     }
 
     /// <summary>Language codes the user asked for (BCP 47) that are not
