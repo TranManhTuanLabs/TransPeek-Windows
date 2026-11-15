@@ -20,53 +20,53 @@
                  OCR to Clipboard, OCR to Clipboard - Translated,
                  Translate Selection, Translate Clipboard, Screenshot
                  Copy, Scan, Settings). -->
-            <TextBox x:Name="TranslateHotkeyBox" x:Uid="Settings.General.TranslateHotkey" Header="Hotkey to open the translate panel (e.g. Control+Alt+T)"
+            <TextBox x:Name="TranslateHotkeyBox" x:Uid="Settings.General.TranslateHotkey" Header="Open translate panel"
                      GotFocus="OnHotkeyBoxGotFocus" KeyDown="OnHotkeyBoxKeyDown"
                      LostFocus="OnTranslateHotkeyLostFocus" />
             <TextBlock x:Name="HotkeyErrorText" FontSize="12" Foreground="Red" Visibility="Collapsed" />
 
             <!-- One hotkey per tray menu action (Manh 2026-11-12). -->
-            <TextBox x:Name="ManualHotkeyBox" x:Uid="Settings.General.ManualHotkey" Header="Hotkey for Manual Translation (e.g. Control+Alt+M)"
+            <TextBox x:Name="ManualHotkeyBox" x:Uid="Settings.General.ManualHotkey" Header="Manual Translation"
                      GotFocus="OnHotkeyBoxGotFocus" KeyDown="OnHotkeyBoxKeyDown"
                      LostFocus="OnManualHotkeyLostFocus" />
             <TextBlock x:Name="ManualHotkeyErrorText" FontSize="12" Foreground="Red" Visibility="Collapsed" />
 
-            <TextBox x:Name="OcrHotkeyBox" x:Uid="Settings.General.OcrHotkey" Header="Hotkey for OCR Screen Translate (e.g. Control+Shift+S)"
+            <TextBox x:Name="OcrHotkeyBox" x:Uid="Settings.General.OcrHotkey" Header="OCR Screen Translate"
                      GotFocus="OnHotkeyBoxGotFocus" KeyDown="OnHotkeyBoxKeyDown"
                      LostFocus="OnOcrHotkeyLostFocus" />
             <TextBlock x:Name="OcrHotkeyErrorText" FontSize="12" Foreground="Red" Visibility="Collapsed" />
 
-            <TextBox x:Name="ClipboardOcrHotkeyBox" x:Uid="Settings.General.ClipboardOcrHotkey" Header="Hotkey for OCR to Clipboard (e.g. Control+Alt+C)"
+            <TextBox x:Name="ClipboardOcrHotkeyBox" x:Uid="Settings.General.ClipboardOcrHotkey" Header="OCR to Clipboard"
                      GotFocus="OnHotkeyBoxGotFocus" KeyDown="OnHotkeyBoxKeyDown"
                      LostFocus="OnClipboardOcrHotkeyLostFocus" />
             <TextBlock x:Name="ClipboardOcrHotkeyErrorText" FontSize="12" Foreground="Red" Visibility="Collapsed" />
 
-            <TextBox x:Name="ClipboardOcrTranslatedHotkeyBox" x:Uid="Settings.General.ClipboardOcrTranslatedHotkey" Header="Hotkey for OCR to Clipboard - Translated (e.g. Control+Alt+R)"
+            <TextBox x:Name="ClipboardOcrTranslatedHotkeyBox" x:Uid="Settings.General.ClipboardOcrTranslatedHotkey" Header="OCR to Clipboard - Translated"
                      GotFocus="OnHotkeyBoxGotFocus" KeyDown="OnHotkeyBoxKeyDown"
                      LostFocus="OnClipboardOcrTranslatedHotkeyLostFocus" />
             <TextBlock x:Name="ClipboardOcrTranslatedHotkeyErrorText" FontSize="12" Foreground="Red" Visibility="Collapsed" />
 
-            <TextBox x:Name="SelectionHotkeyBox" x:Uid="Settings.General.SelectionHotkey" Header="Hotkey for Translate Selection (e.g. Control+Alt+S)"
+            <TextBox x:Name="SelectionHotkeyBox" x:Uid="Settings.General.SelectionHotkey" Header="Translate Selection"
                      GotFocus="OnHotkeyBoxGotFocus" KeyDown="OnHotkeyBoxKeyDown"
                      LostFocus="OnSelectionHotkeyLostFocus" />
             <TextBlock x:Name="SelectionHotkeyErrorText" FontSize="12" Foreground="Red" Visibility="Collapsed" />
 
-            <TextBox x:Name="ClipboardTranslationHotkeyBox" x:Uid="Settings.General.ClipboardTranslationHotkey" Header="Hotkey for Translate Clipboard (e.g. Control+Alt+L)"
+            <TextBox x:Name="ClipboardTranslationHotkeyBox" x:Uid="Settings.General.ClipboardTranslationHotkey" Header="Translate Clipboard"
                      GotFocus="OnHotkeyBoxGotFocus" KeyDown="OnHotkeyBoxKeyDown"
                      LostFocus="OnClipboardTranslationHotkeyLostFocus" />
             <TextBlock x:Name="ClipboardTranslationHotkeyErrorText" FontSize="12" Foreground="Red" Visibility="Collapsed" />
 
-            <TextBox x:Name="ScreenshotCopyHotkeyBox" x:Uid="Settings.General.ScreenshotCopyHotkey" Header="Hotkey for Screenshot Copy (e.g. Control+Alt+P)"
+            <TextBox x:Name="ScreenshotCopyHotkeyBox" x:Uid="Settings.General.ScreenshotCopyHotkey" Header="Screenshot Copy"
                      GotFocus="OnHotkeyBoxGotFocus" KeyDown="OnHotkeyBoxKeyDown"
                      LostFocus="OnScreenshotCopyHotkeyLostFocus" />
             <TextBlock x:Name="ScreenshotCopyHotkeyErrorText" FontSize="12" Foreground="Red" Visibility="Collapsed" />
 
-            <TextBox x:Name="ScanHotkeyBox" x:Uid="Settings.General.ScanHotkey" Header="Hotkey for Scan Barcodes / QR Codes (e.g. Control+Alt+B)"
+            <TextBox x:Name="ScanHotkeyBox" x:Uid="Settings.General.ScanHotkey" Header="Scan Barcodes/QR Codes"
                      GotFocus="OnHotkeyBoxGotFocus" KeyDown="OnHotkeyBoxKeyDown"
                      LostFocus="OnScanHotkeyLostFocus" />
             <TextBlock x:Name="ScanHotkeyErrorText" FontSize="12" Foreground="Red" Visibility="Collapsed" />
 
-            <TextBox x:Name="SettingsHotkeyBox" x:Uid="Settings.General.SettingsHotkey" Header="Hotkey to open Settings (e.g. Control+Alt+O)"
+            <TextBox x:Name="SettingsHotkeyBox" x:Uid="Settings.General.SettingsHotkey" Header="Settings…"
                      GotFocus="OnHotkeyBoxGotFocus" KeyDown="OnHotkeyBoxKeyDown"
                      LostFocus="OnSettingsHotkeyLostFocus" />
             <TextBlock x:Name="SettingsHotkeyErrorText" FontSize="12" Foreground="Red" Visibility="Collapsed" />

@@ -2113,3 +2113,21 @@ an OS limit.)
   Launch sat under it.) Each toggle moved with its own hint/note/error
   text. No code change — XAML order only, the code-behind addresses
   the toggles by name.
+
+## Hotkey labels match the tray menu exactly, no examples (Manh 2026-11-15)
+
+- The ten hotkey boxes in Settings -> General now use exactly the tray
+  menu item names as their Header, with no "Hotkey to/for ..." prefix
+  and no "(e.g. ...)" example — the box itself already shows the
+  current combination, so the example was redundant. The names come
+  from TrayIconService (the fallbacks, which are what the tray shows):
+  "Open translate panel", "Manual Translation", "OCR Screen Translate",
+  "OCR to Clipboard", "OCR to Clipboard - Translated", "Translate
+  Selection", "Translate Clipboard", "Screenshot Copy", "Scan
+  Barcodes/QR Codes" (no spaces around the slash, as in the tray),
+  "Settings…" (with the ellipsis, as in the tray). Both the XAML Header
+  fallback and the resw values were updated (resw wins at runtime).
+- Note: "Open translate panel" has no tray menu item (the tray has no
+  open-panel entry — the panel opens from selection/hover/hotkey), so
+  that one is the plain action name in the same concise style, not a
+  tray name. Manh can rename it if he wants a different one.

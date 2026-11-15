@@ -181,34 +181,34 @@
     <value>Trigger icon hides after (seconds)</value>
   </data>
   <data name="Settings.General.TranslateHotkey.Header" xml:space="preserve">
-    <value>Hotkey to open the translate panel (e.g. Control+Alt+T)</value>
+    <value>Open translate panel</value>
   </data>
   <data name="Settings.General.OcrHotkey.Header" xml:space="preserve">
-    <value>Hotkey for OCR Screen Translate (e.g. Control+Shift+S)</value>
+    <value>OCR Screen Translate</value>
   </data>
   <data name="Settings.General.ManualHotkey.Header" xml:space="preserve">
-    <value>Hotkey for Manual Translation (e.g. Control+Alt+M)</value>
+    <value>Manual Translation</value>
   </data>
   <data name="Settings.General.ClipboardOcrHotkey.Header" xml:space="preserve">
-    <value>Hotkey for OCR to Clipboard (e.g. Control+Alt+C)</value>
+    <value>OCR to Clipboard</value>
   </data>
   <data name="Settings.General.ClipboardOcrTranslatedHotkey.Header" xml:space="preserve">
-    <value>Hotkey for OCR to Clipboard - Translated (e.g. Control+Alt+R)</value>
+    <value>OCR to Clipboard - Translated</value>
   </data>
   <data name="Settings.General.SelectionHotkey.Header" xml:space="preserve">
-    <value>Hotkey for Translate Selection (e.g. Control+Alt+S)</value>
+    <value>Translate Selection</value>
   </data>
   <data name="Settings.General.ClipboardTranslationHotkey.Header" xml:space="preserve">
-    <value>Hotkey for Translate Clipboard (e.g. Control+Alt+L)</value>
+    <value>Translate Clipboard</value>
   </data>
   <data name="Settings.General.ScreenshotCopyHotkey.Header" xml:space="preserve">
-    <value>Hotkey for Screenshot Copy (e.g. Control+Alt+P)</value>
+    <value>Screenshot Copy</value>
   </data>
   <data name="Settings.General.ScanHotkey.Header" xml:space="preserve">
-    <value>Hotkey for Scan Barcodes / QR Codes (e.g. Control+Alt+B)</value>
+    <value>Scan Barcodes/QR Codes</value>
   </data>
   <data name="Settings.General.SettingsHotkey.Header" xml:space="preserve">
-    <value>Hotkey to open Settings (e.g. Control+Alt+O)</value>
+    <value>Settings…</value>
   </data>
   <data name="Settings.General.LaunchAtLogin.Header" xml:space="preserve">
     <value>Launch with Windows</value>
