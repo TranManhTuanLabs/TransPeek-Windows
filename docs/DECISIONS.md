@@ -2192,3 +2192,20 @@ an OS limit.)
   is still in progress — wait for it to finish (or be cancelled) first,
   or the release can be lost. This push re-triggers a clean run (#130)
   with no concurrent run, so v0.1.3.130 is created properly.
+
+## Resize grip flush against the corner; build text clears it (Manh 2026-11-16)
+
+- The 3-line resize grip now sits FLUSH against the window's
+  bottom-right corner: the Canvas margin is -11 on the right and
+  bottom, cancelling the root Grid's 12 px padding, so the 12x12 grip
+  ends 1 px from the edge — inside the 8 px native resize strip. Before,
+  it sat 12 px in from the corner (inside the padding), so hovering the
+  lines did not show the resize cursor; the user had to travel a further
+  12 px to the corner before the cursor changed. Now the cursor turns
+  to resize as soon as the mouse reaches the lines.
+- The footer build/version text (FooterBuildText) gets a 16 px right
+  margin so it stops clear of the grip. Before, the grip sat at the
+  bottom of the footer row and overlapped the right end of the version
+  text ("góc chồng version" in a company-doc screenshot). The grip is
+  still decorative only (IsHitTestVisible=False); the OS strips do the
+  dragging.

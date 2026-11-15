@@ -215,7 +215,8 @@
                 </StackPanel>
             </HyperlinkButton>
             <TextBlock x:Name="FooterBuildText" Foreground="Gray" FontSize="11"
-                       VerticalAlignment="Center" HorizontalAlignment="Right" Opacity="0.7" />
+                       VerticalAlignment="Center" HorizontalAlignment="Right" Opacity="0.7"
+                       Margin="0,0,16,0" />
         </Grid>
 
         <!-- Resize grip (Manh 2026-11-15 — like mac's ResizeGripView):
@@ -225,13 +226,19 @@
              only — the actual drag is handled by the OS via the native
              resize strips (UpdateResizeRegions: BottomBorder +
              RightBorder), which also show the resize cursor there.
-             It sits in the root Grid's 12 px padding, below the footer,
-             so it covers no interactive content. Replaces the single
-             "↘" arrow, which read as a plain arrow rather than a
-             resize grip. -->
+             It sits FLUSH against the window's bottom-right corner
+             (Manh 2026-11-16): the negative margin (-11) cancels the
+             root Grid's 12 px padding, so the 12x12 grip ends 1 px
+             from the edge, inside the 8 px native resize strip — the
+             cursor turns to resize as soon as the mouse reaches the
+             lines, instead of the user having to travel a further
+             12 px to the corner. The footer build text has a 16 px
+             right margin so it clears the grip and never overlaps it.
+             Replaces the single "↘" arrow, which read as a plain
+             arrow rather than a resize grip. -->
         <Canvas Grid.RowSpan="8" Width="12" Height="12"
                 HorizontalAlignment="Right" VerticalAlignment="Bottom"
-                Margin="0,0,1,0" IsHitTestVisible="False">
+                Margin="0,0,-11,-11" IsHitTestVisible="False">
             <Line X1="3" Y1="12" X2="12" Y2="3"
                   Stroke="{ThemeResource TextFillColorTertiaryBrush}" StrokeThickness="1" />
             <Line X1="6" Y1="12" X2="12" Y2="6"
