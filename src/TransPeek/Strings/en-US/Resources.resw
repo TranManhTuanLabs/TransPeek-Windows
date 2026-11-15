@@ -189,8 +189,14 @@
   <data name="Settings.General.ClipboardOcrHotkey.Header" xml:space="preserve">
     <value>Hotkey for OCR to Clipboard (e.g. Control+Alt+C)</value>
   </data>
+  <data name="Settings.General.ClipboardOcrTranslatedHotkey.Header" xml:space="preserve">
+    <value>Hotkey for OCR to Clipboard - Translated (e.g. Control+Alt+R)</value>
+  </data>
   <data name="Settings.General.SelectionHotkey.Header" xml:space="preserve">
     <value>Hotkey for Translate Selection (e.g. Control+Alt+S)</value>
+  </data>
+  <data name="Settings.General.ClipboardTranslationHotkey.Header" xml:space="preserve">
+    <value>Hotkey for Translate Clipboard (e.g. Control+Alt+L)</value>
   </data>
   <data name="Settings.General.ScreenshotCopyHotkey.Header" xml:space="preserve">
     <value>Hotkey for Screenshot Copy (e.g. Control+Alt+P)</value>

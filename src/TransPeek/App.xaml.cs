@@ -436,8 +436,12 @@ public sealed partial class App : Application
             () => _panel?.ShowInputMode());
         TryRegister(GlobalHotkeyService.ClipboardOcrHotkeyId, Settings.ClipboardOcrHotkey, "clipboard OCR",
             () => _ = _ocrFlow!.RunSilentOcrAsync());
+        TryRegister(GlobalHotkeyService.ClipboardOcrTranslatedHotkeyId, Settings.ClipboardOcrTranslatedHotkey, "clipboard OCR translated",
+            () => _ = _ocrFlow!.RunSilentOcrTranslatedAsync());
         TryRegister(GlobalHotkeyService.SelectionHotkeyId, Settings.SelectionHotkey, "selection translation",
             () => _ = TranslateCurrentSelectionAsync());
+        TryRegister(GlobalHotkeyService.ClipboardTranslationHotkeyId, Settings.ClipboardTranslationHotkey, "clipboard translation",
+            () => _ = TranslateClipboardAsync());
         TryRegister(GlobalHotkeyService.ScreenshotCopyHotkeyId, Settings.ScreenshotCopyHotkey, "screenshot copy",
             () => _ = _screenshotCopy!.RunAsync());
         TryRegister(GlobalHotkeyService.ScanHotkeyId, Settings.ScanHotkey, "barcode scan",

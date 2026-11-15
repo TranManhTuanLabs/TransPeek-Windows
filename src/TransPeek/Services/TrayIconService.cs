@@ -39,9 +39,10 @@ public sealed class TrayIconService : IDisposable
     private readonly Microsoft.UI.Dispatching.DispatcherQueue _dispatcher;
     private bool _disposed;
 
-    // The two hotkey actions, so their shortcut hints can be refreshed
+    // The hotkey actions, so their shortcut hints can be refreshed
     // on every menu open (see the Opening handler in the constructor).
     private readonly MenuFlyoutItem _clipboardTranslationItem;
+    private readonly MenuFlyoutItem _clipboardOcrTranslatedItem;
     private readonly MenuFlyoutItem _screenshotOcrItem;
 
     // The .ico stream behind the tray Icon: Icon(Stream) needs the
@@ -82,7 +83,8 @@ public sealed class TrayIconService : IDisposable
         // sits right under "OCR to Clipboard" (same prefix, so the pair
         // stays adjacent). Glyph E774 Globe (Segoe Fluent Icons — the
         // language/translation mark; E76E is Emoji2, not Globe).
-        menu.Items.Add(Item("Tray.Menu.ClipboardOcrTranslated", "OCR to Clipboard - Translated", "\uE774", clipboardOcrTranslated));
+        _clipboardOcrTranslatedItem = Item("Tray.Menu.ClipboardOcrTranslated", "OCR to Clipboard - Translated", "\uE774", clipboardOcrTranslated);
+        menu.Items.Add(_clipboardOcrTranslatedItem);
         menu.Items.Add(Item("Tray.Menu.SelectionTranslation", "Translate Selection", "\uE70F", selectionTranslation));
         _clipboardTranslationItem = Item("Tray.Menu.ClipboardTranslation", "Translate Clipboard", "\uE77F", clipboardTranslation);
         menu.Items.Add(_clipboardTranslationItem);
@@ -117,7 +119,7 @@ public sealed class TrayIconService : IDisposable
         // breaking the menu, so this one never touches the items.
         menu.Opening += (_, _) => CrashLog.WriteLine("TrayMenu", "Menu opening");
 
-        // Shortcut hints on the right of the two hotkey actions (mac
+        // Shortcut hints on the right of the hotkey actions (mac
         // menubar parity). Set once here and refreshed when Settings are
         // saved (RefreshAccelerators) — NOT on menu.Opening: the Opening
         // handler ran on every open and is suspected of breaking the
@@ -147,7 +149,13 @@ public sealed class TrayIconService : IDisposable
     /// (call after Settings are saved — hotkeys can change at runtime).</summary>
     public void RefreshAccelerators()
     {
-        _clipboardTranslationItem.KeyboardAcceleratorTextOverride = FormatHotkey(App.Settings.TranslateHotkey);
+        // FIX (Manh 2026-11-15): "Translate Clipboard" used to show
+        // TranslateHotkey (Control+Alt+T) — the "open the translate
+        // panel" chord, which does NOT trigger Translate Clipboard
+        // (it translates the current selection instead). It now shows
+        // the real Translate Clipboard chord, Control+Alt+L.
+        _clipboardTranslationItem.KeyboardAcceleratorTextOverride = FormatHotkey(App.Settings.ClipboardTranslationHotkey);
+        _clipboardOcrTranslatedItem.KeyboardAcceleratorTextOverride = FormatHotkey(App.Settings.ClipboardOcrTranslatedHotkey);
         _screenshotOcrItem.KeyboardAcceleratorTextOverride = FormatHotkey(App.Settings.OcrHotkey);
     }
 

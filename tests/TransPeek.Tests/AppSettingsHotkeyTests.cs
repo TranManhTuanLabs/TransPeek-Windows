@@ -21,7 +21,9 @@ public sealed class AppSettingsHotkeyTests
             s.OcrHotkey,
             s.ManualHotkey,
             s.ClipboardOcrHotkey,
+            s.ClipboardOcrTranslatedHotkey,
             s.SelectionHotkey,
+            s.ClipboardTranslationHotkey,
             s.ScreenshotCopyHotkey,
             s.ScanHotkey,
             s.SettingsHotkey,
@@ -38,7 +40,9 @@ public sealed class AppSettingsHotkeyTests
         Assert.Equal("Control+Shift+S", s.OcrHotkey);
         Assert.Equal("Control+Alt+M", s.ManualHotkey);
         Assert.Equal("Control+Alt+C", s.ClipboardOcrHotkey);
+        Assert.Equal("Control+Alt+R", s.ClipboardOcrTranslatedHotkey);
         Assert.Equal("Control+Alt+S", s.SelectionHotkey);
+        Assert.Equal("Control+Alt+L", s.ClipboardTranslationHotkey);
         Assert.Equal("Control+Alt+P", s.ScreenshotCopyHotkey);
         Assert.Equal("Control+Alt+B", s.ScanHotkey);
         Assert.Equal("Control+Alt+O", s.SettingsHotkey);

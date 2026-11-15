@@ -7,17 +7,21 @@
          32 pt panel, 30 pt circle inset 1 pt; see the link Manh asked
          for: Sources/UI/TriggerIcon/TriggerIconPanel.swift). The mark is
          the letter "A" (Manh 2026-11-14: keep "A", drop the Chinese
-         character), 14 pt like the mac symbol. The mac bubble port
-         (0.1.3.72, a XAML Path bubble outline with "A" inside) looked
-         bad — shadowed and off-size — so it was reverted to the plain
-         "A" (Manh 2026-11-14). Clicking switches the mark to a speaker
-         glyph (the visual state for the listen/TTS mode; TTS audio
-         itself is NOT built yet — planned M2, after mac is stable). -->
+         character), 14 pt like the mac symbol, REGULAR weight (not
+         Bold) and sea blue #0078D4 (Manh 2026-11-15 — the mac glyph
+         went .systemBlue the same day; the Windows circle stays white
+         and does NOT follow system dark/light yet — that is planned
+         for later). The mac bubble port (0.1.3.72, a XAML Path bubble
+         outline with "A" inside) looked bad — shadowed and off-size —
+         so it was reverted to the plain "A" (Manh 2026-11-14).
+         Clicking switches the mark to a speaker glyph (the visual state
+         for the listen/TTS mode; TTS audio itself is NOT built yet —
+         planned M2, after mac is stable). -->
     <Grid Background="Transparent">
         <Border x:Name="IconBorder" Width="30" Height="30" CornerRadius="15"
                 Background="White" BorderBrush="#C8C8C8" BorderThickness="1">
             <Grid>
-                <TextBlock x:Name="LetterMark" Text="A" FontSize="14" FontWeight="Bold" Foreground="#1A1A1A"
+                <TextBlock x:Name="LetterMark" Text="A" FontSize="14" FontWeight="Normal" Foreground="#0078D4"
                            HorizontalAlignment="Center" VerticalAlignment="Center" />
                 <!-- Speaker mark (click = listen/TTS mode): E767 Volume —
                      the Windows 11 system speaker WITH sound waves. The

@@ -80,7 +80,15 @@ public sealed class AppSettings
     /// free on Windows and distinct from the two originals.</summary>
     public string ManualHotkey { get; set; } = "Control+Alt+M";
     public string ClipboardOcrHotkey { get; set; } = "Control+Alt+C";
+    /// <summary>Global hotkey for OCR to Clipboard - Translated
+    /// (OCR -&gt; translate -&gt; copy the translation). Default
+    /// Control+Alt+R (tRanslated — T is taken by Translate).</summary>
+    public string ClipboardOcrTranslatedHotkey { get; set; } = "Control+Alt+R";
     public string SelectionHotkey { get; set; } = "Control+Alt+S";
+    /// <summary>Global hotkey for Translate Clipboard (translate the
+    /// text currently in the clipboard). Default Control+Alt+L
+    /// (cLipboard — C is taken by OCR to Clipboard).</summary>
+    public string ClipboardTranslationHotkey { get; set; } = "Control+Alt+L";
     public string ScreenshotCopyHotkey { get; set; } = "Control+Alt+P";
     public string ScanHotkey { get; set; } = "Control+Alt+B";
     public string SettingsHotkey { get; set; } = "Control+Alt+O";

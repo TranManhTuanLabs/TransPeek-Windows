@@ -32,6 +32,8 @@ public sealed class GlobalHotkeyService : IDisposable
     public const int ScreenshotCopyHotkeyId = 6;
     public const int ScanHotkeyId = 7;
     public const int SettingsHotkeyId = 8;
+    public const int ClipboardOcrTranslatedHotkeyId = 9;
+    public const int ClipboardTranslationHotkeyId = 10;
 
     private readonly Dictionary<int, (uint Modifiers, uint Vk, Action Handler)> _hotkeys = new();
     private readonly Thread _thread;

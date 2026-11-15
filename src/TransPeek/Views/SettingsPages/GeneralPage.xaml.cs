@@ -50,10 +50,12 @@ public sealed partial class GeneralPage : Page
         AppTextSizeSlider.Value = s.AppTextSize;
         AppTextSizeSlider.Header = AppTextSizeLabel(s.AppTextSize);
         TranslateHotkeyBox.Text = s.TranslateHotkey;
-        OcrHotkeyBox.Text = s.OcrHotkey;
         ManualHotkeyBox.Text = s.ManualHotkey;
+        OcrHotkeyBox.Text = s.OcrHotkey;
         ClipboardOcrHotkeyBox.Text = s.ClipboardOcrHotkey;
+        ClipboardOcrTranslatedHotkeyBox.Text = s.ClipboardOcrTranslatedHotkey;
         SelectionHotkeyBox.Text = s.SelectionHotkey;
+        ClipboardTranslationHotkeyBox.Text = s.ClipboardTranslationHotkey;
         ScreenshotCopyHotkeyBox.Text = s.ScreenshotCopyHotkey;
         ScanHotkeyBox.Text = s.ScanHotkey;
         SettingsHotkeyBox.Text = s.SettingsHotkey;
@@ -163,9 +165,17 @@ public sealed partial class GeneralPage : Page
         => TrySaveHotkey(ClipboardOcrHotkeyBox, ClipboardOcrHotkeyErrorText, "OCR to Clipboard",
             s => App.Settings.ClipboardOcrHotkey = s, () => App.Settings.ClipboardOcrHotkey);
 
+    private void OnClipboardOcrTranslatedHotkeyLostFocus(object sender, RoutedEventArgs e)
+        => TrySaveHotkey(ClipboardOcrTranslatedHotkeyBox, ClipboardOcrTranslatedHotkeyErrorText, "OCR to Clipboard - Translated",
+            s => App.Settings.ClipboardOcrTranslatedHotkey = s, () => App.Settings.ClipboardOcrTranslatedHotkey);
+
     private void OnSelectionHotkeyLostFocus(object sender, RoutedEventArgs e)
         => TrySaveHotkey(SelectionHotkeyBox, SelectionHotkeyErrorText, "Translate Selection",
             s => App.Settings.SelectionHotkey = s, () => App.Settings.SelectionHotkey);
+
+    private void OnClipboardTranslationHotkeyLostFocus(object sender, RoutedEventArgs e)
+        => TrySaveHotkey(ClipboardTranslationHotkeyBox, ClipboardTranslationHotkeyErrorText, "Translate Clipboard",
+            s => App.Settings.ClipboardTranslationHotkey = s, () => App.Settings.ClipboardTranslationHotkey);
 
     private void OnScreenshotCopyHotkeyLostFocus(object sender, RoutedEventArgs e)
         => TrySaveHotkey(ScreenshotCopyHotkeyBox, ScreenshotCopyHotkeyErrorText, "Screenshot Copy",
@@ -239,9 +249,15 @@ public sealed partial class GeneralPage : Page
         else if (box == ClipboardOcrHotkeyBox)
             TrySaveHotkey(box, ClipboardOcrHotkeyErrorText, "OCR to Clipboard",
                 s => App.Settings.ClipboardOcrHotkey = s, () => App.Settings.ClipboardOcrHotkey);
+        else if (box == ClipboardOcrTranslatedHotkeyBox)
+            TrySaveHotkey(box, ClipboardOcrTranslatedHotkeyErrorText, "OCR to Clipboard - Translated",
+                s => App.Settings.ClipboardOcrTranslatedHotkey = s, () => App.Settings.ClipboardOcrTranslatedHotkey);
         else if (box == SelectionHotkeyBox)
             TrySaveHotkey(box, SelectionHotkeyErrorText, "Translate Selection",
                 s => App.Settings.SelectionHotkey = s, () => App.Settings.SelectionHotkey);
+        else if (box == ClipboardTranslationHotkeyBox)
+            TrySaveHotkey(box, ClipboardTranslationHotkeyErrorText, "Translate Clipboard",
+                s => App.Settings.ClipboardTranslationHotkey = s, () => App.Settings.ClipboardTranslationHotkey);
         else if (box == ScreenshotCopyHotkeyBox)
             TrySaveHotkey(box, ScreenshotCopyHotkeyErrorText, "Screenshot Copy",
                 s => App.Settings.ScreenshotCopyHotkey = s, () => App.Settings.ScreenshotCopyHotkey);
@@ -347,7 +363,9 @@ public sealed partial class GeneralPage : Page
         ("OCR Screen Translate", () => App.Settings.OcrHotkey),
         ("Manual Translation", () => App.Settings.ManualHotkey),
         ("OCR to Clipboard", () => App.Settings.ClipboardOcrHotkey),
+        ("OCR to Clipboard - Translated", () => App.Settings.ClipboardOcrTranslatedHotkey),
         ("Translate Selection", () => App.Settings.SelectionHotkey),
+        ("Translate Clipboard", () => App.Settings.ClipboardTranslationHotkey),
         ("Screenshot Copy", () => App.Settings.ScreenshotCopyHotkey),
         ("Scan Barcodes", () => App.Settings.ScanHotkey),
         ("Settings", () => App.Settings.SettingsHotkey),

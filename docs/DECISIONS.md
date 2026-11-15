@@ -2023,3 +2023,33 @@ an OS limit.)
   PanelHeight (mac baselineHeight) — so a panel the user dragged
   tall stays tall, and it still grows when the content needs more.
   A new show resets the suppression, so auto-fit runs fresh again.
+
+## Icon "A": regular weight, sea blue; two new hotkeys; hotkey order follows the tray menu (Manh 2026-11-15)
+
+- Icon: the float icon's letter "A" is now REGULAR weight (was Bold)
+  and sea blue `#0078D4` (the Windows accent blue — the mac glyph went
+  `.systemBlue` the same day). The white circle and its grey border are
+  unchanged, and the icon still does NOT follow system dark/light —
+  that is planned for later (Manh 2026-11-15). The speaker mark (the
+  click = listen/TTS state) stays near-black; only the "A" changed.
+- Two new hotkey settings (Settings -> General, in the hotkey list):
+  "OCR to Clipboard - Translated" defaults to Control+Alt+R
+  (tRanslated — T is taken by Translate) and "Translate Clipboard"
+  defaults to Control+Alt+L (cLipboard — C is taken by OCR to
+  Clipboard). Both are registered globally in `App.StartHotkeys` and
+  call the same handlers as their tray menu items
+  (`RunSilentOcrTranslatedAsync`, `TranslateClipboardAsync`). The
+  duplicate check in `GeneralPage` (`AllHotkeys`) covers all ten.
+- Hotkey order in Settings now follows the tray menu (Manh 2026-11-15):
+  Hotkey to open the translate panel, Manual Translation, OCR Screen
+  Translate, OCR to Clipboard, OCR to Clipboard - Translated, Translate
+  Selection, Translate Clipboard, Screenshot Copy, Scan Barcodes / QR
+  Codes, Settings. (Before: OCR sat second and Manual third.)
+- BUG FIX in the same round: the tray menu's "Translate Clipboard"
+  item showed the hint "Ctrl+Alt+T" — the "open the translate panel"
+  chord, which does NOT trigger Translate Clipboard (it translates the
+  current selection instead). It now shows the real Translate Clipboard
+  chord (Control+Alt+L). "OCR to Clipboard - Translated" also shows
+  its chord in the tray menu now (Control+Alt+R).
+- Tests: `AppSettingsHotkeyTests` covers all ten defaults (distinct +
+  expected values).
