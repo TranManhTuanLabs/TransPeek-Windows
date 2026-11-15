@@ -13,7 +13,7 @@
                  hint stays at the TOP of the list, right under the
                  header (Manh 2026-11-15, correcting the move below the
                  last box — the hint introduces the list, it is not a
-                 footer note). -->
+                 footer note). Do NOT move it below the boxes again. -->
             <TextBlock x:Uid="Settings.General.KeyboardShortcuts" Text="Keyboard shortcuts" FontSize="16" FontWeight="SemiBold" />
             <TextBlock x:Uid="Settings.General.HotkeyHint" Text="Click a hotkey box, then press the key combination — no typing needed. Esc cancels."
                        FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
