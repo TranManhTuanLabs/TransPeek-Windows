@@ -5,9 +5,12 @@
 
     <ScrollViewer>
         <StackPanel Spacing="12" MaxWidth="560" HorizontalAlignment="Left">
-            <!-- Hotkeys FIRST (Manh 2026-11-15): the most-used settings,
-                 so they sit at the top of General instead of buried
-                 below Appearance. -->
+            <!-- Keyboard shortcuts (Manh 2026-11-15): the hotkeys get a
+                 section header like Appearance / Popup Panel, so the
+                 page reads as sections instead of a bare list at the
+                 top. The name follows Windows: "Keyboard shortcuts" is
+                 the term Windows Settings uses for this. -->
+            <TextBlock x:Uid="Settings.General.KeyboardShortcuts" Text="Keyboard shortcuts" FontSize="16" FontWeight="SemiBold" />
             <TextBlock x:Uid="Settings.General.HotkeyHint" Text="Click a hotkey box, then press the key combination — no typing needed. Esc cancels."
                        FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
 
@@ -68,22 +71,22 @@
                      LostFocus="OnSettingsHotkeyLostFocus" />
             <TextBlock x:Name="SettingsHotkeyErrorText" FontSize="12" Foreground="Red" Visibility="Collapsed" />
 
-            <!-- Watch selection + Launch with Windows together (Manh
-                 2026-11-15): both are app-behaviour toggles, so Launch
-                 sits right under Watch selection instead of at the
-                 bottom of the page. -->
-            <ToggleSwitch x:Name="WatchSelectionToggle" x:Uid="Settings.General.WatchSelection" Header="Watch selection automatically"
-                          OnContent="On" OffContent="Off"
-                          Toggled="OnWatchSelectionToggled" />
-            <TextBlock x:Uid="Settings.General.WatchSelectionHint" Text="When on, the trigger icon appears whenever you select text. When off, the app only responds to hotkeys and the tray menu."
-                       FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
-
+            <!-- Behaviour toggles (Manh 2026-11-15): Launch with
+                 Windows sits FIRST, then Watch selection, then how long
+                 to hover and trigger icon hides after — all app-behaviour
+                 settings together in one group. -->
             <ToggleSwitch x:Name="LaunchAtLoginToggle" x:Uid="Settings.General.LaunchAtLogin" Header="Launch with Windows"
                           OnContent="On" OffContent="Off"
                           Toggled="OnLaunchAtLoginToggled" />
             <TextBlock x:Uid="Settings.General.RunKeyNote" Text="Writes to the Windows Run key (HKCU\Software\Microsoft\Windows\CurrentVersion\Run). No admin rights needed."
                        FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
             <TextBlock x:Name="LaunchErrorText" FontSize="12" Foreground="Red" Visibility="Collapsed" />
+
+            <ToggleSwitch x:Name="WatchSelectionToggle" x:Uid="Settings.General.WatchSelection" Header="Watch selection automatically"
+                          OnContent="On" OffContent="Off"
+                          Toggled="OnWatchSelectionToggled" />
+            <TextBlock x:Uid="Settings.General.WatchSelectionHint" Text="When on, the trigger icon appears whenever you select text. When off, the app only responds to hotkeys and the tray menu."
+                       FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
 
             <ComboBox x:Name="HoverDelayCombo" x:Uid="Settings.General.HoverDelay" Header="How long to hover before the panel opens"
                       SelectionChanged="OnHoverDelayChanged">

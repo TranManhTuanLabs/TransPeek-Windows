@@ -2098,3 +2098,18 @@ an OS limit.)
 - Mac: asked the mac chat the same day whether mac can do this natively
   (snap back for short text, output grows for long text) so both sides
   behave the same on a vertical drag; waiting on their answer.
+
+## General settings: "Keyboard shortcuts" header; Launch with Windows first (Manh 2026-11-15)
+
+- The hotkeys at the top of General now have a section header,
+  "Keyboard shortcuts", in the same style as Appearance (16 pt,
+  SemiBold) — the page reads as sections instead of a bare list at the
+  top. The name follows Windows: "Keyboard shortcuts" is the term
+  Windows Settings uses (resw `Settings.General.KeyboardShortcuts`).
+  The individual boxes keep their "Hotkey to/for ..." labels.
+- Behaviour group order changed: Launch with Windows now sits FIRST,
+  then Watch selection automatically, then how long to hover, then
+  trigger icon hides after. (Before: Watch selection was first and
+  Launch sat under it.) Each toggle moved with its own hint/note/error
+  text. No code change — XAML order only, the code-behind addresses
+  the toggles by name.
