@@ -114,4 +114,20 @@ public sealed class TranslationCoordinatorTests
         var result = await coordinator.TranslateAsync("hello", null, "vi");
         Assert.Equal("Google Translate", result.ProviderName);
     }
+
+    [Fact]
+    public async Task TranslateAsync_RateLimited_DoesNotFallBack()
+    {
+        // 429 (Manh 2026-11-15): no fallback to another provider — the
+        // clear rate-limit message surfaces instead, even when a second
+        // provider is configured and would have succeeded.
+        var rateLimited = new FakeProvider("google", "Google Translate",
+            _ => throw TranslationException.RateLimited());
+        var custom = new FakeProvider("custom:openai", "OpenAI");
+        var coordinator = new TranslationCoordinator(Settings("google", "custom:openai"), [rateLimited, custom]);
+        var ex = await Assert.ThrowsAsync<TranslationException>(
+            () => coordinator.TranslateAsync("hello", null, "vi"));
+        Assert.Equal(429, ex.StatusCode);
+        Assert.Equal("Google Translate is rate-limiting requests. Try again in a few minutes.", ex.Message);
+    }
 }

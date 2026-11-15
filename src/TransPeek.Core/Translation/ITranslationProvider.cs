@@ -48,11 +48,23 @@ public sealed class TranslationException : Exception
     public TranslationException(string message) : base(message) { }
     public TranslationException(string message, Exception inner) : base(message, inner) { }
 
+    /// <summary>HTTP status code when the failure came from an API
+    /// response (e.g. 429 rate-limit); null for local failures. The
+    /// coordinator uses it to decide whether another provider may be
+    /// tried — a 429 is never fallen back from (Manh 2026-11-15).</summary>
+    public int? StatusCode { get; private set; }
+
     public static TranslationException InvalidResponse(string detail)
         => new($"Invalid response from server. {detail}".Trim());
 
     public static TranslationException ApiError(int statusCode, string detail)
-        => new($"API error ({statusCode}): {detail}".Trim());
+        => new($"API error ({statusCode}): {detail}".Trim()) { StatusCode = statusCode };
+
+    /// <summary>Google rate-limit after all retries: a plain message the
+    /// user can act on (wait a few minutes), not the raw 429 body.</summary>
+    public static TranslationException RateLimited()
+        => new("Google Translate is rate-limiting requests. Try again in a few minutes.")
+        { StatusCode = 429 };
 
     public static TranslationException MissingApiKey(string providerName)
         => new($"API key not configured for {providerName}. Open Settings to set it up.");

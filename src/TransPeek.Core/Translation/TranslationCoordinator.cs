@@ -77,6 +77,14 @@ public sealed class TranslationCoordinator
             {
                 throw;
             }
+            catch (TranslationException ex) when (ex.StatusCode == 429)
+            {
+                // Rate-limited (Manh 2026-11-15): NO fallback to another
+                // provider. The provider already retried with backoff;
+                // trying a different provider would just move the load
+                // and hide the real cause. Surface the clear message.
+                throw;
+            }
             catch (Exception ex)
             {
                 firstError ??= ex;

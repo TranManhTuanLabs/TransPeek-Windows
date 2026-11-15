@@ -27,7 +27,7 @@ public sealed class DictionaryLink
         // phrase can be looked up, not just its first word.
         new() { Name = "Oxford", UrlTemplate = "https://www.oxfordlearnersdictionaries.com/definition/english/{word}?q={word}" },
         new() { Name = "Cambridge", UrlTemplate = "https://dictionary.cambridge.org/dictionary/english/{word}" },
-        new() { Name = "Google", UrlTemplate = "https://www.google.com/search?q=define+{text}" },
+        new() { Name = "Google", UrlTemplate = "https://www.google.com/search?q={text}+meaning" },
         new() { Name = "YouGlish", UrlTemplate = "https://youglish.com/pronounce/{text}/english" },
         // Cambridge Vi (mac parity, 2026-11-11): English–Vietnamese, added
         // LAST in the defaults, like on mac. {word} is lowercased + first
@@ -66,9 +66,22 @@ public sealed class DictionaryLink
                 link.UrlTemplate = "https://youglish.com/pronounce/{text}/english";
                 changed = true;
             }
+            // Google link (2026-11-15, Manh): "{text}+meaning" instead of
+            // "define+{text}" — the way he used to search when learning
+            // English. Both show the definition card; "meaning" reads
+            // more naturally and adds web results. Runs BEFORE the name
+            // check below so a "Google Dictionary" entry is renamed in
+            // the same pass.
+            if (string.Equals(link.UrlTemplate,
+                    "https://www.google.com/search?q=define+{text}",
+                    StringComparison.Ordinal))
+            {
+                link.UrlTemplate = "https://www.google.com/search?q={text}+meaning";
+                changed = true;
+            }
             if (string.Equals(link.Name, "Google Dictionary", StringComparison.Ordinal)
                 && string.Equals(link.UrlTemplate,
-                    "https://www.google.com/search?q=define+{text}",
+                    "https://www.google.com/search?q={text}+meaning",
                     StringComparison.Ordinal))
             {
                 link.Name = "Google";
@@ -82,7 +95,7 @@ public sealed class DictionaryLink
         {
             "https://www.oxfordlearnersdictionaries.com/definition/english/{word}?q={word}",
             "https://dictionary.cambridge.org/dictionary/english/{word}",
-            "https://www.google.com/search?q=define+{text}",
+            "https://www.google.com/search?q={text}+meaning",
             "https://youglish.com/pronounce/{text}/english",
         };
         const string cambridgeVi = "https://dictionary.cambridge.org/dictionary/english-vietnamese/{word}";
@@ -162,7 +175,7 @@ public sealed class DictionaryLink
     /// <summary>Percent-encodes a substituted value. Deliberately stricter
     /// than the default query encoding: only RFC 3986 unreserved characters
     /// pass through, so `&`, `+`, `=` in the text cannot corrupt query
-    /// templates such as Google's `define+{text}`.</summary>
+    /// templates such as Google's `{text}+meaning`.</summary>
     public static string? PercentEncode(string value)
     {
         var bytes = System.Text.Encoding.UTF8.GetBytes(value);

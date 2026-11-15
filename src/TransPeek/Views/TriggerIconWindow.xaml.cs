@@ -117,11 +117,36 @@ public sealed partial class TriggerIconWindow : Window
         var px = Math.Clamp(x + 8, work.X, work.X + work.Width - w);
         var py = Math.Clamp(y + 8, work.Y, work.Y + work.Height - h);
         WindowHelpers.MoveAndResize(this, px, py, w, h);
+        // Cut the window into a circle (Manh 2026-11-15): on machines
+        // where DWM blur-behind fails, the transparent backdrop shows a
+        // grey square around the white circle (Lenovo T460S). A window
+        // region does not depend on DWM blur, so the icon is round even
+        // then. The region is in physical pixels — same w/h as the
+        // window above. Re-applied on every show (ShowAt runs each time
+        // the icon appears), so a DPI change is picked up too.
+        ApplyCircularRegion(w, h);
         WindowHelpers.ShowWithoutActivation(this);
         _visible = true;
         _hoverTimer.Interval = TimeSpan.FromMilliseconds(App.Settings.HoverDelayMs);
         _autoHideTimer.Interval = TimeSpan.FromSeconds(App.Settings.TriggerIconAutoHideSeconds);
         _autoHideTimer.Start();
+    }
+
+    /// <summary>Clip the icon window to a circle inscribed in its
+    /// (physical-pixel) bounds. SetWindowRgn takes ownership of the
+    /// region on success — only DeleteObject it when the call fails.</summary>
+    private void ApplyCircularRegion(int width, int height)
+    {
+        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
+        if (hwnd == IntPtr.Zero)
+            return;
+        // Right/bottom are exclusive in CreateEllipticRgn, so +1 covers
+        // the full width/height.
+        var region = NativeMethods.CreateEllipticRgn(0, 0, width + 1, height + 1);
+        if (region == IntPtr.Zero)
+            return;
+        if (NativeMethods.SetWindowRgn(hwnd, region, true) == 0)
+            NativeMethods.DeleteObject(region);
     }
 
     public void HideIcon()

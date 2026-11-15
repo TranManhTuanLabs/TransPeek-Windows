@@ -43,11 +43,20 @@ public sealed partial class ToastWindow : Window, IToastService
         var (cx, cy) = WindowHelpers.CursorPosition();
         var work = WindowHelpers.DisplayWorkArea(cx, cy);
         // Measure: fixed height, width from content (cap at 480).
+        // DPI: the 320x40 size is logical (DIPs) but MoveAndResize takes
+        // PHYSICAL pixels — scale it, or at 150% the toast is 1.5x too
+        // small and the text is clipped (Lenovo T460S, 2026-11-15).
+        // At 100% the factor is 1.0, so the behaviour there is unchanged.
+        var scale = WindowHelpers.DpiScale(this);
         const int height = 40;
         const int width = 320;
-        var x = work.X + work.Width - width - 16;
-        var y = work.Y + work.Height - height - 16;
-        WindowHelpers.MoveAndResize(this, x, y, width, height);
+        const int margin = 16;
+        var w = Math.Max(1, (int)Math.Round(width * scale));
+        var h = Math.Max(1, (int)Math.Round(height * scale));
+        var m = Math.Max(1, (int)Math.Round(margin * scale));
+        var x = work.X + work.Width - w - m;
+        var y = work.Y + work.Height - h - m;
+        WindowHelpers.MoveAndResize(this, x, y, w, h);
         WindowHelpers.ShowWithoutActivation(this);
         _hideTimer.Stop();
         _hideTimer.Start();

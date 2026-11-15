@@ -53,6 +53,7 @@ public sealed class TrayIconService : IDisposable
         Action manualTranslation,
         Action screenshotOcr,
         Action clipboardOcr,
+        Action clipboardOcrTranslated,
         Action selectionTranslation,
         Action clipboardTranslation,
         Action screenshotCopy,
@@ -74,11 +75,16 @@ public sealed class TrayIconService : IDisposable
         menu.Items.Add(new MenuFlyoutSeparator());
         menu.Items.Add(SectionItem(AppStrings.Get("Tray.Section.Capture", "Text Capture from Screen")));
         menu.Items.Add(Item("Tray.Menu.ManualTranslation", "Manual Translation", "\uE765", manualTranslation));
-        _screenshotOcrItem = Item("Tray.Menu.ScreenshotOcr", "OCR from Screen", "\uE8FE", screenshotOcr);
+        _screenshotOcrItem = Item("Tray.Menu.ScreenshotOcr", "OCR Screen Translate", "\uE8FE", screenshotOcr);
         menu.Items.Add(_screenshotOcrItem);
-        menu.Items.Add(Item("Tray.Menu.ClipboardOcr", "OCR to Clipboards", "\uE8C8", clipboardOcr));
-        menu.Items.Add(Item("Tray.Menu.SelectionTranslation", "Selection Translation", "\uE70F", selectionTranslation));
-        _clipboardTranslationItem = Item("Tray.Menu.ClipboardTranslation", "Clipboard Translation", "\uE77F", clipboardTranslation);
+        menu.Items.Add(Item("Tray.Menu.ClipboardOcr", "OCR to Clipboard", "\uE8C8", clipboardOcr));
+        // OCR -> translate -> copy the TRANSLATION (Manh 2026-11-15):
+        // sits right under "OCR to Clipboard" (same prefix, so the pair
+        // stays adjacent). Glyph E774 Globe (Segoe Fluent Icons — the
+        // language/translation mark; E76E is Emoji2, not Globe).
+        menu.Items.Add(Item("Tray.Menu.ClipboardOcrTranslated", "OCR to Clipboard - Translated", "\uE774", clipboardOcrTranslated));
+        menu.Items.Add(Item("Tray.Menu.SelectionTranslation", "Translate Selection", "\uE70F", selectionTranslation));
+        _clipboardTranslationItem = Item("Tray.Menu.ClipboardTranslation", "Translate Clipboard", "\uE77F", clipboardTranslation);
         menu.Items.Add(_clipboardTranslationItem);
         menu.Items.Add(Item("Tray.Menu.ScreenshotCopy", "Screenshot Copy", "\uE722", screenshotCopy));
         menu.Items.Add(new MenuFlyoutSeparator());

@@ -108,6 +108,7 @@ public sealed partial class App : Application
             manualTranslation: () => _panel?.ShowInputMode(),
             screenshotOcr: () => _ = _ocrFlow!.RunOcrAsync(),
             clipboardOcr: () => _ = _ocrFlow!.RunSilentOcrAsync(),
+            clipboardOcrTranslated: () => _ = _ocrFlow!.RunSilentOcrTranslatedAsync(),
             selectionTranslation: () => _ = TranslateCurrentSelectionAsync(),
             clipboardTranslation: () => _ = TranslateClipboardAsync(),
             screenshotCopy: () => _ = _screenshotCopy!.RunAsync(),
@@ -257,7 +258,7 @@ public sealed partial class App : Application
         _panel?.ShowTranslationFlow(text, cx, cy);
     }
 
-    /// <summary>Clipboard Translation (mac parity): read the clipboard
+    /// <summary>Translate Clipboard (mac parity): read the clipboard
     /// text and translate it in the panel. Empty clipboard shows a toast,
     /// like the no-selection case above.</summary>
     private async Task TranslateClipboardAsync()

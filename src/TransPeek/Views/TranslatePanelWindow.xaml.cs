@@ -252,10 +252,16 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         // Win32 only: DisplayArea.Primary.WorkArea threw on this machine
         // (same WinRT display bug as FindAll()) and the tray Manual
         // Translation click died silently — the panel never appeared.
+        // DPI: the work area is physical pixels, PanelWidth/PanelHeight
+        // are logical — scale them before MoveAndResize (see
+        // ResizeToFitContent). At 100% the factor is 1.0 (no change).
+        var scale = WindowHelpers.DpiScale(this);
+        var w = Math.Max(1, (int)Math.Round(PanelWidth * scale));
+        var h = Math.Max(1, (int)Math.Round(PanelHeight * scale));
         var work = WindowHelpers.PrimaryWorkArea();
-        var px = work.X + Math.Max((work.Width - PanelWidth) / 2, 0);
-        var py = work.Y + Math.Max((work.Height - PanelHeight) / 2, 0);
-        WindowHelpers.MoveAndResize(this, px, py, PanelWidth, PanelHeight);
+        var px = work.X + Math.Max((work.Width - w) / 2, 0);
+        var py = work.Y + Math.Max((work.Height - h) / 2, 0);
+        WindowHelpers.MoveAndResize(this, px, py, w, h);
         SetSource("");
         _translationText = "";
         TranslationTextBox.Text = "";
@@ -376,10 +382,18 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     private void ShowPanelNear(int x, int y)
     {
         _epoch++;
+        // DPI: (x, y) and the work area are physical pixels, but
+        // PanelWidth/PanelHeight are logical (DIPs) — scale them before
+        // MoveAndResize, which takes physical pixels (see
+        // ResizeToFitContent). At 100% the factor is 1.0 (no change).
+        var scale = WindowHelpers.DpiScale(this);
+        var w = Math.Max(1, (int)Math.Round(PanelWidth * scale));
+        var h = Math.Max(1, (int)Math.Round(PanelHeight * scale));
+        var gap = Math.Max(1, (int)Math.Round(8 * scale));
         var work = WindowHelpers.DisplayWorkArea(x, y);
-        var px = Math.Clamp(x + 8, work.X, work.X + work.Width - PanelWidth);
-        var py = Math.Clamp(y + 8, work.Y, work.Y + work.Height - PanelHeight);
-        WindowHelpers.MoveAndResize(this, px, py, PanelWidth, PanelHeight);
+        var px = Math.Clamp(x + gap, work.X, work.X + work.Width - w);
+        var py = Math.Clamp(y + gap, work.Y, work.Y + work.Height - h);
+        WindowHelpers.MoveAndResize(this, px, py, w, h);
         WindowHelpers.ShowWithoutActivation(this);
         _visible = true;
         _clickOutside.Start();
@@ -407,19 +421,29 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     {
         if (!_visible || Content is not FrameworkElement root)
             return;
+        // DPI: XAML measures in logical pixels (DIPs) but AppWindow
+        // MoveAndResize takes PHYSICAL pixels (Microsoft Learn, "Manage
+        // app windows": AppWindow.Resize/ResizeClient take physical
+        // pixels). At 150% scale the unscaled height made the window 1.5x
+        // too short, cutting off the bottom row (Lenovo T460S, 2026-11-15).
+        // Scale logical -> physical here; at 100% the factor is 1.0, so
+        // the behaviour there is unchanged.
+        var scale = WindowHelpers.DpiScale(this);
         root.Measure(new Windows.Foundation.Size(PanelWidth, double.PositiveInfinity));
         var desired = root.DesiredSize.Height;
         if (desired <= 0 || double.IsNaN(desired) || double.IsInfinity(desired))
             return;
         var pos = AppWindow.Position;
         var work = WindowHelpers.DisplayWorkArea(pos.X, pos.Y);
-        var maxHeight = Math.Max(260, work.Height - 16);
-        var height = (int)Math.Clamp(Math.Ceiling(desired), 260, maxHeight);
+        var minHeight = Math.Max(1, (int)Math.Round(260 * scale));
+        var maxHeight = Math.Max(minHeight, work.Height - 16);
+        var height = (int)Math.Clamp(Math.Ceiling(desired * scale), minHeight, maxHeight);
+        var width = Math.Max(1, (int)Math.Round(PanelWidth * scale));
         var y = pos.Y;
         if (y + height > work.Y + work.Height)
             y = Math.Max(work.Y, work.Y + work.Height - height);
         if (AppWindow.Size.Height != height || pos.Y != y)
-            WindowHelpers.MoveAndResize(this, pos.X, y, PanelWidth, height);
+            WindowHelpers.MoveAndResize(this, pos.X, y, width, height);
     }
 
     /// <summary>The input box grows as the user types (up to MaxHeight):

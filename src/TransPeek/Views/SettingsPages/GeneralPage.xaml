@@ -16,7 +16,7 @@
                      LostFocus="OnTranslateHotkeyLostFocus" />
             <TextBlock x:Name="HotkeyErrorText" FontSize="12" Foreground="Red" Visibility="Collapsed" />
 
-            <TextBox x:Name="OcrHotkeyBox" x:Uid="Settings.General.OcrHotkey" Header="Hotkey for OCR from Screen (e.g. Control+Shift+S)"
+            <TextBox x:Name="OcrHotkeyBox" x:Uid="Settings.General.OcrHotkey" Header="Hotkey for OCR Screen Translate (e.g. Control+Shift+S)"
                      GotFocus="OnHotkeyBoxGotFocus" KeyDown="OnHotkeyBoxKeyDown"
                      LostFocus="OnOcrHotkeyLostFocus" />
             <TextBlock x:Name="OcrHotkeyErrorText" FontSize="12" Foreground="Red" Visibility="Collapsed" />
@@ -27,12 +27,12 @@
                      LostFocus="OnManualHotkeyLostFocus" />
             <TextBlock x:Name="ManualHotkeyErrorText" FontSize="12" Foreground="Red" Visibility="Collapsed" />
 
-            <TextBox x:Name="ClipboardOcrHotkeyBox" x:Uid="Settings.General.ClipboardOcrHotkey" Header="Hotkey for OCR to Clipboards (e.g. Control+Alt+C)"
+            <TextBox x:Name="ClipboardOcrHotkeyBox" x:Uid="Settings.General.ClipboardOcrHotkey" Header="Hotkey for OCR to Clipboard (e.g. Control+Alt+C)"
                      GotFocus="OnHotkeyBoxGotFocus" KeyDown="OnHotkeyBoxKeyDown"
                      LostFocus="OnClipboardOcrHotkeyLostFocus" />
             <TextBlock x:Name="ClipboardOcrHotkeyErrorText" FontSize="12" Foreground="Red" Visibility="Collapsed" />
 
-            <TextBox x:Name="SelectionHotkeyBox" x:Uid="Settings.General.SelectionHotkey" Header="Hotkey for Selection Translation (e.g. Control+Alt+S)"
+            <TextBox x:Name="SelectionHotkeyBox" x:Uid="Settings.General.SelectionHotkey" Header="Hotkey for Translate Selection (e.g. Control+Alt+S)"
                      GotFocus="OnHotkeyBoxGotFocus" KeyDown="OnHotkeyBoxKeyDown"
                      LostFocus="OnSelectionHotkeyLostFocus" />
             <TextBlock x:Name="SelectionHotkeyErrorText" FontSize="12" Foreground="Red" Visibility="Collapsed" />

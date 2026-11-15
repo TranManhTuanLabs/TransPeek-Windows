@@ -1833,3 +1833,97 @@ an OS limit.)
   never apply the misspelling as-is; watch capitalisation too.
   The slogan's T/P capitalisation above is the exception (as Manh
   specified).
+
+## DPI: panel/toast cut off at 150% scale — MoveAndResize takes physical pixels (Manh 2026-11-15)
+
+- Lenovo T460S, 1920x1080, scale 150%: panel bottom cut off (last row
+  half-visible), toast after saving settings showed text but 2/3 cut
+  off. At 100% scale everything was normal.
+- Cause: `AppWindow.MoveAndResize` takes PHYSICAL pixels (Microsoft
+  Learn, "Manage app windows": "AppWindow.Resize and
+  AppWindow.ResizeClient take sizes in physical pixels"), but the panel
+  (`ResizeToFitContent`, `ShowPanelNear`, `ShowInputMode`) and the toast
+  (`ToastWindow.Show`, fixed 320x40) passed LOGICAL pixels (DIPs)
+  straight in, without multiplying by the DPI factor. At 150% the
+  window was 1.5x too small, so content was clipped. The float icon
+  (`TriggerIconWindow.ShowAt`) and the caption drag region
+  (`UpdateCaptionRegion`) already scaled correctly — only the panel and
+  toast did not.
+- Fix: multiply every logical size/offset by `WindowHelpers.DpiScale`
+  (GetDpiForWindow/96) before `MoveAndResize`. At 100% the factor is
+  1.0, so behaviour there is unchanged — the fix cannot break the
+  working case. 150% is Microsoft's recommended default for 14" 1080p
+  laptops, so this is not an edge case.
+- Forwarded to mac as a precaution (Manh only has one 13" M1 Mac and
+  cannot test every resolution/scale). Mac checked and is NOT affected:
+  AppKit uses points (logical) throughout — NSWindow.setFrame,
+  NSScreen.frame/visibleFrame, NSEvent.mouseLocation, SwiftUI
+  measurement are all points, the system converts point to pixel, and
+  no code uses backingScaleFactor or pixel sizes (grep = 0).
+
+## Float icon: SetWindowRgn circle (Manh 2026-11-15)
+
+- On the Lenovo T460S the transparent icon window showed a grey
+  square around the white circle — DWM blur-behind fails there
+  (Transparency effects off, or old Intel HD 520 driver). Manh chose
+  ONLY SetWindowRgn (cut the window into a circle); no
+  AdvancedEffectsEnabled check and no "turn on Transparency effects"
+  prompt.
+- `SetWindowRgn` (winuser.h, User32.dll) + `CreateEllipticRgn`
+  (wingdi.h, Gdi32.dll) — both verified against Microsoft Learn. The
+  region is in PHYSICAL pixels, so its diameter is 32 x DpiScale (same
+  w/h as the window in ShowAt). Applied in ShowAt on every show, so a
+  DPI change is picked up. On success the OS owns the region — only
+  DeleteObject it when SetWindowRgn fails.
+
+## Tray renames: "Translate Selection" + "Translate Clipboard", "OCR to Clipboard" pair (Manh 2026-11-15, mac parity)
+
+- "Selection Translation" -> "Translate Selection", "Clipboard
+  Translation" -> "Translate Clipboard" (verb-first reads as an
+  action; "Clipboard Translation" was ambiguous — translate FROM the
+  clipboard, or translate then copy INTO it).
+- "OCR from Screen" -> "OCR Screen Translate"; "OCR to Clipboards" ->
+  "OCR to Clipboard" (singular — a machine has ONE clipboard;
+  "Clipboards" is wrong). New item right under it: "OCR to Clipboard -
+  Translated" — OCR a region, translate, copy the TRANSLATION to the
+  clipboard, no panel (waits up to 30 s, opens the panel with the
+  source + error on failure). Glyph E774 Globe (Segoe Fluent Icons —
+  E76E is Emoji2, not Globe). Same renames applied to the hotkey
+  labels in Settings -> General.
+- DROPPED as redundant: "Translate to Clipboard" / "Translate
+  Selection to Clipboard" — a translated copy is already covered by
+  "OCR to Clipboard - Translated" (OCR) or copying from the panel
+  after "Translate Selection".
+
+## Google dictionary link: "{text}+meaning" (Manh 2026-11-15) + panel hint "word"
+
+- Google default link changed from `define+{text}` to `{text}+meaning`
+  — the way Manh used to search when learning English. Both show the
+  definition card; "meaning" reads more naturally and adds web
+  results. MigrateDefaults upgrades saved links (old URL -> new, and
+  "Google Dictionary" -> "Google" in the same pass); the old-defaults
+  list used for the Cambridge Vi append now carries the new URL.
+  Tests updated (migration asserts the new URL; UrlFor fixture uses
+  the new template).
+- Panel hint: "Select text in the panel..." -> "Select a word in the
+  panel to look it up in the dictionary" ("look up a word" already
+  covers phrases/idioms; "text" was vague, "sentence" is not what a
+  dictionary looks up).
+
+## Google 429: retry with backoff, no fallback provider (Manh 2026-11-15)
+
+- Cause found in the company PC log ("LOG TransSpeek TEST"): Google
+  Translate returns HTTP 429 (rate limit) on the first request after
+  launch; restarting / retrying 1-2 times gets through (limit relaxes
+  over time/IP).
+- Fix: GoogleTranslateProvider retries the SAME provider up to 3
+  times, backoff 1s -> 2s -> 4s, instead of failing at once. The panel
+  keeps showing "Translating…" during the retries (mac parity). After
+  the retries, a clear message replaces the raw 429 body:
+  "Google Translate is rate-limiting requests. Try again in a few
+  minutes." (TranslationException.RateLimited, StatusCode 429).
+- NO fallback provider on 429 (Manh): the coordinator rethrows a 429
+  immediately instead of trying the next provider. TranslationException
+  gained a StatusCode property (set by ApiError/RateLimited) so the
+  coordinator can tell a 429 from any other failure. Test:
+  TranslateAsync_RateLimited_DoesNotFallBack.

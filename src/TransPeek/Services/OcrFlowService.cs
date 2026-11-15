@@ -127,6 +127,54 @@ public sealed class OcrFlowService
         _toast.Show(AppStrings.Get("App.Toast.Copied", "Copied"));
     }
 
+    /// <summary>Silent OCR with translation (mac "OCR to Clipboard -
+    /// Translated", Manh 2026-11-15): region select → OCR → translate →
+    /// copy the TRANSLATION straight to the clipboard, toast "Copied" —
+    /// no panel. Translation waits up to 30 seconds (mac parity). On
+    /// failure (or timeout) the panel opens with the source text and the
+    /// error instead, like RunOcrAsync, so the user still sees what was
+    /// recognized. OCR failures were already toasted by the shared
+    /// capture step.</summary>
+    public async Task RunSilentOcrTranslatedAsync()
+    {
+        var settings = _settingsFactory();
+        var text = await CaptureAndRecognizeTextAsync(settings);
+        if (text is null)
+            return;
+        string? translation = null;
+        string errorMessage = "";
+        try
+        {
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            var result = await _coordinatorFactory().TranslateAsync(
+                text,
+                sourceLang: settings.SourceLanguage == LanguageCode.Auto ? null : settings.SourceLanguage,
+                targetLang: settings.TargetLanguage,
+                timeout.Token);
+            translation = result.Text;
+        }
+        catch (OperationCanceledException)
+        {
+            errorMessage = "Translation timed out.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        if (!string.IsNullOrWhiteSpace(translation))
+        {
+            await ClipboardHelper.CopyTextAsync(translation);
+            _toast.Show(AppStrings.Get("App.Toast.Copied", "Copied"));
+            return;
+        }
+        if (string.IsNullOrEmpty(errorMessage))
+            errorMessage = "Translation returned an empty result.";
+        _panel.ShowTranslating(text);
+        _panel.ShowResult(text,
+            $"{AppStrings.Get("Translation.ErrorPrefix", "[Translation error: ")}{errorMessage}]",
+            "");
+    }
+
     /// <summary>Shared prefix of both OCR flows: region select → capture →
     /// first-run Tesseract data → recognize (Tesseract, Windows OCR on
     /// failure). Returns the trimmed text, or null when the user cancelled

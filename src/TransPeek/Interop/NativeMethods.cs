@@ -85,6 +85,19 @@ internal static class NativeMethods
     public static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter,
         int x, int y, int cx, int cy, uint uFlags);
 
+    // Window region (float icon, 2026-11-15): cut the icon window into a
+    // circle so it stays round even when DWM blur-behind fails and the
+    // transparent backdrop shows a grey square (Lenovo T460S). The region
+    // is in PHYSICAL pixels. After a successful SetWindowRgn the OS owns
+    // the region — do NOT DeleteObject it; on failure, delete it.
+    // (Microsoft Learn: SetWindowRgn, winuser.h, User32.dll;
+    // CreateEllipticRgn, wingdi.h, Gdi32.dll.)
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern int SetWindowRgn(IntPtr hWnd, IntPtr hRgn, bool bRedraw);
+
+    [DllImport("gdi32.dll", SetLastError = true)]
+    public static extern IntPtr CreateEllipticRgn(int nLeftRect, int nTopRect, int nRightRect, int nBottomRect);
+
     public static readonly IntPtr HWND_TOPMOST = new(-1);
     public const uint SWP_NOMOVE = 0x0002;
     public const uint SWP_NOSIZE = 0x0001;

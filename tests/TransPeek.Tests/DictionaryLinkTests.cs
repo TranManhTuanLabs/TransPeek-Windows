@@ -72,6 +72,7 @@ public sealed class DictionaryLinkTests
             links[0].UrlTemplate);
         Assert.Equal("https://youglish.com/pronounce/{text}/english", links[1].UrlTemplate);
         Assert.Equal("Google", links[2].Name);
+        Assert.Equal("https://www.google.com/search?q={text}+meaning", links[2].UrlTemplate);
         Assert.Equal("https://example.com/{word}", links[3].UrlTemplate);
         // Second run is a no-op.
         Assert.False(DictionaryLink.MigrateDefaults(links));
@@ -89,6 +90,8 @@ public sealed class DictionaryLinkTests
         };
         Assert.True(DictionaryLink.MigrateDefaults(links));
         Assert.Equal(5, links.Count);
+        // The old Google URL is migrated to "{text}+meaning" too.
+        Assert.Equal("https://www.google.com/search?q={text}+meaning", links[2].UrlTemplate);
         Assert.Equal("Cambridge Vi", links[^1].Name);
         Assert.Equal(
             "https://dictionary.cambridge.org/dictionary/english-vietnamese/{word}",
@@ -128,12 +131,12 @@ public sealed class DictionaryLinkTests
     {
         var link = new DictionaryLink
         {
-            Name = "Google Dictionary",
-            UrlTemplate = "https://www.google.com/search?q=define+{text}",
+            Name = "Google",
+            UrlTemplate = "https://www.google.com/search?q={text}+meaning",
         };
         var url = link.UrlFor("hello world");
         Assert.NotNull(url);
-        Assert.Equal("https://www.google.com/search?q=define+hello%20world", url!.AbsoluteUri);
+        Assert.Equal("https://www.google.com/search?q=hello%20world+meaning", url!.AbsoluteUri);
     }
 
     [Fact]

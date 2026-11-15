@@ -83,7 +83,7 @@
             </Button>
             <Button x:Name="CopySourceButton" x:Uid="Panel.CopySource" Content="Copy" Padding="8,4" />
         </StackPanel>
-        <TextBlock x:Uid="Panel.Hint" Grid.Row="2" Text="Enter: translate again • Esc: close • Select text in the panel to look it up in the dictionary"
+        <TextBlock x:Uid="Panel.Hint" Grid.Row="2" Text="Enter: translate again • Esc: close • Select a word in the panel to look it up in the dictionary"
                    FontSize="11" Foreground="Gray" TextWrapping="Wrap" Margin="0,0,0,8" />
 
         <!-- Language pickers + Capture OCR (Manh 2026-11-15): ABOVE
