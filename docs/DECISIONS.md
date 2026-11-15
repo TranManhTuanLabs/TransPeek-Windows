@@ -2176,3 +2176,19 @@ an OS limit.)
   Windows records which apps start automatically at login, so the note
   explains what the Launch toggle does. The word "Run" here is the
   registry key's name, not "run a shortcut". It belongs with Launch.
+
+## Release race: pushing twice in quick succession lost the #129 pre-release (Manh 2026-11-15)
+
+- Run #129 (commit f6e9ef6, hotkey hint back at top) completed SUCCESS,
+  but no v0.1.3.129 pre-release exists. The only release is v0.1.3.128
+  (asset TransPeek-Windows-128.zip — a #128 build, hint BELOW the last
+  box, the wrong position), even though its tag points at f6e9ef6.
+  Cause: #129 was pushed while #128 was still running, and the two
+  runs' "Create pre-release" / "Delete older pre-releases" steps raced
+  (the delete step keeps only the newest by createdAt; with two runs
+  creating and deleting at the same time the newer release got removed).
+  The run logs cannot be read via the public API (403, needs admin).
+- Lesson: do NOT push a new [build-app] commit while the previous run
+  is still in progress — wait for it to finish (or be cancelled) first,
+  or the release can be lost. This push re-triggers a clean run (#130)
+  with no concurrent run, so v0.1.3.130 is created properly.
