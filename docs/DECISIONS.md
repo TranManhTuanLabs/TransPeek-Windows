@@ -2053,3 +2053,48 @@ an OS limit.)
   its chord in the tray menu now (Control+Alt+R).
 - Tests: `AppSettingsHotkeyTests` covers all ten defaults (distinct +
   expected values).
+
+## Vertical resize: full Windows approach — snap back for short text, output grows for long text (Manh 2026-11-15)
+
+- Problem: dragging the panel taller left useless white space below the
+  footer (all 8 root rows were Auto and the translation box was capped
+  at MaxHeight 260, so no row grew). Manh chose the full Windows
+  approach over a plain mac-style snap-back: short text snaps back on
+  release, long text grows the output so more of it is visible.
+- XAML (`TranslatePanelWindow.xaml`): the output-card row is now `*`
+  (was Auto) and named `OutputCardRow`. The card stretches with the
+  window, so the translation fills the extra height. Collapsed, the row
+  goes back to Auto in code — a `*` row would keep its share of the
+  window height and leave empty space below the header, and
+  VerticalAlignment.Top alone does not prevent that (the row itself
+  still takes the space).
+- `PersistResizedSize` (on release, 300 ms debounce): reads the
+  translation box's ScrollViewer — ExtentHeight (full text height) vs
+  ViewportHeight (visible height). The window height needed to show all
+  the text is the current height plus (full - visible), because the card
+  row is `*` and the box row inside it is `*`, so the box grows 1:1
+  with the window. If the drag left the window taller than needed by
+  more than 8 pt (mac rule), it snaps back to the needed height and the
+  box cap resets to 260. Otherwise the dragged height is kept and the
+  box cap is raised to the full text height, so the output grows past
+  260 and shows more text. Cannot measure (card collapsed / ScrollViewer
+  not ready): keep the dragged height, previous behaviour.
+- `ResizeToFitContent` (auto-fit): resets the box cap to 260 and forces
+  layout before measuring, so the measure and the ScrollViewer read are
+  both with the cap. The baseline is no longer always
+  max(PanelHeight, desired): if the full text fits in the capped box
+  (ExtentHeight <= 260) the panel shrinks to the content height, so a
+  new show with short text after a tall manual resize opens compact
+  again instead of carrying the tall height (and its white space)
+  forward. If the text is long, the PanelHeight floor stays, so a manual
+  tall resize sticks — and the box cap is then raised to the full text
+  height so the output fills the tall window instead of leaving the
+  extra height empty.
+- Helper: `FindDescendant<T>` walks the visual tree to reach the
+  ScrollViewer inside the TextBox (GetTemplateChild is protected, so the
+  Window cannot call it on the TextBox directly); `TryGetTranslationTextHeights`
+  returns false when the card is collapsed or the ScrollViewer is not
+  ready, and callers fall back instead of guessing.
+- Mac: asked the mac chat the same day whether mac can do this natively
+  (snap back for short text, output grows for long text) so both sides
+  behave the same on a vertical drag; waiting on their answer.

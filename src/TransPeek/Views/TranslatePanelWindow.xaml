@@ -10,7 +10,20 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
+            <!-- Output card is the * row (Manh 2026-11-15 — vertical
+                 resize, full Windows approach): when the user drags the
+                 window taller the card stretches so the translation
+                 fills the extra height instead of leaving white space
+                 below the footer. The TranslationTextBox inside is
+                 capped by MaxHeight (260) for auto-fit, and the cap is
+                 raised in code when the user drags taller so it can
+                 grow past 260 for long text; for short text the panel
+                 snaps back to the content height on release
+                 (PersistResizedSize), so the * row never shows empty
+                 space. Collapsed, the row goes back to Auto (see
+                 SetProviderCardExpanded) so it only takes the header
+                 height and does not sit as a tall empty row. -->
+            <RowDefinition x:Name="OutputCardRow" Height="*" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />

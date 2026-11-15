@@ -19,6 +19,7 @@ using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
 using TransPeek.Assets;
 using TransPeek.Core.Dictionary;
 using TransPeek.Core.Settings;
@@ -49,6 +50,13 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// Grid's 12 px padding, so they never cover interactive content.
     /// SetRegionRects takes physical pixels (like the caption region).</summary>
     private const int ResizeStripThickness = 8;
+    /// <summary>Auto-fit cap for the translation text box, in logical
+    /// pixels (DIPs). Must match the MaxHeight="260" in XAML: auto-fit
+    /// never grows the panel past (chrome + 260) for long text — the
+    /// text scrolls instead. A manual drag taller than that RAISES the
+    /// cap (to the full text height) so the output can grow past 260
+    /// and show more text; a new show / auto-fit resets it to 260.</summary>
+    private const double TranslationTextMaxHeight = 260;
 
     /// <summary>The _epoch at which the user last resized the panel
     /// (height). While it equals the current _epoch, ResizeToFitContent
@@ -384,11 +392,11 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     // ----- provider output card (mac ProviderResultCard) -----
 
     /// <summary>Expand/collapse the provider card body. Collapsed, the
-    /// card shrinks to its header (the border stops stretching so it
-    /// does not sit as a tall empty card in the * row); expanded, it
-    /// stretches again so the translation fills the remaining space.
-    /// The window itself stays fixed for now — the mac-style window
-    /// resize-to-fit comes later.</summary>
+    /// card shrinks to its header and the output row goes back to Auto
+    /// (so it does not sit as a tall empty row); expanded, the row is
+    /// * again so the card stretches and the translation fills the
+    /// remaining space. The window resizes to fit via
+    /// RequestResizeToFit.</summary>
     private void OnProviderCardHeaderClicked(object sender, RoutedEventArgs e)
         => SetProviderCardExpanded(!_providerCardExpanded);
 
@@ -403,6 +411,15 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         ProviderCardBorder.VerticalAlignment = expanded
             ? VerticalAlignment.Stretch
             : VerticalAlignment.Top;
+        // The output row is * when expanded (the card stretches with
+        // the window so the output grows) and Auto when collapsed
+        // (the row only takes the header height — a * row would keep
+        // its share of the window height and leave empty space below
+        // the header, VerticalAlignment.Top alone does not prevent
+        // that because the row itself still takes the space).
+        OutputCardRow.Height = expanded
+            ? new GridLength(1, GridUnitType.Star)
+            : new GridLength(1, GridUnitType.Auto);
         RequestResizeToFit();
     }
 
@@ -476,6 +493,46 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         DispatcherQueue.TryEnqueue(ResizeToFitContent);
     }
 
+    /// <summary>Find the first descendant of a given type in the visual
+    /// tree (used to reach the ScrollViewer inside the translation
+    /// TextBox — GetTemplateChild is protected, so the Window cannot
+    /// call it on the TextBox directly).</summary>
+    private static T? FindDescendant<T>(DependencyObject root) where T : DependencyObject
+    {
+        var count = VisualTreeHelper.GetChildrenCount(root);
+        for (var i = 0; i < count; i++)
+        {
+            var child = VisualTreeHelper.GetChild(root, i);
+            if (child is T found)
+                return found;
+            var nested = FindDescendant<T>(child);
+            if (nested is not null)
+                return nested;
+        }
+        return null;
+    }
+
+    /// <summary>Full vs visible height of the translation text, in
+    /// logical pixels (DIPs), from the TextBox's ScrollViewer:
+    /// ExtentHeight is the height of ALL the text, ViewportHeight the
+    /// height currently visible. Returns false when the card is
+    /// collapsed or the ScrollViewer is not ready (template not
+    /// applied yet) — callers fall back to the previous behaviour
+    /// (no snap-back, no cap change) instead of guessing.</summary>
+    private bool TryGetTranslationTextHeights(out double full, out double visible)
+    {
+        full = 0;
+        visible = 0;
+        if (!_providerCardExpanded)
+            return false;
+        var sv = FindDescendant<ScrollViewer>(TranslationTextBox);
+        if (sv is null)
+            return false;
+        full = sv.ExtentHeight;
+        visible = sv.ViewportHeight;
+        return !(double.IsNaN(full) || double.IsNaN(visible) || full <= 0 || visible <= 0);
+    }
+
     private void ResizeToFitContent()
     {
         if (!_visible || Content is not FrameworkElement root)
@@ -483,6 +540,14 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         // Manual resize this show: do not override the user's size.
         if (_manualResizeGeneration == _epoch)
             return;
+        // Reset the output cap (a manual drag may have raised it so the
+        // box could grow past 260) and force layout, so the measure
+        // below and the ScrollViewer read are both with the cap — the
+        // ScrollViewer only updates on arrange, and ResizeToFitContent
+        // runs from the dispatcher where layout may not have run yet
+        // for the new text.
+        TranslationTextBox.MaxHeight = TranslationTextMaxHeight;
+        root.UpdateLayout();
         // DPI: XAML measures in logical pixels (DIPs) but AppWindow
         // MoveAndResize takes PHYSICAL pixels (Microsoft Learn, "Manage
         // app windows": AppWindow.Resize/ResizeClient take physical
@@ -504,10 +569,23 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         var work = WindowHelpers.DisplayWorkArea(pos.X, pos.Y);
         var minHeight = Math.Max(1, (int)Math.Round(260 * scale));
         var maxHeight = Math.Max(minHeight, work.Height - 16);
-        // Baseline = the user's persisted height (mac frameToFit
-        // baselineHeight): the panel never shrinks below the height the
-        // user chose, but it still grows when the content needs more.
-        var baseline = Math.Max(App.Settings.PanelHeight, desired);
+        // Baseline (Manh 2026-11-15 — vertical resize, full Windows
+        // approach): the panel never shrinks below the user's persisted
+        // height — UNLESS the translation text all fits in the output
+        // box, in which case holding it tall would leave white space
+        // below the footer, so it shrinks to the content height. The
+        // text is "long" (needs the floor) when the ScrollViewer says
+        // the full text is taller than the capped box; short text has
+        // ExtentHeight <= the cap. A new show with short text after a
+        // tall manual resize therefore opens compact again instead of
+        // carrying the tall height (and its white space) forward.
+        var baseline = desired;
+        var sv = FindDescendant<ScrollViewer>(TranslationTextBox);
+        var longText = sv is not null && _providerCardExpanded && sv.ExtentHeight > TranslationTextMaxHeight;
+        if (longText)
+        {
+            baseline = Math.Max(App.Settings.PanelHeight, desired);
+        }
         var height = (int)Math.Clamp(Math.Ceiling(baseline * scale), minHeight, maxHeight);
         var width = AppWindow.Size.Width;
         var y = pos.Y;
@@ -517,6 +595,15 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         {
             _lastProgrammaticSize = new Windows.Graphics.SizeInt32(width, height);
             WindowHelpers.MoveAndResize(this, pos.X, y, width, height);
+        }
+        // Long text + tall window (PanelHeight floor kept it tall):
+        // raise the output cap so the box grows past 260 and fills
+        // the window instead of leaving the extra height empty. The
+        // cap is only an upper bound (the box grows to the available
+        // space), so a very long text just scrolls for the rest.
+        if (longText && sv is not null)
+        {
+            TranslationTextBox.MaxHeight = sv.ExtentHeight;
         }
     }
 
@@ -658,6 +745,35 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         var maxH = Math.Min(MaxPanelSize, work.Height / scale);
         var clampedW = Math.Clamp(w, MinPanelWidth, Math.Max(MinPanelWidth, maxW));
         var clampedH = Math.Clamp(h, MinPanelHeight, Math.Max(MinPanelHeight, maxH));
+        // Vertical snap-back + output growth (Manh 2026-11-15 — full
+        // Windows approach): the output card row is * and the text box
+        // row inside it is *, so the box grows 1:1 with the window.
+        // The window height needed to show ALL the translation text is
+        // the current height plus (full text height - visible text
+        // height), from the box's ScrollViewer. If the drag left the
+        // window taller than that (short text), shrink it back — the
+        // extra height was white space. If the text is longer than the
+        // box shows, keep the dragged height and raise the box cap so
+        // the output grows past 260 and shows more text instead of
+        // leaving the extra height empty. Cannot measure (card
+        // collapsed / ScrollViewer not ready): keep the dragged height,
+        // previous behaviour.
+        if (TryGetTranslationTextHeights(out var fullText, out var visibleText))
+        {
+            var neededH = Math.Clamp(clampedH + (fullText - visibleText), MinPanelHeight, maxH);
+            if (clampedH > neededH + 8)
+            {
+                // Short text: the drag left white space — snap back.
+                clampedH = neededH;
+                TranslationTextBox.MaxHeight = TranslationTextMaxHeight;
+            }
+            else
+            {
+                // Long text (or exact fit): keep the dragged height
+                // and let the output grow to the full text height.
+                TranslationTextBox.MaxHeight = Math.Max(TranslationTextMaxHeight, fullText);
+            }
+        }
         var changed = false;
         if (Math.Abs(clampedW - App.Settings.PanelWidth) > 0.5)
         {
