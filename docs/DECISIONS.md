@@ -2149,3 +2149,16 @@ an OS limit.)
   recognition over recall, a core UX principle, not a shortcut around
   the rules. Appearance (font sizes) is set-and-forget, so it belongs
   lower; the "settings are stored in ..." line stays the page footer.
+
+## Resize grip: three diagonal lines like mac, not a "↘" arrow (Manh 2026-11-15)
+
+- The bottom-right resize indicator is now three diagonal lines (a
+  12x12 Canvas, 3 lines 3 px apart, 1 px wide, tertiary colour), drawn
+  exactly like mac's ResizeGripView (PopupView.swift: Canvas, 3 lines,
+  spacing 3, lineWidth 1, secondary at 0.4 opacity). It replaces the
+  single "↘" arrow, which read as a plain arrow rather than a resize
+  grip. Decorative only (IsHitTestVisible=False) — the actual drag is
+  still the OS native resize strips (BottomBorder + RightBorder), which
+  show the resize cursor there; the grip just signals that the corner
+  drags diagonally. It sits in the root Grid's 12 px padding, below the
+  footer, covering no interactive content.
