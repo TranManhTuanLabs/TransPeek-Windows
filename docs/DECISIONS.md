@@ -2131,3 +2131,21 @@ an OS limit.)
   open-panel entry — the panel opens from selection/hover/hotkey), so
   that one is the plain action name in the same concise style, not a
   tray name. Manh can rename it if he wants a different one.
+
+## Hotkey hint moved below the last hotkey box; shortcuts stay at the top (Manh 2026-11-15)
+
+- The how-to hint ("Click a hotkey box, then press the key combination
+  — no typing needed. Esc cancels.") moved from the top of the Keyboard
+  shortcuts section to below the last hotkey box (Settings…), as the
+  section's footer note. It was sitting at the top where it read as
+  attached to the wrong group.
+- The whole Keyboard shortcuts section STAYS at the top of General and
+  is NOT moved below Appearance / Popup Panel (Manh asked whether to
+  move it, and whether proper UX/UI rules demand it). The answer is to
+  keep it: the most-used settings go first, and the hotkeys are the
+  most-used settings on this page (decided 2026-11-15 for the same
+  reason). Opening Settings and seeing the shortcut list at once — so
+  the user can check a shortcut he forgot without scrolling — is
+  recognition over recall, a core UX principle, not a shortcut around
+  the rules. Appearance (font sizes) is set-and-forget, so it belongs
+  lower; the "settings are stored in ..." line stays the page footer.

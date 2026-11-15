@@ -9,10 +9,10 @@
                  section header like Appearance / Popup Panel, so the
                  page reads as sections instead of a bare list at the
                  top. The name follows Windows: "Keyboard shortcuts" is
-                 the term Windows Settings uses for this. -->
+                 the term Windows Settings uses for this. The how-to
+                 hint sits BELOW the last hotkey box (Manh 2026-11-15),
+                 as the section's footer note, not at the top. -->
             <TextBlock x:Uid="Settings.General.KeyboardShortcuts" Text="Keyboard shortcuts" FontSize="16" FontWeight="SemiBold" />
-            <TextBlock x:Uid="Settings.General.HotkeyHint" Text="Click a hotkey box, then press the key combination — no typing needed. Esc cancels."
-                       FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
 
             <!-- Hotkeys in tray-menu order (Manh 2026-11-15): open the
                  translate panel first, Manual Translation second, then
@@ -70,6 +70,13 @@
                      GotFocus="OnHotkeyBoxGotFocus" KeyDown="OnHotkeyBoxKeyDown"
                      LostFocus="OnSettingsHotkeyLostFocus" />
             <TextBlock x:Name="SettingsHotkeyErrorText" FontSize="12" Foreground="Red" Visibility="Collapsed" />
+
+            <!-- How to set a hotkey (Manh 2026-11-15): the footer note
+                 for the Keyboard shortcuts section, below the last box
+                 — not at the top, and not attached to the Launch
+                 toggle below. -->
+            <TextBlock x:Uid="Settings.General.HotkeyHint" Text="Click a hotkey box, then press the key combination — no typing needed. Esc cancels."
+                       FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
 
             <!-- Behaviour toggles (Manh 2026-11-15): Launch with
                  Windows sits FIRST, then Watch selection, then how long
