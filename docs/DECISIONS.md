@@ -2209,3 +2209,14 @@ an OS limit.)
   text ("góc chồng version" in a company-doc screenshot). The grip is
   still decorative only (IsHitTestVisible=False); the OS strips do the
   dragging.
+
+## Build/version text aligned to the right edge, under the Settings icon (Manh 2026-11-16)
+
+- The footer build/version text (FooterBuildText) has NO right margin
+  any more — its right edge lines up with the Settings icon in the
+  Actions row above it and with the output card's right edge, all at
+  the content edge. This reverses the 16 px right margin added with the
+  flush grip, which had pushed the version too far left; Manh wants it
+  tight to the right, aligned down from the Settings icon (the company
+  doc screenshot showed the version sitting too far in from the edge).
+  The 1 px corner touch with the flush grip is negligible.

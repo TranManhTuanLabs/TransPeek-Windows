@@ -215,8 +215,7 @@
                 </StackPanel>
             </HyperlinkButton>
             <TextBlock x:Name="FooterBuildText" Foreground="Gray" FontSize="11"
-                       VerticalAlignment="Center" HorizontalAlignment="Right" Opacity="0.7"
-                       Margin="0,0,16,0" />
+                       VerticalAlignment="Center" HorizontalAlignment="Right" Opacity="0.7" />
         </Grid>
 
         <!-- Resize grip (Manh 2026-11-15 — like mac's ResizeGripView):
@@ -232,10 +231,12 @@
              from the edge, inside the 8 px native resize strip — the
              cursor turns to resize as soon as the mouse reaches the
              lines, instead of the user having to travel a further
-             12 px to the corner. The footer build text has a 16 px
-             right margin so it clears the grip and never overlaps it.
-             Replaces the single "↘" arrow, which read as a plain
-             arrow rather than a resize grip. -->
+             12 px to the corner. The footer build text has NO right
+             margin (Manh 2026-11-16): its right edge lines up with the
+             Settings icon above it and the output card's right edge,
+             all at the content edge — the 1 px corner touch with the
+             grip is negligible. Replaces the single "↘" arrow, which
+             read as a plain arrow rather than a resize grip. -->
         <Canvas Grid.RowSpan="8" Width="12" Height="12"
                 HorizontalAlignment="Right" VerticalAlignment="Bottom"
                 Margin="0,0,-11,-11" IsHitTestVisible="False">
