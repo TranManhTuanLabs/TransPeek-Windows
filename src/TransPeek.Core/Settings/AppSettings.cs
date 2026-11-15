@@ -57,6 +57,19 @@ public sealed class AppSettings
     /// already saved in settings.json wins over the default until the
     /// slider is moved once.</summary>
     public double AppTextSize { get; set; } = 15;
+    /// <summary>Panel width in logical pixels (DIPs), as the user last
+    /// resized it. Mac parity: same setting names (popupDefaultWidth /
+    /// popupDefaultHeight); mac defaults 450x350, Windows 440x480.
+    /// Auto-fit never changes the width — it only ever sets the height
+    /// — so the width is purely the user's choice, persisted on every
+    /// manual resize (Manh 2026-11-15 — user-resizable panel).</summary>
+    public double PanelWidth { get; set; } = 440;
+    /// <summary>Panel height in logical pixels (DIPs), as the user last
+    /// resized it — the baseline auto-fit never goes below (mac
+    /// frameToFit baselineHeight). Saved only when a manual resize
+    /// changes the height by more than 8 pt (mac rule), so a tiny
+    /// nudge does not become the new baseline.</summary>
+    public double PanelHeight { get; set; } = 480;
     /// <summary>How long the trigger icon stays after the selection changes, in seconds.</summary>
     public int TriggerIconAutoHideSeconds { get; set; } = 3;
     /// <summary>Global hotkey that shows the panel for the current selection.

@@ -32,8 +32,40 @@ namespace TransPeek.Views;
 
 public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
 {
-    private const int PanelWidth = 440;
-    private const int PanelHeight = 480;
+    /// <summary>Manual-resize limits in logical pixels (DIPs), chosen
+    /// for the WINDOWS panel (Manh 2026-11-15 — the mac numbers are
+    /// reference only, not fixed; Windows picks its own). Min width
+    /// 400: the language row needs Source 128 + Swap + Target 128 +
+    /// Capture OCR (~390), so narrower would clip the pickers. Min
+    /// height 260: the same floor auto-fit uses — the content (title
+    /// + input + language row + output + actions + dictionary +
+    /// footer) cannot fit in less. Max 800x800: roomy on a big
+    /// screen, further clamped to the display work area.</summary>
+    private const double MinPanelWidth = 400;
+    private const double MinPanelHeight = 260;
+    private const double MaxPanelSize = 800;
+    /// <summary>Thickness of the native resize strips along the bottom
+    /// and right edges, in PHYSICAL pixels. They sit inside the root
+    /// Grid's 12 px padding, so they never cover interactive content.
+    /// SetRegionRects takes physical pixels (like the caption region).</summary>
+    private const int ResizeStripThickness = 8;
+
+    /// <summary>The _epoch at which the user last resized the panel
+    /// (height). While it equals the current _epoch, ResizeToFitContent
+    /// (auto-fit) is suppressed — mac's manualResizeGeneration vs
+    /// translationGeneration. A new show bumps _epoch, so auto-fit runs
+    /// fresh again. Null = no manual resize this show.</summary>
+    private int? _manualResizeGeneration;
+    /// <summary>Physical size set by the last programmatic MoveAndResize
+    /// (show + auto-fit). AppWindow.Changed fires for those too; when
+    /// the new size equals this, it was our own resize, not the user's
+    /// drag — so it must not persist the size or suppress auto-fit.</summary>
+    private Windows.Graphics.SizeInt32? _lastProgrammaticSize;
+    /// <summary>Debounce for persisting a user resize: AppWindow.Changed
+    /// fires on every step of a border drag, so the save + clamp run
+    /// 300 ms after the last size change (i.e. when the drag ends),
+    /// not on every pixel.</summary>
+    private DispatcherTimer? _resizePersistTimer;
 
     private readonly Func<string, Task<(string? Translation, string ProviderName)>> _translateAsync;
     private readonly Func<Task> _ocrRequested;
@@ -80,13 +112,23 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         {
             contentRoot.Loaded += (_, _) =>
             {
-                WindowHelpers.MakeBorderlessTopmost(this);
+                // resizable: true (Manh 2026-11-15 — user-resizable
+                // panel): only flips OverlappedPresenter.IsResizable so
+                // the OS allows user resizing; the grab areas are the
+                // native resize strips (UpdateResizeRegions), and the
+                // size is tracked in OnAppWindowChanged.
+                WindowHelpers.MakeBorderlessTopmost(this, resizable: true);
                 WindowHelpers.MakeToolWindow(this);
                 // Native drag region (see UpdateCaptionRegion): set once
                 // the layout is known, and again whenever the title bar
                 // resizes (font size change).
                 UpdateCaptionRegion();
                 TitleBar.SizeChanged += (_, _) => UpdateCaptionRegion();
+                // Native resize strips (bottom + right edges) + size
+                // tracking: re-declared whenever the window size
+                // changes, so the strips stay on the edges.
+                UpdateResizeRegions();
+                AppWindow.Changed += OnAppWindowChanged;
             };
             // A click into the panel activates it (see ActivateWindow):
             // until then the NOACTIVATE window never receives keyboard
@@ -249,18 +291,24 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     {
         _ocrMode = false;
         _epoch++;
+        // New show: auto-fit runs fresh again (the manual-resize
+        // suppression only lasts for the show the user resized in).
+        _manualResizeGeneration = null;
         // Win32 only: DisplayArea.Primary.WorkArea threw on this machine
         // (same WinRT display bug as FindAll()) and the tray Manual
         // Translation click died silently — the panel never appeared.
         // DPI: the work area is physical pixels, PanelWidth/PanelHeight
         // are logical — scale them before MoveAndResize (see
         // ResizeToFitContent). At 100% the factor is 1.0 (no change).
+        // The size is the user's persisted size (or the 440x480
+        // default), not a constant — a manual resize sticks.
         var scale = WindowHelpers.DpiScale(this);
-        var w = Math.Max(1, (int)Math.Round(PanelWidth * scale));
-        var h = Math.Max(1, (int)Math.Round(PanelHeight * scale));
+        var w = Math.Max(1, (int)Math.Round(App.Settings.PanelWidth * scale));
+        var h = Math.Max(1, (int)Math.Round(App.Settings.PanelHeight * scale));
         var work = WindowHelpers.PrimaryWorkArea();
         var px = work.X + Math.Max((work.Width - w) / 2, 0);
         var py = work.Y + Math.Max((work.Height - h) / 2, 0);
+        _lastProgrammaticSize = new Windows.Graphics.SizeInt32(w, h);
         WindowHelpers.MoveAndResize(this, px, py, w, h);
         SetSource("");
         _translationText = "";
@@ -382,17 +430,22 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     private void ShowPanelNear(int x, int y)
     {
         _epoch++;
+        // New show: auto-fit runs fresh again (see ShowInputMode).
+        _manualResizeGeneration = null;
         // DPI: (x, y) and the work area are physical pixels, but
         // PanelWidth/PanelHeight are logical (DIPs) — scale them before
         // MoveAndResize, which takes physical pixels (see
         // ResizeToFitContent). At 100% the factor is 1.0 (no change).
+        // The size is the user's persisted size (or the 440x480
+        // default), not a constant — a manual resize sticks.
         var scale = WindowHelpers.DpiScale(this);
-        var w = Math.Max(1, (int)Math.Round(PanelWidth * scale));
-        var h = Math.Max(1, (int)Math.Round(PanelHeight * scale));
+        var w = Math.Max(1, (int)Math.Round(App.Settings.PanelWidth * scale));
+        var h = Math.Max(1, (int)Math.Round(App.Settings.PanelHeight * scale));
         var gap = Math.Max(1, (int)Math.Round(8 * scale));
         var work = WindowHelpers.DisplayWorkArea(x, y);
         var px = Math.Clamp(x + gap, work.X, work.X + work.Width - w);
         var py = Math.Clamp(y + gap, work.Y, work.Y + work.Height - h);
+        _lastProgrammaticSize = new Windows.Graphics.SizeInt32(w, h);
         WindowHelpers.MoveAndResize(this, px, py, w, h);
         WindowHelpers.ShowWithoutActivation(this);
         _visible = true;
@@ -411,7 +464,13 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// ShowInputMode put it; if the bottom would run off-screen the
     /// whole window shifts up. Deferred via the dispatcher so layout
     /// has finished before measuring. Only resizes when the height
-    /// actually changed, so a resize never re-triggers itself.</summary>
+    /// actually changed, so a resize never re-triggers itself.
+    /// User-resizable (Manh 2026-11-15): the width is never changed
+    /// here (mac frameToFit keeps currentFrame.width) and the height
+    /// never goes below the user's persisted PanelHeight; after a
+    /// manual resize in this show auto-fit is skipped entirely
+    /// (_manualResizeGeneration == _epoch) so it cannot fight the
+    /// user's drag.</summary>
     private void RequestResizeToFit()
     {
         DispatcherQueue.TryEnqueue(ResizeToFitContent);
@@ -421,6 +480,9 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     {
         if (!_visible || Content is not FrameworkElement root)
             return;
+        // Manual resize this show: do not override the user's size.
+        if (_manualResizeGeneration == _epoch)
+            return;
         // DPI: XAML measures in logical pixels (DIPs) but AppWindow
         // MoveAndResize takes PHYSICAL pixels (Microsoft Learn, "Manage
         // app windows": AppWindow.Resize/ResizeClient take physical
@@ -429,7 +491,12 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         // Scale logical -> physical here; at 100% the factor is 1.0, so
         // the behaviour there is unchanged.
         var scale = WindowHelpers.DpiScale(this);
-        root.Measure(new Windows.Foundation.Size(PanelWidth, double.PositiveInfinity));
+        // Measure at the CURRENT width (the user's width), never the
+        // default — auto-fit never changes the width (mac frameToFit
+        // keeps currentFrame.width), so a wider panel wraps the text
+        // into fewer lines and fits shorter.
+        var currentWidth = Math.Max(1.0, AppWindow.Size.Width / scale);
+        root.Measure(new Windows.Foundation.Size(currentWidth, double.PositiveInfinity));
         var desired = root.DesiredSize.Height;
         if (desired <= 0 || double.IsNaN(desired) || double.IsInfinity(desired))
             return;
@@ -437,13 +504,20 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         var work = WindowHelpers.DisplayWorkArea(pos.X, pos.Y);
         var minHeight = Math.Max(1, (int)Math.Round(260 * scale));
         var maxHeight = Math.Max(minHeight, work.Height - 16);
-        var height = (int)Math.Clamp(Math.Ceiling(desired * scale), minHeight, maxHeight);
-        var width = Math.Max(1, (int)Math.Round(PanelWidth * scale));
+        // Baseline = the user's persisted height (mac frameToFit
+        // baselineHeight): the panel never shrinks below the height the
+        // user chose, but it still grows when the content needs more.
+        var baseline = Math.Max(App.Settings.PanelHeight, desired);
+        var height = (int)Math.Clamp(Math.Ceiling(baseline * scale), minHeight, maxHeight);
+        var width = AppWindow.Size.Width;
         var y = pos.Y;
         if (y + height > work.Y + work.Height)
             y = Math.Max(work.Y, work.Y + work.Height - height);
         if (AppWindow.Size.Height != height || pos.Y != y)
+        {
+            _lastProgrammaticSize = new Windows.Graphics.SizeInt32(width, height);
             WindowHelpers.MoveAndResize(this, pos.X, y, width, height);
+        }
     }
 
     /// <summary>The input box grows as the user types (up to MaxHeight):
@@ -484,6 +558,133 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
             Math.Max(1, (int)Math.Round(bounds.Height * scale)));
         var source = InputNonClientPointerSource.GetForWindowId(AppWindow.Id);
         source.SetRegionRects(NonClientRegionKind.Caption, new[] { physical });
+    }
+
+    /// <summary>Declare the native resize strips along the bottom and
+    /// right edges (Manh 2026-11-15 — user-resizable panel). The OS
+    /// shows the resize cursor there and handles the drag itself
+    /// (including the correct cursor, snap, and DPI — the resize is
+    /// done in physical pixels by the OS, so it is right at 150% with
+    /// no manual logical/physical conversion). NonClientRegionKind
+    /// (Microsoft Learn, Windows App SDK): BottomBorder / RightBorder
+    /// are the border areas; there are no corner values, so the
+    /// bottom-right corner is where the two strips overlap and the OS
+    /// treats it as a diagonal resize. The strips are 8 physical px
+    /// inside the root Grid's 12 px padding, so they never cover
+    /// interactive content. Re-declared whenever the window size
+    /// changes (OnAppWindowChanged) so they stay on the edges.
+    /// Requires OverlappedPresenter.IsResizable = true (set in the
+    /// Loaded handler via MakeBorderlessTopmost(resizable: true)).</summary>
+    private void UpdateResizeRegions()
+    {
+        var size = AppWindow.Size;
+        if (size.Width <= 0 || size.Height <= 0)
+            return;
+        var t = ResizeStripThickness;
+        var source = InputNonClientPointerSource.GetForWindowId(AppWindow.Id);
+        source.SetRegionRects(NonClientRegionKind.BottomBorder, new[]
+        {
+            new Windows.Graphics.RectInt32(0, Math.Max(0, size.Height - t), size.Width, Math.Min(t, size.Height)),
+        });
+        source.SetRegionRects(NonClientRegionKind.RightBorder, new[]
+        {
+            new Windows.Graphics.RectInt32(Math.Max(0, size.Width - t), 0, Math.Min(t, size.Width), size.Height),
+        });
+    }
+
+    /// <summary>Track window size changes (Microsoft Learn, "Manage app
+    /// windows": AppWindow.Changed + AppWindowChangedEventArgs.
+    /// DidSizeChange). Two jobs: (1) keep the native resize strips on
+    /// the edges (UpdateResizeRegions); (2) tell a user border-drag
+    /// apart from our own programmatic MoveAndResize (show + auto-fit),
+    /// so a manual resize persists the size and suppresses auto-fit
+    /// for the rest of this show (mac manualResizeGeneration), while
+    /// our own resizes do neither. The distinction is the size itself:
+    /// a programmatic resize sets exactly _lastProgrammaticSize, a
+    /// user drag lands on any other size.</summary>
+    private void OnAppWindowChanged(AppWindow sender, AppWindowChangedEventArgs args)
+    {
+        if (!args.DidSizeChange)
+            return;
+        UpdateResizeRegions();
+        var size = sender.Size;
+        if (_lastProgrammaticSize is { } expected
+            && size.Width == expected.Width && size.Height == expected.Height)
+        {
+            // Our own MoveAndResize (show / auto-fit): not a user drag.
+            _lastProgrammaticSize = null;
+            return;
+        }
+        // User border-drag: suppress auto-fit for the rest of this show
+        // (mac: manualResizeGeneration = translationGeneration) so it
+        // cannot shrink the panel back while the user is resizing it.
+        _manualResizeGeneration = _epoch;
+        // Persist (debounced): Changed fires on every step of a drag,
+        // so the save + clamp run 300 ms after the last size change.
+        // The Tick handler is attached once, at creation — attaching
+        // it on every restart would stack a handler per size change
+        // and run PersistResizedSize() N times.
+        _resizePersistTimer?.Stop();
+        if (_resizePersistTimer is null)
+        {
+            _resizePersistTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(300) };
+            _resizePersistTimer.Tick += (_, _) =>
+            {
+                _resizePersistTimer?.Stop();
+                PersistResizedSize();
+            };
+        }
+        _resizePersistTimer.Start();
+    }
+
+    /// <summary>Clamp a user-resized panel to the manual limits and the
+    /// display work area, then persist the size (mac onEnded). Width is
+    /// always saved; height only when it moved more than 8 pt from the
+    /// saved value (mac rule), so a tiny nudge does not become the new
+    /// auto-fit baseline. Called 300 ms after the last size change of
+    /// a border drag (OnAppWindowChanged debounce).</summary>
+    private void PersistResizedSize()
+    {
+        // No _visible guard: the timer only starts on a user resize
+        // (which implies the panel was visible), and AppWindow.Size
+        // still holds the resized size even if the user hid the panel
+        // within the 300 ms debounce — that resize must still persist.
+        var scale = WindowHelpers.DpiScale(this);
+        var size = AppWindow.Size;
+        var w = size.Width / scale;
+        var h = size.Height / scale;
+        var work = WindowHelpers.DisplayWorkArea(AppWindow.Position.X, AppWindow.Position.Y);
+        var maxW = Math.Min(MaxPanelSize, work.Width / scale);
+        var maxH = Math.Min(MaxPanelSize, work.Height / scale);
+        var clampedW = Math.Clamp(w, MinPanelWidth, Math.Max(MinPanelWidth, maxW));
+        var clampedH = Math.Clamp(h, MinPanelHeight, Math.Max(MinPanelHeight, maxH));
+        var changed = false;
+        if (Math.Abs(clampedW - App.Settings.PanelWidth) > 0.5)
+        {
+            App.Settings.PanelWidth = clampedW;
+            changed = true;
+        }
+        if (Math.Abs(clampedH - App.Settings.PanelHeight) > 8)
+        {
+            App.Settings.PanelHeight = clampedH;
+            changed = true;
+        }
+        if (changed)
+            SettingsStore.Save(App.Settings);
+        // Clamp the window itself if the drag went past the limits
+        // (the OS does not enforce min/max on a borderless window):
+        // record it as programmatic so OnAppWindowChanged ignores it.
+        var cw = Math.Max(1, (int)Math.Round(clampedW * scale));
+        var ch = Math.Max(1, (int)Math.Round(clampedH * scale));
+        if (cw != size.Width || ch != size.Height)
+        {
+            var pos = AppWindow.Position;
+            var y = pos.Y;
+            if (y + ch > work.Y + work.Height)
+                y = Math.Max(work.Y, work.Y + work.Height - ch);
+            _lastProgrammaticSize = new Windows.Graphics.SizeInt32(cw, ch);
+            WindowHelpers.MoveAndResize(this, pos.X, y, cw, ch);
+        }
     }
 
     /// <summary>Pin toggle: while pinned the panel stays put — click-outside

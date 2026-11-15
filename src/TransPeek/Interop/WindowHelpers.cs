@@ -90,15 +90,23 @@ internal static class WindowHelpers
     }
 
     /// <summary>Configure an AppWindow as a borderless, always-on-top,
-    /// non-resizable floating window.</summary>
-    public static void MakeBorderlessTopmost(Window window)
+    /// non-resizable floating window. Pass resizable: true for a window
+    /// the user may resize by dragging its edges (the translate panel,
+    /// Manh 2026-11-15): it only flips OverlappedPresenter.IsResizable
+    /// so the OS allows user resizing — the actual grab areas are
+    /// declared with InputNonClientPointerSource.SetRegionRects (the
+    /// panel's UpdateResizeRegions), because a borderless window has
+    /// no visible border to grab. IsResizable does NOT affect
+    /// AppWindow.Resize/MoveAndResize calls (Microsoft Learn,
+    /// "Manage app windows").</summary>
+    public static void MakeBorderlessTopmost(Window window, bool resizable = false)
     {
         var appWindow = window.AppWindow;
         appWindow.SetPresenter(AppWindowPresenterKind.Overlapped);
         if (appWindow.Presenter is OverlappedPresenter presenter)
         {
             presenter.IsAlwaysOnTop = true;
-            presenter.IsResizable = false;
+            presenter.IsResizable = resizable;
             presenter.IsMaximizable = false;
             presenter.IsMinimizable = false;
             presenter.SetBorderAndTitleBar(false, false);

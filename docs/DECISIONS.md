@@ -1957,3 +1957,69 @@ an OS limit.)
 - Extra languages still download on demand to the local dir (the
   all-languages picker is a separate session, after the 2026-11-16
   token reset). The old "never bundled" comment is removed.
+
+## Panel: user-resizable by dragging the edges (Manh 2026-11-15, mac parity)
+
+- Manh asked (via the mac chat) whether the panel should be responsive
+  automatically or user-resizable, for big screens. Mac conclusion:
+  NO auto-responsive (a popup should stay compact — auto-growing would
+  cover the user's work, and translation content does not need a big
+  panel); instead let the user drag it bigger when they want. Mac
+  already had it; Windows did not, so it was added here to match.
+- Mac reference (PopupPanel / PopupView / PopupPanelController):
+  default 450x350, min 280x200, max 800x800; a resize grip at the
+  bottom-right (custom DragGesture); the size persists
+  (popupDefaultWidth/Height); auto-fit (frameToFit) keeps the current
+  width and never goes below the persisted height (baselineHeight);
+  after a manual resize, auto-fit is suppressed for the rest of that
+  translation (manualResizeGeneration == translationGeneration), and
+  the height is only persisted when it moved more than 8 pt.
+- Windows implementation — NATIVE borders, not a custom drag grip:
+  `OverlappedPresenter.IsResizable = true` (only the panel;
+  `WindowHelpers.MakeBorderlessTopmost` gained a `resizable`
+  parameter, default false, so the trigger icon / toast / region
+  window stay non-resizable) plus `InputNonClientPointerSource.
+  SetRegionRects` with `NonClientRegionKind.BottomBorder` and
+  `RightBorder` (Microsoft Learn, Windows App SDK: the enum has the
+  four borders + Caption/Passthrough, no corner values — the
+  bottom-right corner is where the two strips overlap and the OS
+  treats it as a diagonal resize). The OS shows the resize cursor
+  and handles the drag itself, in physical pixels, so it is correct
+  at 150% with no manual logical/physical conversion (the DPI bug
+  class that cut the panel off at 150%). A custom grip was considered
+  and rejected: it would need its own pointer-drag math (the exact
+  DPI conversion just fixed) and a hover cursor via the protected
+  `UIElement.ProtectedCursor` (not settable from Window code-behind).
+  The strips are 8 physical px along the bottom/right edges, inside
+  the root Grid's 12 px padding, so they never cover interactive
+  content. A small "↘" glyph at the bottom-right corner (IsHitTest-
+  Visible=False, decorative) hints that the edge drags.
+- Size tracking: `AppWindow.Changed` + `AppWindowChangedEventArgs.
+  DidSizeChange` (Microsoft Learn, "Manage app windows"). A user
+  border-drag is told apart from our own programmatic MoveAndResize
+  (show + auto-fit) by the size itself: a programmatic resize sets
+  exactly `_lastProgrammaticSize`, recorded before every
+  MoveAndResize; any other size is a user drag. On a user drag,
+  `_manualResizeGeneration = _epoch` suppresses auto-fit for the rest
+  of that show (mac generation rule), and the size is persisted
+  300 ms after the last size change (debounced — Changed fires on
+  every step of a drag). Width is always saved; height only when it
+  moved more than 8 pt from the saved value (mac rule). The window
+  itself is clamped to the limits when the drag ends (the OS does not
+  enforce min/max on a borderless window).
+- Limits: min 400x260, max 800x800, further clamped to the display
+  work area. The limits are chosen for the WINDOWS panel, not copied
+  from mac (Manh 2026-11-15 — mac's 450x350 / 280x200 / 800x800 are
+  reference only): min width 400 fits the language row (Source 128 +
+  Swap + Target 128 + Capture OCR, ~390); min height 260 is the same
+  floor auto-fit uses, because the Windows content cannot fit in
+  less; max 800x800 is roomy on a big screen.
+- Settings: `PanelWidth` (default 440) / `PanelHeight` (default 480)
+  in `AppSettings` (mac names popupDefaultWidth/Height). Show
+  (ShowPanelNear / ShowInputMode) opens at the persisted size.
+  Auto-fit (`ResizeToFitContent`) never changes the width (it
+  measures at the current width, mac frameToFit keeps
+  currentFrame.width) and never goes below the persisted
+  PanelHeight (mac baselineHeight) — so a panel the user dragged
+  tall stays tall, and it still grows when the content needs more.
+  A new show resets the suppression, so auto-fit runs fresh again.

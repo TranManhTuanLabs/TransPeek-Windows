@@ -204,5 +204,17 @@
             <TextBlock x:Name="FooterBuildText" Foreground="Gray" FontSize="11"
                        VerticalAlignment="Center" HorizontalAlignment="Right" Opacity="0.7" />
         </Grid>
+
+        <!-- Resize grip (Manh 2026-11-15 — user-resizable panel, mac
+             parity): a diagonal-arrow hint at the bottom-right corner.
+             Decorative only — the actual drag is handled by the OS via
+             the native resize strips (UpdateResizeRegions: BottomBorder
+             + RightBorder), which also show the resize cursor there.
+             It sits in the root Grid's 12 px padding, below the footer,
+             so it covers no interactive content. -->
+        <TextBlock Grid.RowSpan="8" Text="↘" FontSize="12"
+                   Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                   HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                   Margin="0,0,1,0" IsHitTestVisible="False" />
     </Grid>
 </Window>
