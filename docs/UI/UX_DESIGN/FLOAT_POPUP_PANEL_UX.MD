@@ -30,7 +30,7 @@ Hàng `*` là hàng duy nhất dãn theo chiều cao; các hàng `Auto` chỉ ca
 | Row 1 | Auto | **SourceTextBox** — ô nhập, sửa được | `MaxHeight 120`, Margin `0,0,0,4`. Enter = dịch lại, Shift+Enter = xuống dòng. Loa + Copy **nằm trong ô** ở góc dưới-phải (overlay, Margin `0,0,6,8`) |
 | Row 2 | Auto | **Hint** — 11pt, **PHẢI ở 1 dòng ở mọi chiều rộng** (xem §6) | "Select a word, then click Dictionary to look it up" (rút ngắn 17/11 #161 — câu cũ dài ~103 ký tự, xuống 2 dòng khi kéo hẹp, gây che loa) |
 | Row 3 | Auto | **Hàng ngôn ngữ** — Source ⇄ Target + Capture OCR | ComboBox Source/Target **rộng 112**, nút Swap ⇄ Padding `4,2`, Spacing `4`. Nút "Capture OCR" ở bên phải |
-| Row 4 | `*` | **Output card** (`ProviderCardBorder`) | Margin `0,0,0,8`, CornerRadius 6, BorderThickness 1, `MinHeight 218`. Bên trong **4 hàng**: header (tên provider 13pt SemiBold + trạng thái) / divider / TextBox (`*`, FontSize 14, MinHeight 60, MaxHeight 260) / **loa/Copy ở hàng Auto riêng** ở cuối card (Margin `0,4,6,8`, Spacing 4) — xem §6 |
+| Row 4 | `*` | **Output card** (`ProviderCardBorder`) | Margin `0,0,0,8`, CornerRadius 6, BorderThickness 1, `MinHeight 218`. Bên trong **3 hàng**: header (tên provider 13pt SemiBold + trạng thái) / divider / TextBox (`*`, FontSize 14, MinHeight 60, MaxHeight 260) với **loa/Copy overlay trong ô TextBox** (góc dưới-phải, Margin `0,0,6,8` như ô nhập) — xem §6 |
 | Row 5 | Auto | **Actions** — Pin + Settings | Căn phải, Spacing 4, Margin `0,0,0,8`. Pin (glyph E718) trước, Settings (E713) sau |
 | Row 6 | Auto | **DictionaryBarControl** — link tra từ điển | |
 | Row 7 | Auto | **Footer** — link GitHub căn giữa + build text căn phải | |
@@ -117,6 +117,15 @@ dưới card khi tra 1–5 line; từ 6 line trở lên không bị. **Nguyên n
   ở chiều rộng tối thiểu 400). **Quy tắc: hint PHẢI vừa 1 dòng ở 400px** — ghi chú
   cảnh báo đã có trong XAML ngay trên dòng hint; lengthen lại là che loa trở lại.
   **Chưa xác nhận hết che cho tới khi Manh test bản #161** (kéo hẹp + 1 word / 3 line / 6 line).
+- **Fix #162 (đưa loa/Copy VÀO TRONG ô output — Manh 17/11 06:14):** #160 đã đưa loa/Copy
+  ra hàng Auto riêng dưới ô TextBox để tránh bị che, nhưng đó chỉ là tránh triệu chứng —
+  nguyên nhân thật (hint xuống 2 dòng) đã sửa ở #161 nên overlay không còn bị kẹp nữa.
+  #162 đưa loa/Copy về lại **overlay trong ô TextBox** (cùng ô `*`, sau TextBox trong
+  XAML để vẽ lên trên, Margin `0,0,6,8` như ô nhập — giống #157). Card về lại 3 hàng;
+  TextBox `*` ở mức tối thiểu còn ≈186 (218 − 2 viền − 29 header − 1 divider), rộng
+  hơn lúc có hàng loa riêng (≈146). **Sau #162 thì saved pre-release bản #162.**
+  **Chưa xác nhận cho tới khi Manh test bản #162** (loa/Copy trong ô output, hết che ở
+  400/420/600 + 1 word / 3 line / 6 line).
 
 Lịch sử mò số (để tránh lặp lại): min output card 150 → 160 (#151) → 170 (#152) →
 180 (#154) → 210 (#155, đo từ ảnh: card 3 line ~206px, card 1 word ~193px, chênh 13px)

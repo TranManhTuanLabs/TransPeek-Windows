@@ -145,9 +145,9 @@
              it is long (mac grows the window to fit, then scrolls —
              see PopupPanelSizing.frameToFit; the window resize comes
              later, the card + scroll is the shape first). The speaker
-             sits at the bottom-right of the card body, mirroring mac's
-             result card (Speak + Copy on the right below the result) —
-             wired to the Windows system voices (SystemSpeechService). -->
+             + Copy sit INSIDE the TextBox's bottom-right corner
+             (overlay, like the input's — Manh 2026-11-17, #162), wired
+             to the Windows system voices (SystemSpeechService). -->
         <Border x:Name="ProviderCardBorder" Grid.Row="4" Margin="0,0,0,8" CornerRadius="6" BorderThickness="1" MinHeight="218"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                 Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
@@ -156,25 +156,6 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
-                    <!-- Speaker row is its OWN Auto row (Manh 2026-11-17,
-                         #160 — the last fix for the covered speaker):
-                         the buttons used to overlay the TextBox cell
-                         (same * row, #157), but a * row is sized to the
-                         leftover space, so when the panel/card came out
-                         ~8 px short the buttons — anchored to the * row's
-                         bottom edge — were clipped by the card edge for
-                         short text (1–5 lines; 6+ lines were fine
-                         because their content filled the box). An Auto
-                         row is allocated its full height BEFORE the *
-                         row gets anything, so the buttons can never be
-                         squeezed or clipped by the card edge — the *
-                         TextBox row absorbs any shortfall instead.
-                         The input's overlay works because the input
-                         sits in an Auto row (never squeezed); the
-                         output sits in a * row, so it needs its own
-                         Auto row. Card MinHeight stays 218; the TextBox
-                         * row is now 218-2-29-1-40 ≈ 146 at minimum. -->
-                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
                 <Button x:Name="ProviderCardHeaderButton" Grid.Row="0" Click="OnProviderCardHeaderClicked"
                         Background="Transparent" BorderThickness="0" Padding="8,6"
@@ -191,21 +172,25 @@
                          TextWrapping="Wrap" AcceptsReturn="True" BorderThickness="0"
                          Background="Transparent" FontSize="14" MaxHeight="260" MinHeight="60"
                          SelectionChanged="OnTranslationSelectionChanged" />
-                <!-- Speak + Copy in their OWN Auto row at the bottom of
-                     the card (Manh 2026-11-17, #160): NOT overlaid on
-                     the TextBox cell anymore (see the RowDefinitions
-                     comment above). The row is Auto, so the Grid gives
-                     the buttons their full height first and the *
-                     TextBox row takes what is left — the buttons can
-                     never be clipped by the card edge. Margin top 4
-                     separates them from the text; bottom 8 keeps them
-                     8 px above the card edge, like the input's. The
-                     Copy here is the translation copy; CopyButton shows
-                     in normal mode and CopyTranslationButton in OCR mode
+                <!-- Speak + Copy INSIDE the TextBox (Manh 2026-11-17,
+                     #162): back to the overlay in the TextBox cell
+                     (same * row, after the TextBox in XAML so they
+                     paint on top), like the input's and like #157.
+                     #160 had moved them to their own Auto row below
+                     the TextBox to dodge the covered-speaker bug, but
+                     the real cause was the hint wrapping to 2 lines
+                     (fixed in #161 — hint is 1 line now, so the card
+                     is never squeezed and the overlay cannot be
+                     clipped by the card edge). The overlay gives the
+                     TextBox the full card height back (218-2-29-1 ≈
+                     186 at minimum, was ≈146 with the extra row).
+                     Margin 0,0,6,8 like the input's. The Copy here is
+                     the translation copy; CopyButton shows in normal
+                     mode and CopyTranslationButton in OCR mode
                      (UpdateCopyButtons toggles them, only one visible
                      at a time) — both labelled just "Copy". Speak
                      first, Copy second (mac order). -->
-                <StackPanel x:Name="ProviderCardSpeakerRow" Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,4,6,8" Spacing="4">
+                <StackPanel x:Name="ProviderCardSpeakerRow" Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,6,8" Spacing="4">
                     <Button x:Name="SpeakTranslationButton" Padding="8,4"
                             ToolTipService.ToolTip="Listen to translation"
                             Click="OnSpeakTranslationClicked">
