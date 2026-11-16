@@ -363,17 +363,17 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         // New show: auto-fit runs fresh again (the manual-resize
         // suppression only lasts for the show the user resized in).
         _manualResizeGeneration = null;
-        // Win32 only: DisplayArea.Primary.WorkArea threw on this machine
-        // (same WinRT display bug as FindAll()) and the tray Manual
-        // Translation click died silently — the panel never appeared.
-        // DPI: the work area is physical pixels, PanelWidth/PanelHeight
-        // are logical — scale them before MoveAndResize (see
-        // ResizeToFitContent). At 100% the factor is 1.0 (no change).
-        // The size is the user's persisted size (or the 440x480
-        // default), not a constant — a manual resize sticks.
+        // The size is the user's persisted WIDTH (or the 440 default),
+        // but the height opens COMPACT (MinPanelHeight), not at the
+        // saved PanelHeight — the panel must fit the content on every
+        // show (Manh 2026-11-16: "mỗi khi panel hiện ra là resize nếu
+        // cần"). Opening at the saved tall height and shrinking after
+        // was fragile: the shrink is deferred and could be skipped or
+        // delayed, leaving a tall panel for short text (#143/#145).
+        // ResizeToFitContent grows the window if the content is tall.
         var scale = WindowHelpers.DpiScale(this);
         var w = Math.Max(1, (int)Math.Round(App.Settings.PanelWidth * scale));
-        var h = Math.Max(1, (int)Math.Round(App.Settings.PanelHeight * scale));
+        var h = Math.Max(1, (int)Math.Round(MinPanelHeight * scale));
         var work = WindowHelpers.PrimaryWorkArea();
         var px = work.X + Math.Max((work.Width - w) / 2, 0);
         var py = work.Y + Math.Max((work.Height - h) / 2, 0);
@@ -565,14 +565,17 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         // New show: auto-fit runs fresh again (see ShowInputMode).
         _manualResizeGeneration = null;
         // DPI: (x, y) and the work area are physical pixels, but
-        // PanelWidth/PanelHeight are logical (DIPs) — scale them before
-        // MoveAndResize, which takes physical pixels (see
-        // ResizeToFitContent). At 100% the factor is 1.0 (no change).
-        // The size is the user's persisted size (or the 440x480
-        // default), not a constant — a manual resize sticks.
+        // PanelWidth is logical (DIPs) — scale it before MoveAndResize,
+        // which takes physical pixels (see ResizeToFitContent). At 100%
+        // the factor is 1.0 (no change). The WIDTH is the user's
+        // persisted size (or the 440 default); the HEIGHT opens compact
+        // (MinPanelHeight), not at the saved PanelHeight — the panel
+        // must fit the content on every show (Manh 2026-11-16: "mỗi
+        // khi panel hiện ra là resize nếu cần"). ResizeToFitContent
+        // grows it if the content is tall.
         var scale = WindowHelpers.DpiScale(this);
         var w = Math.Max(1, (int)Math.Round(App.Settings.PanelWidth * scale));
-        var h = Math.Max(1, (int)Math.Round(App.Settings.PanelHeight * scale));
+        var h = Math.Max(1, (int)Math.Round(MinPanelHeight * scale));
         var gap = Math.Max(1, (int)Math.Round(8 * scale));
         var work = WindowHelpers.DisplayWorkArea(x, y);
         var px = Math.Clamp(x + gap, work.X, work.X + work.Width - w);
