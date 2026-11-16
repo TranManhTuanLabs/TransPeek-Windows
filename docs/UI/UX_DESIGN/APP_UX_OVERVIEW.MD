@@ -25,7 +25,7 @@
 
 ## 4. Các doc UX chi tiết
 
-- `FLOAT_POPUP_PANEL_UX.MD` — **CHỐT** (17/11/2026): size panel, khung layout, snap-back.
+- `FLOAT_POPUP_PANEL_UX.MD` — **CHỐT** (17/11/2026, build #161): size panel, khung layout, snap-back.
 - `FLOAT_ICON_UX_SPEC.MD` — bản nháp: hình dạng + hành vi icon float.
 - `MAIN_NAVIGATION_UX.MD` — bản nháp: menu tray + cửa sổ Settings.
 - `SETTING_UX.MD` — **CHƯA VIẾT**.

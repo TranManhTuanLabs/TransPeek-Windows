@@ -1,7 +1,8 @@
 # Float / Popup Panel — UX Spec (CHỐT)
 
-> **Trạng thái: CHỐT — 17/11/2026, theo build #159 (commit `93bbd8e`).**
+> **Trạng thái: CHỐT — 17/11/2026, theo build #161 (commit `c262eac`).**
 > Các con số trong doc này là **spec**. Đổi bất kỳ số đã chốt nào cũng cần Manh duyệt trước.
+> Spec đã bao gồm: cấu trúc card 4 hàng (#160) + hint 1 dòng (#161).
 > Doc này chỉ cho **Windows**. Bên mac có yêu cầu tương tự nhưng **chưa viết panel UX vì chưa chốt size** — khi nào mac chốt thì viết riêng, đối chiếu với doc này.
 
 ## 1. Kích thước chốt (locked sizes)
@@ -72,10 +73,11 @@ minH = max(450, fixedH + cardMin + cardMargin + 24)
 - Auto-fit (`ResizeToFitContent`): đo `DesiredSize` của root, kẹp giữa min height động
   và max 800, rộng kẹp 400–600.
 
-## 6. Vấn đề đang mở (OPEN — không đổi size để sửa)
+## 6. Bug che loa/Copy — nguyên nhân đã tìm ra, fix #161 chờ xác nhận
 
-**Bug che loa/Copy (từ #149, SỬA ở #160 — chờ Manh test xác nhận):** nút loa/Copy ở
-góc dưới-phải ô output bị cắt ở mép dưới card khi tra 1–5 line; từ 6 line trở lên không bị.
+**Bug che loa/Copy (từ #149):** nút loa/Copy ở góc dưới-phải ô output bị cắt ở mép
+dưới card khi tra 1–5 line; từ 6 line trở lên không bị. **Nguyên nhân thật đã tìm ra
+(Manh, 17/11 05:52) và fix #161 đã đẩy — chỉ còn chờ Manh test xác nhận hết che.**
 
 - Đã đo từ video build 158 (1 word "lea", panel 424×550): đáy card ở y≈417,
   nút bị cắt đúng ở y=417 — chỉ hiện ~20px trên ~28px của nút, thiếu ~8px.
@@ -140,6 +142,21 @@ Lịch sử mò số (để tránh lặp lại): min output card 150 → 160 (#1
   migration `SettingsVersion` (v1 reset 440×450, v2 rộng 440→420)
 - `src/TransPeek/Views/TranslatePanelWindow.xaml.cs` — `SetProviderCardExpanded`
   (thu/mở card, auto-fit lại)
+
+## 9. Kiểm chứng (checklist test panel — chạy mỗi khi sửa layout)
+
+- **Hết che loa:** tra 1 word, 3 line, 6 line — ở cả 3 chiều rộng (hẹp 400, mặc định 420,
+  rộng 600). Loa/Copy phải hiện đủ, cách đáy card 8px, không bị cắt.
+- **Hint 1 dòng:** kéo panel hẹp về 400 rồi rộng ra 600 — hint luôn 1 dòng, không xuống
+  2 dòng ở bất kỳ chiều rộng nào.
+- **Snap-back ngang:** kéo rộng thừa cho text ngắn → thả ra, panel co về 420.
+- **Snap-back dọc:** kéo cao thừa → thả ra, panel co về chiều cao nội dung.
+- **Text dài:** tra đoạn dài — output cuộn trong ô (cap 260), panel không tự dãn;
+  kéo tay dãn panel thì ô dãn theo.
+- **Thu/mở provider:** thu card → panel thụt theo; mở lại → auto-fit về đúng nội dung.
+- **Slider font:** kéo "Source & Translation Text Size" và "App name & Slogan Font Size"
+  trong Settings — panel giãn live theo, không che, không tràn.
+- **Mở lại:** đóng panel rồi mở lại — về đúng mặc định 420×450, không nhớ cỡ kéo cũ.
 
 ## Liên kết
 

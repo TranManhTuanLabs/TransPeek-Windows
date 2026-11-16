@@ -27,7 +27,7 @@
 | `docs/FEATURES/SPEECH_PLAYER.MD` | Player TTS + RSVP | Bản nháp |
 | `docs/FEATURES/OCR_TEXT_CAPTURE.MD` | OCR | Bản nháp |
 | `docs/FEATURES/SETTINGS.MD` | Tính năng Settings | **CHƯA VIẾT** |
-| `docs/UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.MD` | **Panel UX — size đã CHỐT** | **CHỐT 17/11/2026** |
+| `docs/UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.MD` | **Panel UX — size đã CHỐT** | **CHỐT 17/11/2026 (#161)** |
 | `docs/UI/UX_DESIGN/FLOAT_ICON_UX_SPEC.MD` | Icon float UX | Bản nháp |
 | `docs/UI/UX_DESIGN/APP_UX_OVERVIEW.MD` | Tổng quan UX | Bản nháp |
 | `docs/UI/UX_DESIGN/SETTING_UX.MD` | Settings UX | **CHƯA VIẾT** |
