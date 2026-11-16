@@ -426,4 +426,24 @@ internal static class NativeMethods
     public static extern IntPtr DefSubclassProc(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam);
 
     public const uint WM_ERASEBKGND = 0x0014;
+
+    // ----- user32: minimum window size -----
+    // WM_GETMINMAXINFO (0x0024): sent when the user drags a window
+    // border, before the size changes. Returning a MINMAXINFO with
+    // ptMinTrackSize set stops the drag at that size — the OS enforces
+    // the minimum, so the window can never go below it (unlike a
+    // post-hoc clamp, which lets the window shrink and then snaps it
+    // back). Used by the translate panel (Manh 2026-11-16: the output
+    // kept hiding when the panel was dragged small).
+    public const uint WM_GETMINMAXINFO = 0x0024;
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MINMAXINFO
+    {
+        public POINT ptReserved;
+        public POINT ptMaxSize;
+        public POINT ptMaxPosition;
+        public POINT ptMinTrackSize;
+        public POINT ptMaxTrackSize;
+    }
 }

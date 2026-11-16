@@ -4,7 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:TransPeek.Views">
 
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Padding="12">
+    <Grid x:Name="RootGrid" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Padding="12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -48,7 +48,7 @@
              row is the drag region. -->
         <StackPanel x:Name="TitleBar" Grid.Row="0" Margin="0,0,0,16"
                     Background="Transparent" HorizontalAlignment="Stretch">
-            <TextBlock x:Name="AppNameText" FontWeight="Bold" FontSize="13" HorizontalAlignment="Center" />
+            <TextBlock x:Name="AppNameText" FontWeight="Bold" FontSize="13" HorizontalAlignment="Center" Foreground="#0EA5E9" />
             <!-- Tagline (slogan): 12 pt — exactly 1 size smaller than the
                  app name (13 pt), not 2 (Manh 2026-11-14). At 11 pt it
                  read too small next to the name; the 1 pt gap keeps the
@@ -137,7 +137,7 @@
              sits at the bottom-right of the card body, mirroring mac's
              result card (Speak + Copy on the right below the result) —
              wired to the Windows system voices (SystemSpeechService). -->
-        <Border x:Name="ProviderCardBorder" Grid.Row="4" Margin="0,0,0,8" CornerRadius="6" BorderThickness="1"
+        <Border x:Name="ProviderCardBorder" Grid.Row="4" Margin="0,0,0,8" CornerRadius="6" BorderThickness="1" MinHeight="110"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                 Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
             <Grid>

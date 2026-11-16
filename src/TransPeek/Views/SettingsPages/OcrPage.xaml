@@ -35,12 +35,20 @@
                  languages to fetch, then Download. No "Download all"
                  button — files are large, so the user picks what they
                  need. The list is hardcoded (works offline); Refresh
-                 fetches the live list from GitHub to find new ones. -->
-            <TextBox x:Name="LanguageFindBox" x:Uid="Settings.Ocr.FindLanguage" Header="Find a language"
-                     PlaceholderText="Type a name or code, e.g. French or fra"
-                     TextChanged="OnLanguageFindChanged" />
-            <Expander x:Name="LanguagesExpander" Header="All Tesseract languages">
-                <ListView x:Name="LanguagesListView" MaxHeight="220" SelectionMode="None" />
+                 fetches the live list from GitHub to find new ones.
+                 The find box lives INSIDE the Expander, at the head of
+                 the list (Manh 2026-11-16): placed outside it, the box
+                 looked separate from the list it filters, and typing
+                 in it did nothing visible while the Expander was
+                 collapsed. The Expander starts expanded so the find
+                 box is usable right away. -->
+            <Expander x:Name="LanguagesExpander" Header="All Tesseract languages" IsExpanded="True">
+                <StackPanel>
+                    <TextBox x:Name="LanguageFindBox" x:Uid="Settings.Ocr.FindLanguage" Header="Find a language"
+                             PlaceholderText="Type a name or code, e.g. French or fra"
+                             TextChanged="OnLanguageFindChanged" Margin="0,0,0,8" />
+                    <ListView x:Name="LanguagesListView" MaxHeight="220" SelectionMode="None" />
+                </StackPanel>
             </Expander>
             <StackPanel Orientation="Horizontal" Spacing="8">
                 <Button x:Name="DownloadSelectedButton" x:Uid="Settings.Ocr.DownloadSelected" Content="Download selected" Click="OnDownloadSelected" />

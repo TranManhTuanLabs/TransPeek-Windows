@@ -16,6 +16,7 @@
 // editable (Enter re-translates, Shift+Enter newlines) and the header
 // has source/target pickers + swap, like the mac LanguageBarView.
 
+using System.Runtime.InteropServices;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Input;
 using Microsoft.UI.Windowing;
@@ -31,6 +32,7 @@ using TransPeek.Interop;
 using TransPeek.Services;
 using Windows.System;
 using Windows.UI.Core;
+using WinRT.Interop;
 
 namespace TransPeek.Views;
 
@@ -46,14 +48,34 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// footer) cannot fit in less. Max 800x800: roomy on a big
     /// screen, further clamped to the display work area.</summary>
     private const double MinPanelWidth = 400;
-    /// <summary>Minimum panel height in DIPs. 450 keeps the output
-    /// card usable (header + a couple of text lines + Speak/Copy) —
-    /// at 400 the card was still squeezed and the output stayed
-    /// hidden even after the snap-back (Manh 2026-11-16: it only
-    /// snapped back to the input's height). The fixed rows (title +
-    /// input + hint + language + actions + dictionary + footer +
-    /// padding) take ~310, so 450 leaves ~140 for the output card.</summary>
+    /// <summary>Minimum panel height in DIPs — the FLOOR. The real
+    /// minimum is dynamic (ComputeMinPanelHeight): the fixed rows
+    /// (title + input + hint + language + actions + dictionary +
+    /// footer + padding) plus a minimum output card. A fixed 450 was
+    /// not enough when the input grew to several lines — the output
+    /// still hid even after the snap-back (Manh 2026-11-16). At the
+    /// floor the fixed rows take ~310, so 450 leaves ~140 for the
+    /// output card.</summary>
     private const double MinPanelHeight = 450;
+    /// <summary>Minimum height of the output card (ProviderCardBorder),
+    /// in DIPs. Must match the MinHeight="110" in XAML: header (~34) +
+    /// one text line (~24) + Speak/Copy row (~36) + margins. The card
+    /// never collapses below this, so the output is always visible.</summary>
+    private const double MinOutputCardHeight = 110;
+    /// <summary>Light-orange 1 px border around the panel (COLORREF
+    /// 0x00BBGGRR: #FFB74D). Windows draws a faint 1 px accent border
+    /// around top-level windows by default — on Manh's machine the
+    /// accent is light orange, and he liked the top edge so much he
+    /// asked to keep it as decor (Manh 2026-11-16). Setting it
+    /// explicitly here makes it a fixed light orange instead of
+    /// following the Windows accent colour, so it stays the same on
+    /// any machine. Change this value to change the decor colour.</summary>
+    private const int PanelBorderColor = 0x004DB7FF;
+    /// <summary>Window-subclass delegate for the WM_GETMINMAXINFO
+    /// minimum-size enforcement. Kept in a field (not a local) so the
+    /// GC cannot collect it while the window lives — a collected
+    /// delegate would crash the next border drag.</summary>
+    private NativeMethods.WindowSubclassProc? _minSizeSubclassProc;
     private const double MaxPanelSize = 800;
     /// <summary>Thickness of the native resize strips along the bottom
     /// and right edges, in PHYSICAL pixels. They sit inside the root
@@ -163,6 +185,19 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
                 // size is tracked in OnAppWindowChanged.
                 WindowHelpers.MakeBorderlessTopmost(this, resizable: true);
                 WindowHelpers.MakeToolWindow(this);
+                // Light-orange 1 px border as decor (Manh 2026-11-16):
+                // Windows draws a faint accent border by default; set
+                // it explicitly to the fixed light orange so it does
+                // not follow the machine's accent colour.
+                var hwnd = WindowNative.GetWindowHandle(this);
+                var borderColor = PanelBorderColor;
+                NativeMethods.DwmSetWindowAttribute(hwnd, NativeMethods.DWMWA_BORDER_COLOR, ref borderColor, sizeof(int));
+                // Minimum-size enforcement (WM_GETMINMAXINFO, Manh
+                // 2026-11-16): the OS stops the border drag at the
+                // minimum, so the panel can never be dragged small
+                // enough to hide the output. The post-hoc clamp in
+                // PersistResizedSize stays as a backstop.
+                InstallMinSizeSubclass(hwnd);
                 // Native drag region (see UpdateCaptionRegion): set once
                 // the layout is known, and again whenever the title bar
                 // resizes (font size change).
@@ -646,7 +681,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
             return;
         var pos = AppWindow.Position;
         var work = WindowHelpers.DisplayWorkArea(pos.X, pos.Y);
-        var minHeight = Math.Max(1, (int)Math.Round(MinPanelHeight * scale));
+        var minHeight = Math.Max(1, (int)Math.Round(ComputeMinPanelHeight() * scale));
         var maxHeight = Math.Max(minHeight, work.Height - 16);
         // Baseline (Manh 2026-11-16 — the height IS remembered, like
         // the width): the panel never opens below the user's persisted
@@ -759,6 +794,66 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         });
     }
 
+    /// <summary>Install the WM_GETMINMAXINFO subclass that enforces
+    /// the panel's minimum size while the user drags a border. Uses
+    /// SetWindowSubclass (comctl32, the safe subclass API — it chains
+    /// to the previous proc and cleans up with the window). Idempotent
+    /// for this window: the delegate is created once and kept in the
+    /// _minSizeSubclassProc field.</summary>
+    private void InstallMinSizeSubclass(IntPtr hwnd)
+    {
+        if (_minSizeSubclassProc is not null)
+            return;
+        _minSizeSubclassProc = MinSizeSubclassProc;
+        NativeMethods.SetWindowSubclass(hwnd, _minSizeSubclassProc, new UIntPtr(2), UIntPtr.Zero);
+    }
+
+    /// <summary>Subclass proc: on WM_GETMINMAXINFO, set the minimum
+    /// tracking size to (MinPanelWidth, ComputeMinPanelHeight) in
+    /// PHYSICAL pixels. The OS then refuses to drag the window any
+    /// smaller — the resize cursor simply stops at the minimum, and
+    /// the output can never be hidden. Everything else is passed to
+    /// the previous proc (DefSubclassProc).</summary>
+    private IntPtr MinSizeSubclassProc(
+        IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam, UIntPtr uIdSubclass, UIntPtr dwRefData)
+    {
+        if (uMsg == NativeMethods.WM_GETMINMAXINFO)
+        {
+            var mmi = Marshal.PtrToStructure<NativeMethods.MINMAXINFO>(lParam);
+            var scale = WindowHelpers.DpiScale(this);
+            var minW = Math.Max(1, (int)Math.Round(MinPanelWidth * scale));
+            var minH = Math.Max(1, (int)Math.Round(ComputeMinPanelHeight() * scale));
+            mmi.ptMinTrackSize = new NativeMethods.POINT { X = minW, Y = minH };
+            Marshal.StructureToPtr(mmi, lParam, false);
+        }
+        return NativeMethods.DefSubclassProc(hWnd, uMsg, wParam, lParam);
+    }
+
+    /// <summary>Minimum panel height in DIPs, from the CURRENT content:
+    /// the fixed rows' measured heights (title + input + hint +
+    /// language + actions + dictionary + footer) plus the minimum
+    /// output card plus the root Grid's padding (12 top + 12 bottom),
+    /// floored at MinPanelHeight (450). This is what makes the
+    /// minimum follow a multi-line input or a larger font size — a
+    /// fixed 450 was not enough when the input grew (Manh
+    /// 2026-11-16). RowDefinition.ActualHeight is the last layout's
+    /// value; during a drag the input height does not change, so the
+    /// stale value is correct. Capped at the display work area so a
+    /// huge font size cannot make the minimum taller than the screen.</summary>
+    private double ComputeMinPanelHeight()
+    {
+        var fixedH = 0.0;
+        foreach (var row in RootGrid.RowDefinitions)
+        {
+            if (!ReferenceEquals(row, OutputCardRow))
+                fixedH += row.ActualHeight;
+        }
+        var minH = Math.Max(MinPanelHeight, fixedH + MinOutputCardHeight + 24);
+        var work = WindowHelpers.DisplayWorkArea(AppWindow.Position.X, AppWindow.Position.Y);
+        var maxH = Math.Min(MaxPanelSize, work.Height / WindowHelpers.DpiScale(this));
+        return Math.Min(minH, Math.Max(MinPanelHeight, maxH));
+    }
+
     /// <summary>Track window size changes (Microsoft Learn, "Manage app
     /// windows": AppWindow.Changed + AppWindowChangedEventArgs.
     /// DidSizeChange). Two jobs: (1) keep the native resize strips on
@@ -824,7 +919,8 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         var maxW = Math.Min(MaxPanelSize, work.Width / scale);
         var maxH = Math.Min(MaxPanelSize, work.Height / scale);
         var clampedW = Math.Clamp(w, MinPanelWidth, Math.Max(MinPanelWidth, maxW));
-        var clampedH = Math.Clamp(h, MinPanelHeight, Math.Max(MinPanelHeight, maxH));
+        var minPanelH = ComputeMinPanelHeight();
+        var clampedH = Math.Clamp(h, minPanelH, Math.Max(minPanelH, maxH));
         // Vertical snap-back + output growth (Manh 2026-11-15 — full
         // Windows approach): the output card row is * and the text box
         // row inside it is *, so the box grows 1:1 with the window.
@@ -840,7 +936,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         // previous behaviour.
         if (TryGetTranslationTextHeights(out var fullText, out var visibleText))
         {
-            var neededH = Math.Clamp(clampedH + (fullText - visibleText), MinPanelHeight, maxH);
+            var neededH = Math.Clamp(clampedH + (fullText - visibleText), minPanelH, maxH);
             if (clampedH > neededH + 8)
             {
                 // Short text: the drag left white space — snap back.
