@@ -27,7 +27,7 @@ Hàng `*` là hàng duy nhất dãn theo chiều cao; các hàng `Auto` chỉ ca
 |---|---|---|---|
 | Row 0 | Auto | **TitleBar** — tên app + slogan + hint, căn giữa | Margin `0,0,0,16` (đáy = hintSize, mặc định 13). Tên app Bold, màu `#0EA5E9`. Slogan xám. Hint: "Hover icon to translate, Click to listen". **Cả hàng là vùng kéo di chuyển** (native caption region) — panel không có title bar riêng |
 | Row 1 | Auto | **SourceTextBox** — ô nhập, sửa được | `MaxHeight 120`, Margin `0,0,0,4`. Enter = dịch lại, Shift+Enter = xuống dòng. Loa + Copy **nằm trong ô** ở góc dưới-phải (overlay, Margin `0,0,6,8`) |
-| Row 2 | Auto | **Hint** — 11pt | "Enter: translate again • Esc: close • Select a word in the panel to look it up in the dictionary" |
+| Row 2 | Auto | **Hint** — 11pt, **PHẢI ở 1 dòng ở mọi chiều rộng** (xem §6) | "Select a word, then click Dictionary to look it up" (rút ngắn 17/11 #161 — câu cũ dài ~103 ký tự, xuống 2 dòng khi kéo hẹp, gây che loa) |
 | Row 3 | Auto | **Hàng ngôn ngữ** — Source ⇄ Target + Capture OCR | ComboBox Source/Target **rộng 112**, nút Swap ⇄ Padding `4,2`, Spacing `4`. Nút "Capture OCR" ở bên phải |
 | Row 4 | `*` | **Output card** (`ProviderCardBorder`) | Margin `0,0,0,8`, CornerRadius 6, BorderThickness 1, `MinHeight 218`. Bên trong **4 hàng**: header (tên provider 13pt SemiBold + trạng thái) / divider / TextBox (`*`, FontSize 14, MinHeight 60, MaxHeight 260) / **loa/Copy ở hàng Auto riêng** ở cuối card (Margin `0,4,6,8`, Spacing 4) — xem §6 |
 | Row 5 | Auto | **Actions** — Pin + Settings | Căn phải, Spacing 4, Margin `0,0,0,8`. Pin (glyph E718) trước, Settings (E713) sau |
@@ -95,6 +95,26 @@ góc dưới-phải ô output bị cắt ở mép dưới card khi tra 1–5 lin
   phần thiếu. Card MinHeight vẫn 218; TextBox `*` ở mức tối thiểu còn ≈146
   (218 − 2 viền − 29 header − 1 divider − 40 hàng nút), vẫn đủ MinHeight 60.
   **Chưa xác nhận hết che cho tới khi Manh test bản #160** (1 word, 3 line, 6 line).
+- **NGUYÊN NHÂN THẬT — Manh tìm ra 17/11 05:52, xác nhận bằng code (fix #161):**
+  hint dưới ô input (Row 2, `TextWrapping="Wrap"`, ~103 ký tự) dãn 1 dòng khi panel
+  rộng, xuống 2 dòng khi kéo hẹp → hàng hint cao thêm ~15px. `ComputeMinPanelHeight()`
+  đọc `row.ActualHeight` (giá trị layout LẦN TRƯỚC — comment trong code còn ghi sai là
+  "during a drag the input height does not change, so the stale value is correct":
+  đúng với ô input, SAI với hint vì hint đổi chiều cao theo chiều rộng). Sau kéo tay
+  thì auto-fit bị skip (không được chống lại thao tác kéo của user) nên panel không cao
+  thêm → 15px thừa trừ vào hàng `*` OutputCardRow → card bị kẹp dưới MinHeight, cắt
+  từ đáy → loa/Copy ở đáy card bị che. Đây là lý do #160 không sửa được: #160 sửa
+  BÊN TRONG card, còn chỗ bị bóp là Ở PANEL (hàng `*` của panel), nằm trên card.
+  Mẫu 1–5 line bị / ≥6 line không bị cũng khớp: text dài thì panel cao hơn mức tối
+  thiểu, 15px thừa được hàng TextBox `*` bên trong card hấp thụ; text ngắn thì panel
+  đang ở mức tối thiểu nên cắt thẳng vào loa.
+- **Fix #161 (rút ngắn hint, không đổi số):** bỏ "Enter: translate again" và
+  "Esc: close" (Esc là chuẩn, panel đã tự ẩn khi click ra ngoài; Enter dịch lại ít
+  dùng, panel đã tự dịch khi bôi chọn), chỉ giữ tính năng khó đoán nhất là tra từ điển.
+  Hint mới: "Select a word, then click Dictionary to look it up" (51 ký tự, vừa 1 dòng
+  ở chiều rộng tối thiểu 400). **Quy tắc: hint PHẢI vừa 1 dòng ở 400px** — ghi chú
+  cảnh báo đã có trong XAML ngay trên dòng hint; lengthen lại là che loa trở lại.
+  **Chưa xác nhận hết che cho tới khi Manh test bản #161** (kéo hẹp + 1 word / 3 line / 6 line).
 
 Lịch sử mò số (để tránh lặp lại): min output card 150 → 160 (#151) → 170 (#152) →
 180 (#154) → 210 (#155, đo từ ảnh: card 3 line ~206px, card 1 word ~193px, chênh 13px)

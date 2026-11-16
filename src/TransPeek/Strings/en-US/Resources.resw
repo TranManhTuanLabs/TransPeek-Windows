@@ -100,7 +100,7 @@
     <value>Copied ✓</value>
   </data>
   <data name="Panel.Hint.Text" xml:space="preserve">
-    <value>Enter: translate again • Esc: close • Select a word in the panel to look it up in the dictionary</value>
+    <value>Select a word, then click Dictionary to look it up</value>
   </data>
   <data name="RegionSelect.Hint.Text" xml:space="preserve">
     <value>Drag to select the region to OCR — Esc / right-click to exit</value>
