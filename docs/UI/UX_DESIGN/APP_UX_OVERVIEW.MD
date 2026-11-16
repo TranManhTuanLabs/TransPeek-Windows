@@ -29,3 +29,12 @@
 - `FLOAT_ICON_UX_SPEC.MD` — bản nháp: hình dạng + hành vi icon float.
 - `MAIN_NAVIGATION_UX.MD` — bản nháp: menu tray + cửa sổ Settings.
 - `SETTING_UX.MD` — **CHƯA VIẾT**.
+
+## Liên kết
+
+- [Panel UX (CHỐT)](FLOAT_POPUP_PANEL_UX.MD)
+- [Icon float UX](FLOAT_ICON_UX_SPEC.MD)
+- [Điều hướng chính](MAIN_NAVIGATION_UX.MD)
+- [Settings UX (chưa viết)](SETTING_UX.MD)
+- [Speech Player](../../FEATURES/SPEECH_PLAYER.MD)
+- [Quy tắc làm việc](../../AGENTS.MD)

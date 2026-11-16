@@ -36,3 +36,9 @@
 ## ĐÃ ĐÓNG
 
 - [x] SAPI / Service tự nhận engine TTS cài ngoài — Manh chốt KHÔNG làm (16/11 23:32).
+
+## Liên kết
+
+- [Trạng thái dự án](PROJECT_STATE.MD)
+- [Lộ trình](MASTER_PLAN.md)
+- [Panel UX (bug che loa)](UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.MD)

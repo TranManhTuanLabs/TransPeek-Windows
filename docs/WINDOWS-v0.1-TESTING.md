@@ -162,3 +162,9 @@ Chụp màn hình lỗi + ghi lại bước làm trước đó. Nếu app crash 
 - About → Check for Updates: "Checking…", up-to-date / update-available / error states in English.
 - Language picker still lists each language in its own name (Tiếng Việt, 中文 (简体), 한국어…) — that is deliberate, not a leftover.
 - No Vietnamese left in the UI except language names. (Comments in code are still partly Vietnamese — dev-facing only.)
+
+## Liên kết
+
+- [Trạng thái dự án](PROJECT_STATE.MD)
+- [Bản đồ docs](STRUCTURE_MAP.md)
+- [Việc đang làm / chờ](TASK_QUEUE.MD)

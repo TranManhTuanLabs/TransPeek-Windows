@@ -36,3 +36,8 @@
 
 - mac Vision mặc định `["vi-VN", "en-US"]`. Windows: Tesseract + Windows OCR
   theo ngôn ngữ máy đã cài / đã tải trong app.
+
+## Liên kết
+
+- [Điều hướng chính](../UI/UX_DESIGN/MAIN_NAVIGATION_UX.MD)
+- [Kiến trúc](../ARCHITECTURE.MD)

@@ -21,3 +21,12 @@
 - Trước khi sửa UI: lên khung layout trước, Manh duyệt, rồi sửa theo khung.
   Không đẩy bản mò từng lỗi vặt.
 - Native trước, tự chế sau (báo Manh 1 câu trước khi tự chế).
+
+## Liên kết
+
+- [Panel UX (CHỐT)](UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.MD)
+- [Icon float UX](UI/UX_DESIGN/FLOAT_ICON_UX_SPEC.MD)
+- [Tổng quan UX](UI/UX_DESIGN/APP_UX_OVERVIEW.MD)
+- [Điều hướng chính](UI/UX_DESIGN/MAIN_NAVIGATION_UX.MD)
+- [Settings UX (chưa viết)](UI/UX_DESIGN/SETTING_UX.MD)
+- [Trạng thái dự án](PROJECT_STATE.MD)

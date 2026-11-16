@@ -32,3 +32,10 @@
 - Doc UI/UX — panel đã chốt, còn lại đang viết dần.
 - Link từ điển — chờ Manh gửi 1 thể, chỉ sửa khi Manh nói "bắt đầu fix".
 - Icon float theo dark/light — làm sau.
+
+## Liên kết
+
+- [Việc đang làm / chờ](TASK_QUEUE.MD)
+- [Trạng thái dự án](PROJECT_STATE.MD)
+- [Kiến trúc](ARCHITECTURE.MD)
+- [Chỉ mục UX](UI_DESIGN.MD)

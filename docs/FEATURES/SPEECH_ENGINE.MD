@@ -28,3 +28,9 @@
 - `ITranslationProvider.TranslateAsync` trả `TranslationProviderResult(Text, DetectedSourceLanguage)`
   (Google parse trường `src`) — loa panel không còn "luôn giọng An".
 - Click icon float phát tiếng qua `_iconSpeech` + heuristic `DetectLanguage` (VI/EN).
+
+## Liên kết
+
+- [Speech Player](SPEECH_PLAYER.MD)
+- [Kiến trúc](../ARCHITECTURE.MD)
+- [Tổng quan UX](../UI/UX_DESIGN/APP_UX_OVERVIEW.MD)

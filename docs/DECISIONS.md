@@ -2220,3 +2220,9 @@ an OS limit.)
   tight to the right, aligned down from the Settings icon (the company
   doc screenshot showed the version sitting too far in from the edge).
   The 1 px corner touch with the flush grip is negligible.
+
+## Liên kết
+
+- [Bối cảnh AI](AI_CONTEXT.MD)
+- [Kiến trúc](ARCHITECTURE.MD)
+- [Bản đồ docs](STRUCTURE_MAP.md)

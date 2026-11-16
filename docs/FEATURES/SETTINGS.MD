@@ -8,3 +8,8 @@
 > 10 hotkey, auto-play, OCR languages.
 > Khung UX đã có trong `docs/UI/UX_DESIGN/MAIN_NAVIGATION_UX.MD` (§2) và
 > `docs/UI/UX_DESIGN/SETTING_UX.MD` (chưa viết).
+
+## Liên kết
+
+- [Settings UX (chưa viết)](../UI/UX_DESIGN/SETTING_UX.MD)
+- [Điều hướng chính](../UI/UX_DESIGN/MAIN_NAVIGATION_UX.MD)

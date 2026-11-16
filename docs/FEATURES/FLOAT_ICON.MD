@@ -19,3 +19,9 @@
 
 - Icon theo dark/light system: **CHƯA LÀM**.
 - Icon lúc hiện lúc không khi select text: Manh test thêm.
+
+## Liên kết
+
+- [Icon float UX](../UI/UX_DESIGN/FLOAT_ICON_UX_SPEC.MD)
+- [Speech Player](SPEECH_PLAYER.MD)
+- [Tổng quan UX](../UI/UX_DESIGN/APP_UX_OVERVIEW.MD)

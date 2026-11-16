@@ -55,3 +55,11 @@ docs/
   `[build-app]` (tag `v0.1.3.<run>`, chỉ giữ mới nhất). Stable sau này là 0.1.4,
   tạo thủ công.
 - Bundle Tesseract eng+vie tải ở bước CI (fail nếu file < 1MB).
+
+## Liên kết
+
+- [Quyết định đã chốt](DECISIONS.md)
+- [Lộ trình](MASTER_PLAN.md)
+- [Bản đồ docs](STRUCTURE_MAP.md)
+- [Bối cảnh AI](AI_CONTEXT.MD)
+- [Trạng thái dự án](PROJECT_STATE.MD)

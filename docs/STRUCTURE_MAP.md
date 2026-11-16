@@ -30,9 +30,49 @@
 | `docs/UI/UX_DESIGN/APP_UX_OVERVIEW.MD` | Tổng quan UX | Bản nháp |
 | `docs/UI/UX_DESIGN/SETTING_UX.MD` | Settings UX | **CHƯA VIẾT** |
 | `docs/UI/UX_DESIGN/MAIN_NAVIGATION_UX.MD` | Menu tray + Settings | Bản nháp |
+| `docs/AGENTS.MD` | Quy tắc làm việc cho AI trong repo | Đang dùng |
+| `docs/AI_CONTEXT.MD` | Bối cảnh cho AI | Đang dùng |
+| `docs/PROJECT_STATE.MD` | Trạng thái dự án hiện tại | Đang dùng |
 
-## 3. Quy ước
+## 3. Cây docs
+
+```
+docs/
+├── DECISIONS.md                  # mọi quyết định đã chốt + lý do
+├── WINDOWS-v0.1-TESTING.md       # checklist build + test live
+├── AGENTS.MD                     # quy tắc làm việc cho AI
+├── AI_CONTEXT.MD                 # bối cảnh cho AI
+├── PROJECT_STATE.MD              # trạng thái dự án hiện tại
+├── ARCHITECTURE.MD               # kiến trúc tổng
+├── MASTER_PLAN.md                # lộ trình 0.1.4
+├── STRUCTURE_MAP.md              # doc này (bản đồ + cây docs)
+├── TASK_QUEUE.MD                 # việc đang làm / chờ
+├── UI_DESIGN.MD                  # chỉ mục UX
+├── FEATURES/
+│   ├── FLOAT_ICON.MD             # tính năng icon float
+│   ├── SPEECH_ENGINE.MD          # engine TTS
+│   ├── SPEECH_PLAYER.MD          # player TTS + RSVP
+│   ├── OCR_TEXT_CAPTURE.MD       # OCR
+│   └── SETTINGS.MD               # tính năng Settings (CHƯA VIẾT)
+└── UI/
+    └── UX_DESIGN/
+        ├── FLOAT_POPUP_PANEL_UX.MD   # panel UX — size đã CHỐT
+        ├── FLOAT_ICON_UX_SPEC.MD     # icon float UX
+        ├── APP_UX_OVERVIEW.MD        # tổng quan UX
+        ├── MAIN_NAVIGATION_UX.MD     # menu tray + Settings
+        └── SETTING_UX.MD             # Settings UX (CHƯA VIẾT)
+```
+
+## 4. Quy ước
 
 - Doc trong `docs/` viết tiếng Việt (trừ `DECISIONS.md` viết tiếng Anh từ đầu — giữ nguyên).
 - Panel UX là spec chốt: đổi số trong đó cần Manh duyệt, và cập nhật doc trong cùng đợt
   với code.
+
+## Liên kết
+
+- [Quy tắc làm việc](AGENTS.MD)
+- [Bối cảnh AI](AI_CONTEXT.MD)
+- [Trạng thái dự án](PROJECT_STATE.MD)
+- [Panel UX (CHỐT)](UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.MD)
+- [Chỉ mục UX](UI_DESIGN.MD)

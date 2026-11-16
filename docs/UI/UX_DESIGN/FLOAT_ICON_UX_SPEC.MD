@@ -34,3 +34,10 @@
 
 - `TriggerIconWindow` (cửa sổ icon), `TransparentWindow.cs`, `SetWindowRgn` cắt tròn.
 - Click phát tiếng: `_iconSpeech` trong `App.xaml.cs` + `SystemSpeechService.DetectLanguage` (VI/EN).
+
+## Liên kết
+
+- [Panel UX (CHỐT)](FLOAT_POPUP_PANEL_UX.MD)
+- [Tổng quan UX](APP_UX_OVERVIEW.MD)
+- [Tính năng Float Icon](../../FEATURES/FLOAT_ICON.MD)
+- [Điều hướng chính](MAIN_NAVIGATION_UX.MD)

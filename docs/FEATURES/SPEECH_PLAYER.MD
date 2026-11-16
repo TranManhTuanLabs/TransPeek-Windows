@@ -27,3 +27,9 @@
   Nếu làm tab phải **ẩn HOÀN TOÀN chức năng panel dịch** khi đang đọc.
 - Engine RSVP (tham khảo SwiftRead): WPM mặc định 275, max 2000, chunk 1–6,
   ORP pivot = ký tự giữa `floor(n/2)`, chữ cam `#f6861f`.
+
+## Liên kết
+
+- [Speech Engine](SPEECH_ENGINE.MD)
+- [Float Icon](FLOAT_ICON.MD)
+- [Panel UX (CHỐT)](../UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.MD)

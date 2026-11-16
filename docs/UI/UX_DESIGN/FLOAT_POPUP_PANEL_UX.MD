@@ -111,3 +111,12 @@ Lịch sử mò số (để tránh lặp lại): min output card 150 → 160 (#1
   migration `SettingsVersion` (v1 reset 440×450, v2 rộng 440→420)
 - `src/TransPeek/Views/TranslatePanelWindow.xaml.cs` — `SetProviderCardExpanded`
   (thu/mở card, auto-fit lại)
+
+## Liên kết
+
+- [Icon float UX](FLOAT_ICON_UX_SPEC.MD)
+- [Tổng quan UX](APP_UX_OVERVIEW.MD)
+- [Kiến trúc](../../ARCHITECTURE.MD)
+- [Việc đang làm / chờ](../../TASK_QUEUE.MD)
+- [Trạng thái dự án](../../PROJECT_STATE.MD)
+- [Chỉ mục UX](../../UI_DESIGN.MD)
