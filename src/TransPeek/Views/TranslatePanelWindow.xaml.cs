@@ -419,6 +419,17 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         ProviderStatusText.Text = "";
         SetProviderCardExpanded(true);
         UpdateCopyButtons();
+        // A new result always re-fits, even if the user dragged the
+        // panel during the previous result (Manh 2026-11-16, CI #145:
+        // the panel stayed super tall for a 1-word translation). The
+        // manual-resize suppression (_manualResizeGeneration == _epoch)
+        // only means "don't fight the drag for the result that was
+        // showing when the user dragged" — a new result is a new
+        // fit, so clear it here. Without this, a tall drag stuck for
+        // the whole time the panel stayed open, because _epoch only
+        // bumps when the panel is re-shown (ShowPanelNear), not when
+        // a new translation arrives while it is already visible.
+        _manualResizeGeneration = null;
         RequestResizeToFit();
         AutoPlayIfEnabled();
     }
