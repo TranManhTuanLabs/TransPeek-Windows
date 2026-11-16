@@ -145,7 +145,6 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
-                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
                 <Button x:Name="ProviderCardHeaderButton" Grid.Row="0" Click="OnProviderCardHeaderClicked"
                         Background="Transparent" BorderThickness="0" Padding="8,6"
@@ -162,15 +161,24 @@
                          TextWrapping="Wrap" AcceptsReturn="True" BorderThickness="0"
                          Background="Transparent" FontSize="14" MaxHeight="260" MinHeight="60"
                          SelectionChanged="OnTranslationSelectionChanged" />
-                <!-- Speak + Copy on the right, like mac's
-                     ProviderResultCard (Speak + Copy below the result,
-                     right-aligned). The Copy here is the translation
-                     copy; CopyButton shows in normal mode and
-                     CopyTranslationButton in OCR mode (UpdateCopyButtons
-                     toggles them, only one visible at a time) — both
-                     labelled just "Copy". Speak first, Copy second
-                     (mac order). -->
-                <StackPanel x:Name="ProviderCardSpeakerRow" Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="8,2,8,6" Spacing="4">
+                <!-- Speak + Copy INSIDE the output box (Manh 2026-11-17):
+                     like the input, the buttons overlay the TextBox's
+                     bottom-right corner — same cell as the TextBox
+                     (Grid.Row 2), after it in XAML so they paint on
+                     top. This is the simplest fix for the covered
+                     speaker: there is no separate speaker row anymore
+                     to be clipped by the card edge, so the 1-word
+                     short-card case cannot hide the buttons. The
+                     buttons cover a corner of the text, but that is
+                     fine (Manh: drag sideways to see it, and the
+                     buttons are see-through like the input's; no bottom
+                     padding is left for them). The Copy here is the
+                     translation copy; CopyButton shows in normal mode
+                     and CopyTranslationButton in OCR mode
+                     (UpdateCopyButtons toggles them, only one visible
+                     at a time) — both labelled just "Copy". Speak
+                     first, Copy second (mac order). -->
+                <StackPanel x:Name="ProviderCardSpeakerRow" Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,6,8" Spacing="4">
                     <Button x:Name="SpeakTranslationButton" Padding="8,4"
                             ToolTipService.ToolTip="Listen to translation"
                             Click="OnSpeakTranslationClicked">
