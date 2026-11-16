@@ -110,11 +110,66 @@ public static class TesseractLanguageDataManager
         File.Move(tempDownload, destination, overwrite: true);
     }
 
-    /// <summary>Language codes the user asked for (BCP 47) that are not
-    /// installed yet, as Tesseract codes. Pure function of (languages,
-    /// isInstalled) so tests can cover it without touching disk or network.
-    /// No usable code in settings: match TesseractOcrProvider, which falls
-    /// back to English on its own.</summary>
+    /// <summary>Progress of a batch download: which language is being
+    /// fetched now, and how many of the batch are done (downloaded or
+    /// failed) so far.</summary>
+    public record DownloadProgress(string Code, int Done, int Total);
+
+    /// <summary>Result of a batch download: the codes that landed in
+    /// the tessdata dir, and the per-file failures (code + reason) so
+    /// the UI can report each one instead of stopping at the first.</summary>
+    public record DownloadBatchResult(
+        IReadOnlyList<string> Downloaded,
+        IReadOnlyList<(string Code, string Error)> Failed);
+
+    /// <summary>Download several languages, one at a time. A single
+    /// file failing (network, bad response, too small to be real data)
+    /// does not stop the rest — its error is collected in
+    /// <see cref="DownloadBatchResult.Failed"/>. Each downloaded file
+    /// is verified (exists and is not suspiciously small) before it
+    /// counts as downloaded.</summary>
+    public static async Task<DownloadBatchResult> DownloadManyAsync(
+        IReadOnlyList<string> codes,
+        IProgress<DownloadProgress>? progress = null,
+        CancellationToken cancellationToken = default)
+    {
+        var downloaded = new List<string>();
+        var failed = new List<(string Code, string Error)>();
+        var done = 0;
+        foreach (var code in codes)
+        {
+            try
+            {
+                await DownloadAsync(code, cancellationToken).ConfigureAwait(false);
+                VerifyDownloaded(code);
+                downloaded.Add(code);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                failed.Add((code, ex.Message));
+            }
+            done++;
+            progress?.Report(new DownloadProgress(code, done, codes.Count));
+            cancellationToken.ThrowIfCancellationRequested();
+        }
+        return new DownloadBatchResult(downloaded, failed);
+    }
+
+    /// <summary>A downloaded language file must exist and hold real
+    /// data. A file under 1 KB is not a traineddata model (a truncated
+    /// download or an error page saved as a file) — delete it and fail
+    /// so the next attempt retries instead of leaving junk behind.</summary>
+    private static void VerifyDownloaded(string code)
+    {
+        var path = Path.Combine(TessdataDirectory, code + ".traineddata");
+        var info = new FileInfo(path);
+        if (!info.Exists || info.Length < 1024)
+        {
+            try { if (info.Exists) info.Delete(); } catch { /* best effort */ }
+            throw OcrException.EngineFailed(
+                $"Downloaded {code} language data looks incomplete (file too small).");
+        }
+    }
     public static IReadOnlyList<string> MissingCodes(
         IReadOnlyList<string> languages, Func<string, bool> isInstalled)
     {
@@ -145,6 +200,67 @@ public static class TesseractLanguageDataManager
         "ar-SA" or "ar" => "ara",
         "it-IT" or "it" => "ita",
         "th-TH" or "th" => "tha",
+        // Extended 2026-11-16 (Tesseract language downloads): the
+        // major languages users are likely to OCR. Only mappings we
+        // are sure about — the Tesseract code is the ISO 639-2/3 code.
+        "nl-NL" or "nl" => "nld",
+        "sv-SE" or "sv" => "swe",
+        "da-DK" or "da" => "dan",
+        "fi-FI" or "fi" => "fin",
+        "nb-NO" or "nb" or "nn-NO" or "nn" or "no" => "nor",
+        "pl-PL" or "pl" => "pol",
+        "cs-CZ" or "cs" => "ces",
+        "hu-HU" or "hu" => "hun",
+        "ro-RO" or "ro" => "ron",
+        "bg-BG" or "bg" => "bul",
+        "el-GR" or "el" => "ell",
+        "he-IL" or "he" => "heb",
+        "hi-IN" or "hi" => "hin",
+        "id-ID" or "id" => "ind",
+        "ms-MY" or "ms" => "msa",
+        "tr-TR" or "tr" => "tur",
+        "uk-UA" or "uk" => "ukr",
+        "af-ZA" or "af" => "afr",
+        "ca-ES" or "ca" => "cat",
+        "hr-HR" or "hr" => "hrv",
+        "sk-SK" or "sk" => "slk",
+        "sl-SI" or "sl" => "slv",
+        "et-EE" or "et" => "est",
+        "lv-LV" or "lv" => "lav",
+        "lt-LT" or "lt" => "lit",
+        "sr-RS" or "sr" => "srp",
+        "sq-AL" or "sq" => "sqi",
+        "hy-AM" or "hy" => "hye",
+        "ka-GE" or "ka" => "kat",
+        "kk-KZ" or "kk" => "kaz",
+        "ky-KG" or "ky" => "kir",
+        "mk-MK" or "mk" => "mkd",
+        "fa-IR" or "fa" => "fas",
+        "ur-PK" or "ur" => "urd",
+        "bn-IN" or "bn" => "ben",
+        "ta-IN" or "ta" => "tam",
+        "te-IN" or "te" => "tel",
+        "mr-IN" or "mr" => "mar",
+        "gu-IN" or "gu" => "guj",
+        "pa-IN" or "pa" => "pan",
+        "ne-NP" or "ne" => "nep",
+        "si-LK" or "si" => "sin",
+        "km-KH" or "km" => "khm",
+        "lo-LA" or "lo" => "lao",
+        "my-MM" or "my" => "mya",
+        "is-IS" or "is" => "isl",
+        "ga-IE" or "ga" => "gle",
+        "cy-GB" or "cy" => "cym",
+        "eu-ES" or "eu" => "eus",
+        "gl-ES" or "gl" => "glg",
+        "mt-MT" or "mt" => "mlt",
+        "sw-KE" or "sw" => "swa",
+        "fil-PH" or "fil" => "fil",
+        "az-AZ" or "az" => "aze",
+        "be-BY" or "be" => "bel",
+        "bs-BA" or "bs" => "bos",
+        "eo" => "epo",
+        "la" => "lat",
         _ => null,
     };
 
@@ -165,6 +281,64 @@ public static class TesseractLanguageDataManager
         "ara" => "ar-SA",
         "ita" => "it-IT",
         "tha" => "th-TH",
+        "nld" => "nl-NL",
+        "swe" => "sv-SE",
+        "dan" => "da-DK",
+        "fin" => "fi-FI",
+        "nor" => "nb-NO",
+        "pol" => "pl-PL",
+        "ces" => "cs-CZ",
+        "hun" => "hu-HU",
+        "ron" => "ro-RO",
+        "bul" => "bg-BG",
+        "ell" => "el-GR",
+        "heb" => "he-IL",
+        "hin" => "hi-IN",
+        "ind" => "id-ID",
+        "msa" => "ms-MY",
+        "tur" => "tr-TR",
+        "ukr" => "uk-UA",
+        "afr" => "af-ZA",
+        "cat" => "ca-ES",
+        "hrv" => "hr-HR",
+        "slk" => "sk-SK",
+        "slv" => "sl-SI",
+        "est" => "et-EE",
+        "lav" => "lv-LV",
+        "lit" => "lt-LT",
+        "srp" => "sr-RS",
+        "sqi" => "sq-AL",
+        "hye" => "hy-AM",
+        "kat" => "ka-GE",
+        "kaz" => "kk-KZ",
+        "kir" => "ky-KG",
+        "mkd" => "mk-MK",
+        "fas" => "fa-IR",
+        "urd" => "ur-PK",
+        "ben" => "bn-IN",
+        "tam" => "ta-IN",
+        "tel" => "te-IN",
+        "mar" => "mr-IN",
+        "guj" => "gu-IN",
+        "pan" => "pa-IN",
+        "nep" => "ne-NP",
+        "sin" => "si-LK",
+        "khm" => "km-KH",
+        "lao" => "lo-LA",
+        "mya" => "my-MM",
+        "isl" => "is-IS",
+        "gle" => "ga-IE",
+        "cym" => "cy-GB",
+        "eus" => "eu-ES",
+        "glg" => "gl-ES",
+        "mlt" => "mt-MT",
+        "swa" => "sw-KE",
+        "fil" => "fil-PH",
+        "aze" => "az-AZ",
+        "bel" => "be-BY",
+        "bos" => "bs-BA",
+        "epo" => "eo",
+        "lat" => "la",
         _ => code,
     };
 }

@@ -31,11 +31,22 @@
             <TextBlock x:Uid="Settings.Ocr.LanguageData" Text="Tesseract language data" FontWeight="SemiBold" Margin="0,8,0,0" />
             <TextBlock x:Name="TesseractStatusText" FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
             <TextBlock x:Name="InstalledCodesText" FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
+            <!-- Download more languages (Manh 2026-11-15): tick the
+                 languages to fetch, then Download. No "Download all"
+                 button — files are large, so the user picks what they
+                 need. The list is hardcoded (works offline); Refresh
+                 fetches the live list from GitHub to find new ones. -->
+            <TextBox x:Name="LanguageFindBox" x:Uid="Settings.Ocr.FindLanguage" Header="Find a language"
+                     PlaceholderText="Type a name or code, e.g. French or fra"
+                     TextChanged="OnLanguageFindChanged" />
+            <Expander x:Name="LanguagesExpander" Header="All Tesseract languages">
+                <ListView x:Name="LanguagesListView" MaxHeight="220" SelectionMode="None" />
+            </Expander>
             <StackPanel Orientation="Horizontal" Spacing="8">
-                <Button x:Name="DownloadVieButton" x:Uid="Settings.Ocr.DownloadVie" Content="Download vie" Click="OnDownloadVie" />
-                <Button x:Name="DownloadEngButton" x:Uid="Settings.Ocr.DownloadEng" Content="Download eng" Click="OnDownloadEng" />
-                <Button x:Name="DownloadBothButton" x:Uid="Settings.Ocr.DownloadBoth" Content="Download vie + eng" Click="OnDownloadBoth" />
+                <Button x:Name="DownloadSelectedButton" x:Uid="Settings.Ocr.DownloadSelected" Content="Download selected" Click="OnDownloadSelected" />
+                <Button x:Name="RefreshLanguagesButton" x:Uid="Settings.Ocr.RefreshLanguages" Content="Refresh" Click="OnRefreshLanguages" />
             </StackPanel>
+            <TextBlock x:Name="SizeWarningText" FontSize="12" Foreground="Gray" TextWrapping="Wrap" Visibility="Collapsed" />
             <TextBlock x:Name="DownloadStatusText" FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
             <TextBlock x:Uid="Settings.Ocr.DataNote" Text="Data downloads from tessdata_best (GitHub) into %LOCALAPPDATA%\TransPeek\tessdata."
                        FontSize="12" Foreground="Gray" TextWrapping="Wrap" />

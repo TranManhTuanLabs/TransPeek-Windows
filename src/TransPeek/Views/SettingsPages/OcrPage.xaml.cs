@@ -21,6 +21,9 @@ public sealed partial class OcrPage : Page
         InitializeComponent();
     }
 
+    private readonly HashSet<string> _checkedCodes = new(StringComparer.Ordinal);
+    private List<TesseractLanguageCatalog.Language> _extraLanguages = [];
+
     protected override void OnNavigatedTo(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
@@ -35,6 +38,7 @@ public sealed partial class OcrPage : Page
         OcrHotkeyBox.Text = s.OcrHotkey;
         RefreshTesseractStatus();
         RefreshWindowsOcrStatus();
+        PopulateLanguagesList();
         _loading = false;
     }
 
@@ -141,27 +145,143 @@ public sealed partial class OcrPage : Page
         }
     }
 
-    private async void OnDownloadVie(object sender, RoutedEventArgs e)
-        => await DownloadLanguagesAsync(["vie"]);
+    /// <summary>The language list: one CheckBox per catalog language
+    /// (plus any extra languages found live by Refresh), showing the
+    /// name, the Tesseract code, and whether it is already installed.
+    /// Checked state lives in <see cref="_checkedCodes"/> so typing in
+    /// the find box does not lose the selection. Installed languages
+    /// can still be ticked to re-download them.</summary>
+    private void PopulateLanguagesList()
+    {
+        var query = LanguageFindBox.Text.Trim();
+        var installed = TesseractLanguageDataManager.AvailableCodes().ToHashSet(StringComparer.Ordinal);
+        var languages = TesseractLanguageCatalog.Languages.Concat(_extraLanguages)
+            .DistinctBy(l => l.Code, StringComparer.Ordinal)
+            .OrderBy(l => l.Name, StringComparer.OrdinalIgnoreCase)
+            .Where(l => query.Length == 0
+                || l.Name.Contains(query, StringComparison.OrdinalIgnoreCase)
+                || l.Code.Contains(query, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        LanguagesExpander.Header = AppStrings.Get("Settings.Ocr.AllLanguages",
+            "All Tesseract languages ({0})", TesseractLanguageCatalog.Languages.Count + _extraLanguages.Count);
+        LanguagesListView.Items.Clear();
+        foreach (var lang in languages)
+        {
+            var box = new CheckBox
+            {
+                Content = installed.Contains(lang.Code)
+                    ? $"{lang.Name} ({lang.Code}) — installed"
+                    : $"{lang.Name} ({lang.Code})",
+                Tag = lang.Code,
+                IsChecked = _checkedCodes.Contains(lang.Code),
+            };
+            box.Checked += OnLanguageChecked;
+            box.Unchecked += OnLanguageChecked;
+            LanguagesListView.Items.Add(box);
+        }
+        UpdateSizeWarning();
+    }
 
-    private async void OnDownloadEng(object sender, RoutedEventArgs e)
-        => await DownloadLanguagesAsync(["eng"]);
+    private void OnLanguageChecked(object sender, RoutedEventArgs e)
+    {
+        if (sender is CheckBox box && box.Tag is string code)
+        {
+            if (box.IsChecked == true)
+                _checkedCodes.Add(code);
+            else
+                _checkedCodes.Remove(code);
+            UpdateSizeWarning();
+        }
+    }
 
-    private async void OnDownloadBoth(object sender, RoutedEventArgs e)
-        => await DownloadLanguagesAsync(["vie", "eng"]);
+    private void OnLanguageFindChanged(object sender, TextChangedEventArgs e)
+        => PopulateLanguagesList();
+
+    /// <summary>Size warning (Manh: warn about download size, no
+    /// "Download all"). Files vary a lot — eng ~15 MB, vie ~12 MB —
+    /// so the warning names the count and the typical range instead
+    /// of a fake exact total.</summary>
+    private void UpdateSizeWarning()
+    {
+        if (_checkedCodes.Count == 0)
+        {
+            SizeWarningText.Visibility = Visibility.Collapsed;
+            return;
+        }
+        SizeWarningText.Text = AppStrings.Get("Settings.Ocr.SizeWarning",
+            "{0} language(s) selected. Language files are large (eng ~15 MB, vie ~12 MB) — downloading takes a while and uses significant disk space.",
+            _checkedCodes.Count);
+        SizeWarningText.Visibility = Visibility.Visible;
+    }
+
+    /// <summary>Refresh: fetch the live language list from GitHub and
+    /// add any codes the hardcoded catalog does not know yet (shown
+    /// with the code as their name). A failure (no network, GitHub
+    /// rate limit) keeps the hardcoded list and says so.</summary>
+    private async void OnRefreshLanguages(object sender, RoutedEventArgs e)
+    {
+        RefreshLanguagesButton.IsEnabled = false;
+        try
+        {
+            var live = await TesseractLanguageCatalog.FetchLiveCodesAsync();
+            var known = TesseractLanguageCatalog.Languages.Select(l => l.Code).ToHashSet(StringComparer.Ordinal);
+            _extraLanguages = live.Where(c => !known.Contains(c))
+                .Select(c => new TesseractLanguageCatalog.Language(c, c))
+                .ToList();
+            PopulateLanguagesList();
+            DownloadStatusText.Text = _extraLanguages.Count == 0
+                ? AppStrings.Get("Settings.Ocr.RefreshNoNew", "Language list is up to date.")
+                : AppStrings.Get("Settings.Ocr.RefreshNew", "Found {0} new language(s).", _extraLanguages.Count);
+        }
+        catch (Exception ex)
+        {
+            DownloadStatusText.Text = AppStrings.Get("Settings.Ocr.RefreshError", "Could not refresh the language list: {0}", ex.Message);
+        }
+        finally
+        {
+            RefreshLanguagesButton.IsEnabled = true;
+        }
+    }
+
+    private async void OnDownloadSelected(object sender, RoutedEventArgs e)
+        => await DownloadLanguagesAsync(_checkedCodes.OrderBy(c => c, StringComparer.Ordinal).ToArray());
 
     private async Task DownloadLanguagesAsync(string[] codes)
     {
+        if (codes.Length == 0)
+        {
+            DownloadStatusText.Text = AppStrings.Get("Settings.Ocr.NothingSelected", "Tick one or more languages first.");
+            return;
+        }
         SetDownloadButtonsEnabled(false);
         try
         {
-            foreach (var code in codes)
+            var progress = new Progress<TesseractLanguageDataManager.DownloadProgress>(p =>
+                DownloadStatusText.Text = AppStrings.Get("Settings.Ocr.DownloadingLanguage",
+                    "Downloading {0}… ({1}/{2})", p.Code, p.Done + 1, p.Total));
+            var result = await TesseractLanguageDataManager.DownloadManyAsync(codes, progress);
+            var parts = new List<string>();
+            if (result.Downloaded.Count > 0)
+                parts.Add(AppStrings.Get("Settings.Ocr.DownloadedLanguages", "Downloaded: {0}.", string.Join(", ", result.Downloaded)));
+            foreach (var (code, error) in result.Failed)
+                parts.Add(AppStrings.Get("Settings.Ocr.DownloadFailedOne", "{0} failed: {1}", code, error));
+            if (result.Downloaded.Count > 0)
             {
-                DownloadStatusText.Text = AppStrings.Get("Settings.Ocr.DownloadingLanguage", "Downloading {0}…", code);
-                await TesseractLanguageDataManager.DownloadAsync(code);
+                // Suggest the new languages for the OCR Languages
+                // setting (BCP 47) so the user can actually OCR with
+                // them — a suggestion only, the setting is not changed.
+                var missing = result.Downloaded
+                    .Select(TesseractLanguageDataManager.Bcp47ForTessCode)
+                    .Where(b => !App.Settings.OcrLanguages.Contains(b, StringComparer.OrdinalIgnoreCase))
+                    .ToList();
+                if (missing.Count > 0)
+                    parts.Add(AppStrings.Get("Settings.Ocr.SuggestLanguages",
+                        "To OCR with them, add to OCR languages above: {0}.", string.Join(", ", missing)));
             }
-            DownloadStatusText.Text = AppStrings.Get("Settings.Ocr.DownloadedLanguages", "Downloaded: {0}.", string.Join(", ", codes));
+            DownloadStatusText.Text = string.Join(" ", parts);
+            _checkedCodes.Clear();
             RefreshTesseractStatus();
+            PopulateLanguagesList();
         }
         catch (Exception ex)
         {
@@ -175,9 +295,8 @@ public sealed partial class OcrPage : Page
 
     private void SetDownloadButtonsEnabled(bool enabled)
     {
-        DownloadVieButton.IsEnabled = enabled;
-        DownloadEngButton.IsEnabled = enabled;
-        DownloadBothButton.IsEnabled = enabled;
+        DownloadSelectedButton.IsEnabled = enabled;
+        RefreshLanguagesButton.IsEnabled = enabled;
     }
 
     private static void SelectComboByTag(ComboBox combo, string tag)

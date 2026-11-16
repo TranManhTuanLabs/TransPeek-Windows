@@ -351,14 +351,41 @@
   <data name="Settings.Ocr.LanguageData.Text" xml:space="preserve">
     <value>Tesseract language data</value>
   </data>
-  <data name="Settings.Ocr.DownloadVie.Content" xml:space="preserve">
-    <value>Download vie</value>
+  <data name="Settings.Ocr.FindLanguage.Header" xml:space="preserve">
+    <value>Find a language</value>
   </data>
-  <data name="Settings.Ocr.DownloadEng.Content" xml:space="preserve">
-    <value>Download eng</value>
+  <data name="Settings.Ocr.FindLanguage.PlaceholderText" xml:space="preserve">
+    <value>Type a name or code, e.g. French or fra</value>
   </data>
-  <data name="Settings.Ocr.DownloadBoth.Content" xml:space="preserve">
-    <value>Download vie + eng</value>
+  <data name="Settings.Ocr.AllLanguages" xml:space="preserve">
+    <value>All Tesseract languages ({0})</value>
+  </data>
+  <data name="Settings.Ocr.DownloadSelected.Content" xml:space="preserve">
+    <value>Download selected</value>
+  </data>
+  <data name="Settings.Ocr.RefreshLanguages.Content" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="Settings.Ocr.SizeWarning" xml:space="preserve">
+    <value>{0} language(s) selected. Language files are large (eng ~15 MB, vie ~12 MB) — downloading takes a while and uses significant disk space.</value>
+  </data>
+  <data name="Settings.Ocr.RefreshNoNew" xml:space="preserve">
+    <value>Language list is up to date.</value>
+  </data>
+  <data name="Settings.Ocr.RefreshNew" xml:space="preserve">
+    <value>Found {0} new language(s).</value>
+  </data>
+  <data name="Settings.Ocr.RefreshError" xml:space="preserve">
+    <value>Could not refresh the language list: {0}</value>
+  </data>
+  <data name="Settings.Ocr.NothingSelected" xml:space="preserve">
+    <value>Tick one or more languages first.</value>
+  </data>
+  <data name="Settings.Ocr.DownloadFailedOne" xml:space="preserve">
+    <value>{0} failed: {1}</value>
+  </data>
+  <data name="Settings.Ocr.SuggestLanguages" xml:space="preserve">
+    <value>To OCR with them, add to OCR languages above: {0}.</value>
   </data>
   <data name="Settings.Ocr.DataNote.Text" xml:space="preserve">
     <value>Data downloads from tessdata_best (GitHub) into %LOCALAPPDATA%\TransPeek\tessdata.</value>
@@ -385,7 +412,7 @@
     <value>Installed: {0}</value>
   </data>
   <data name="Settings.Ocr.DownloadingLanguage" xml:space="preserve">
-    <value>Downloading {0}…</value>
+    <value>Downloading {0}… ({1}/{2})</value>
   </data>
   <data name="Settings.Ocr.DownloadedLanguages" xml:space="preserve">
     <value>Downloaded: {0}.</value>
