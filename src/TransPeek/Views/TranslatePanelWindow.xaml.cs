@@ -46,14 +46,14 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// footer) cannot fit in less. Max 800x800: roomy on a big
     /// screen, further clamped to the display work area.</summary>
     private const double MinPanelWidth = 400;
-    /// <summary>Minimum panel height in DIPs. 400 keeps the output
-    /// card usable (header + a line of text + Speak/Copy) — at 260
-    /// the card was squeezed to nothing and the output looked hidden
-    /// (Manh 2026-11-16, first thought Google Translate was broken).
-    /// The fixed rows (title + input + hint + language + actions +
-    /// dictionary + footer + padding) take ~300, so 400 leaves ~100
-    /// for the output card.</summary>
-    private const double MinPanelHeight = 400;
+    /// <summary>Minimum panel height in DIPs. 450 keeps the output
+    /// card usable (header + a couple of text lines + Speak/Copy) —
+    /// at 400 the card was still squeezed and the output stayed
+    /// hidden even after the snap-back (Manh 2026-11-16: it only
+    /// snapped back to the input's height). The fixed rows (title +
+    /// input + hint + language + actions + dictionary + footer +
+    /// padding) take ~310, so 450 leaves ~140 for the output card.</summary>
+    private const double MinPanelHeight = 450;
     private const double MaxPanelSize = 800;
     /// <summary>Thickness of the native resize strips along the bottom
     /// and right edges, in PHYSICAL pixels. They sit inside the root

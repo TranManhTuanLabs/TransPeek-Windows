@@ -225,21 +225,6 @@
   <data name="Settings.General.SettingsPath.Text" xml:space="preserve">
     <value>Settings are stored in %LOCALAPPDATA%\TransPeek\settings.json</value>
   </data>
-  <data name="Settings.General.TextToSpeech.Text" xml:space="preserve">
-    <value>Text-to-speech</value>
-  </data>
-  <data name="Settings.General.AddVoices.Content" xml:space="preserve">
-    <value>Add voices</value>
-  </data>
-  <data name="Settings.General.TtsVoicesNote.Text" xml:space="preserve">
-    <value>Voices come from Windows, not from the app. To add one, open Windows Settings → Accessibility → Narrator → Narrator's voice → Add voices.</value>
-  </data>
-  <data name="Settings.General.NoTtsVoices" xml:space="preserve">
-    <value>No text-to-speech voice installed on this machine.</value>
-  </data>
-  <data name="Settings.General.TtsVoicesInstalled" xml:space="preserve">
-    <value>Installed: {0}</value>
-  </data>
   <data name="Settings.General.RunKeyWriteFailed" xml:space="preserve">
     <value>Could not write the Run key: {0}</value>
   </data>
@@ -512,7 +497,10 @@
     <value>Vietnamese voice</value>
   </data>
   <data name="Settings.Tts.VoicesNote.Text" xml:space="preserve">
-    <value>Applies to Windows system TTS. If a chosen voice is no longer installed, the system default voice for that language is used.</value>
+    <value>Applies to Windows system TTS. If a chosen voice is no longer installed, the system default voice for that language is used. To add a voice, open Windows Settings → Accessibility → Narrator → Narrator's voice → Add voices.</value>
+  </data>
+  <data name="Settings.Tts.AddVoices.Content" xml:space="preserve">
+    <value>Add voices</value>
   </data>
   <data name="Settings.Tts.Test.Text" xml:space="preserve">
     <value>Test</value>

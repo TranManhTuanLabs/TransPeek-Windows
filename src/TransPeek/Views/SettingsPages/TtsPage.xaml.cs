@@ -10,6 +10,7 @@ using Microsoft.UI.Xaml.Controls;
 using TransPeek.Core.Settings;
 using TransPeek.Services;
 using Windows.Media.SpeechSynthesis;
+using Windows.System;
 
 namespace TransPeek.Views.SettingsPages;
 
@@ -151,6 +152,14 @@ public sealed partial class TtsPage : Page
             Save();
         }
     }
+
+    /// <summary>Voices come from Windows (the Narrator voices) — open
+    /// Accessibility → Narrator so the user can add a voice in
+    /// "Narrator's voice" (the app cannot install a Windows voice).
+    /// Moved here from Settings → General (Manh 2026-11-16): all
+    /// voice settings live in this tab now.</summary>
+    private async void OnAddVoices(object sender, RoutedEventArgs e)
+        => await Launcher.LaunchUriAsync(new Uri("ms-settings:easeofaccess-narrator"));
 
     /// <summary>Play the test text in the chosen test language, using
     /// the voice/rate the user just picked (PickVoice reads the saved

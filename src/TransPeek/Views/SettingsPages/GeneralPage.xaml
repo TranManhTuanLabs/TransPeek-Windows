@@ -129,12 +129,6 @@
                     Minimum="12" Maximum="24" StepFrequency="1"
                     ValueChanged="OnFontSizeChanged" />
 
-            <TextBlock x:Uid="Settings.General.TextToSpeech" Text="Text-to-speech" FontWeight="SemiBold" Margin="0,8,0,0" />
-            <TextBlock x:Name="TtsVoicesText" FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
-            <Button x:Name="AddVoicesButton" x:Uid="Settings.General.AddVoices" Content="Add voices" Click="OnAddVoices" />
-            <TextBlock x:Uid="Settings.General.TtsVoicesNote" Text="Voices come from Windows, not from the app. To add one, open Windows Settings → Accessibility → Narrator → Narrator's voice → Add voices."
-                       FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
-
             <TextBlock x:Uid="Settings.General.SettingsPath" Text="Settings are stored in %LOCALAPPDATA%\TransPeek\settings.json"
                        FontSize="12" Foreground="Gray" TextWrapping="Wrap" Margin="0,12,0,0" />
         </StackPanel>
