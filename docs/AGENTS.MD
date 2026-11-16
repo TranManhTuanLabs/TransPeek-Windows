@@ -30,6 +30,18 @@
 - **Bài học chuỗi #150→#159 (bug che loa):** nâng min output card 150→160→170→180→
   210→218 mà không tìm nguyên nhân gốc — không lần nào hết. Đừng lặp lại:
   **điều tra nguyên nhân trước (cần bằng chứng: ảnh/video đo được), rồi mới sửa.**
+- **Chuỗi #149→#161 — kết thúc (17/11):** #160 sửa BÊN TRONG card (loa sang hàng Auto
+  riêng) vẫn không hết, vì chỗ bị bóp là Ở PANEL (hàng `*`), nằm trên card — sửa sai
+  tầng thì không bao giờ hết. **Nguyên nhân thật do Manh tìm ra bằng quan sát**
+  (kéo rộng → hint 1 dòng, hết che; kéo hẹp → hint xuống 2 dòng, che lại): hint
+  `TextWrapping="Wrap"` (~103 ký tự) đổi chiều cao theo chiều rộng, còn
+  `ComputeMinPanelHeight()` đọc `ActualHeight` của layout lần trước (comment trong code
+  còn ghi sai là "kéo thì chiều cao không đổi"). Fix #161: rút ngắn hint còn 51 ký tự,
+  vừa 1 dòng ở rộng tối thiểu 400. Bài học: (1) có bằng chứng rồi vẫn phải hỏi
+  **sửa đúng tầng chưa**; (2) quan sát hành vi của user (kéo rộng/hẹp) tìm ra nguyên
+  nhân mà đọc code không thấy — **hỏi user "nó thay đổi theo cái gì" trước khi đoán**;
+  (3) comment trong code cũng có thể sai — tin bằng chứng, không tin comment.
+  Chi tiết kỹ thuật đầy đủ ở `UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.MD` §6.
 - Số đã chốt trong `UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.MD` là spec — đổi số cần Manh duyệt,
   và cập nhật doc trong cùng đợt.
 - **Native trước, tự chế sau:** tính năng nào control native không có thì **báo Manh
