@@ -48,6 +48,25 @@ public sealed class SystemSpeechService : IDisposable
     public static IReadOnlyList<VoiceInformation> InstalledVoices =>
         SpeechSynthesizer.AllVoices;
 
+    /// <summary>Guess the language of a text when the source language
+    /// is "auto" and no provider has detected it yet (the float icon
+    /// speaks the selection without translating first). Vietnamese has
+    /// distinctive letters (ă â ê ô ơ ư đ + tone-marked vowels) that
+    /// no other language in the app's set uses — if any appear, it is
+    /// Vietnamese; otherwise assume English (the app's other main
+    /// language). A heuristic, not a detector: it only separates
+    /// Vietnamese from English, which is the pair the float icon
+    /// mostly hears.</summary>
+    public static string DetectLanguage(string text)
+    {
+        foreach (var ch in text)
+        {
+            if ("ăâêôơưđĂÂÊÔƠƯĐàáảãạèéẻẽẹìíỉĩịòóỏõọùúủũụỳýỷỹỵÀÁẢÃẠÈÉẺẼẸÌÍỈĨỊÒÓỎÕỌÙÚỦŨỤỲÝỶỸỴ".Contains(ch))
+                return "vi";
+        }
+        return "en";
+    }
+
     /// <summary>Speak <paramref name="text"/> in the voice matching
     /// <paramref name="languageCode"/> (an app code like "en", "vi",
     /// "zh-Hans", or "auto" for the default voice). Returns false
@@ -64,6 +83,10 @@ public sealed class SystemSpeechService : IDisposable
         Stop();
         try
         {
+            // Rate from Settings (the TTS Speech tab, Default Speech
+            // Rate). SpeechSynthesizer takes 0.5 - 6.0; the setting
+            // is clamped to the 0.5 - 2.0 the UI offers.
+            _synth.Options.SpeakingRate = Math.Clamp(App.Settings.SpeechRate, 0.5, 2.0);
             // Always set the voice explicitly (matched voice, else
             // the system default) — otherwise the voice from a
             // previous SpeakAsync would stick to the next language.
@@ -108,10 +131,14 @@ public sealed class SystemSpeechService : IDisposable
         _synth.Dispose();
     }
 
-    /// <summary>Best voice for an app language code: exact BCP 47
-    /// match ("vi" → "vi-VN"), then a language-prefix match ("en" →
-    /// "en-US"), else null = the system default voice. "auto" (source
-    /// language unknown) always takes the default voice.</summary>
+    /// <summary>Best voice for an app language code: the voice the user
+    /// picked in Settings -> TTS Speech -> Voices (by Id) when one is
+    /// set for this language, then an exact BCP 47 match ("vi" →
+    /// "vi-VN"), then a language-prefix match ("en" → "en-US"), else
+    /// null = the system default voice. "auto" (source language
+    /// unknown) always takes the default voice. A picked voice that is
+    /// no longer installed falls through to the match, then the
+    /// default — the Settings note says so.</summary>
     private static VoiceInformation? PickVoice(string languageCode)
     {
         var voices = SpeechSynthesizer.AllVoices;
@@ -121,7 +148,26 @@ public sealed class SystemSpeechService : IDisposable
             || string.Equals(languageCode, "auto", StringComparison.OrdinalIgnoreCase))
             return null;
 
+        // The user's picked voice for this language (TTS Speech tab).
+        var preferredId = PreferredVoiceId(languageCode);
+        if (!string.IsNullOrWhiteSpace(preferredId))
+        {
+            foreach (var voice in voices)
+            {
+                if (string.Equals(voice.Id, preferredId, StringComparison.Ordinal))
+                    return voice;
+            }
+        }
+
         var target = MapToBcp47(languageCode);
+        // English accent (TTS Speech tab, English Accent): when no
+        // specific English voice is picked, prefer a voice in the
+        // chosen accent (e.g. "en-GB" over "en-US").
+        if (target.Split('-')[0].Equals("en", StringComparison.OrdinalIgnoreCase)
+            && !string.IsNullOrWhiteSpace(App.Settings.EnglishAccent))
+        {
+            target = App.Settings.EnglishAccent;
+        }
         foreach (var voice in voices)
         {
             if (string.Equals(voice.Language, target, StringComparison.OrdinalIgnoreCase))
@@ -134,6 +180,22 @@ public sealed class SystemSpeechService : IDisposable
                 return voice;
         }
         return null;
+    }
+
+    /// <summary>The voice id the user picked for a language code, or
+    /// null for the system default. English uses EnglishVoiceId; for
+    /// English the accent setting (EnglishAccent) is the fallback
+    /// target — handled by the exact-match step above, since the
+    /// accent is itself a BCP 47 tag.</summary>
+    private static string? PreferredVoiceId(string languageCode)
+    {
+        var prefix = MapToBcp47(languageCode).Split('-')[0].ToLowerInvariant();
+        return prefix switch
+        {
+            "en" => App.Settings.EnglishVoiceId,
+            "vi" => App.Settings.VietnameseVoiceId,
+            _ => null,
+        };
     }
 
     /// <summary>App code → BCP 47, same mapping the translation

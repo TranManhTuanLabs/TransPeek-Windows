@@ -44,6 +44,11 @@ public sealed partial class App : Application
     private OcrFlowService? _ocrFlow;
     private ScreenshotCopyService? _screenshotCopy;
     private BarcodeScanService? _barcodeScan;
+    /// <summary>Speaks the selected text when the user clicks the float
+    /// icon (listen mode). Separate from the panel's own speech
+    /// service — the icon speaks the selection without opening the
+    /// panel, so it needs its own synthesizer/player.</summary>
+    private SystemSpeechService? _iconSpeech;
     private string _lastSelection = "";
     private DateTimeOffset _lastSelectionAt = DateTimeOffset.MinValue;
     private (int X, int Y) _lastPoint;
@@ -88,6 +93,9 @@ public sealed partial class App : Application
         _panel = new TranslatePanelWindow(TranslateAsync, () => _ocrFlow!.RunOcrAsync(), ShowSettings);
         _triggerIcon = new TriggerIconWindow();
         _triggerIcon.OpenRequested += OnTriggerIconOpenRequested;
+        _iconSpeech = new SystemSpeechService();
+        _triggerIcon.SpeakRequested += OnTriggerIconSpeakRequested;
+        _triggerIcon.SpeakStopped += () => _iconSpeech?.Stop();
 
         _ocrFlow = new OcrFlowService(
             () => Settings,
@@ -236,6 +244,31 @@ public sealed partial class App : Application
         _triggerIcon?.HideIcon();
         if (!string.IsNullOrWhiteSpace(_lastSelection))
             _panel?.ShowTranslationFlow(_lastSelection, _lastPoint.X, _lastPoint.Y);
+    }
+
+    /// <summary>Float icon click = listen (mac handleIconClick,
+    /// .speak): read the selected text aloud without opening the
+    /// panel. Re-grabs the selection via the clipboard when it is
+    /// stale, like the translate hotkey path. Language: the source
+    /// language setting when the user picked one; when it is "auto"
+    /// the text's language is unknown, so guess from the text
+    /// (Vietnamese diacritics -> vi, otherwise en — the app's two
+    /// main languages). Nothing to speak -> stay silent.</summary>
+    private async void OnTriggerIconSpeakRequested()
+    {
+        var text = _lastSelection;
+        if (string.IsNullOrWhiteSpace(text)
+            || DateTimeOffset.UtcNow - _lastSelectionAt > TimeSpan.FromSeconds(10))
+        {
+            text = await ClipboardHelper.TryGetSelectionViaClipboardAsync()
+                ?? _lastSelection;
+        }
+        if (string.IsNullOrWhiteSpace(text) || _iconSpeech is null)
+            return;
+        var lang = Settings.SourceLanguage == LanguageCode.Auto
+            ? SystemSpeechService.DetectLanguage(text)
+            : Settings.SourceLanguage;
+        _ = await _iconSpeech.SpeakAsync(text, lang);
     }
 
     private async Task TranslateCurrentSelectionAsync()

@@ -113,6 +113,30 @@ public sealed class AppSettings
     /// <summary>Global hotkey for OCR region capture. Default Ctrl+Shift+S.</summary>
     public string OcrHotkey { get; set; } = "Control+Shift+S";
 
+    // --- Text-to-speech (Settings -> TTS Speech, Manh 2026-11-16) ---
+    /// <summary>TTS engine id. Only "system" (Windows built-in voices)
+    /// for now — the picker exists so a neural engine (Azure, Edge)
+    /// can be added later without moving the setting.</summary>
+    public string TtsService { get; set; } = "system";
+    /// <summary>Preferred English accent (BCP 47, e.g. "en-US"). Used
+    /// when no specific English voice is picked.</summary>
+    public string EnglishAccent { get; set; } = "en-US";
+    /// <summary>Id of the chosen English voice (VoiceInformation.Id),
+    /// or null/empty for the system default English voice.</summary>
+    public string? EnglishVoiceId { get; set; }
+    /// <summary>Id of the chosen Vietnamese voice, or null/empty for
+    /// the system default Vietnamese voice.</summary>
+    public string? VietnameseVoiceId { get; set; }
+    /// <summary>Default speech rate (0.5 - 2.0, 1.0 = normal). The
+    /// SpeechSynthesizer rate.</summary>
+    public double SpeechRate { get; set; } = 1.0;
+    /// <summary>Read the source text aloud automatically after a
+    /// translation finishes.</summary>
+    public bool AutoPlaySource { get; set; } = false;
+    /// <summary>Read the translation aloud automatically after a
+    /// translation finishes.</summary>
+    public bool AutoPlayTranslation { get; set; } = false;
+
     // --- General ---
     public bool LaunchAtLogin { get; set; } = false;
     public bool HasCompletedOnboarding { get; set; } = false;

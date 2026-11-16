@@ -123,6 +123,12 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// the panel speaker buttons speak through this. One instance for
     /// the window's lifetime; it owns a MediaPlayer + synthesizer.</summary>
     private readonly SystemSpeechService _speech = new();
+    /// <summary>Auto-play chain (TTS Speech tab): when auto-play spoke
+    /// the source and Auto-play translation is also on, speak the
+    /// translation when the source finishes (SpeechEnded). Cleared
+    /// whenever the user toggles a speaker manually or a new result
+    /// arrives, so a manual speak never chains into a translation.</summary>
+    private bool _autoPlayPendingTranslation;
 
     public TranslatePanelWindow(
         Func<string, Task<(string? Translation, string ProviderName, string? DetectedSourceLanguage)>> translateAsync,
@@ -135,6 +141,15 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         InitializeComponent();
         PopulateLangCombos();
         SyncLangCombos();
+        // Auto-play chain: when the auto-played source finishes and
+        // Auto-play translation is also on, speak the translation.
+        _speech.SpeechEnded += (_, _) =>
+        {
+            if (!_autoPlayPendingTranslation)
+                return;
+            _autoPlayPendingTranslation = false;
+            _ = _speech.SpeakAsync(_translationText, App.Settings.TargetLanguage);
+        };
         // WinUI 3 Window has no Loaded event (Loaded lives on
         // FrameworkElement): attach to the root content element instead.
         if (Content is FrameworkElement contentRoot)
@@ -380,6 +395,30 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         SetProviderCardExpanded(true);
         UpdateCopyButtons();
         RequestResizeToFit();
+        AutoPlayIfEnabled();
+    }
+
+    /// <summary>Auto-play (Settings -> TTS Speech -> Preferences):
+    /// read the source and/or the translation aloud when a result
+    /// arrives. Both on: speak the source, then the translation when
+    /// the source finishes (the SpeechEnded chain above). A new
+    /// result clears any pending chain from the previous one.</summary>
+    private void AutoPlayIfEnabled()
+    {
+        _autoPlayPendingTranslation = false;
+        var playSource = App.Settings.AutoPlaySource && !string.IsNullOrWhiteSpace(_sourceText);
+        var playTranslation = App.Settings.AutoPlayTranslation && !string.IsNullOrWhiteSpace(_translationText);
+        if (!playSource && !playTranslation)
+            return;
+        if (playSource)
+        {
+            _autoPlayPendingTranslation = playTranslation;
+            _ = _speech.SpeakAsync(_sourceText, _detectedSourceLanguage ?? App.Settings.SourceLanguage);
+        }
+        else
+        {
+            _ = _speech.SpeakAsync(_translationText, App.Settings.TargetLanguage);
+        }
     }
 
     // ----- internals -----
@@ -470,6 +509,10 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
 
     private async Task SpeakAsync(string text, string languageCode)
     {
+        // A manual speaker click cancels any pending auto-play chain
+        // (the chain belongs to the auto-played source, not to a
+        // speaker the user pressed by hand).
+        _autoPlayPendingTranslation = false;
         if (_speech.IsSpeaking)
         {
             _speech.Stop();

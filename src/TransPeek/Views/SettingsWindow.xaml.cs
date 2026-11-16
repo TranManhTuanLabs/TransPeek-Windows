@@ -96,6 +96,7 @@ public sealed partial class SettingsWindow : Window
             "Translation" => typeof(TranslationPage),
             "Dictionary" => typeof(DictionaryPage),
             "OCR" => typeof(OcrPage),
+            "TTS" => typeof(TtsPage),
             "About" => typeof(AboutPage),
             _ => null,
         };

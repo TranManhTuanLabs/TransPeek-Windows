@@ -35,6 +35,14 @@ public sealed partial class TriggerIconWindow : Window
     /// <summary>Raised on click, or when the hover delay elapses.</summary>
     public event Action? OpenRequested;
 
+    /// <summary>Raised when the user clicks the icon to start listening
+    /// (the speaker mark appears). App speaks the current selection.</summary>
+    public event Action? SpeakRequested;
+
+    /// <summary>Raised when the user clicks the icon again to stop
+    /// listening (the speaker mark goes back to "A").</summary>
+    public event Action? SpeakStopped;
+
     public TriggerIconWindow()
     {
         InitializeComponent();
@@ -68,12 +76,16 @@ public sealed partial class TriggerIconWindow : Window
         // OpenRequested here, and opening the panel hid the icon at once,
         // so the speaker never showed). A click also cancels the pending
         // hover timer, so hover and click never both fire. A second click
-        // while speaking turns the speaker back off.
+        // while speaking turns the speaker back off. The click also
+        // raises SpeakRequested / SpeakStopped so App can speak (or
+        // stop) the current selection — the click is the listen action,
+        // not just the icon state (Manh 2026-11-16).
         IconBorder.Tapped += (_, _) =>
         {
             if (_isSpeaking)
             {
                 SetSpeaking(false);
+                SpeakStopped?.Invoke();
                 _autoHideTimer.Interval = TimeSpan.FromSeconds(App.Settings.TriggerIconAutoHideSeconds);
                 _autoHideTimer.Start();
             }
@@ -81,9 +93,10 @@ public sealed partial class TriggerIconWindow : Window
             {
                 _hoverTimer.Stop();
                 SetSpeaking(true);
-                // No TTS audio yet: keep the speaker visible for the
-                // auto-hide duration, then hide (the mac keeps it until
-                // playback stops; here there is no playback to stop it).
+                SpeakRequested?.Invoke();
+                // Keep the speaker visible while it speaks (the mac
+                // keeps it until playback stops); the auto-hide timer
+                // hides it after the usual delay if nothing stops it.
                 _autoHideTimer.Interval = TimeSpan.FromSeconds(App.Settings.TriggerIconAutoHideSeconds);
                 _autoHideTimer.Start();
             }

@@ -471,4 +471,65 @@
   <data name="Settings.About.Support.QrDialog.Close" xml:space="preserve">
     <value>Close</value>
   </data>
+  <!-- TTS Speech tab (Manh 2026-11-16, mirrors the mac audio tab). -->
+  <data name="Settings.Nav.Tts.Content" xml:space="preserve">
+    <value>TTS Speech</value>
+  </data>
+  <data name="Settings.Tts.Service.Text" xml:space="preserve">
+    <value>Service</value>
+  </data>
+  <data name="Settings.Tts.TtsService.Header" xml:space="preserve">
+    <value>TTS Service</value>
+  </data>
+  <data name="Settings.Tts.SystemBuiltIn.Content" xml:space="preserve">
+    <value>System built-in</value>
+  </data>
+  <data name="Settings.Tts.ServiceNote.Text" xml:space="preserve">
+    <value>System built-in, no configuration needed.</value>
+  </data>
+  <data name="Settings.Tts.Preferences.Text" xml:space="preserve">
+    <value>Preferences</value>
+  </data>
+  <data name="Settings.Tts.EnglishAccent.Header" xml:space="preserve">
+    <value>English Accent</value>
+  </data>
+  <data name="Settings.Tts.SpeechRate.Header" xml:space="preserve">
+    <value>Default Speech Rate</value>
+  </data>
+  <data name="Settings.Tts.AutoPlaySource.Header" xml:space="preserve">
+    <value>Auto-play source text</value>
+  </data>
+  <data name="Settings.Tts.AutoPlayTranslation.Header" xml:space="preserve">
+    <value>Auto-play translation result</value>
+  </data>
+  <data name="Settings.Tts.Voices.Text" xml:space="preserve">
+    <value>Voices (EN / VI)</value>
+  </data>
+  <data name="Settings.Tts.EnglishVoice.Header" xml:space="preserve">
+    <value>English voice</value>
+  </data>
+  <data name="Settings.Tts.VietnameseVoice.Header" xml:space="preserve">
+    <value>Vietnamese voice</value>
+  </data>
+  <data name="Settings.Tts.VoicesNote.Text" xml:space="preserve">
+    <value>Applies to Windows system TTS. If a chosen voice is no longer installed, the system default voice for that language is used.</value>
+  </data>
+  <data name="Settings.Tts.Test.Text" xml:space="preserve">
+    <value>Test</value>
+  </data>
+  <data name="Settings.Tts.TestText.Header" xml:space="preserve">
+    <value>Test text</value>
+  </data>
+  <data name="Settings.Tts.TestLanguage.Header" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="Settings.Tts.PlayTest.Content" xml:space="preserve">
+    <value>Play Test</value>
+  </data>
+  <data name="Settings.Tts.StopTest.Content" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="Settings.Tts.SystemDefaultVoice" xml:space="preserve">
+    <value>System default</value>
+  </data>
 </root>
