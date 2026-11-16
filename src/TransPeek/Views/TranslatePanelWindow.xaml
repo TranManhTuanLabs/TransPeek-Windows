@@ -186,8 +186,12 @@
              here — the copy buttons moved next to their speaker icons
              (input Copy inside the input, translation Copy inside the
              output card) and Capture OCR moved up to the language row,
-             like mac. -->
-        <StackPanel Grid.Row="5" Orientation="Horizontal" Spacing="4" HorizontalAlignment="Right" Margin="0,8,0,8">
+             like mac. Margin top is 0, not 8 (Manh 2026-11-17): the
+             card above already has bottom margin 8, so a top margin 8
+             here made the gap above the buttons 16 while the gap below
+             (to the dictionary links) was only 8 — the buttons sat
+             visibly low. With top 0 both gaps are 8. -->
+        <StackPanel Grid.Row="5" Orientation="Horizontal" Spacing="4" HorizontalAlignment="Right" Margin="0,0,0,8">
             <!-- Pin (Manh 2026-11-14): keep the panel fixed and always
                  visible — while pinned, click-outside and Esc do NOT
                  hide it. Toggle again to unpin. Segoe MDL2 Pin E718. -->

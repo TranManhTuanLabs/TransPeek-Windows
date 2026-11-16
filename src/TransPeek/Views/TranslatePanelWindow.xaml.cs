@@ -557,6 +557,16 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         OutputCardRow.Height = expanded
             ? new GridLength(1, GridUnitType.Star)
             : new GridLength(1, GridUnitType.Auto);
+        // A collapse/expand is a new fit, like a new translation
+        // (ShowResult clears the flag the same way): after a manual
+        // drag the flag suppresses auto-fit, so without this the panel
+        // stayed at the dragged height when the provider was hidden
+        // and the bottom bar sat on the output box with an empty gap
+        // below it instead of the panel shrinking to fit (Manh
+        // 2026-11-17). Clearing it lets the RequestResizeToFit below
+        // actually run. Low risk: the flag only ever blocks a fit
+        // this method already requests.
+        _manualResizeGeneration = null;
         RequestResizeToFit();
     }
 
@@ -949,7 +959,22 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         // panel up (Manh 2026-11-16). Collapsed, the header is small
         // enough that the 450 floor covers it.
         var cardMin = _providerCardExpanded ? MinOutputCardHeight : 0;
-        var minH = Math.Max(MinPanelHeight, fixedH + cardMin + 24);
+        // The card Border also carries a vertical margin (Margin
+        // "0,0,0,8" in XAML) between the card and the Actions row —
+        // it is NOT part of MinHeight, so it must be counted here too.
+        // Without it the minimum (and the auto-fit floor) came out 8
+        // short, the * row squeezed the card by 8, and the speaker row
+        // at the bottom of the card lost its bottom ~8 px — which is
+        // why raising MinOutputCardHeight 170 -> 180 -> 210 never
+        // fixed the covered speaker (Manh 2026-11-17): the shortfall
+        // was a missing margin, not a too-small minimum. Long text was
+        // fine because its height came from the full content measure,
+        // which does include the margin. Read the margin from the
+        // Border itself so it stays right if the XAML margin changes.
+        var cardMargin = _providerCardExpanded
+            ? ProviderCardBorder.Margin.Top + ProviderCardBorder.Margin.Bottom
+            : 0;
+        var minH = Math.Max(MinPanelHeight, fixedH + cardMin + cardMargin + 24);
         var work = WindowHelpers.DisplayWorkArea(AppWindow.Position.X, AppWindow.Position.Y);
         var maxH = Math.Min(MaxPanelSize, work.Height / WindowHelpers.DpiScale(this));
         return Math.Min(minH, Math.Max(MinPanelHeight, maxH));
