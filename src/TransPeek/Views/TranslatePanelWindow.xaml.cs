@@ -92,16 +92,25 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// translationGeneration. A new show bumps _epoch, so auto-fit runs
     /// fresh again. Null = no manual resize this show.</summary>
     private int? _manualResizeGeneration;
+    /// <summary>Whether auto-fit already retried once this show.
+    /// Shared design (2026-11-16): retry auto-fit once when a
+    /// measurement is missing (a measure taken before the window was
+    /// sized reads wrong). Reset on every new show; the flag stops a
+    /// persistently bad measure from retrying forever.</summary>
+    private bool _autoFitRetried;
     /// <summary>Physical size set by the last programmatic MoveAndResize
     /// (show + auto-fit). AppWindow.Changed fires for those too; when
     /// the new size equals this, it was our own resize, not the user's
-    /// drag — so it must not persist the size or suppress auto-fit.</summary>
+    /// drag — so it must not start the drag debounce or suppress
+    /// auto-fit. (A user drag is never saved to Settings anymore —
+    /// shared design 2026-11-16 — it only lives for the session.)</summary>
     private Windows.Graphics.SizeInt32? _lastProgrammaticSize;
-    /// <summary>Debounce for persisting a user resize: AppWindow.Changed
-    /// fires on every step of a border drag, so the save + clamp run
-    /// 300 ms after the last size change (i.e. when the drag ends),
-    /// not on every pixel.</summary>
-    private DispatcherTimer? _resizePersistTimer;
+    /// <summary>Debounce for settling a user resize: AppWindow.Changed
+    /// fires on every step of a border drag, so the clamp + snap-back
+    /// run 300 ms after the last size change (i.e. when the drag ends),
+    /// not on every pixel. (The drag is never saved to Settings —
+    /// shared design 2026-11-16 — it only lives for the session.)</summary>
+    private DispatcherTimer? _resizeSettleTimer;
 
     private readonly Func<string, Task<(string? Translation, string ProviderName, string? DetectedSourceLanguage)>> _translateAsync;
     private readonly Func<Task> _ocrRequested;
@@ -185,7 +194,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
                 // 2026-11-16): the OS stops the border drag at the
                 // minimum, so the panel can never be dragged small
                 // enough to hide the output. The post-hoc clamp in
-                // PersistResizedSize stays as a backstop.
+                // SettleResizedSize stays as a backstop.
                 var hwnd = WindowNative.GetWindowHandle(this);
                 InstallMinSizeSubclass(hwnd);
                 // Native drag region (see UpdateCaptionRegion): set once
@@ -363,17 +372,16 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         // New show: auto-fit runs fresh again (the manual-resize
         // suppression only lasts for the show the user resized in).
         _manualResizeGeneration = null;
-        // The size is the user's persisted WIDTH (or the 440 default),
-        // but the height opens COMPACT (MinPanelHeight), not at the
-        // saved PanelHeight — the panel must fit the content on every
-        // show (Manh 2026-11-16: "mỗi khi panel hiện ra là resize nếu
-        // cần"). Opening at the saved tall height and shrinking after
-        // was fragile: the shrink is deferred and could be skipped or
-        // delayed, leaving a tall panel for short text (#143/#145).
-        // ResizeToFitContent grows the window if the content is tall.
+        _autoFitRetried = false;
+        // Shared panel design (2026-11-16): the panel opens at the
+        // DEFAULT size in Settings (440x450) every show. A manual drag
+        // only enlarges it for the session and is NOT saved back to
+        // Settings, so PanelWidth/PanelHeight here ARE the default —
+        // opening at them is opening at the default. ResizeToFitContent
+        // grows the window if the content is tall.
         var scale = WindowHelpers.DpiScale(this);
         var w = Math.Max(1, (int)Math.Round(App.Settings.PanelWidth * scale));
-        var h = Math.Max(1, (int)Math.Round(MinPanelHeight * scale));
+        var h = Math.Max(1, (int)Math.Round(App.Settings.PanelHeight * scale));
         var work = WindowHelpers.PrimaryWorkArea();
         var px = work.X + Math.Max((work.Width - w) / 2, 0);
         var py = work.Y + Math.Max((work.Height - h) / 2, 0);
@@ -564,18 +572,18 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         _epoch++;
         // New show: auto-fit runs fresh again (see ShowInputMode).
         _manualResizeGeneration = null;
+        _autoFitRetried = false;
         // DPI: (x, y) and the work area are physical pixels, but
-        // PanelWidth is logical (DIPs) — scale it before MoveAndResize,
-        // which takes physical pixels (see ResizeToFitContent). At 100%
-        // the factor is 1.0 (no change). The WIDTH is the user's
-        // persisted size (or the 440 default); the HEIGHT opens compact
-        // (MinPanelHeight), not at the saved PanelHeight — the panel
-        // must fit the content on every show (Manh 2026-11-16: "mỗi
-        // khi panel hiện ra là resize nếu cần"). ResizeToFitContent
+        // PanelWidth/PanelHeight are logical (DIPs) — scale them before
+        // MoveAndResize, which takes physical pixels (see
+        // ResizeToFitContent). At 100% the factor is 1.0 (no change).
+        // Shared panel design (2026-11-16): the panel opens at the
+        // DEFAULT size in Settings (440x450) every show — a manual drag
+        // is not saved back, so these ARE the default. ResizeToFitContent
         // grows it if the content is tall.
         var scale = WindowHelpers.DpiScale(this);
         var w = Math.Max(1, (int)Math.Round(App.Settings.PanelWidth * scale));
-        var h = Math.Max(1, (int)Math.Round(MinPanelHeight * scale));
+        var h = Math.Max(1, (int)Math.Round(App.Settings.PanelHeight * scale));
         var gap = Math.Max(1, (int)Math.Round(8 * scale));
         var work = WindowHelpers.DisplayWorkArea(x, y);
         var px = Math.Clamp(x + gap, work.X, work.X + work.Width - w);
@@ -591,18 +599,19 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     }
 
     /// <summary>Grow/shrink the window to fit its content, like mac's
-    /// PopupPanelSizing.frameToFit (Manh 2026-11-15 — the output looked
-    /// small in the fixed 480 px window). All rows are Auto and the
-    /// translation box is capped by MaxHeight, so the desired height is
-    /// bounded; beyond the screen the text scrolls instead of the
-    /// window growing off-screen. The top stays where ShowPanelNear /
-    /// ShowInputMode put it; if the bottom would run off-screen the
-    /// whole window shifts up. Deferred via the dispatcher so layout
-    /// has finished before measuring. Only resizes when the height
-    /// actually changed, so a resize never re-triggers itself.
-    /// User-resizable (Manh 2026-11-15): the width is never changed
-    /// here (mac frameToFit keeps currentFrame.width) and the height
-    /// never goes below the user's persisted PanelHeight; after a
+    /// PopupPanelSizing.frameToFit. All rows are Auto and the
+    /// translation box is capped by MaxHeight (260), so the desired
+    /// height is bounded; beyond the screen the text scrolls instead
+    /// of the window growing off-screen. The top stays where
+    /// ShowPanelNear / ShowInputMode put it; if the bottom would run
+    /// off-screen the whole window shifts up. Deferred via the
+    /// dispatcher so layout has finished before measuring. Only
+    /// resizes when the height actually changed, so a resize never
+    /// re-triggers itself. User-resizable (Manh 2026-11-15): the width
+    /// is never changed here (mac frameToFit keeps currentFrame.width)
+    /// and auto-fit sizes to the CONTENT, with no saved-height floor
+    /// (shared design 2026-11-16 — a tall drag for long text must not
+    /// keep the panel tall for a later one-word translation); after a
     /// manual resize in this show auto-fit is skipped entirely
     /// (_manualResizeGeneration == _epoch) so it cannot fight the
     /// user's drag.</summary>
@@ -681,8 +690,24 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         var currentWidth = Math.Max(1.0, AppWindow.Size.Width / scale);
         root.Measure(new Windows.Foundation.Size(currentWidth, double.PositiveInfinity));
         var desired = root.DesiredSize.Height;
-        if (desired <= 0 || double.IsNaN(desired) || double.IsInfinity(desired))
+        if (desired <= 0 || double.IsNaN(desired) || double.IsInfinity(desired)
+            || currentWidth < MinPanelWidth)
+        {
+            // Missing measurement — retry auto-fit once (shared design
+            // 2026-11-16; mac had the same miss: a measure taken before
+            // the window was sized reads wrong, e.g. width still ~0 so
+            // the text wraps into a tall column). currentWidth below the
+            // 400 minimum means the window has not been sized yet, so
+            // the measure at that width is not the content's real size.
+            // _autoFitRetried is per-show (reset in ShowPanelNear /
+            // ShowInputMode), so a persistently bad measure cannot loop.
+            if (!_autoFitRetried)
+            {
+                _autoFitRetried = true;
+                RequestResizeToFit();
+            }
             return;
+        }
         var pos = AppWindow.Position;
         var work = WindowHelpers.DisplayWorkArea(pos.X, pos.Y);
         var minHeight = Math.Max(1, (int)Math.Round(ComputeMinPanelHeight() * scale));
@@ -693,9 +718,9 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         // dragged the panel tall it opened tall for every later show
         // — even a one-word translation — and the user read that as
         // "the vertical still remembers the long position" (CI #143).
-        // The dragged height is still saved (PersistResizedSize) and
-        // still limits the manual drag, but auto-fit sizes to what
-        // the text needs, not to the tallest drag ever made.
+        // Shared design 2026-11-16: a drag is never saved to Settings
+        // anymore and auto-fit has no saved-height floor — it sizes to
+        // what the text needs, not to the tallest drag ever made.
         var baseline = desired;
         // The output box stays capped at 260 (TranslationTextMaxHeight)
         // during auto-fit — it scrolls for longer text instead of
@@ -704,7 +729,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         // the box uncapped and let the output expand super long on
         // the next show/measure — Manh 2026-11-16, #147 "output siêu
         // expand dài". Dragging the window taller by hand still grows
-        // the box — PersistResizedSize raises the cap for manual drags.)
+        // the box — SettleResizedSize raises the cap for manual drags.)
         var height = (int)Math.Clamp(Math.Ceiling(baseline * scale), minHeight, maxHeight);
         var width = AppWindow.Size.Width;
         var y = pos.Y;
@@ -854,11 +879,13 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// DidSizeChange). Two jobs: (1) keep the native resize strips on
     /// the edges (UpdateResizeRegions); (2) tell a user border-drag
     /// apart from our own programmatic MoveAndResize (show + auto-fit),
-    /// so a manual resize persists the size and suppresses auto-fit
-    /// for the rest of this show (mac manualResizeGeneration), while
-    /// our own resizes do neither. The distinction is the size itself:
-    /// a programmatic resize sets exactly _lastProgrammaticSize, a
-    /// user drag lands on any other size.</summary>
+    /// so a manual resize suppresses auto-fit for the rest of this
+    /// show (mac manualResizeGeneration) while our own resizes do
+    /// neither. (A manual resize is never saved to Settings anymore —
+    /// shared design 2026-11-16 — it only lives for the session.) The
+    /// distinction is the size itself: a programmatic resize sets
+    /// exactly _lastProgrammaticSize, a user drag lands on any other
+    /// size.</summary>
     private void OnAppWindowChanged(AppWindow sender, AppWindowChangedEventArgs args)
     {
         if (!args.DidSizeChange)
@@ -876,38 +903,39 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         // (mac: manualResizeGeneration = translationGeneration) so it
         // cannot shrink the panel back while the user is resizing it.
         _manualResizeGeneration = _epoch;
-        // Persist (debounced): Changed fires on every step of a drag,
-        // so the save + clamp run 300 ms after the last size change.
+        // Settle (debounced): Changed fires on every step of a drag,
+        // so the clamp + snap-back run 300 ms after the last size change.
         // The Tick handler is attached once, at creation — attaching
         // it on every restart would stack a handler per size change
-        // and run PersistResizedSize() N times.
-        _resizePersistTimer?.Stop();
-        if (_resizePersistTimer is null)
+        // and run SettleResizedSize() N times.
+        _resizeSettleTimer?.Stop();
+        if (_resizeSettleTimer is null)
         {
-            _resizePersistTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(300) };
-            _resizePersistTimer.Tick += (_, _) =>
+            _resizeSettleTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(300) };
+            _resizeSettleTimer.Tick += (_, _) =>
             {
-                _resizePersistTimer?.Stop();
-                PersistResizedSize();
+                _resizeSettleTimer?.Stop();
+                SettleResizedSize();
             };
         }
-        _resizePersistTimer.Start();
+        _resizeSettleTimer.Start();
     }
 
-    /// <summary>Clamp a user-resized panel to the manual limits and the
-    /// display work area, then persist the size (mac onEnded). Width
-    /// and height are both saved on any change over 0.5 pt — the same
-    /// threshold — so a vertical drag remembers its position just like
-    /// a horizontal one (Manh 2026-11-16: vertical drags did not
-    /// remember, horizontal did; the old mac rule only saved height
-    /// past 8 pt). Called 300 ms after the last size change of a
-    /// border drag (OnAppWindowChanged debounce).</summary>
-    private void PersistResizedSize()
+    /// <summary>Clamp a user border-drag to the min/max frame and snap
+    /// back any excess (shared panel design 2026-11-16). A drag only
+    /// enlarges the panel for the SESSION — it is NOT saved to
+    /// Settings anymore, so the next show opens at the default size
+    /// (440x450) again. The window clamp below still applies (the OS
+    /// does not enforce min/max on a borderless window). Called 300 ms
+    /// after the last size change of a border drag (OnAppWindowChanged
+    /// debounce).</summary>
+    private void SettleResizedSize()
     {
         // No _visible guard: the timer only starts on a user resize
         // (which implies the panel was visible), and AppWindow.Size
         // still holds the resized size even if the user hid the panel
-        // within the 300 ms debounce — that resize must still persist.
+        // within the 300 ms debounce — that resize must still apply
+        // to the window (it just is not saved anywhere).
         var scale = WindowHelpers.DpiScale(this);
         var size = AppWindow.Size;
         var w = size.Width / scale;
@@ -947,22 +975,29 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
                 TranslationTextBox.MaxHeight = Math.Max(TranslationTextMaxHeight, fullText);
             }
         }
-        var changed = false;
-        if (Math.Abs(clampedW - App.Settings.PanelWidth) > 0.5)
+        // Horizontal snap-back (shared design 2026-11-16): if the
+        // dragged width does not meaningfully reduce the content
+        // height, the extra width was white space (short text already
+        // fits at the default width) — snap back to the default width
+        // (440) on release. Long text keeps the dragged width (fewer
+        // wraps = a shorter panel). The +8 threshold mirrors the
+        // vertical snap-back: a width that saves more than 8 pt of
+        // height is genuinely useful. Cannot measure: keep the dragged
+        // width, previous behaviour.
+        var defaultW = App.Settings.PanelWidth; // 440
+        if (clampedW > defaultW + 8 && Content is FrameworkElement snapRoot)
         {
-            App.Settings.PanelWidth = clampedW;
-            changed = true;
+            var hAtDefault = MeasureContentHeight(snapRoot, defaultW);
+            var hAtDragged = MeasureContentHeight(snapRoot, clampedW);
+            if (hAtDefault > 0 && hAtDragged > 0 && hAtDefault <= hAtDragged + 8)
+                clampedW = defaultW;
         }
-        if (Math.Abs(clampedH - App.Settings.PanelHeight) > 0.5)
-        {
-            App.Settings.PanelHeight = clampedH;
-            changed = true;
-        }
-        if (changed)
-            SettingsStore.Save(App.Settings);
-        // Clamp the window itself if the drag went past the limits
-        // (the OS does not enforce min/max on a borderless window):
-        // record it as programmatic so OnAppWindowChanged ignores it.
+        // Shared design 2026-11-16: the dragged size is NOT saved to
+        // Settings (no PanelWidth/PanelHeight write, no Save) — the
+        // next show opens at the default size again. The clamp below
+        // only fixes the live window (the OS does not enforce min/max
+        // on a borderless window): record it as programmatic so
+        // OnAppWindowChanged ignores it.
         var cw = Math.Max(1, (int)Math.Round(clampedW * scale));
         var ch = Math.Max(1, (int)Math.Round(clampedH * scale));
         if (cw != size.Width || ch != size.Height)
@@ -974,6 +1009,22 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
             _lastProgrammaticSize = new Windows.Graphics.SizeInt32(cw, ch);
             WindowHelpers.MoveAndResize(this, pos.X, y, cw, ch);
         }
+    }
+
+    /// <summary>Content height (DIPs) if the panel were this wide,
+    /// measured with unlimited height. Used by the horizontal
+    /// snap-back to tell whether a wider drag actually helps (long
+    /// text wraps into fewer lines) or is just empty width (short
+    /// text). A failed measure returns 0 and the caller keeps the
+    /// dragged width. Measure only computes a desired size — it does
+    /// not move or resize the live window.</summary>
+    private static double MeasureContentHeight(FrameworkElement root, double width)
+    {
+        if (width <= 0)
+            return 0;
+        root.Measure(new Windows.Foundation.Size(width, double.PositiveInfinity));
+        var h = root.DesiredSize.Height;
+        return double.IsNaN(h) || double.IsInfinity(h) || h <= 0 ? 0 : h;
     }
 
     /// <summary>Pin toggle: while pinned the panel stays put — click-outside

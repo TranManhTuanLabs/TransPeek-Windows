@@ -57,19 +57,27 @@ public sealed class AppSettings
     /// already saved in settings.json wins over the default until the
     /// slider is moved once.</summary>
     public double AppTextSize { get; set; } = 15;
-    /// <summary>Panel width in logical pixels (DIPs), as the user last
-    /// resized it. Mac parity: same setting names (popupDefaultWidth /
-    /// popupDefaultHeight); mac defaults 450x350, Windows 440x480.
-    /// Auto-fit never changes the width — it only ever sets the height
-    /// — so the width is purely the user's choice, persisted on every
-    /// manual resize (Manh 2026-11-15 — user-resizable panel).</summary>
+    /// <summary>Panel default width in logical pixels (DIPs).
+    /// Shared panel design (2026-11-16): the panel opens at this
+    /// DEFAULT size every show (440x450); a manual drag only enlarges
+    /// it for the session and is NOT saved back here. Mac parity:
+    /// same setting names (popupDefaultWidth / popupDefaultHeight).
+    /// Auto-fit never changes the width — it only ever sets the
+    /// height — so the width is purely the default (440).</summary>
     public double PanelWidth { get; set; } = 440;
-    /// <summary>Panel height in logical pixels (DIPs), as the user last
-    /// resized it — the baseline auto-fit never goes below (mac
-    /// frameToFit baselineHeight). Saved only when a manual resize
-    /// changes the height by more than 8 pt (mac rule), so a tiny
-    /// nudge does not become the new baseline.</summary>
-    public double PanelHeight { get; set; } = 480;
+    /// <summary>Panel default height in logical pixels (DIPs).
+    /// Shared panel design (2026-11-16): the panel opens at this
+    /// DEFAULT size every show (440x450); a manual drag only enlarges
+    /// it for the session and is NOT saved back here. Was 480; the
+    /// shared design sets the default open height to 450.</summary>
+    public double PanelHeight { get; set; } = 450;
+    /// <summary>Settings schema version for one-time migrations
+    /// (0 = never migrated). Version 1 (2026-11-16): reset the panel
+    /// size to the shared default 440x450 — files written before this
+    /// held a dragged size in PanelWidth/PanelHeight (manual resize
+    /// used to save back), which would otherwise keep opening the
+    /// panel at the old dragged size.</summary>
+    public int SettingsVersion { get; set; } = 0;
     /// <summary>How long the trigger icon stays after the selection changes, in seconds.</summary>
     public int TriggerIconAutoHideSeconds { get; set; } = 3;
     /// <summary>Global hotkey that shows the panel for the current selection.
@@ -184,6 +192,17 @@ public static class SettingsStore
             // v0.1 saved the old dictionary defaults: migrate them once
             // in memory (saved back on the next settings save).
             DictionaryLink.MigrateDefaults(settings.DictionaryLinks);
+            // Shared panel design (2026-11-16): the panel opens at the
+            // DEFAULT size (440x450) every show; a manual drag is no
+            // longer saved to Settings. Files written before this held
+            // a dragged size in PanelWidth/PanelHeight — reset it to
+            // the default once so old installs open compact again.
+            if (settings.SettingsVersion < 1)
+            {
+                settings.PanelWidth = 440;
+                settings.PanelHeight = 450;
+                settings.SettingsVersion = 1;
+            }
             return settings;
         }
         catch
