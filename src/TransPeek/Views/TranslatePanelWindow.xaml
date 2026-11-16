@@ -107,17 +107,23 @@
              Actions row at the bottom). Changing a picker saves the
              setting and re-translates immediately, like mac. No close
              (X) button: Esc and click-outside already close the panel
-             (Manh 2026-11-12). -->
+             (Manh 2026-11-12). Widths are tight by design (Manh
+             2026-11-17): the pickers were 128 wide with Spacing 6 and
+             the Capture button touched/covered the Target picker —
+             the row is only ~396 wide at the default panel width, so
+             the pickers are 112 (the longest label, "Auto Detect",
+             still fits with room) and the gaps are 4, leaving ~40 of
+             slack for the Capture button. -->
         <Grid Grid.Row="3" Margin="0,0,0,8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                <ComboBox x:Name="SourceLangCombo" Width="128"
+            <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                <ComboBox x:Name="SourceLangCombo" Width="112"
                           SelectionChanged="OnSourceLangChanged" />
-                <Button x:Name="SwapButton" Content="⇄" Padding="6,2" Click="OnSwapLanguages" />
-                <ComboBox x:Name="TargetLangCombo" Width="128"
+                <Button x:Name="SwapButton" Content="⇄" Padding="4,2" Click="OnSwapLanguages" />
+                <ComboBox x:Name="TargetLangCombo" Width="112"
                           SelectionChanged="OnTargetLangChanged" />
             </StackPanel>
             <Button x:Name="OcrButton" Grid.Column="1" x:Uid="Panel.CaptureOcr" Content="Capture OCR" VerticalAlignment="Center" />
