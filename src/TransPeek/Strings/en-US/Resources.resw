@@ -361,7 +361,22 @@
     <value>Download vie + eng</value>
   </data>
   <data name="Settings.Ocr.DataNote.Text" xml:space="preserve">
-    <value>Data downloads from tessdata_best (GitHub) into %LOCALAPPDATA%\TransPeek\tessdata. Windows OCR needs no download, but Vietnamese needs the 'Vietnamese OCR' package in Windows Settings (Time &amp; language → Language → Vietnamese → Options).</value>
+    <value>Data downloads from tessdata_best (GitHub) into %LOCALAPPDATA%\TransPeek\tessdata.</value>
+  </data>
+  <data name="Settings.Ocr.WindowsLanguages.Text" xml:space="preserve">
+    <value>Windows OCR languages</value>
+  </data>
+  <data name="Settings.Ocr.OpenWindowsSettings.Content" xml:space="preserve">
+    <value>Open Windows Settings</value>
+  </data>
+  <data name="Settings.Ocr.WindowsLanguagesNote.Text" xml:space="preserve">
+    <value>Windows OCR languages come from Windows, not from the app. To add one, open Windows Settings → Time &amp; language → Language &amp; region → Add a language, then tick 'Optical character recognition'.</value>
+  </data>
+  <data name="Settings.Ocr.NoWindowsLanguages" xml:space="preserve">
+    <value>No OCR language installed on this machine.</value>
+  </data>
+  <data name="Settings.Ocr.WindowsLanguagesInstalled" xml:space="preserve">
+    <value>Installed: {0}</value>
   </data>
   <data name="Settings.Ocr.NoLanguagesInstalled" xml:space="preserve">
     <value>No languages installed.</value>

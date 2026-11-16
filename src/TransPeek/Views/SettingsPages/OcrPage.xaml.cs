@@ -7,6 +7,7 @@ using Microsoft.UI.Xaml.Controls;
 using TransPeek.Core.Ocr;
 using TransPeek.Core.Settings;
 using TransPeek.Services;
+using Windows.System;
 
 namespace TransPeek.Views.SettingsPages;
 
@@ -33,6 +34,7 @@ public sealed partial class OcrPage : Page
         UpdateAutoCopyEnabled();
         OcrHotkeyBox.Text = s.OcrHotkey;
         RefreshTesseractStatus();
+        RefreshWindowsOcrStatus();
         _loading = false;
     }
 
@@ -55,6 +57,23 @@ public sealed partial class OcrPage : Page
             ? AppStrings.Get("Settings.Ocr.NoLanguagesInstalled", "No languages installed.")
             : AppStrings.Get("Settings.Ocr.InstalledLanguages", "Installed: {0}", string.Join(", ", installed));
     }
+
+    /// <summary>Windows OCR languages come from the OS, not from the
+    /// app — list what this machine has (OcrEngine.
+    /// AvailableRecognizerLanguages). If the language the user needs
+    /// is missing, the button below opens Windows Settings so they
+    /// can add it (the app cannot install a Windows language pack).</summary>
+    private void RefreshWindowsOcrStatus()
+    {
+        var provider = new WindowsOcrProvider();
+        var installed = provider.SupportedLanguages;
+        WindowsOcrLanguagesText.Text = installed.Count == 0
+            ? AppStrings.Get("Settings.Ocr.NoWindowsLanguages", "No OCR language installed on this machine.")
+            : AppStrings.Get("Settings.Ocr.WindowsLanguagesInstalled", "Installed: {0}", string.Join(", ", installed));
+    }
+
+    private async void OnOpenWindowsSettings(object sender, RoutedEventArgs e)
+        => await Launcher.LaunchUriAsync(new Uri("ms-settings:regionlanguage"));
 
     private void OnProviderChanged(object sender, SelectionChangedEventArgs e)
     {

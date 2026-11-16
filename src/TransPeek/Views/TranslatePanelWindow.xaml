@@ -85,12 +85,13 @@
              sits next to it. Both are in one StackPanel in the same
              cell as the TextBox, after it in XAML so they paint on
              top, and stay there as the input grows. Speak is first,
-             Copy second (mac order). TTS audio is NOT wired yet —
-             decor for now (tooltip says so). -->
+             Copy second (mac order). Speak uses the Windows system
+             voices (SystemSpeechService) — click to listen, click
+             again to stop. -->
         <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="4"
                     HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,6,8">
             <Button x:Name="SpeakSourceButton" Padding="8,4"
-                    ToolTipService.ToolTip="Listen to source text (coming soon)"
+                    ToolTipService.ToolTip="Listen to source text"
                     Click="OnSpeakSourceClicked">
                 <FontIcon Glyph="&#xE767;" FontSize="16" />
             </Button>
@@ -135,7 +136,7 @@
              later, the card + scroll is the shape first). The speaker
              sits at the bottom-right of the card body, mirroring mac's
              result card (Speak + Copy on the right below the result) —
-             decor for now, TTS audio comes later. -->
+             wired to the Windows system voices (SystemSpeechService). -->
         <Border x:Name="ProviderCardBorder" Grid.Row="4" Margin="0,0,0,8" CornerRadius="6" BorderThickness="1"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                 Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
@@ -171,7 +172,7 @@
                      (mac order). -->
                 <StackPanel x:Name="ProviderCardSpeakerRow" Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="8,2,8,6" Spacing="4">
                     <Button x:Name="SpeakTranslationButton" Padding="8,4"
-                            ToolTipService.ToolTip="Listen to translation (coming soon)"
+                            ToolTipService.ToolTip="Listen to translation"
                             Click="OnSpeakTranslationClicked">
                         <FontIcon Glyph="&#xE767;" FontSize="16" />
                     </Button>

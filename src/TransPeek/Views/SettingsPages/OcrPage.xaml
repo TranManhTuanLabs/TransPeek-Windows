@@ -37,7 +37,13 @@
                 <Button x:Name="DownloadBothButton" x:Uid="Settings.Ocr.DownloadBoth" Content="Download vie + eng" Click="OnDownloadBoth" />
             </StackPanel>
             <TextBlock x:Name="DownloadStatusText" FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
-            <TextBlock x:Uid="Settings.Ocr.DataNote" Text="Data downloads from tessdata_best (GitHub) into %LOCALAPPDATA%\TransPeek\tessdata. Windows OCR needs no download, but Vietnamese needs the 'Vietnamese OCR' package in Windows Settings (Time &amp; language → Language → Vietnamese → Options)."
+            <TextBlock x:Uid="Settings.Ocr.DataNote" Text="Data downloads from tessdata_best (GitHub) into %LOCALAPPDATA%\TransPeek\tessdata."
+                       FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
+
+            <TextBlock x:Uid="Settings.Ocr.WindowsLanguages" Text="Windows OCR languages" FontWeight="SemiBold" Margin="0,8,0,0" />
+            <TextBlock x:Name="WindowsOcrLanguagesText" FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
+            <Button x:Name="OpenWindowsSettingsButton" x:Uid="Settings.Ocr.OpenWindowsSettings" Content="Open Windows Settings" Click="OnOpenWindowsSettings" />
+            <TextBlock x:Uid="Settings.Ocr.WindowsLanguagesNote" Text="Windows OCR languages come from Windows, not from the app. To add one, open Windows Settings → Time &amp; language → Language &amp; region → Add a language, then tick 'Optical character recognition'."
                        FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
         </StackPanel>
     </ScrollViewer>

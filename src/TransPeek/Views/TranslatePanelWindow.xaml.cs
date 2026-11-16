@@ -3,8 +3,11 @@
 // [Copy gốc] / [Copy dịch] (OCR mode), and the dictionary bar at the
 // bottom. Click outside, Esc, or the ✕ button closes it.
 //
-// v0.1 has NO speaker button and NO click-to-read: TTS comes after the
-// mac side is stable (see README).
+// Panel speaker buttons (source + translation) are wired to the
+// Windows system voices (SystemSpeechService, Manh 2026-11-16).
+// The float icon's click-to-listen (click = speak the selection)
+// is still visual-only — that flow comes after the mac side is
+// stable (see README).
 //
 // v0.1.2 mac parity — lookup follows the panel selection (mac PopupView):
 // selecting words in the source box OR in the translation re-points the
@@ -102,6 +105,10 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// the panel that click re-showed.</summary>
     private int _epoch;
     private readonly Action _openSettings;
+    /// <summary>Windows system TTS (Windows.Media.SpeechSynthesis):
+    /// the panel speaker buttons speak through this. One instance for
+    /// the window's lifetime; it owns a MediaPlayer + synthesizer.</summary>
+    private readonly SystemSpeechService _speech = new();
 
     public TranslatePanelWindow(
         Func<string, Task<(string? Translation, string ProviderName)>> translateAsync,
@@ -423,25 +430,34 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         RequestResizeToFit();
     }
 
-    // ----- speaker buttons (decor first, Manh 2026-11-15) -----
+    // ----- speaker buttons (Windows system TTS, Manh 2026-11-16) -----
 
     /// <summary>Speaker icons (E767 Volume, same glyph as the float
     /// icon's speaker state): one at the bottom-right of the input
     /// area, one at the bottom-right of the output card body — both
     /// mirroring mac, where Speak + Copy sit on the right below the
-    /// text in SourceInputView and in ProviderResultCard. Decor only
-    /// for now: TTS audio is NOT wired yet (it comes after the mac
-    /// side is stable), so the buttons do nothing when clicked.</summary>
-    private void OnSpeakSourceClicked(object sender, RoutedEventArgs e)
-    {
-        // TTS not wired yet (decor). See the float-icon click-to-listen
-        // direction in DECISIONS.md.
-    }
+    /// text in SourceInputView and in ProviderResultCard. Wired to
+    /// the Windows system voices (SystemSpeechService): the source
+    /// button speaks the source text in the source language, the
+    /// translation button speaks the translation in the target
+    /// language. Click while speaking stops. A second click on the
+    /// same button therefore toggles speak/stop.</summary>
+    private async void OnSpeakSourceClicked(object sender, RoutedEventArgs e)
+        => await SpeakAsync(_sourceText, App.Settings.SourceLanguage);
 
-    private void OnSpeakTranslationClicked(object sender, RoutedEventArgs e)
+    private async void OnSpeakTranslationClicked(object sender, RoutedEventArgs e)
+        => await SpeakAsync(_translationText, App.Settings.TargetLanguage);
+
+    private async Task SpeakAsync(string text, string languageCode)
     {
-        // TTS not wired yet (decor). See the float-icon click-to-listen
-        // direction in DECISIONS.md.
+        if (_speech.IsSpeaking)
+        {
+            _speech.Stop();
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(text))
+            return;
+        await _speech.SpeakAsync(text, languageCode);
     }
 
     private void ShowPanelNear(int x, int y)
