@@ -58,7 +58,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// output card.</summary>
     private const double MinPanelHeight = 450;
     /// <summary>Minimum height of the output card (ProviderCardBorder),
-    /// in DIPs. Must match the MinHeight="210" in XAML: header (~34) +
+    /// in DIPs. Must match the MinHeight="218" in XAML: header (~34) +
     /// one divider (1) + text box minimum (60, MinHeight on the
     /// TranslationTextBox so the output never collapses) + Speak/Copy
     /// row (~36) + margins (~19), plus 60 of breathing room (Manh
@@ -73,14 +73,24 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// short-text card is 13 px short and the speaker row has no
     /// slack. 210 = the measured good-card height (~206) + 4 px
     /// buffer, so a 1-word translation now gets the same card height
-    /// as the 3-line one. The card never collapses below this while
-    /// expanded, so the output is always visible — the vertical
-    /// equivalent of MinPanelWidth for the horizontal (Manh
-    /// 2026-11-16: the output shrank to nothing when the panel was
-    /// dragged small, even with long text). When the provider is
-    /// collapsed the border MinHeight goes to 0 instead (see
-    /// SetProviderCardExpanded).</summary>
-    private const double MinOutputCardHeight = 210;
+    /// as the 3-line one. 218 = 210 + 8 (Manh 17/11 03:47, video in
+    /// the company doc, build 158): the speaker/Copy buttons were
+    /// STILL clipped by ~8 px at the card's bottom edge (only ~20 px
+    /// of ~28 px visible) even after #157 moved them inside the box
+    /// and #156 added the card's bottom margin to
+    /// ComputeMinPanelHeight — because #156 ALSO removed the Actions
+    /// row's top margin in the same commit, which shrank fixedH by
+    /// the same 8 px, so the computed minimum never actually grew.
+    /// Raising the card minimum itself by 8 grows BOTH the minimum
+    /// (via cardMin) and the auto-fit measure (via the card's
+    /// DesiredSize) by 8, with nothing to cancel it out. The card
+    /// never collapses below this while expanded, so the output is
+    /// always visible — the vertical equivalent of MinPanelWidth
+    /// for the horizontal (Manh 2026-11-16: the output shrank to
+    /// nothing when the panel was dragged small, even with long
+    /// text). When the provider is collapsed the border MinHeight
+    /// goes to 0 instead (see SetProviderCardExpanded).</summary>
+    private const double MinOutputCardHeight = 218;
     /// <summary>Window-subclass delegate for the WM_GETMINMAXINFO
     /// minimum-size enforcement. Kept in a field (not a local) so the
     /// GC cannot collect it while the window lives — a collected

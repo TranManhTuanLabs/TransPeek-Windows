@@ -143,7 +143,7 @@
              sits at the bottom-right of the card body, mirroring mac's
              result card (Speak + Copy on the right below the result) —
              wired to the Windows system voices (SystemSpeechService). -->
-        <Border x:Name="ProviderCardBorder" Grid.Row="4" Margin="0,0,0,8" CornerRadius="6" BorderThickness="1" MinHeight="210"
+        <Border x:Name="ProviderCardBorder" Grid.Row="4" Margin="0,0,0,8" CornerRadius="6" BorderThickness="1" MinHeight="218"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                 Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
             <Grid>
