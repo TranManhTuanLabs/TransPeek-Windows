@@ -148,7 +148,7 @@
              + Copy sit INSIDE the TextBox's bottom-right corner
              (overlay, like the input's — Manh 2026-11-17, #162), wired
              to the Windows system voices (SystemSpeechService). -->
-        <Border x:Name="ProviderCardBorder" Grid.Row="4" Margin="0,0,0,8" CornerRadius="6" BorderThickness="1" MinHeight="238"
+        <Border x:Name="ProviderCardBorder" Grid.Row="4" Margin="0,0,0,8" CornerRadius="6" BorderThickness="1" MinHeight="218"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                 Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
             <Grid>

@@ -141,6 +141,36 @@ dưới card khi tra 1–5 line; từ 6 line trở lên không bị. **Nguyên n
   min); bước sau là tìm đúng số px thiếu trong công thức, KHÔNG giữ +20. Nếu #163 vẫn
   che → chiều cao bị loại trừ, nguyên nhân ở chỗ khác (vị trí/cắt xén, không phải cao).
   Số chốt §1 (min card 218, min panel 450) CHƯA đổi — chỉ đổi sau khi thí nghiệm xác nhận.
+- **#163 VẪN BỊ CHE (Manh test 17/11 06:44) — CHIỀU CAO BỊ LOẠI TRỪ:** min card +20 không
+  sửa được, nên shortfall KHÔNG nằm ở cardMin. Đã check chiều cao output theo lệnh Manh:
+  chuỗi chiều cao tự nhất quán — minH = fixedH + cardMin + cardMargin + 24 nên khi panel
+  đạt minH thì card LUÔN = cardMin + cardMargin (= 246 ở #163), TextBox ~214, nút cách
+  đáy card 8px; DictionaryBar là StackPanel ngang 1 hàng (không wrap) nên fixedH ổn định;
+  TextBox Min 60 / Max 260 không phải chỗ kẹt. Suy ra panel không đạt minH trên máy Manh,
+  hoặc nguyên nhân không phải chiều cao (vị trí/cắt xén/z-order). Cần ảnh chụp #163 lúc
+  bị che (+ xác nhận footer hiện Build #163) để phân biệt — KHÔNG đẩy thêm bản mò khi
+  chưa có bằng chứng. Case study AGENTS.md §3 (viết theo giả thuyết hint) vẫn chờ sửa
+  lại khi tìm ra nguyên nhân thật.
+- **NGUYÊN NHÂN THẬT ĐÃ TÌM RA (Manh 17/11 06:50, test #163): kéo rộng ra thì hết che,
+  kéo hẹp vào hint 2 dòng + output nhiều dòng hơn thì bị.** Cơ chế (đã xác nhận bằng code):
+  (1) kéo NGANG (chỉ đổi rộng) cũng bị tính là kéo tay → `OnAppWindowChanged` đặt
+  `_manualResizeGeneration = _epoch`, auto-fit bị khóa hết lần hiện đó, panel không tự
+  cao thêm; (2) kéo hẹp làm hint xuống 2 dòng (+~15) và text output xuống nhiều dòng
+  (text dài +100–200); (3) `SettleResizedSize` (300ms sau khi thả kéo) chỉ biết CO panel
+  khi thừa (snap-back), KHÔNG biết DÀI panel khi thiếu — nhánh text dài hơn hộp chỉ tăng
+  `TranslationTextBox.MaxHeight` mà không tăng chiều cao panel, nên ô text không có chỗ
+  để cao thêm; (4) card tràn khỏi hàng `*`, hàng Pin/Settings vẽ đè lên đáy card → che
+  loa/Copy; (5) kéo rộng ra text bớt dòng, card vừa → hết che. Giải thích vì sao hint
+  (+15) và #163 (+20) không ăn: shortfall do text wrap có thể tới +100–200. **Fix đề
+  xuất (chờ Manh duyệt): trong `SettleResizedSize`, khi `neededH` > chiều cao hiện tại
+  thì dài panel ra tới `neededH` (đã kẹp tối đa 800), giữ nguyên snap-back co lại khi
+  thừa.** **FIX #164 ĐÃ LÀM (Manh duyệt 17/11 06:59): `SettleResizedSize` thêm nhánh
+  `else if (neededH > clampedH)` → `clampedH = neededH` (dài panel tới chiều cao cần,
+  đã kẹp tối đa 800) + nâng `MaxHeight` ô text như trước; nhánh co snap-back giữ nguyên.
+  Đồng thời trả min card 238 → 218 (const + XAML) — bỏ số thí nghiệm #163. Đang chờ
+  Manh test #164: kéo hẹp vào (hint 2 dòng, output nhiều dòng) xem còn che không + kéo
+  rộng ra vẫn snap-back bình thường.** Số chốt §1: min card 218 (đã trả về), min panel
+  450 — đúng số chốt.
 
 Lịch sử mò số (để tránh lặp lại): min output card 150 → 160 (#151) → 170 (#152) →
 180 (#154) → 210 (#155, đo từ ảnh: card 3 line ~206px, card 1 word ~193px, chênh 13px)

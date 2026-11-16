@@ -59,16 +59,11 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     private const double MinPanelHeight = 450;
     /// <summary>Minimum height of the output card (ProviderCardBorder),
     /// in DIPs. Must match the MinHeight in XAML.
-    /// DIAGNOSTIC +20 (Manh 2026-11-17, #163): the speaker was STILL covered in #161
-    /// even with a 1-line hint, and dragging the bottom edge down past the cover point
-    /// clears it — while the OS min-track (WM_GETMINMAXINFO = ComputeMinPanelHeight)
-    /// stops an upward drag exactly AT the cover point. So the computed minimum itself
-    /// is ~8 px short of the true need (the formula is missing ~8 px somewhere).
-    /// Raising the card minimum 218 -> 238 lifts the computed minimum by 20 to test
-    /// whether height is the cause. If #163 clears the cover, the next step is to find
-    /// the exact missing px in the formula (not to keep the +20) — and to check whether
-    /// the #162 overlay alone would have fixed it. If #163 still covers, height is
-    /// ruled out and the cause is elsewhere (position/clipping, not height).
+    /// 218 restored in #164 (Manh 2026-11-17): the +20 experiment (#163,
+    /// 218 -> 238) did NOT clear the cover, so the shortfall was not in
+    /// the card minimum — the real cause was SettleResizedSize never
+    /// growing the panel after a horizontal drag (see there). The +20
+    /// is reverted; 218 is the locked minimum again.
     /// History: 218 = header (~34) + one divider (1) + text box minimum (60, MinHeight on the
     /// TranslationTextBox so the output never collapses) + Speak/Copy
     /// row (~36) + margins (~19), plus 60 of breathing room (Manh
@@ -100,7 +95,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// nothing when the panel was dragged small, even with long
     /// text). When the provider is collapsed the border MinHeight
     /// goes to 0 instead (see SetProviderCardExpanded).</summary>
-    private const double MinOutputCardHeight = 238;
+    private const double MinOutputCardHeight = 218;
     /// <summary>Window-subclass delegate for the WM_GETMINMAXINFO
     /// minimum-size enforcement. Kept in a field (not a local) so the
     /// GC cannot collect it while the window lives — a collected
@@ -1057,8 +1052,9 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         _resizeSettleTimer.Start();
     }
 
-    /// <summary>Clamp a user border-drag to the min/max frame and snap
-    /// back any excess (shared panel design 2026-11-16). A drag only
+    /// <summary>Clamp a user border-drag to the min/max frame, snap
+    /// back any excess, and grow to fit text that wrapped taller
+    /// (shared panel design 2026-11-16; grow added 2026-11-17, #164). A drag only
     /// enlarges the panel for the SESSION — it is NOT saved to
     /// Settings anymore, so the next show opens at the default size
     /// (420x450) again. The window clamp below still applies (the OS
@@ -1094,11 +1090,14 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         // height), from the box's ScrollViewer. If the drag left the
         // window taller than that (short text), shrink it back — the
         // extra height was white space. If the text is longer than the
-        // box shows, keep the dragged height and raise the box cap so
-        // the output grows past 260 and shows more text instead of
-        // leaving the extra height empty. Cannot measure (card
-        // collapsed / ScrollViewer not ready): keep the dragged height,
-        // previous behaviour.
+        // box shows, GROW the window to the needed height (Manh
+        // 2026-11-17, #164): a horizontal drag wraps the text taller
+        // while auto-fit is suppressed, so keeping the dragged height
+        // left the card overflowing under the Actions row and covered
+        // the speaker/Copy buttons — raising the box cap alone could
+        // not help, the box had no room to grow into. Cannot measure
+        // (card collapsed / ScrollViewer not ready): keep the dragged
+        // height, previous behaviour.
         if (TryGetTranslationTextHeights(out var fullText, out var visibleText))
         {
             var neededH = Math.Clamp(clampedH + (fullText - visibleText), minPanelH, maxH);
@@ -1108,10 +1107,20 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
                 clampedH = neededH;
                 TranslationTextBox.MaxHeight = TranslationTextMaxHeight;
             }
+            else if (neededH > clampedH)
+            {
+                // Wrapped text needs MORE height than the panel has
+                // (Manh 2026-11-17, #164 — see the comment above):
+                // grow the panel to the needed height (already
+                // clamped to the screen max) so the card stops
+                // overflowing under the Actions row.
+                clampedH = neededH;
+                TranslationTextBox.MaxHeight = Math.Max(TranslationTextMaxHeight, fullText);
+            }
             else
             {
-                // Long text (or exact fit): keep the dragged height
-                // and let the output grow to the full text height.
+                // Exact fit: keep the dragged height and let the output
+                // grow to the full text height.
                 TranslationTextBox.MaxHeight = Math.Max(TranslationTextMaxHeight, fullText);
             }
         }
