@@ -58,20 +58,23 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// output card.</summary>
     private const double MinPanelHeight = 450;
     /// <summary>Minimum height of the output card (ProviderCardBorder),
-    /// in DIPs. Must match the MinHeight="170" in XAML: header (~34) +
+    /// in DIPs. Must match the MinHeight="180" in XAML: header (~34) +
     /// one divider (1) + text box minimum (60, MinHeight on the
     /// TranslationTextBox so the output never collapses) + Speak/Copy
-    /// row (~36) + margins (~19), plus 20 of breathing room (Manh
+    /// row (~36) + margins (~19), plus 30 of breathing room (Manh
     /// 2026-11-16: at 150 the box was a touch small and clipped the
-    /// Copy/speaker buttons for a one-word translation; 160 (17/11)
-    /// fixed three-line text but one word still clipped, so 170).
-    /// The card never collapses below this while expanded, so the
-    /// output is always visible — the vertical equivalent of
-    /// MinPanelWidth for the horizontal (Manh 2026-11-16: the output
-    /// shrank to nothing when the panel was dragged small, even with
-    /// long text). When the provider is collapsed the border
-    /// MinHeight goes to 0 instead (see SetProviderCardExpanded).</summary>
-    private const double MinOutputCardHeight = 170;
+    /// Copy/speaker buttons for a one-word translation; 160 fixed
+    /// three-line text but one word still clipped, 170 (17/11) still
+    /// clipped one word / two lines while three lines were fine, so
+    /// 180 — short text lives entirely on this floor, long text
+    /// grows past it). The card never collapses below this while
+    /// expanded, so the output is always visible — the vertical
+    /// equivalent of MinPanelWidth for the horizontal (Manh
+    /// 2026-11-16: the output shrank to nothing when the panel was
+    /// dragged small, even with long text). When the provider is
+    /// collapsed the border MinHeight goes to 0 instead (see
+    /// SetProviderCardExpanded).</summary>
+    private const double MinOutputCardHeight = 180;
     /// <summary>Window-subclass delegate for the WM_GETMINMAXINFO
     /// minimum-size enforcement. Kept in a field (not a local) so the
     /// GC cannot collect it while the window lives — a collected
