@@ -58,19 +58,20 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// output card.</summary>
     private const double MinPanelHeight = 450;
     /// <summary>Minimum height of the output card (ProviderCardBorder),
-    /// in DIPs. Must match the MinHeight="160" in XAML: header (~34) +
+    /// in DIPs. Must match the MinHeight="170" in XAML: header (~34) +
     /// one divider (1) + text box minimum (60, MinHeight on the
     /// TranslationTextBox so the output never collapses) + Speak/Copy
-    /// row (~36) + margins (~19), plus 10 of breathing room (Manh
+    /// row (~36) + margins (~19), plus 20 of breathing room (Manh
     /// 2026-11-16: at 150 the box was a touch small and clipped the
-    /// Copy/speaker buttons for a one-word translation). The card
-    /// never collapses below this while expanded, so the output is
-    /// always visible — the vertical equivalent of MinPanelWidth for
-    /// the horizontal (Manh 2026-11-16: the output shrank to nothing
-    /// when the panel was dragged small, even with long text). When
-    /// the provider is collapsed the border MinHeight goes to 0
-    /// instead (see SetProviderCardExpanded).</summary>
-    private const double MinOutputCardHeight = 160;
+    /// Copy/speaker buttons for a one-word translation; 160 (17/11)
+    /// fixed three-line text but one word still clipped, so 170).
+    /// The card never collapses below this while expanded, so the
+    /// output is always visible — the vertical equivalent of
+    /// MinPanelWidth for the horizontal (Manh 2026-11-16: the output
+    /// shrank to nothing when the panel was dragged small, even with
+    /// long text). When the provider is collapsed the border
+    /// MinHeight goes to 0 instead (see SetProviderCardExpanded).</summary>
+    private const double MinOutputCardHeight = 170;
     /// <summary>Window-subclass delegate for the WM_GETMINMAXINFO
     /// minimum-size enforcement. Kept in a field (not a local) so the
     /// GC cannot collect it while the window lives — a collected
@@ -378,7 +379,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         _manualResizeGeneration = null;
         _autoFitRetried = false;
         // Shared panel design (2026-11-16): the panel opens at the
-        // DEFAULT size in Settings (440x450) every show. A manual drag
+        // DEFAULT size in Settings (420x450) every show. A manual drag
         // only enlarges it for the session and is NOT saved back to
         // Settings, so PanelWidth/PanelHeight here ARE the default —
         // opening at them is opening at the default. ResizeToFitContent
@@ -590,7 +591,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         // MoveAndResize, which takes physical pixels (see
         // ResizeToFitContent). At 100% the factor is 1.0 (no change).
         // Shared panel design (2026-11-16): the panel opens at the
-        // DEFAULT size in Settings (440x450) every show — a manual drag
+        // DEFAULT size in Settings (420x450) every show — a manual drag
         // is not saved back, so these ARE the default. ResizeToFitContent
         // grows it if the content is tall.
         var scale = WindowHelpers.DpiScale(this);
@@ -750,12 +751,12 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         // wide — no horizontal snap-back for short text, unlike the
         // drag-release snap-back in SettleResizedSize. Same rule here:
         // if the content is no meaningfully taller at the default
-        // width (440) than at the current width, the extra width is
-        // white space — snap back to 440. Long text keeps its width
+        // width (420) than at the current width, the extra width is
+        // white space — snap back to 420. Long text keeps its width
         // (fewer wraps = a shorter panel). Only runs when the panel
-        // is wider than the default, so a 440-wide panel is untouched.
+        // is wider than the default, so a 420-wide panel is untouched.
         var widthDip = Math.Max(1.0, AppWindow.Size.Width / scale);
-        var defaultW = App.Settings.PanelWidth; // 440
+        var defaultW = App.Settings.PanelWidth; // 420
         if (widthDip > defaultW + 8)
         {
             var hAtDefault = MeasureContentHeight(root, defaultW);
@@ -991,7 +992,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// back any excess (shared panel design 2026-11-16). A drag only
     /// enlarges the panel for the SESSION — it is NOT saved to
     /// Settings anymore, so the next show opens at the default size
-    /// (440x450) again. The window clamp below still applies (the OS
+    /// (420x450) again. The window clamp below still applies (the OS
     /// does not enforce min/max on a borderless window). Called 300 ms
     /// after the last size change of a border drag (OnAppWindowChanged
     /// debounce).</summary>
@@ -1045,12 +1046,12 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         // dragged width does not meaningfully reduce the content
         // height, the extra width was white space (short text already
         // fits at the default width) — snap back to the default width
-        // (440) on release. Long text keeps the dragged width (fewer
+        // (420) on release. Long text keeps the dragged width (fewer
         // wraps = a shorter panel). The +8 threshold mirrors the
         // vertical snap-back: a width that saves more than 8 pt of
         // height is genuinely useful. Cannot measure: keep the dragged
         // width, previous behaviour.
-        var defaultW = App.Settings.PanelWidth; // 440
+        var defaultW = App.Settings.PanelWidth; // 420
         if (clampedW > defaultW + 8 && Content is FrameworkElement snapRoot)
         {
             var hAtDefault = MeasureContentHeight(snapRoot, defaultW);
