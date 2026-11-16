@@ -45,8 +45,11 @@
                       SelectionChanged="OnEnglishVoiceChanged" />
             <ComboBox x:Name="VietnameseVoiceCombo" x:Uid="Settings.Tts.VietnameseVoice" Header="Vietnamese voice"
                       SelectionChanged="OnVietnameseVoiceChanged" />
-            <Button x:Name="AddVoicesButton" x:Uid="Settings.Tts.AddVoices" Content="Add voices" Click="OnAddVoices" />
-            <TextBlock x:Uid="Settings.Tts.VoicesNote" Text="Applies to Windows system TTS. If a chosen voice is no longer installed, the system default voice for that language is used. To add a voice, open Windows Settings → Accessibility → Narrator → Narrator's voice → Add voices."
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button x:Name="AddVoicesButton" x:Uid="Settings.Tts.AddVoices" Content="Add voices" Click="OnAddVoices" />
+                <Button x:Name="RefreshVoicesButton" x:Uid="Settings.Tts.RefreshVoices" Content="Refresh" Click="OnRefreshVoices" />
+            </StackPanel>
+            <TextBlock x:Uid="Settings.Tts.VoicesNote" Text="Applies to Windows system TTS. If a chosen voice is no longer installed, the system default voice for that language is used. To add a voice, open Windows Settings → Accessibility → Narrator → Narrator's voice → Add voices, then click Refresh to see it here."
                        FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
 
             <!-- Test: hear a voice before leaving Settings. -->

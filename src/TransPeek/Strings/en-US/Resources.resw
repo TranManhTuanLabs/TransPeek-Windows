@@ -497,10 +497,13 @@
     <value>Vietnamese voice</value>
   </data>
   <data name="Settings.Tts.VoicesNote.Text" xml:space="preserve">
-    <value>Applies to Windows system TTS. If a chosen voice is no longer installed, the system default voice for that language is used. To add a voice, open Windows Settings → Accessibility → Narrator → Narrator's voice → Add voices.</value>
+    <value>Applies to Windows system TTS. If a chosen voice is no longer installed, the system default voice for that language is used. To add a voice, open Windows Settings → Accessibility → Narrator → Narrator's voice → Add voices, then click Refresh to see it here.</value>
   </data>
   <data name="Settings.Tts.AddVoices.Content" xml:space="preserve">
     <value>Add voices</value>
+  </data>
+  <data name="Settings.Tts.RefreshVoices.Content" xml:space="preserve">
+    <value>Refresh</value>
   </data>
   <data name="Settings.Tts.Test.Text" xml:space="preserve">
     <value>Test</value>

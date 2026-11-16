@@ -161,6 +161,19 @@ public sealed partial class TtsPage : Page
     private async void OnAddVoices(object sender, RoutedEventArgs e)
         => await Launcher.LaunchUriAsync(new Uri("ms-settings:easeofaccess-narrator"));
 
+    /// <summary>Re-read the installed voices (English accents + both
+    /// voice pickers). The lists are only populated when the page is
+    /// navigated to, so a voice installed via "Add voices" while this
+    /// tab is open would not show up until the user clicks Refresh
+    /// (Manh 2026-11-16: installed a voice, list did not update).</summary>
+    private void OnRefreshVoices(object sender, RoutedEventArgs e)
+    {
+        var s = App.Settings;
+        PopulateEnglishAccents(s.EnglishAccent);
+        PopulateVoices(EnglishVoiceCombo, "en", s.EnglishVoiceId);
+        PopulateVoices(VietnameseVoiceCombo, "vi", s.VietnameseVoiceId);
+    }
+
     /// <summary>Play the test text in the chosen test language, using
     /// the voice/rate the user just picked (PickVoice reads the saved
     /// settings). A second click stops it.</summary>

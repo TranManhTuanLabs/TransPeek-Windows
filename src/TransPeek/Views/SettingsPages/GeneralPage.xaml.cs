@@ -8,6 +8,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.Win32;
 using TransPeek.Core.Settings;
+using Windows.System;
 using Windows.UI.Core;
 
 namespace TransPeek.Views.SettingsPages;
