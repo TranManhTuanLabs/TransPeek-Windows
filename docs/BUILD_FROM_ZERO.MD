@@ -52,7 +52,7 @@ taskkill /F /IM TransPeek.exe
 - Bản build sẵn là self-contained (đã gồm .NET runtime) nên chạy được trên
   máy Windows 10/11 chưa cài gì thêm.
 - Chi tiết CI (khi nào chạy, khi nào build app, đọc run đỏ):
-  `GIT-CI-BUILD-SETUP.md` + `BUILD-TEST-WORKFLOW-GITHUB-CI.md`.
+  `TEST-BUILD-WORKFLOW-GITHUB/GIT-CI-BUILD-SETUP.md` + `TEST-BUILD-WORKFLOW-GITHUB/BUILD-TEST-WORKFLOW-GITHUB-CI.md`.
 - Bản build sẵn là self-contained (đã gồm .NET runtime) nên chạy được trên
   máy Windows 10/11 chưa cài gì thêm.
 
@@ -96,8 +96,8 @@ dotnet test tests\TransPeek.Tests\TransPeek.Tests.csproj
 
 ## Liên kết
 
-- [Setup git, CI test + build workflow](GIT-CI-BUILD-SETUP.md)
-- [CI workflow chi tiết](BUILD-TEST-WORKFLOW-GITHUB-CI.md)
+- [Setup git, CI test + build workflow](TEST-BUILD-WORKFLOW-GITHUB/GIT-CI-BUILD-SETUP.md)
+- [CI workflow chi tiết](TEST-BUILD-WORKFLOW-GITHUB/BUILD-TEST-WORKFLOW-GITHUB-CI.md)
 - [Checklist build + test live](WINDOWS-v0.1-TESTING.md)
 - [Kiến trúc](ARCHITECTURE.MD)
 - [Quy tắc làm việc](AGENTS.MD)

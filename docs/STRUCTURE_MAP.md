@@ -13,8 +13,8 @@
 
 | File | Nội dung | Trạng thái |
 |---|---|---|
-| `docs/GIT-CI-BUILD-SETUP.md` | Git, CI test + build workflow, intervention log | Đang dùng |
-| `docs/BUILD-TEST-WORKFLOW-GITHUB-CI.md` | CI workflow chi tiết (đọc run đỏ, gotcha) | Đang dùng |
+| `docs/TEST-BUILD-WORKFLOW-GITHUB/GIT-CI-BUILD-SETUP.md` | Git, CI test + build workflow, intervention log | Đang dùng |
+| `docs/TEST-BUILD-WORKFLOW-GITHUB/BUILD-TEST-WORKFLOW-GITHUB-CI.md` | CI workflow chi tiết (đọc run đỏ, gotcha) | Đang dùng |
 | `docs/DECISIONS.md` | Mọi quyết định đã chốt + lý do | Đang dùng |
 | `docs/WINDOWS-v0.1-TESTING.md` | Checklist build + test live | Đang dùng |
 | `docs/ARCHITECTURE.MD` | Kiến trúc tổng | Bản nháp |
@@ -43,8 +43,9 @@
 
 ```
 docs/
-├── GIT-CI-BUILD-SETUP.md         # git, CI test + build workflow, intervention log
-├── BUILD-TEST-WORKFLOW-GITHUB-CI.md  # CI workflow chi tiết
+├── TEST-BUILD-WORKFLOW-GITHUB/   # doc workflow (setup + CI chi tiết)
+│   ├── GIT-CI-BUILD-SETUP.md         # git, CI test + build workflow, intervention log
+│   └── BUILD-TEST-WORKFLOW-GITHUB-CI.md  # CI workflow chi tiết
 ├── DECISIONS.md                  # mọi quyết định đã chốt + lý do
 ├── WINDOWS-v0.1-TESTING.md       # checklist build + test live
 ├── AGENTS.MD                     # quy tắc làm việc cho AI
