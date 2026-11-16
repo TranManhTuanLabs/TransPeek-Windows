@@ -29,7 +29,7 @@ Hàng `*` là hàng duy nhất dãn theo chiều cao; các hàng `Auto` chỉ ca
 | Row 1 | Auto | **SourceTextBox** — ô nhập, sửa được | `MaxHeight 120`, Margin `0,0,0,4`. Enter = dịch lại, Shift+Enter = xuống dòng. Loa + Copy **nằm trong ô** ở góc dưới-phải (overlay, Margin `0,0,6,8`) |
 | Row 2 | Auto | **Hint** — 11pt | "Enter: translate again • Esc: close • Select a word in the panel to look it up in the dictionary" |
 | Row 3 | Auto | **Hàng ngôn ngữ** — Source ⇄ Target + Capture OCR | ComboBox Source/Target **rộng 112**, nút Swap ⇄ Padding `4,2`, Spacing `4`. Nút "Capture OCR" ở bên phải |
-| Row 4 | `*` | **Output card** (`ProviderCardBorder`) | Margin `0,0,0,8`, CornerRadius 6, BorderThickness 1, `MinHeight 218`. Bên trong 3 hàng: header (tên provider 13pt SemiBold + trạng thái) / divider / TextBox (FontSize 14, MinHeight 60, MaxHeight 260) + **loa/Copy overlay cùng ô TextBox** ở góc dưới-phải (Margin `0,0,6,8`, Spacing 4) |
+| Row 4 | `*` | **Output card** (`ProviderCardBorder`) | Margin `0,0,0,8`, CornerRadius 6, BorderThickness 1, `MinHeight 218`. Bên trong **4 hàng**: header (tên provider 13pt SemiBold + trạng thái) / divider / TextBox (`*`, FontSize 14, MinHeight 60, MaxHeight 260) / **loa/Copy ở hàng Auto riêng** ở cuối card (Margin `0,4,6,8`, Spacing 4) — xem §6 |
 | Row 5 | Auto | **Actions** — Pin + Settings | Căn phải, Spacing 4, Margin `0,0,0,8`. Pin (glyph E718) trước, Settings (E713) sau |
 | Row 6 | Auto | **DictionaryBarControl** — link tra từ điển | |
 | Row 7 | Auto | **Footer** — link GitHub căn giữa + build text căn phải | |
@@ -74,8 +74,8 @@ minH = max(450, fixedH + cardMin + cardMargin + 24)
 
 ## 6. Vấn đề đang mở (OPEN — không đổi size để sửa)
 
-**Bug che loa/Copy (từ #149, vẫn mở ở #159):** nút loa/Copy ở góc dưới-phải ô output
-bị cắt ở mép dưới card khi tra 1–5 line; từ 6 line trở lên không bị.
+**Bug che loa/Copy (từ #149, SỬA ở #160 — chờ Manh test xác nhận):** nút loa/Copy ở
+góc dưới-phải ô output bị cắt ở mép dưới card khi tra 1–5 line; từ 6 line trở lên không bị.
 
 - Đã đo từ video build 158 (1 word "lea", panel 424×550): đáy card ở y≈417,
   nút bị cắt đúng ở y=417 — chỉ hiện ~20px trên ~28px của nút, thiếu ~8px.
@@ -83,9 +83,18 @@ bị cắt ở mép dưới card khi tra 1–5 line; từ 6 line trở lên khô
 - **Giả thuyết "thiếu cố định ~8px" ĐÃ BỊ BÁC BỎ** bởi dữ kiện 17/11 04:31:
   giờ 3-line cũng bị, chỉ từ 6-line trở lên mới không bị. Nếu chỉ thiếu 8px cố định
   thì 3-line (trước đây không bị) không thể tự nhiên bị, và 6-line không thể đặc biệt hơn.
-- **Nguyên nhân thật CHƯA RA.** Đang chờ video/ảnh so sánh 3-line (bị) vs 6-line (không bị)
-  trên cùng một bản để điều tra. **Fix phải nằm trong khung size đã chốt ở §1 — không đổi
-  số để mò.**
+- **Nguyên nhân (kết luận 17/11, #160):** loa/Copy từ #157 nằm **overlay trong cùng ô `*`
+  của TextBox** — hàng `*` lấy theo phần thừa của panel, nên khi panel/card ra thiếu
+  ~8px thì nút (neo ở đáy ô `*`) bị cắt theo mép card. Nâng `MinOutputCardHeight`
+  không sửa được vì chiều cao card bị kẹp bởi hàng `*` của panel, không phải bởi MinHeight.
+  (Nút loa ở ô nhập không bị vì ô nhập nằm ở hàng Auto — không bao giờ bị bóp.)
+- **Fix #160 (cấu trúc, không đổi số):** loa/Copy chuyển sang **hàng Auto riêng**
+  ở cuối card (hàng thứ 4 trong card: header / divider / TextBox `*` / loa-Copy Auto).
+  Grid cấp phát hàng Auto đủ chiều cao TRƯỚC khi chia phần thừa cho hàng `*`, nên
+  nút không bao giờ bị bóp hay cắt theo mép card — hàng TextBox `*` mới là chỗ hấp thụ
+  phần thiếu. Card MinHeight vẫn 218; TextBox `*` ở mức tối thiểu còn ≈146
+  (218 − 2 viền − 29 header − 1 divider − 40 hàng nút), vẫn đủ MinHeight 60.
+  **Chưa xác nhận hết che cho tới khi Manh test bản #160** (1 word, 3 line, 6 line).
 
 Lịch sử mò số (để tránh lặp lại): min output card 150 → 160 (#151) → 170 (#152) →
 180 (#154) → 210 (#155, đo từ ảnh: card 3 line ~206px, card 1 word ~193px, chênh 13px)
@@ -103,7 +112,7 @@ Lịch sử mò số (để tránh lặp lại): min output card 150 → 160 (#1
 
 ## 8. Tham chiếu code
 
-- `src/TransPeek/Views/TranslatePanelWindow.xaml` — layout (RootGrid 8 hàng, card, overlay loa/Copy)
+- `src/TransPeek/Views/TranslatePanelWindow.xaml` — layout (RootGrid 8 hàng, card 4 hàng trong, loa/Copy ở hàng Auto riêng)
 - `src/TransPeek/Views/TranslatePanelWindow.xaml.cs` — hằng số (~dòng 50–121),
   `ComputeMinPanelHeight` (~940), `ResizeToFitContent` (~705), `SettleResizedSize` (~1070),
   `RefreshTopBarFontSize` / `RefreshPopupFontSize` (~355–385)

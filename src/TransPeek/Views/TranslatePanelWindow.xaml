@@ -151,6 +151,25 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
+                    <!-- Speaker row is its OWN Auto row (Manh 2026-11-17,
+                         #160 — the last fix for the covered speaker):
+                         the buttons used to overlay the TextBox cell
+                         (same * row, #157), but a * row is sized to the
+                         leftover space, so when the panel/card came out
+                         ~8 px short the buttons — anchored to the * row's
+                         bottom edge — were clipped by the card edge for
+                         short text (1–5 lines; 6+ lines were fine
+                         because their content filled the box). An Auto
+                         row is allocated its full height BEFORE the *
+                         row gets anything, so the buttons can never be
+                         squeezed or clipped by the card edge — the *
+                         TextBox row absorbs any shortfall instead.
+                         The input's overlay works because the input
+                         sits in an Auto row (never squeezed); the
+                         output sits in a * row, so it needs its own
+                         Auto row. Card MinHeight stays 218; the TextBox
+                         * row is now 218-2-29-1-40 ≈ 146 at minimum. -->
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
                 <Button x:Name="ProviderCardHeaderButton" Grid.Row="0" Click="OnProviderCardHeaderClicked"
                         Background="Transparent" BorderThickness="0" Padding="8,6"
@@ -167,24 +186,21 @@
                          TextWrapping="Wrap" AcceptsReturn="True" BorderThickness="0"
                          Background="Transparent" FontSize="14" MaxHeight="260" MinHeight="60"
                          SelectionChanged="OnTranslationSelectionChanged" />
-                <!-- Speak + Copy INSIDE the output box (Manh 2026-11-17):
-                     like the input, the buttons overlay the TextBox's
-                     bottom-right corner — same cell as the TextBox
-                     (Grid.Row 2), after it in XAML so they paint on
-                     top. This is the simplest fix for the covered
-                     speaker: there is no separate speaker row anymore
-                     to be clipped by the card edge, so the 1-word
-                     short-card case cannot hide the buttons. The
-                     buttons cover a corner of the text, but that is
-                     fine (Manh: drag sideways to see it, and the
-                     buttons are see-through like the input's; no bottom
-                     padding is left for them). The Copy here is the
-                     translation copy; CopyButton shows in normal mode
-                     and CopyTranslationButton in OCR mode
+                <!-- Speak + Copy in their OWN Auto row at the bottom of
+                     the card (Manh 2026-11-17, #160): NOT overlaid on
+                     the TextBox cell anymore (see the RowDefinitions
+                     comment above). The row is Auto, so the Grid gives
+                     the buttons their full height first and the *
+                     TextBox row takes what is left — the buttons can
+                     never be clipped by the card edge. Margin top 4
+                     separates them from the text; bottom 8 keeps them
+                     8 px above the card edge, like the input's. The
+                     Copy here is the translation copy; CopyButton shows
+                     in normal mode and CopyTranslationButton in OCR mode
                      (UpdateCopyButtons toggles them, only one visible
                      at a time) — both labelled just "Copy". Speak
                      first, Copy second (mac order). -->
-                <StackPanel x:Name="ProviderCardSpeakerRow" Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,6,8" Spacing="4">
+                <StackPanel x:Name="ProviderCardSpeakerRow" Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,4,6,8" Spacing="4">
                     <Button x:Name="SpeakTranslationButton" Padding="8,4"
                             ToolTipService.ToolTip="Listen to translation"
                             Click="OnSpeakTranslationClicked">
