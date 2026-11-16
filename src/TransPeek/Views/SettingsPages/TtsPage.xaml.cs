@@ -166,19 +166,14 @@ public sealed partial class TtsPage : Page
         }
     }
 
-    /// <summary>Voices come from Windows (the Narrator voices) — open
-    /// Accessibility → Narrator so the user can add a voice in
-    /// "Narrator's voice" (the app cannot install a Windows voice).
-    /// Moved here from Settings → General (Manh 2026-11-16): all
-    /// voice settings live in this tab now.</summary>
+    /// <summary>Open Windows Settings → Language &amp; region so the
+    /// user can add a voice (Manh 2026-11-16: the old target,
+    /// Accessibility → Narrator, was wrong — TTS voices come from
+    /// Windows language packs, so adding a voice means adding its
+    /// language in Language &amp; region, then Refresh here. This is
+    /// the only button for it now; the separate "Open Windows
+    /// Settings" button that opened the same place is gone).</summary>
     private async void OnAddVoices(object sender, RoutedEventArgs e)
-        => await Launcher.LaunchUriAsync(new Uri("ms-settings:easeofaccess-narrator"));
-
-    /// <summary>Open Windows Settings → Language &amp; region (copied
-    /// from the OCR tab, Manh 2026-11-16): TTS voices also come from
-    /// Windows language packs, like the OCR languages — adding a
-    /// language there adds its voices, which Refresh then picks up.</summary>
-    private async void OnOpenWindowsSettings(object sender, RoutedEventArgs e)
         => await Launcher.LaunchUriAsync(new Uri("ms-settings:regionlanguage"));
 
     /// <summary>Show (or hide) the full list of every installed voice

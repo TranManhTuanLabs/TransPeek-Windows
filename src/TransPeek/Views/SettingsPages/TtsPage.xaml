@@ -46,14 +46,16 @@
             <ComboBox x:Name="VietnameseVoiceCombo" x:Uid="Settings.Tts.VietnameseVoice" Header="Vietnamese voice"
                       SelectionChanged="OnVietnameseVoiceChanged" />
             <StackPanel Orientation="Horizontal" Spacing="8">
+                <!-- Add voices (Manh 2026-11-16): ONE button only, and
+                     it opens Language &amp; region — NOT Narrator. The
+                     old target (Accessibility → Narrator) was wrong:
+                     TTS voices come from Windows language packs, so
+                     adding a voice means adding its language here.
+                     The separate "Open Windows Settings" button that
+                     opened the same place was redundant, so it is
+                     gone. -->
                 <Button x:Name="AddVoicesButton" x:Uid="Settings.Tts.AddVoices" Content="Add voices" Click="OnAddVoices" />
                 <Button x:Name="RefreshVoicesButton" x:Uid="Settings.Tts.RefreshVoices" Content="Refresh" Click="OnRefreshVoices" />
-                <!-- Open Windows Settings (copied from the OCR tab, Manh
-                     2026-11-16): TTS voices also come from Windows
-                     language packs, like the OCR languages — to get a
-                     new voice, add its language in Windows Settings →
-                     Language &amp; region, then Refresh here. -->
-                <Button x:Name="OpenWindowsSettingsButton" x:Uid="Settings.Tts.OpenWindowsSettings" Content="Open Windows Settings" Click="OnOpenWindowsSettings" />
                 <!-- All voices (Manh 2026-11-16): a SEPARATE list of
                      every installed voice — the EN / VI pickers above
                      show only their own language, so this button shows
@@ -62,8 +64,6 @@
                 <Button x:Name="AllVoicesButton" x:Uid="Settings.Tts.AllVoices" Content="All voices" Click="OnShowAllVoices" />
             </StackPanel>
             <ListView x:Name="AllVoicesListView" MaxHeight="200" Visibility="Collapsed" SelectionMode="None" />
-            <TextBlock x:Uid="Settings.Tts.VoicesNote" Text="Applies to Windows system TTS. If a chosen voice is no longer installed, the system default voice for that language is used. To add a voice, open Windows Settings → Accessibility → Narrator → Narrator's voice → Add voices, then click Refresh to see it here."
-                       FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
             <TextBlock x:Uid="Settings.Tts.LanguagePackNote" Text="Voices also come from Windows language packs. To add one, open Windows Settings → Time &amp; language → Language &amp; region → Add a language, then click Refresh to see it here."
                        FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
 
