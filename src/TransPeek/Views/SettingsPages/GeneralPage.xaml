@@ -96,6 +96,8 @@
                       SelectionChanged="OnHoverDelayChanged">
                 <ComboBoxItem Content="300 ms" Tag="300" />
                 <ComboBoxItem Content="500 ms" Tag="500" />
+                <ComboBoxItem Content="800 ms" Tag="800" />
+                <ComboBoxItem Content="1000 ms" Tag="1000" />
             </ComboBox>
 
             <NumberBox x:Name="AutoHideBox" x:Uid="Settings.General.AutoHide" Header="Trigger icon hides after (seconds)"

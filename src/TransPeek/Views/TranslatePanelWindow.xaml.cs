@@ -46,7 +46,14 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// footer) cannot fit in less. Max 800x800: roomy on a big
     /// screen, further clamped to the display work area.</summary>
     private const double MinPanelWidth = 400;
-    private const double MinPanelHeight = 260;
+    /// <summary>Minimum panel height in DIPs. 400 keeps the output
+    /// card usable (header + a line of text + Speak/Copy) — at 260
+    /// the card was squeezed to nothing and the output looked hidden
+    /// (Manh 2026-11-16, first thought Google Translate was broken).
+    /// The fixed rows (title + input + hint + language + actions +
+    /// dictionary + footer + padding) take ~300, so 400 leaves ~100
+    /// for the output card.</summary>
+    private const double MinPanelHeight = 400;
     private const double MaxPanelSize = 800;
     /// <summary>Thickness of the native resize strips along the bottom
     /// and right edges, in PHYSICAL pixels. They sit inside the root
@@ -583,25 +590,26 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
             return;
         var pos = AppWindow.Position;
         var work = WindowHelpers.DisplayWorkArea(pos.X, pos.Y);
-        var minHeight = Math.Max(1, (int)Math.Round(260 * scale));
+        var minHeight = Math.Max(1, (int)Math.Round(MinPanelHeight * scale));
         var maxHeight = Math.Max(minHeight, work.Height - 16);
-        // Baseline (Manh 2026-11-15 — vertical resize, full Windows
-        // approach): the panel never shrinks below the user's persisted
-        // height — UNLESS the translation text all fits in the output
-        // box, in which case holding it tall would leave white space
-        // below the footer, so it shrinks to the content height. The
-        // text is "long" (needs the floor) when the ScrollViewer says
-        // the full text is taller than the capped box; short text has
-        // ExtentHeight <= the cap. A new show with short text after a
-        // tall manual resize therefore opens compact again instead of
-        // carrying the tall height (and its white space) forward.
-        var baseline = desired;
+        // Baseline (Manh 2026-11-16 — the height IS remembered, like
+        // the width): the panel never opens below the user's persisted
+        // PanelHeight, even for short text. The old rule shrank short
+        // text to the content height on every new show, so a height
+        // the user dragged was "forgotten" on reopen while the width
+        // stuck — and a short-text panel could open at the 260 floor
+        // with the output squeezed away. The persisted height is
+        // already the compact "needed" height for short text (the
+        // snap-back in PersistResizedSize saves that, not the dragged
+        // height), so holding it as the floor does not leave white
+        // space; it only stops the panel opening smaller than the
+        // user left it.
+        var baseline = Math.Max(App.Settings.PanelHeight, desired);
+        // Long text (the ScrollViewer says the full text is taller
+        // than the capped box) still needs the output cap raised
+        // below, so the box grows past 260 and fills the tall window.
         var sv = FindDescendant<ScrollViewer>(TranslationTextBox);
         var longText = sv is not null && _providerCardExpanded && sv.ExtentHeight > TranslationTextMaxHeight;
-        if (longText)
-        {
-            baseline = Math.Max(App.Settings.PanelHeight, desired);
-        }
         var height = (int)Math.Clamp(Math.Ceiling(baseline * scale), minHeight, maxHeight);
         var width = AppWindow.Size.Width;
         var y = pos.Y;

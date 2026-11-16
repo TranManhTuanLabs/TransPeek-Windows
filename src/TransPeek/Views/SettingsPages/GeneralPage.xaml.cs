@@ -41,7 +41,13 @@ public sealed partial class GeneralPage : Page
         _loading = true;
         var s = App.Settings;
         WatchSelectionToggle.IsOn = s.WatchSelection;
-        HoverDelayCombo.SelectedIndex = s.HoverDelayMs == 500 ? 1 : 0;
+        HoverDelayCombo.SelectedIndex = s.HoverDelayMs switch
+        {
+            500 => 1,
+            800 => 2,
+            1000 => 3,
+            _ => 0, // 300 ms (or an older saved value) -> first item.
+        };
         AutoHideBox.Value = s.TriggerIconAutoHideSeconds;
         MainFontSizeSlider.Value = s.PopupFontSize;
         MainFontSizeSlider.Header = MainFontSizeLabel(s.PopupFontSize);

@@ -31,7 +31,7 @@ public sealed class AppSettings
 
     // --- Trigger icon / float panel ---
     /// <summary>Hover delay before the panel opens, in milliseconds (300 or 500).</summary>
-    public int HoverDelayMs { get; set; } = 300;
+    public int HoverDelayMs { get; set; } = 500;
     /// <summary>Panel content font size in points (the source and
     /// translation text). Mac parity: same setting name
     /// (popupFontSize); mac default is 14. Slider 12-24 in

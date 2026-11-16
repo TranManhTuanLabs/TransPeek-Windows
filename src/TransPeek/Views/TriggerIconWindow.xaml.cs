@@ -1,5 +1,5 @@
 // Trigger icon (SPEC §3.1): the small bubble tile that appears near
-// the text selection. Hover (~300 ms, configurable) opens the float
+// the text selection. Hover (~500 ms, configurable) opens the float
 // panel (translate); click switches the mark to a speaker (listen/TTS
 // mode) and does NOT open the panel — the mac model
 // (TriggerIconController: click-to-speak cancels the hover timer and
