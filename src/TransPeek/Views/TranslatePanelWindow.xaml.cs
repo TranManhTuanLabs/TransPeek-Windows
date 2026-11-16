@@ -862,11 +862,27 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// huge font size cannot make the minimum taller than the screen.</summary>
     private double ComputeMinPanelHeight()
     {
+        // Force layout first: RowDefinition.ActualHeight is the LAST
+        // layout's value, and MinSizeSubclassProc (WM_GETMINMAXINFO)
+        // can call this before any layout has run for the current
+        // content — a stale/tall ActualHeight would inflate the OS
+        // minimum and clamp the window tall (Manh 2026-11-16, #149:
+        // panel opened ~800 tall with a huge empty output on first
+        // open). UpdateLayout is a no-op when nothing is dirty, so
+        // calling it here is cheap on the ResizeToFitContent path
+        // (which already laid out) and corrective on the OS path.
+        RootGrid.UpdateLayout();
         var fixedH = 0.0;
         foreach (var row in RootGrid.RowDefinitions)
         {
-            if (!ReferenceEquals(row, OutputCardRow))
-                fixedH += row.ActualHeight;
+            // Skip the * output row by TYPE as well as by reference:
+            // the * row takes the leftover height, so its ActualHeight
+            // is the window height, not content — including it would
+            // make the minimum grow with the window itself.
+            if (row.Height.GridUnitType == GridUnitType.Star
+                || ReferenceEquals(row, OutputCardRow))
+                continue;
+            fixedH += row.ActualHeight;
         }
         var minH = Math.Max(MinPanelHeight, fixedH + MinOutputCardHeight + 24);
         var work = WindowHelpers.DisplayWorkArea(AppWindow.Position.X, AppWindow.Position.Y);
@@ -892,8 +908,18 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
             return;
         UpdateResizeRegions();
         var size = sender.Size;
+        // A programmatic MoveAndResize sets exactly _lastProgrammaticSize
+        // — but the OS may adjust it by a pixel or two (DPI rounding,
+        // min/max clamping), so match within a small tolerance instead
+        // of exactly. An exact match misread a 1 px OS adjustment as a
+        // USER drag, which suppressed auto-fit for the whole show
+        // (_manualResizeGeneration = _epoch) and left the panel stuck
+        // at the adjusted size (Manh 2026-11-16, #149 first-open tall
+        // panel). A real user drag moves by far more than 2 px.
+        const int programmaticTolerancePx = 2;
         if (_lastProgrammaticSize is { } expected
-            && size.Width == expected.Width && size.Height == expected.Height)
+            && Math.Abs(size.Width - expected.Width) <= programmaticTolerancePx
+            && Math.Abs(size.Height - expected.Height) <= programmaticTolerancePx)
         {
             // Our own MoveAndResize (show / auto-fit): not a user drag.
             _lastProgrammaticSize = null;
