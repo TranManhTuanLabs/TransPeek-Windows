@@ -60,6 +60,7 @@ public sealed partial class GeneralPage : Page
         ScanHotkeyBox.Text = s.ScanHotkey;
         SettingsHotkeyBox.Text = s.SettingsHotkey;
         LaunchAtLoginToggle.IsOn = IsLaunchAtLoginSet();
+        RefreshTtsVoices();
         _loading = false;
     }
 
@@ -70,6 +71,23 @@ public sealed partial class GeneralPage : Page
         SettingsStore.Save(App.Settings);
         _onSaved?.Invoke();
     }
+
+    /// <summary>Text-to-speech voices come from Windows (the Narrator
+    /// voices) — list what this machine has. The button opens
+    /// Accessibility → Narrator so the user can add a voice in
+    /// "Narrator's voice" (the app cannot install a Windows voice,
+    /// so a user with no voice installed needs this path).</summary>
+    private void RefreshTtsVoices()
+    {
+        var voices = SystemSpeechService.InstalledVoices;
+        TtsVoicesText.Text = voices.Count == 0
+            ? AppStrings.Get("Settings.General.NoTtsVoices", "No text-to-speech voice installed on this machine.")
+            : AppStrings.Get("Settings.General.TtsVoicesInstalled", "Installed: {0}",
+                string.Join(", ", voices.Select(v => v.DisplayName)));
+    }
+
+    private async void OnAddVoices(object sender, RoutedEventArgs e)
+        => await Launcher.LaunchUriAsync(new Uri("ms-settings:easeofaccess-narrator"));
 
     private void OnWatchSelectionToggled(object sender, RoutedEventArgs e)
     {
