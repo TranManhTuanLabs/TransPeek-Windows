@@ -58,8 +58,18 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// output card.</summary>
     private const double MinPanelHeight = 450;
     /// <summary>Minimum height of the output card (ProviderCardBorder),
-    /// in DIPs. Must match the MinHeight="218" in XAML: header (~34) +
-    /// one divider (1) + text box minimum (60, MinHeight on the
+    /// in DIPs. Must match the MinHeight in XAML.
+    /// DIAGNOSTIC +20 (Manh 2026-11-17, #163): the speaker was STILL covered in #161
+    /// even with a 1-line hint, and dragging the bottom edge down past the cover point
+    /// clears it — while the OS min-track (WM_GETMINMAXINFO = ComputeMinPanelHeight)
+    /// stops an upward drag exactly AT the cover point. So the computed minimum itself
+    /// is ~8 px short of the true need (the formula is missing ~8 px somewhere).
+    /// Raising the card minimum 218 -> 238 lifts the computed minimum by 20 to test
+    /// whether height is the cause. If #163 clears the cover, the next step is to find
+    /// the exact missing px in the formula (not to keep the +20) — and to check whether
+    /// the #162 overlay alone would have fixed it. If #163 still covers, height is
+    /// ruled out and the cause is elsewhere (position/clipping, not height).
+    /// History: 218 = header (~34) + one divider (1) + text box minimum (60, MinHeight on the
     /// TranslationTextBox so the output never collapses) + Speak/Copy
     /// row (~36) + margins (~19), plus 60 of breathing room (Manh
     /// 2026-11-16: at 150 the box was a touch small and clipped the
@@ -90,7 +100,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// nothing when the panel was dragged small, even with long
     /// text). When the provider is collapsed the border MinHeight
     /// goes to 0 instead (see SetProviderCardExpanded).</summary>
-    private const double MinOutputCardHeight = 218;
+    private const double MinOutputCardHeight = 238;
     /// <summary>Window-subclass delegate for the WM_GETMINMAXINFO
     /// minimum-size enforcement. Kept in a field (not a local) so the
     /// GC cannot collect it while the window lives — a collected

@@ -127,6 +127,20 @@ dưới card khi tra 1–5 line; từ 6 line trở lên không bị. **Nguyên n
   hơn lúc có hàng loa riêng (≈146). **Sau #162 thì saved pre-release bản #162.**
   **Chưa xác nhận cho tới khi Manh test bản #162** (loa/Copy trong ô output, hết che ở
   400/420/600 + 1 word / 3 line / 6 line).
+- **#161 VẪN BỊ CHE (Manh test 17/11 06:17) — giả thuyết hint BỊ BÁC BỎ:** hint đã 1 dòng
+  mà vẫn che, nên hint không phải nguyên nhân. Đã kiểm tra code: không hàng nào khác wrap
+  theo chiều rộng (TitleBar xếp dọc, DictionaryBar xếp ngang, footer, hàng ngôn ngữ đều
+  không wrap); DictionaryBar set link đồng bộ (chỉ favicon tải async, không đổi chiều cao);
+  RootGrid Padding đúng 12 nên +24 trong công thức là đúng.
+- **Thí nghiệm #163 (Manh 17/11 06:23–06:24: "tăng height lên xem hết không", "min height
+  mở lần đầu"):** kéo đáy xuống qua điểm che là hết che; kéo đáy lên thì OS min-track
+  (WM_GETMINMAXINFO = ComputeMinPanelHeight) chặn đúng TẠI điểm che — tức chính min
+  tính ra đã thiếu ~8px so với nhu cầu thật. #163 tăng MinOutputCardHeight 218 → 238
+  (+20, cả const C# và MinHeight trong XAML) để min tính ra tăng đúng 20 và panel mở cao
+  thêm 20. Nếu #163 hết che → chiều cao đúng là nguyên nhân (thiếu ~8–20px trong chuỗi
+  min); bước sau là tìm đúng số px thiếu trong công thức, KHÔNG giữ +20. Nếu #163 vẫn
+  che → chiều cao bị loại trừ, nguyên nhân ở chỗ khác (vị trí/cắt xén, không phải cao).
+  Số chốt §1 (min card 218, min panel 450) CHƯA đổi — chỉ đổi sau khi thí nghiệm xác nhận.
 
 Lịch sử mò số (để tránh lặp lại): min output card 150 → 160 (#151) → 170 (#152) →
 180 (#154) → 210 (#155, đo từ ảnh: card 3 line ~206px, card 1 word ~193px, chênh 13px)
