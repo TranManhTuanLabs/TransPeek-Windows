@@ -1,8 +1,9 @@
 # Float / Popup Panel — UX Spec (CHỐT)
 
-> **Trạng thái: CHỐT — 17/11/2026, theo build #161 (commit `c262eac`).**
+> **Trạng thái: CHỐT — 17/11/2026, theo build #162 (commit `2053f9b`).**
 > Các con số trong doc này là **spec**. Đổi bất kỳ số đã chốt nào cũng cần Manh duyệt trước.
-> Spec đã bao gồm: cấu trúc card 4 hàng (#160) + hint 1 dòng (#161).
+> Spec đã bao gồm: cấu trúc card 4 hàng (#160) + hint 1 dòng (#161) + loa/Copy overlay
+> trong ô output (#162).
 > Doc này chỉ cho **Windows**. Bên mac có yêu cầu tương tự nhưng **chưa viết panel UX vì chưa chốt size** — khi nào mac chốt thì viết riêng, đối chiếu với doc này.
 
 ## 1. Kích thước chốt (locked sizes)
