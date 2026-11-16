@@ -11,7 +11,18 @@ public sealed class GoogleTranslateResponseTests
         const string body = """
             {"sentences":[{"trans":"Xin "},{"trans":"chào"}]}
             """;
-        Assert.Equal("Xin chào", GoogleTranslateProvider.ParseTranslation(body));
+        Assert.Equal("Xin chào", GoogleTranslateProvider.ParseTranslation(body).Text);
+    }
+
+    [Fact]
+    public void ParseTranslation_ReturnsDetectedSourceLanguage()
+    {
+        const string body = """
+            {"sentences":[{"trans":"Xin chào"}],"src":"en"}
+            """;
+        var result = GoogleTranslateProvider.ParseTranslation(body);
+        Assert.Equal("Xin chào", result.Text);
+        Assert.Equal("en", result.DetectedSourceLanguage);
     }
 
     [Fact]

@@ -8,14 +8,14 @@ public sealed class TranslationCoordinatorTests
 {
     private sealed class FakeProvider : ITranslationProvider
     {
-        private readonly Func<string, Task<string>> _translate;
+        private readonly Func<string, Task<TranslationProviderResult>> _translate;
 
-        public FakeProvider(string id, string name, Func<string, Task<string>>? translate = null,
+        public FakeProvider(string id, string name, Func<string, Task<TranslationProviderResult>>? translate = null,
             bool isConfigured = true)
         {
             Id = id;
             DisplayName = name;
-            _translate = translate ?? (text => Task.FromResult($"[{name}] {text}"));
+            _translate = translate ?? (text => Task.FromResult(new TranslationProviderResult($"[{name}] {text}", null)));
             IsConfigured = isConfigured;
         }
 
@@ -25,7 +25,7 @@ public sealed class TranslationCoordinatorTests
         public bool NeedsApiKey => false;
         public bool IsAvailable => true;
         public bool IsConfigured { get; }
-        public Task<string> TranslateAsync(string text, string? sourceLang, string targetLang,
+        public Task<TranslationProviderResult> TranslateAsync(string text, string? sourceLang, string targetLang,
             CancellationToken cancellationToken = default) => _translate(text);
     }
 
@@ -78,6 +78,16 @@ public sealed class TranslationCoordinatorTests
         var result = await coordinator.TranslateAsync("hello", null, "vi");
         Assert.Equal("[OpenAI] hello", result.Text);
         Assert.Equal("OpenAI", result.ProviderName);
+    }
+
+    [Fact]
+    public async Task TranslateAsync_PassesThroughDetectedSourceLanguage()
+    {
+        var google = new FakeProvider("google", "Google Translate",
+            text => Task.FromResult(new TranslationProviderResult($"[Google] {text}", "en")));
+        var coordinator = new TranslationCoordinator(Settings("google", "google"), [google]);
+        var result = await coordinator.TranslateAsync("hello", null, "vi");
+        Assert.Equal("en", result.DetectedSourceLanguage);
     }
 
     [Fact]

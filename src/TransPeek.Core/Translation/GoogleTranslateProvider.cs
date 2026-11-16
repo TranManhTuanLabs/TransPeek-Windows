@@ -23,7 +23,7 @@ public sealed class GoogleTranslateProvider : ITranslationProvider
     public bool IsAvailable => true;
     public bool IsConfigured => true;
 
-    public async Task<string> TranslateAsync(string text, string? sourceLang, string targetLang,
+    public async Task<TranslationProviderResult> TranslateAsync(string text, string? sourceLang, string targetLang,
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(text))
@@ -88,9 +88,10 @@ public sealed class GoogleTranslateProvider : ITranslationProvider
         return ParseTranslation(body);
     }
 
-    /// <summary>Parse a GTX JSON body into the translated text. Internal
-    /// so tests can verify it without hitting the network.</summary>
-    internal static string ParseTranslation(string body)
+    /// <summary>Parse a GTX JSON body into the translated text and the
+    /// detected source language ("src"). Internal so tests can verify
+    /// it without hitting the network.</summary>
+    internal static TranslationProviderResult ParseTranslation(string body)
     {
         GtxResponse? parsed;
         try
@@ -105,7 +106,7 @@ public sealed class GoogleTranslateProvider : ITranslationProvider
         var translated = string.Concat(parsed?.Sentences?.Select(s => s.Trans) ?? Enumerable.Empty<string>());
         if (string.IsNullOrWhiteSpace(translated))
             throw TranslationException.EmptyResult();
-        return translated;
+        return new TranslationProviderResult(translated, parsed?.Src);
     }
 
     // --- Response model (only the fields we use) ---
@@ -114,6 +115,11 @@ public sealed class GoogleTranslateProvider : ITranslationProvider
     {
         [JsonPropertyName("sentences")]
         public List<GtxSentence>? Sentences { get; set; }
+
+        /// <summary>Detected source language (BCP 47, e.g. "en") —
+        /// present when the request asked for auto-detect.</summary>
+        [JsonPropertyName("src")]
+        public string? Src { get; set; }
     }
 
     internal sealed class GtxSentence

@@ -62,7 +62,7 @@ public sealed class OpenAiCompatibleProvider : ITranslationProvider
     public bool IsAvailable => true;
     public bool IsConfigured => !string.IsNullOrWhiteSpace(_definition.ApiKey);
 
-    public async Task<string> TranslateAsync(string text, string? sourceLang, string targetLang,
+    public async Task<TranslationProviderResult> TranslateAsync(string text, string? sourceLang, string targetLang,
         CancellationToken cancellationToken = default)
     {
         if (!IsConfigured)
@@ -128,7 +128,13 @@ public sealed class OpenAiCompatibleProvider : ITranslationProvider
         var translated = parsed?.Choices?.FirstOrDefault()?.Message?.Content?.Trim();
         if (string.IsNullOrWhiteSpace(translated))
             throw TranslationException.EmptyResult();
-        return translated;
+        // OpenAI-compatible endpoints do not report a detected source
+        // language — the caller uses the requested source language
+        // (null when it was auto-detect, i.e. unknown).
+        var detected = string.IsNullOrWhiteSpace(sourceLang) || sourceLang == LanguageCode.Auto
+            ? null
+            : sourceLang;
+        return new TranslationProviderResult(translated, detected);
     }
 
     // --- Request / response models (OpenAI chat/completions shape) ---

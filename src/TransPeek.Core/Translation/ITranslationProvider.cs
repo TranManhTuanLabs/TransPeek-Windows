@@ -37,9 +37,20 @@ public interface ITranslationProvider
     /// (BCP 47, or null for auto-detect) to <paramref name="targetLang"/>
     /// (BCP 47). Throws <see cref="TranslationException"/> on failure.
     /// </summary>
-    Task<string> TranslateAsync(string text, string? sourceLang, string targetLang,
+    Task<TranslationProviderResult> TranslateAsync(string text, string? sourceLang, string targetLang,
         CancellationToken cancellationToken = default);
 }
+
+/// <summary>What a provider returns: the translated text, plus the
+/// source language it actually detected (BCP 47, e.g. "en") when the
+/// caller asked for auto-detect. Null when the provider does not
+/// report it (OpenAI-compatible endpoints) or the source was given
+/// explicitly — the caller then just uses the requested source
+/// language. The panel's source speaker needs it: with source "auto"
+/// the text's language is unknown until the provider detects it, and
+/// speaking English text in the default (Vietnamese "An") voice is
+/// the "always An" bug (Manh 2026-11-16).</summary>
+public sealed record TranslationProviderResult(string Text, string? DetectedSourceLanguage);
 
 /// <summary>Errors surfaced to the user in the float panel. Messages must
 /// stay short and actionable — never fail silently (SPEC §3.1).</summary>

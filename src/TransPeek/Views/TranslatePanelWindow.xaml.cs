@@ -85,7 +85,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// not on every pixel.</summary>
     private DispatcherTimer? _resizePersistTimer;
 
-    private readonly Func<string, Task<(string? Translation, string ProviderName)>> _translateAsync;
+    private readonly Func<string, Task<(string? Translation, string ProviderName, string? DetectedSourceLanguage)>> _translateAsync;
     private readonly Func<Task> _ocrRequested;
     private readonly ClickOutsideMonitor _clickOutside;
     private readonly EscapeKeyMonitor _escapeKey;
@@ -94,6 +94,13 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     private bool _pinned;
     private string _sourceText = "";
     private string _translationText = "";
+    /// <summary>Source language the translation provider detected for
+    /// the current text (BCP 47, e.g. "en"), when the source was
+    /// "auto". The source speaker uses it to pick the right voice —
+    /// with "auto" the setting alone cannot tell English from
+    /// Vietnamese, so the default voice ("An") read everything.
+    /// Null when the provider did not report one.</summary>
+    private string? _detectedSourceLanguage;
     /// <summary>Text currently selected inside the panel (source or
     /// translation), or null to look up the source text. Mac parity:
     /// dictionary links follow the live selection.</summary>
@@ -118,7 +125,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     private readonly SystemSpeechService _speech = new();
 
     public TranslatePanelWindow(
-        Func<string, Task<(string? Translation, string ProviderName)>> translateAsync,
+        Func<string, Task<(string? Translation, string ProviderName, string? DetectedSourceLanguage)>> translateAsync,
         Func<Task> ocrRequested,
         Action openSettings)
     {
@@ -379,10 +386,11 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
 
     private async Task TranslateAndShowAsync(string text)
     {
-        var (translation, providerName) = await _translateAsync(text);
+        var (translation, providerName, detectedSourceLanguage) = await _translateAsync(text);
         // The user may have closed the panel while translating.
         if (!_visible)
             return;
+        _detectedSourceLanguage = detectedSourceLanguage;
         ShowResult(text, translation, providerName);
     }
 
@@ -450,7 +458,12 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// language. Click while speaking stops. A second click on the
     /// same button therefore toggles speak/stop.</summary>
     private async void OnSpeakSourceClicked(object sender, RoutedEventArgs e)
-        => await SpeakAsync(_sourceText, App.Settings.SourceLanguage);
+        // Source language for the voice: the provider's detected
+        // language when the source was "auto" (that is what the text
+        // actually is), else the source language the user picked.
+        // Without the detected language, "auto" fell back to the
+        // system default voice ("An") for every language.
+        => await SpeakAsync(_sourceText, _detectedSourceLanguage ?? App.Settings.SourceLanguage);
 
     private async void OnSpeakTranslationClicked(object sender, RoutedEventArgs e)
         => await SpeakAsync(_translationText, App.Settings.TargetLanguage);

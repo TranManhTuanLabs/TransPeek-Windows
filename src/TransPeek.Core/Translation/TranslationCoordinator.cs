@@ -7,10 +7,13 @@ using TransPeek.Core.Settings;
 
 namespace TransPeek.Core.Translation;
 
-/// <summary>Translation result: the translated text and the provider
+/// <summary>Translation result: the translated text, the provider
 /// that actually produced it (the panel shows "via Google Translate",
-/// etc.).</summary>
-public sealed record TranslationResult(string Text, string ProviderName);
+/// etc.), and the source language the provider detected (BCP 47) when
+/// the caller asked for auto-detect — the panel's source speaker uses
+/// it to pick the right voice. Null when the provider does not report
+/// it.</summary>
+public sealed record TranslationResult(string Text, string ProviderName, string? DetectedSourceLanguage);
 
 public sealed class TranslationCoordinator
 {
@@ -70,8 +73,8 @@ public sealed class TranslationCoordinator
             {
                 var result = await provider.TranslateAsync(text, sourceLang, targetLang, cancellationToken)
                     .ConfigureAwait(false);
-                if (!string.IsNullOrWhiteSpace(result))
-                    return new TranslationResult(result, provider.DisplayName);
+                if (!string.IsNullOrWhiteSpace(result.Text))
+                    return new TranslationResult(result.Text, provider.DisplayName, result.DetectedSourceLanguage);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {

@@ -301,7 +301,7 @@ public sealed partial class App : Application
         }
     }
 
-    private async Task<(string? Translation, string ProviderName)> TranslateAsync(string text)
+    private async Task<(string? Translation, string ProviderName, string? DetectedSourceLanguage)> TranslateAsync(string text)
     {
         try
         {
@@ -309,11 +309,11 @@ public sealed partial class App : Application
                 text,
                 sourceLang: Settings.SourceLanguage == LanguageCode.Auto ? null : Settings.SourceLanguage,
                 targetLang: Settings.TargetLanguage);
-            return (result.Text, result.ProviderName);
+            return (result.Text, result.ProviderName, result.DetectedSourceLanguage);
         }
         catch (Exception ex)
         {
-            return ($"{AppStrings.Get("Translation.ErrorPrefix", "[Translation error: ")}{ex.Message}]", "");
+            return ($"{AppStrings.Get("Translation.ErrorPrefix", "[Translation error: ")}{ex.Message}]", "", null);
         }
     }
 
