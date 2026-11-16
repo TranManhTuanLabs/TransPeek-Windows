@@ -78,6 +78,16 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// delegate would crash the next border drag.</summary>
     private NativeMethods.WindowSubclassProc? _minSizeSubclassProc;
     private const double MaxPanelSize = 800;
+    /// <summary>Maximum panel WIDTH in logical pixels (DIPs).
+    /// Separate from MaxPanelSize (800, the height cap): the width
+    /// cap used to be the same 800, so dragging the panel wide went
+    /// to ~double the default width (440) and SettleResizedSize
+    // clamped it back to 800 — Manh 2026-11-17: that double-width
+    // snap-back was too wide. 600 is ~1.4x the 420 default: wide
+    // enough for long text (fewer wraps) without the panel ever
+    // spanning near half the screen. The height cap stays 800 so
+    // long text can still grow tall.</summary>
+    private const double MaxPanelWidth = 600;
     /// <summary>Thickness of the native resize strips along the bottom
     /// and right edges, in PHYSICAL pixels. They sit inside the root
     /// Grid's 12 px padding, so they never cover interactive content.
@@ -756,6 +766,11 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         // (fewer wraps = a shorter panel). Only runs when the panel
         // is wider than the default, so a 420-wide panel is untouched.
         var widthDip = Math.Max(1.0, AppWindow.Size.Width / scale);
+        // Never wider than MaxPanelWidth (600): a drag past it is
+        // clamped back by SettleResizedSize, but a new translation
+        // arriving mid-drag (before the 300 ms settle) must not keep
+        // an over-wide panel either.
+        widthDip = Math.Clamp(widthDip, MinPanelWidth, Math.Max(MinPanelWidth, MaxPanelWidth));
         var defaultW = App.Settings.PanelWidth; // 420
         if (widthDip > defaultW + 8)
         {
@@ -1008,7 +1023,11 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         var w = size.Width / scale;
         var h = size.Height / scale;
         var work = WindowHelpers.DisplayWorkArea(AppWindow.Position.X, AppWindow.Position.Y);
-        var maxW = Math.Min(MaxPanelSize, work.Width / scale);
+        // Width caps at MaxPanelWidth (600), not MaxPanelSize (800):
+        // the height may grow to 800 for long text, but the width
+        // must not — 800 was ~double the default and the drag clamp
+        // snapped back to it (Manh 2026-11-17).
+        var maxW = Math.Min(MaxPanelWidth, work.Width / scale);
         var maxH = Math.Min(MaxPanelSize, work.Height / scale);
         var clampedW = Math.Clamp(w, MinPanelWidth, Math.Max(MinPanelWidth, maxW));
         var minPanelH = ComputeMinPanelHeight();
