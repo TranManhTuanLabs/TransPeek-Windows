@@ -58,19 +58,15 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// output card.</summary>
     private const double MinPanelHeight = 450;
     /// <summary>Minimum height of the output card (ProviderCardBorder),
-    /// in DIPs. Must match the MinHeight="110" in XAML: header (~34) +
-    /// one text line (~24) + Speak/Copy row (~36) + margins. The card
-    /// never collapses below this, so the output is always visible.</summary>
-    private const double MinOutputCardHeight = 110;
-    /// <summary>Light-orange 1 px border around the panel (COLORREF
-    /// 0x00BBGGRR: #FFB74D). Windows draws a faint 1 px accent border
-    /// around top-level windows by default — on Manh's machine the
-    /// accent is light orange, and he liked the top edge so much he
-    /// asked to keep it as decor (Manh 2026-11-16). Setting it
-    /// explicitly here makes it a fixed light orange instead of
-    /// following the Windows accent colour, so it stays the same on
-    /// any machine. Change this value to change the decor colour.</summary>
-    private const int PanelBorderColor = 0x004DB7FF;
+    /// in DIPs. Must match the MinHeight="150" in XAML: header (~34) +
+    /// one divider (1) + text box minimum (60, MinHeight on the
+    /// TranslationTextBox so the output never collapses) + Speak/Copy
+    /// row (~36) + margins (~19). The card never collapses below this,
+    /// so the output is always visible — the vertical equivalent of
+    /// MinPanelWidth for the horizontal (Manh 2026-11-16: the output
+    /// shrank to nothing when the panel was dragged small, even with
+    /// long text).</summary>
+    private const double MinOutputCardHeight = 150;
     /// <summary>Window-subclass delegate for the WM_GETMINMAXINFO
     /// minimum-size enforcement. Kept in a field (not a local) so the
     /// GC cannot collect it while the window lives — a collected
@@ -185,18 +181,12 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
                 // size is tracked in OnAppWindowChanged.
                 WindowHelpers.MakeBorderlessTopmost(this, resizable: true);
                 WindowHelpers.MakeToolWindow(this);
-                // Light-orange 1 px border as decor (Manh 2026-11-16):
-                // Windows draws a faint accent border by default; set
-                // it explicitly to the fixed light orange so it does
-                // not follow the machine's accent colour.
-                var hwnd = WindowNative.GetWindowHandle(this);
-                var borderColor = PanelBorderColor;
-                NativeMethods.DwmSetWindowAttribute(hwnd, NativeMethods.DWMWA_BORDER_COLOR, ref borderColor, sizeof(int));
                 // Minimum-size enforcement (WM_GETMINMAXINFO, Manh
                 // 2026-11-16): the OS stops the border drag at the
                 // minimum, so the panel can never be dragged small
                 // enough to hide the output. The post-hoc clamp in
                 // PersistResizedSize stays as a backstop.
+                var hwnd = WindowNative.GetWindowHandle(this);
                 InstallMinSizeSubclass(hwnd);
                 // Native drag region (see UpdateCaptionRegion): set once
                 // the layout is known, and again whenever the title bar
@@ -900,11 +890,13 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     }
 
     /// <summary>Clamp a user-resized panel to the manual limits and the
-    /// display work area, then persist the size (mac onEnded). Width is
-    /// always saved; height only when it moved more than 8 pt from the
-    /// saved value (mac rule), so a tiny nudge does not become the new
-    /// auto-fit baseline. Called 300 ms after the last size change of
-    /// a border drag (OnAppWindowChanged debounce).</summary>
+    /// display work area, then persist the size (mac onEnded). Width
+    /// and height are both saved on any change over 0.5 pt — the same
+    /// threshold — so a vertical drag remembers its position just like
+    /// a horizontal one (Manh 2026-11-16: vertical drags did not
+    /// remember, horizontal did; the old mac rule only saved height
+    /// past 8 pt). Called 300 ms after the last size change of a
+    /// border drag (OnAppWindowChanged debounce).</summary>
     private void PersistResizedSize()
     {
         // No _visible guard: the timer only starts on a user resize
@@ -956,7 +948,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
             App.Settings.PanelWidth = clampedW;
             changed = true;
         }
-        if (Math.Abs(clampedH - App.Settings.PanelHeight) > 8)
+        if (Math.Abs(clampedH - App.Settings.PanelHeight) > 0.5)
         {
             App.Settings.PanelHeight = clampedH;
             changed = true;

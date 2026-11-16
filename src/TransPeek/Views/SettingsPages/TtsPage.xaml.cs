@@ -36,8 +36,8 @@ public sealed partial class TtsPage : Page
         SelectComboByTag(SpeechRateCombo, FormatRate(s.SpeechRate));
         AutoPlaySourceToggle.IsOn = s.AutoPlaySource;
         AutoPlayTranslationToggle.IsOn = s.AutoPlayTranslation;
-        PopulateVoices(EnglishVoiceCombo, "en", s.EnglishVoiceId);
-        PopulateVoices(VietnameseVoiceCombo, "vi", s.VietnameseVoiceId);
+        PopulateVoices(EnglishVoiceCombo, s.EnglishVoiceId);
+        PopulateVoices(VietnameseVoiceCombo, s.VietnameseVoiceId);
         TestLanguageCombo.SelectedIndex = 0;
         _loading = false;
     }
@@ -50,6 +50,15 @@ public sealed partial class TtsPage : Page
         _onSaved?.Invoke();
     }
 
+    /// <summary>Does a voice language belong to a language prefix?
+    /// Matches the bare code ("en") as well as a region tag ("en-US",
+    /// "en-GB"). The old StartsWith(prefix + "-") missed voices whose
+    /// Language is just the bare code, so a newly installed voice did
+    /// not show up after Refresh (Manh 2026-11-16).</summary>
+    private static bool MatchesLanguagePrefix(string language, string prefix)
+        => language.Equals(prefix, StringComparison.OrdinalIgnoreCase)
+        || language.StartsWith(prefix + "-", StringComparison.OrdinalIgnoreCase);
+
     /// <summary>English accents = the distinct Language tags of the
     /// installed English voices (en-US, en-GB, ...). The tag is both
     /// the display text and the saved value. Falls back to en-US when
@@ -57,7 +66,7 @@ public sealed partial class TtsPage : Page
     private void PopulateEnglishAccents(string selected)
     {
         var accents = SystemSpeechService.InstalledVoices
-            .Where(v => v.Language.StartsWith("en-", StringComparison.OrdinalIgnoreCase))
+            .Where(v => MatchesLanguagePrefix(v.Language, "en"))
             .Select(v => v.Language)
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .OrderBy(a => a, StringComparer.OrdinalIgnoreCase)
@@ -71,9 +80,15 @@ public sealed partial class TtsPage : Page
     }
 
     /// <summary>Voice picker for one language: "System default" first
-    /// (Tag ""), then the installed voices for that language by
-    /// display name. The Tag is the voice Id, saved to settings.</summary>
-    private void PopulateVoices(ComboBox combo, string languagePrefix, string? selectedId)
+    /// (Tag ""), then ALL installed Windows voices by display name
+    /// (Manh 2026-11-16: Refresh must pick up every voice installed
+    /// on Windows, not just the ones whose Language matches the
+    /// picker — a voice for another language, or one whose Language
+    /// tag does not start with the prefix, was invisible). The picker
+    /// is per-language (EN / VI) only in what it SAVES — the list
+    /// itself is every voice, so nothing installed is ever missed.
+    /// The Tag is the voice Id, saved to settings.</summary>
+    private void PopulateVoices(ComboBox combo, string? selectedId)
     {
         combo.Items.Clear();
         combo.Items.Add(new ComboBoxItem
@@ -83,8 +98,6 @@ public sealed partial class TtsPage : Page
         });
         foreach (var voice in SystemSpeechService.InstalledVoices)
         {
-            if (!voice.Language.StartsWith(languagePrefix + "-", StringComparison.OrdinalIgnoreCase))
-                continue;
             combo.Items.Add(new ComboBoxItem { Content = voice.DisplayName, Tag = voice.Id });
         }
         SelectComboByTag(combo, selectedId ?? "");
@@ -161,17 +174,36 @@ public sealed partial class TtsPage : Page
     private async void OnAddVoices(object sender, RoutedEventArgs e)
         => await Launcher.LaunchUriAsync(new Uri("ms-settings:easeofaccess-narrator"));
 
+    /// <summary>Open Windows Settings → Language &amp; region (copied
+    /// from the OCR tab, Manh 2026-11-16): TTS voices also come from
+    /// Windows language packs, like the OCR languages — adding a
+    /// language there adds its voices, which Refresh then picks up.</summary>
+    private async void OnOpenWindowsSettings(object sender, RoutedEventArgs e)
+        => await Launcher.LaunchUriAsync(new Uri("ms-settings:regionlanguage"));
+
     /// <summary>Re-read the installed voices (English accents + both
     /// voice pickers). The lists are only populated when the page is
     /// navigated to, so a voice installed via "Add voices" while this
     /// tab is open would not show up until the user clicks Refresh
-    /// (Manh 2026-11-16: installed a voice, list did not update).</summary>
+    /// (Manh 2026-11-16: installed a voice, list did not update).
+    /// Sets _loading while repopulating so the SelectionChanged
+    /// handlers do not fire Save() (and its "settings saved" toast)
+    /// for a programmatic re-select (Manh 2026-11-16: Refresh showed
+    /// a save toast but the new voice was not in the list).</summary>
     private void OnRefreshVoices(object sender, RoutedEventArgs e)
     {
-        var s = App.Settings;
-        PopulateEnglishAccents(s.EnglishAccent);
-        PopulateVoices(EnglishVoiceCombo, "en", s.EnglishVoiceId);
-        PopulateVoices(VietnameseVoiceCombo, "vi", s.VietnameseVoiceId);
+        _loading = true;
+        try
+        {
+            var s = App.Settings;
+            PopulateEnglishAccents(s.EnglishAccent);
+            PopulateVoices(EnglishVoiceCombo, s.EnglishVoiceId);
+            PopulateVoices(VietnameseVoiceCombo, s.VietnameseVoiceId);
+        }
+        finally
+        {
+            _loading = false;
+        }
     }
 
     /// <summary>Play the test text in the chosen test language, using

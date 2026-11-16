@@ -137,7 +137,7 @@
              sits at the bottom-right of the card body, mirroring mac's
              result card (Speak + Copy on the right below the result) —
              wired to the Windows system voices (SystemSpeechService). -->
-        <Border x:Name="ProviderCardBorder" Grid.Row="4" Margin="0,0,0,8" CornerRadius="6" BorderThickness="1" MinHeight="110"
+        <Border x:Name="ProviderCardBorder" Grid.Row="4" Margin="0,0,0,8" CornerRadius="6" BorderThickness="1" MinHeight="150"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                 Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
             <Grid>
@@ -160,7 +160,7 @@
                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Margin="8,0" />
                 <TextBox x:Name="TranslationTextBox" Grid.Row="2" IsReadOnly="True" Margin="8,6,8,0"
                          TextWrapping="Wrap" AcceptsReturn="True" BorderThickness="0"
-                         Background="Transparent" FontSize="14" MaxHeight="260"
+                         Background="Transparent" FontSize="14" MaxHeight="260" MinHeight="60"
                          SelectionChanged="OnTranslationSelectionChanged" />
                 <!-- Speak + Copy on the right, like mac's
                      ProviderResultCard (Speak + Copy below the result,

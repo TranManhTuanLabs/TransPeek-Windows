@@ -48,8 +48,16 @@
             <StackPanel Orientation="Horizontal" Spacing="8">
                 <Button x:Name="AddVoicesButton" x:Uid="Settings.Tts.AddVoices" Content="Add voices" Click="OnAddVoices" />
                 <Button x:Name="RefreshVoicesButton" x:Uid="Settings.Tts.RefreshVoices" Content="Refresh" Click="OnRefreshVoices" />
+                <!-- Open Windows Settings (copied from the OCR tab, Manh
+                     2026-11-16): TTS voices also come from Windows
+                     language packs, like the OCR languages — to get a
+                     new voice, add its language in Windows Settings →
+                     Language &amp; region, then Refresh here. -->
+                <Button x:Name="OpenWindowsSettingsButton" x:Uid="Settings.Tts.OpenWindowsSettings" Content="Open Windows Settings" Click="OnOpenWindowsSettings" />
             </StackPanel>
             <TextBlock x:Uid="Settings.Tts.VoicesNote" Text="Applies to Windows system TTS. If a chosen voice is no longer installed, the system default voice for that language is used. To add a voice, open Windows Settings → Accessibility → Narrator → Narrator's voice → Add voices, then click Refresh to see it here."
+                       FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
+            <TextBlock x:Uid="Settings.Tts.LanguagePackNote" Text="Voices also come from Windows language packs. To add one, open Windows Settings → Time &amp; language → Language &amp; region → Add a language, then click Refresh to see it here."
                        FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
 
             <!-- Test: hear a voice before leaving Settings. -->
