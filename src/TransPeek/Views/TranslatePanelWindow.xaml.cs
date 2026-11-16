@@ -58,15 +58,19 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// output card.</summary>
     private const double MinPanelHeight = 450;
     /// <summary>Minimum height of the output card (ProviderCardBorder),
-    /// in DIPs. Must match the MinHeight="150" in XAML: header (~34) +
+    /// in DIPs. Must match the MinHeight="160" in XAML: header (~34) +
     /// one divider (1) + text box minimum (60, MinHeight on the
     /// TranslationTextBox so the output never collapses) + Speak/Copy
-    /// row (~36) + margins (~19). The card never collapses below this,
-    /// so the output is always visible — the vertical equivalent of
-    /// MinPanelWidth for the horizontal (Manh 2026-11-16: the output
-    /// shrank to nothing when the panel was dragged small, even with
-    /// long text).</summary>
-    private const double MinOutputCardHeight = 150;
+    /// row (~36) + margins (~19), plus 10 of breathing room (Manh
+    /// 2026-11-16: at 150 the box was a touch small and clipped the
+    /// Copy/speaker buttons for a one-word translation). The card
+    /// never collapses below this while expanded, so the output is
+    /// always visible — the vertical equivalent of MinPanelWidth for
+    /// the horizontal (Manh 2026-11-16: the output shrank to nothing
+    /// when the panel was dragged small, even with long text). When
+    /// the provider is collapsed the border MinHeight goes to 0
+    /// instead (see SetProviderCardExpanded).</summary>
+    private const double MinOutputCardHeight = 160;
     /// <summary>Window-subclass delegate for the WM_GETMINMAXINFO
     /// minimum-size enforcement. Kept in a field (not a local) so the
     /// GC cannot collect it while the window lives — a collected
@@ -516,6 +520,14 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         ProviderCardBorder.VerticalAlignment = expanded
             ? VerticalAlignment.Stretch
             : VerticalAlignment.Top;
+        // The card's MinHeight must follow the expanded state too:
+        // a collapsed card (header only) still kept MinHeight 150,
+        // so clicking the provider header never shrank the output
+        // box — and with many providers later, every collapsed card
+        // would keep 150 of height (Manh 2026-11-16). Collapsed the
+        // border may shrink to just the header (0 floor); expanded
+        // it goes back to the minimum output height (160).
+        ProviderCardBorder.MinHeight = expanded ? MinOutputCardHeight : 0;
         // The output row is * when expanded (the card stretches with
         // the window so the output grows) and Auto when collapsed
         // (the row only takes the header height — a * row would keep
@@ -683,10 +695,11 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         // Scale logical -> physical here; at 100% the factor is 1.0, so
         // the behaviour there is unchanged.
         var scale = WindowHelpers.DpiScale(this);
-        // Measure at the CURRENT width (the user's width), never the
-        // default — auto-fit never changes the width (mac frameToFit
-        // keeps currentFrame.width), so a wider panel wraps the text
-        // into fewer lines and fits shorter.
+        // Measure at the CURRENT width (the user's width) — a wider
+        // panel wraps the text into fewer lines and fits shorter.
+        // The width itself is only snapped back below (for short text
+        // that gains nothing from the extra width); it is never
+        // widened by auto-fit, and long text keeps its width.
         var currentWidth = Math.Max(1.0, AppWindow.Size.Width / scale);
         root.Measure(new Windows.Foundation.Size(currentWidth, double.PositiveInfinity));
         var desired = root.DesiredSize.Height;
@@ -731,11 +744,30 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         // expand dài". Dragging the window taller by hand still grows
         // the box — SettleResizedSize raises the cap for manual drags.)
         var height = (int)Math.Clamp(Math.Ceiling(baseline * scale), minHeight, maxHeight);
-        var width = AppWindow.Size.Width;
+        // Horizontal snap-back on a NEW translation (Manh 2026-11-16):
+        // auto-fit used to keep the current width, so after a long
+        // text had widened the panel, a one-word translation left it
+        // wide — no horizontal snap-back for short text, unlike the
+        // drag-release snap-back in SettleResizedSize. Same rule here:
+        // if the content is no meaningfully taller at the default
+        // width (440) than at the current width, the extra width is
+        // white space — snap back to 440. Long text keeps its width
+        // (fewer wraps = a shorter panel). Only runs when the panel
+        // is wider than the default, so a 440-wide panel is untouched.
+        var widthDip = Math.Max(1.0, AppWindow.Size.Width / scale);
+        var defaultW = App.Settings.PanelWidth; // 440
+        if (widthDip > defaultW + 8)
+        {
+            var hAtDefault = MeasureContentHeight(root, defaultW);
+            var hAtCurrent = MeasureContentHeight(root, widthDip);
+            if (hAtDefault > 0 && hAtCurrent > 0 && hAtDefault <= hAtCurrent + 8)
+                widthDip = defaultW;
+        }
+        var width = Math.Max(1, (int)Math.Round(widthDip * scale));
         var y = pos.Y;
         if (y + height > work.Y + work.Height)
             y = Math.Max(work.Y, work.Y + work.Height - height);
-        if (AppWindow.Size.Height != height || pos.Y != y)
+        if (AppWindow.Size.Height != height || AppWindow.Size.Width != width || pos.Y != y)
         {
             _lastProgrammaticSize = new Windows.Graphics.SizeInt32(width, height);
             WindowHelpers.MoveAndResize(this, pos.X, y, width, height);
@@ -884,7 +916,15 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
                 continue;
             fixedH += row.ActualHeight;
         }
-        var minH = Math.Max(MinPanelHeight, fixedH + MinOutputCardHeight + 24);
+        // The output card only counts toward the minimum when it is
+        // expanded: a collapsed card is just the header (~30), so
+        // adding the full 160 minimum would keep the OS minimum (and
+        // the panel) tall even with the provider collapsed — and with
+        // many providers later, every collapsed card would hold the
+        // panel up (Manh 2026-11-16). Collapsed, the header is small
+        // enough that the 450 floor covers it.
+        var cardMin = _providerCardExpanded ? MinOutputCardHeight : 0;
+        var minH = Math.Max(MinPanelHeight, fixedH + cardMin + 24);
         var work = WindowHelpers.DisplayWorkArea(AppWindow.Position.X, AppWindow.Position.Y);
         var maxH = Math.Min(MaxPanelSize, work.Height / WindowHelpers.DpiScale(this));
         return Math.Min(minH, Math.Max(MinPanelHeight, maxH));
