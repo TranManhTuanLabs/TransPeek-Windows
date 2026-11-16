@@ -36,8 +36,8 @@ public sealed partial class TtsPage : Page
         SelectComboByTag(SpeechRateCombo, FormatRate(s.SpeechRate));
         AutoPlaySourceToggle.IsOn = s.AutoPlaySource;
         AutoPlayTranslationToggle.IsOn = s.AutoPlayTranslation;
-        PopulateVoices(EnglishVoiceCombo, s.EnglishVoiceId);
-        PopulateVoices(VietnameseVoiceCombo, s.VietnameseVoiceId);
+        PopulateVoices(EnglishVoiceCombo, "en", s.EnglishVoiceId);
+        PopulateVoices(VietnameseVoiceCombo, "vi", s.VietnameseVoiceId);
         TestLanguageCombo.SelectedIndex = 0;
         _loading = false;
     }
@@ -80,15 +80,13 @@ public sealed partial class TtsPage : Page
     }
 
     /// <summary>Voice picker for one language: "System default" first
-    /// (Tag ""), then ALL installed Windows voices by display name
-    /// (Manh 2026-11-16: Refresh must pick up every voice installed
-    /// on Windows, not just the ones whose Language matches the
-    /// picker — a voice for another language, or one whose Language
-    /// tag does not start with the prefix, was invisible). The picker
-    /// is per-language (EN / VI) only in what it SAVES — the list
-    /// itself is every voice, so nothing installed is ever missed.
-    /// The Tag is the voice Id, saved to settings.</summary>
-    private void PopulateVoices(ComboBox combo, string? selectedId)
+    /// (Tag ""), then the installed voices for THAT language by display
+    /// name (Manh 2026-11-16: the EN and VI pickers must NOT both show
+    /// the same all-voices list — that was confusing. Each picker shows
+    /// only its own language; the full list lives under a separate
+    /// "All voices" button below). The Tag is the voice Id, saved to
+    /// settings.</summary>
+    private void PopulateVoices(ComboBox combo, string languagePrefix, string? selectedId)
     {
         combo.Items.Clear();
         combo.Items.Add(new ComboBoxItem
@@ -98,6 +96,8 @@ public sealed partial class TtsPage : Page
         });
         foreach (var voice in SystemSpeechService.InstalledVoices)
         {
+            if (!MatchesLanguagePrefix(voice.Language, languagePrefix))
+                continue;
             combo.Items.Add(new ComboBoxItem { Content = voice.DisplayName, Tag = voice.Id });
         }
         SelectComboByTag(combo, selectedId ?? "");
@@ -181,6 +181,35 @@ public sealed partial class TtsPage : Page
     private async void OnOpenWindowsSettings(object sender, RoutedEventArgs e)
         => await Launcher.LaunchUriAsync(new Uri("ms-settings:regionlanguage"));
 
+    /// <summary>Show (or hide) the full list of every installed voice
+    /// in the AllVoicesListView. The EN / VI pickers above show only
+    /// their own language; this is the separate "All voices" list
+    /// (Manh 2026-11-16: the two pickers must not both show the same
+    /// all-voices list). Read-only — it only shows what Windows has
+    /// installed; to pick a voice, use the EN / VI picker.</summary>
+    private void OnShowAllVoices(object sender, RoutedEventArgs e)
+    {
+        if (AllVoicesListView.Visibility == Visibility.Visible)
+        {
+            AllVoicesListView.Visibility = Visibility.Collapsed;
+            return;
+        }
+        PopulateAllVoices();
+        AllVoicesListView.Visibility = Visibility.Visible;
+    }
+
+    private void PopulateAllVoices()
+    {
+        AllVoicesListView.Items.Clear();
+        foreach (var voice in SystemSpeechService.InstalledVoices)
+        {
+            AllVoicesListView.Items.Add(new TextBlock
+            {
+                Text = $"{voice.DisplayName} ({voice.Language})",
+            });
+        }
+    }
+
     /// <summary>Re-read the installed voices (English accents + both
     /// voice pickers). The lists are only populated when the page is
     /// navigated to, so a voice installed via "Add voices" while this
@@ -197,8 +226,10 @@ public sealed partial class TtsPage : Page
         {
             var s = App.Settings;
             PopulateEnglishAccents(s.EnglishAccent);
-            PopulateVoices(EnglishVoiceCombo, s.EnglishVoiceId);
-            PopulateVoices(VietnameseVoiceCombo, s.VietnameseVoiceId);
+            PopulateVoices(EnglishVoiceCombo, "en", s.EnglishVoiceId);
+            PopulateVoices(VietnameseVoiceCombo, "vi", s.VietnameseVoiceId);
+            if (AllVoicesListView.Visibility == Visibility.Visible)
+                PopulateAllVoices();
         }
         finally
         {

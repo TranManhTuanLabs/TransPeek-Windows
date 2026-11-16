@@ -673,19 +673,16 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         var work = WindowHelpers.DisplayWorkArea(pos.X, pos.Y);
         var minHeight = Math.Max(1, (int)Math.Round(ComputeMinPanelHeight() * scale));
         var maxHeight = Math.Max(minHeight, work.Height - 16);
-        // Baseline (Manh 2026-11-16 — the height IS remembered, like
-        // the width): the panel never opens below the user's persisted
-        // PanelHeight, even for short text. The old rule shrank short
-        // text to the content height on every new show, so a height
-        // the user dragged was "forgotten" on reopen while the width
-        // stuck — and a short-text panel could open at the 260 floor
-        // with the output squeezed away. The persisted height is
-        // already the compact "needed" height for short text (the
-        // snap-back in PersistResizedSize saves that, not the dragged
-        // height), so holding it as the floor does not leave white
-        // space; it only stops the panel opening smaller than the
-        // user left it.
-        var baseline = Math.Max(App.Settings.PanelHeight, desired);
+        // Auto-fit to the CONTENT height (Manh 2026-11-16: the panel
+        // must NOT stay tall for short text). The old baseline held
+        // the persisted PanelHeight as a floor, so once the user
+        // dragged the panel tall it opened tall for every later show
+        // — even a one-word translation — and the user read that as
+        // "the vertical still remembers the long position" (CI #143).
+        // The dragged height is still saved (PersistResizedSize) and
+        // still limits the manual drag, but auto-fit sizes to what
+        // the text needs, not to the tallest drag ever made.
+        var baseline = desired;
         // Long text (the ScrollViewer says the full text is taller
         // than the capped box) still needs the output cap raised
         // below, so the box grows past 260 and fills the tall window.
@@ -701,11 +698,13 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
             _lastProgrammaticSize = new Windows.Graphics.SizeInt32(width, height);
             WindowHelpers.MoveAndResize(this, pos.X, y, width, height);
         }
-        // Long text + tall window (PanelHeight floor kept it tall):
-        // raise the output cap so the box grows past 260 and fills
-        // the window instead of leaving the extra height empty. The
-        // cap is only an upper bound (the box grows to the available
-        // space), so a very long text just scrolls for the rest.
+        // Long text: raise the output cap so the box grows past 260
+        // and fills the window instead of leaving the extra height
+        // empty. The cap is only an upper bound (the box grows to the
+        // available space), so a very long text just scrolls for the
+        // rest. (Without the old PanelHeight floor the window is sized
+        // to the capped content, so this mainly helps when the user
+        // then drags the window taller by hand.)
         if (longText && sv is not null)
         {
             TranslationTextBox.MaxHeight = sv.ExtentHeight;

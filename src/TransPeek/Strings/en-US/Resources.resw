@@ -535,6 +535,9 @@
   <data name="Settings.Tts.OpenWindowsSettings.Content" xml:space="preserve">
     <value>Open Windows Settings</value>
   </data>
+  <data name="Settings.Tts.AllVoices.Content" xml:space="preserve">
+    <value>All voices</value>
+  </data>
   <data name="Settings.Tts.LanguagePackNote.Text" xml:space="preserve">
     <value>Voices also come from Windows language packs. To add one, open Windows Settings → Time &amp; language → Language &amp; region → Add a language, then click Refresh to see it here.</value>
   </data>

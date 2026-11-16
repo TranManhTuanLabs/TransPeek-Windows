@@ -54,7 +54,14 @@
                      new voice, add its language in Windows Settings →
                      Language &amp; region, then Refresh here. -->
                 <Button x:Name="OpenWindowsSettingsButton" x:Uid="Settings.Tts.OpenWindowsSettings" Content="Open Windows Settings" Click="OnOpenWindowsSettings" />
+                <!-- All voices (Manh 2026-11-16): a SEPARATE list of
+                     every installed voice — the EN / VI pickers above
+                     show only their own language, so this button shows
+                     the full list in one place (read-only, just to see
+                     what Windows has). -->
+                <Button x:Name="AllVoicesButton" x:Uid="Settings.Tts.AllVoices" Content="All voices" Click="OnShowAllVoices" />
             </StackPanel>
+            <ListView x:Name="AllVoicesListView" MaxHeight="200" Visibility="Collapsed" SelectionMode="None" />
             <TextBlock x:Uid="Settings.Tts.VoicesNote" Text="Applies to Windows system TTS. If a chosen voice is no longer installed, the system default voice for that language is used. To add a voice, open Windows Settings → Accessibility → Narrator → Narrator's voice → Add voices, then click Refresh to see it here."
                        FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
             <TextBlock x:Uid="Settings.Tts.LanguagePackNote" Text="Voices also come from Windows language packs. To add one, open Windows Settings → Time &amp; language → Language &amp; region → Add a language, then click Refresh to see it here."
