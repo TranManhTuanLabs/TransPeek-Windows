@@ -13,6 +13,8 @@
 
 | File | Nội dung | Trạng thái |
 |---|---|---|
+| `docs/GIT-CI-BUILD-SETUP.md` | Git, CI test + build workflow, intervention log | Đang dùng |
+| `docs/BUILD-TEST-WORKFLOW-GITHUB-CI.md` | CI workflow chi tiết (đọc run đỏ, gotcha) | Đang dùng |
 | `docs/DECISIONS.md` | Mọi quyết định đã chốt + lý do | Đang dùng |
 | `docs/WINDOWS-v0.1-TESTING.md` | Checklist build + test live | Đang dùng |
 | `docs/ARCHITECTURE.MD` | Kiến trúc tổng | Bản nháp |
@@ -36,13 +38,13 @@
 | `docs/BUILD_FROM_ZERO.MD` | Build app từ máy trắng | Đang dùng |
 | `docs/RESEARCH/README.md` | Chỉ mục research | Đang dùng |
 | `docs/RESEARCH/transpeek-windows-packaging-signing/report.md` | Research đóng gói/ký/Store | Đang dùng |
-| `docs/RESEARCH/tts-speechify-naturalreader/` | Research TTS (6 báo cáo) | Đang dùng |
-| `docs/RESEARCH/transpeek-panel-sizing/report.md` | Research panel co dãn | Đang dùng |
 
 ## 3. Cây docs
 
 ```
 docs/
+├── GIT-CI-BUILD-SETUP.md         # git, CI test + build workflow, intervention log
+├── BUILD-TEST-WORKFLOW-GITHUB-CI.md  # CI workflow chi tiết
 ├── DECISIONS.md                  # mọi quyết định đã chốt + lý do
 ├── WINDOWS-v0.1-TESTING.md       # checklist build + test live
 ├── AGENTS.MD                     # quy tắc làm việc cho AI
@@ -51,9 +53,7 @@ docs/
 ├── BUILD_FROM_ZERO.MD            # build app từ máy trắng
 ├── RESEARCH/
 │   ├── README.md                     # chỉ mục research
-│   ├── transpeek-windows-packaging-signing/  # đóng gói/ký/Store (Windows)
-│   ├── tts-speechify-naturalreader/  # TTS (6 báo cáo)
-│   └── transpeek-panel-sizing/       # panel co dãn (gốc mac, đối chiếu Windows)
+│   └── transpeek-windows-packaging-signing/  # đóng gói/ký/Store (Windows)
 ├── ARCHITECTURE.MD               # kiến trúc tổng
 ├── MASTER_PLAN.md                # lộ trình 0.1.4
 ├── STRUCTURE_MAP.md              # doc này (bản đồ + cây docs)

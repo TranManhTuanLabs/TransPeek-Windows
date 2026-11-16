@@ -48,7 +48,11 @@ taskkill /F /IM TransPeek.exe
   (file `TransPeek-Windows-<run>.zip`, ~150MB vì đã nhúng dữ liệu OCR eng+vie).
   Giải nén rồi chạy `TransPeek.exe` trong đó.
 - **Tab Actions → run Build mới nhất đang xanh → Artifacts**:
-  `TransPeek-Windows-v0.1`. Artifact chỉ lưu 30 ngày.
+  `TransPeek-Windows-v0.1`. Artifact chỉ lưu 7 ngày.
+- Bản build sẵn là self-contained (đã gồm .NET runtime) nên chạy được trên
+  máy Windows 10/11 chưa cài gì thêm.
+- Chi tiết CI (khi nào chạy, khi nào build app, đọc run đỏ):
+  `GIT-CI-BUILD-SETUP.md` + `BUILD-TEST-WORKFLOW-GITHUB-CI.md`.
 - Bản build sẵn là self-contained (đã gồm .NET runtime) nên chạy được trên
   máy Windows 10/11 chưa cài gì thêm.
 
@@ -92,6 +96,8 @@ dotnet test tests\TransPeek.Tests\TransPeek.Tests.csproj
 
 ## Liên kết
 
+- [Setup git, CI test + build workflow](GIT-CI-BUILD-SETUP.md)
+- [CI workflow chi tiết](BUILD-TEST-WORKFLOW-GITHUB-CI.md)
 - [Checklist build + test live](WINDOWS-v0.1-TESTING.md)
 - [Kiến trúc](ARCHITECTURE.MD)
 - [Quy tắc làm việc](AGENTS.MD)

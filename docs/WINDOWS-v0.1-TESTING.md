@@ -18,8 +18,10 @@
   → giải nén rồi chạy `TransPeek.exe` trong đó.
 - Bản này là self-contained (đã gồm .NET runtime) nên chạy được trên
   máy Windows 10/11 chưa cài gì thêm; file zip hơi nặng (~100–200MB).
-- Artifact chỉ lưu 30 ngày — quá hạn thì báo Muse chạy lại CI để có
+- Artifact chỉ lưu 7 ngày — quá hạn thì báo Muse chạy lại CI để có
   bản mới.
+- Chi tiết CI: `GIT-CI-BUILD-SETUP.md` +
+  `BUILD-TEST-WORKFLOW-GITHUB-CI.md`.
 
 ## CI (GitHub Actions, Windows runner)
 
