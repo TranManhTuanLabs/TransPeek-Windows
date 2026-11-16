@@ -697,11 +697,14 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         // still limits the manual drag, but auto-fit sizes to what
         // the text needs, not to the tallest drag ever made.
         var baseline = desired;
-        // Long text (the ScrollViewer says the full text is taller
-        // than the capped box) still needs the output cap raised
-        // below, so the box grows past 260 and fills the tall window.
-        var sv = FindDescendant<ScrollViewer>(TranslationTextBox);
-        var longText = sv is not null && _providerCardExpanded && sv.ExtentHeight > TranslationTextMaxHeight;
+        // The output box stays capped at 260 (TranslationTextMaxHeight)
+        // during auto-fit — it scrolls for longer text instead of
+        // growing the panel super tall. (The old longText raise set
+        // MaxHeight to the full ExtentHeight after sizing, which left
+        // the box uncapped and let the output expand super long on
+        // the next show/measure — Manh 2026-11-16, #147 "output siêu
+        // expand dài". Dragging the window taller by hand still grows
+        // the box — PersistResizedSize raises the cap for manual drags.)
         var height = (int)Math.Clamp(Math.Ceiling(baseline * scale), minHeight, maxHeight);
         var width = AppWindow.Size.Width;
         var y = pos.Y;
@@ -711,17 +714,6 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         {
             _lastProgrammaticSize = new Windows.Graphics.SizeInt32(width, height);
             WindowHelpers.MoveAndResize(this, pos.X, y, width, height);
-        }
-        // Long text: raise the output cap so the box grows past 260
-        // and fills the window instead of leaving the extra height
-        // empty. The cap is only an upper bound (the box grows to the
-        // available space), so a very long text just scrolls for the
-        // rest. (Without the old PanelHeight floor the window is sized
-        // to the capped content, so this mainly helps when the user
-        // then drags the window taller by hand.)
-        if (longText && sv is not null)
-        {
-            TranslationTextBox.MaxHeight = sv.ExtentHeight;
         }
     }
 
