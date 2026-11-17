@@ -46,9 +46,12 @@ investigator reading stale setup. The same rule applies to the mac repo
   call touching `.github/workflows/*` returns 403. Stop after the first
   403; do not retry the same call. Edit workflow files from Manh's PC,
   or through the GitHub web editor (browser session) when Manh has
-  explicitly allowed it. (The TransPeek-Windows exception runs until the
-  app has a base that works like macOS — Muse may read CI logs, fix code,
-  push commits, re-run, and edit workflows via the browser.)
+  explicitly allowed it. (Manh granted a fresh 7-day exception on
+  2026-11-17, until ~2026-11-24, for TransPeek-Windows and the mac repo:
+  Muse may push, edit workflows via the browser, and read CI logs via
+  the browser without asking each time. Ask Manh again after it expires;
+  it does not cover other repos. The previous exception expired
+  ~2026-11-15.)
 - The connector snapshot push (`push-files` with a paths file) only
   handles UTF-8 text files (max 2,000 files / 16 MiB total), no binary,
   and CANNOT delete files. Deleting a file needs the GitHub web UI
