@@ -234,18 +234,18 @@ Lịch sử mò số (để tránh lặp lại): min output card 150 → 160 (#1
 **Chỉ ghi quyết định — chưa triển khai tab.** Khung multi-tab làm trên main trước,
 rồi mới tạo nhánh `feature/fast-read-rsvp` làm Fast Read window (xem dưới).
 
-- **Kiểu "hub":** panel có 3 tab, chấm giữa là màn chính, 2 bên là 2 nhánh.
-  **Chấm 2 (giữa) = Dịch — panel hiện tại, làm mặc định:** mở panel là thấy Dịch.
-- **Chấm 1 (trái) = panel shortcut tạm thời** — ô linh hoạt, sau này thay được
+- **Kiểu "hub":** panel có 3 tab, tab ở giữa là màn chính, 2 bên là 2 nhánh.
+  **panel dịch (ở giữa, mặc định):** mở panel là thấy Dịch.
+- **panel shortcut (tạm thời, ở trái)** — ô linh hoạt, sau này thay được
   (không cố định là shortcut).
-- **Chấm 3 (phải) = Fast Read** — tạm trống/placeholder tới khi Fast Read ship.
-- **3 chấm hiện từ đầu để trải nghiệm** (thay điều kiện cũ "chấm 3 chỉ hiện khi tab
-  có nội dung thật"; ngoại lệ chỉ áp cho tab 3 đã có kế hoạch cụ thể).
-- **Lý do (Manh):** Dịch ở giữa thì vuốt sang 2 bên đều 1 lần; để Dịch ở chấm 1
-  thì sang Fast Read phải qua 2 lần. Có tiền lệ (Snapchat: camera ở giữa làm mặc
+- **panel Fast Read (tên tạm, ở phải)** — tạm trống/placeholder tới khi Fast Read ship.
+- **3 chấm hiện từ đầu để trải nghiệm** (thay điều kiện cũ "chấm của panel Fast Read chỉ hiện khi tab
+  có nội dung thật"; ngoại lệ chỉ áp cho panel Fast Read đã có kế hoạch cụ thể).
+- **Lý do (Manh):** panel dịch ở giữa thì vuốt sang 2 bên đều 1 lần; để panel dịch ở trái
+  thì sang panel Fast Read phải qua 2 lần. Có tiền lệ (Snapchat: camera ở giữa làm mặc
   định, vuốt trái sang chat, vuốt phải sang stories). Khác thứ tự research cũ
-  (Dịch là 1) nhưng lý do chính đáng nên làm theo hướng này.
-- **Nút "?" bảng shortcut nằm trong panel dịch (chấm 2, ở giữa, mặc định)**, ngay trước nút Pin (§3).
+  (panel dịch từng đứng đầu) nhưng lý do chính đáng nên làm theo hướng này.
+- **Nút "?" bảng shortcut nằm trong panel dịch (ở giữa, mặc định)**, ngay trước nút Pin (§3).
 - **Thứ tự làm:** khung multi-tab → Fast Read window → TTS (Fast Read làm trước
   TTS, như mac). **Tab RSVP trong panel chỉ là thử nghiệm sau này**, không làm
   trong nhánh Fast Read — nhánh đó chỉ làm **window riêng chạy RSVP, UX copy y xì
