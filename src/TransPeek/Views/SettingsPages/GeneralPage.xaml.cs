@@ -48,6 +48,7 @@ public sealed partial class GeneralPage : Page
             1000 => 3,
             _ => 0, // 300 ms (or an older saved value) -> first item.
         };
+        IconClickActionCombo.SelectedIndex = string.Equals(s.IconClickAction, "FastRead", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
         AutoHideBox.Value = s.TriggerIconAutoHideSeconds;
         MainFontSizeSlider.Value = s.PopupFontSize;
         MainFontSizeSlider.Header = MainFontSizeLabel(s.PopupFontSize);
@@ -89,6 +90,16 @@ public sealed partial class GeneralPage : Page
             && item.Tag is string tag && int.TryParse(tag, out var ms))
         {
             App.Settings.HoverDelayMs = ms;
+            Save();
+        }
+    }
+
+    private void OnIconClickActionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (IconClickActionCombo.SelectedItem is ComboBoxItem item
+            && item.Tag is string tag)
+        {
+            App.Settings.IconClickAction = tag;
             Save();
         }
     }

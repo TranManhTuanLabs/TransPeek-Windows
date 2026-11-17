@@ -255,7 +255,10 @@ Lịch sử mò số (để tránh lặp lại): min output card 150 → 160 (#1
   SwiftRead, CHỈ ĐỌC, không gồm TTS trong read** (SwiftRead có Listen nhưng
   TransPeek không copy phần đó; nghe là việc của TTS). Engine + luồng vào theo
   `docs/RESEARCH/tts-speechify-naturalreader/rsvp-report.md` trên repo mac
-  (§6.1 + §6.3 cho Windows/C#).
+  (§6.1 + §6.3 cho Windows/C#). **Đã triển khai trên nhánh `feature/fast-read-rsvp`
+  (17/11): xem `docs/FEATURES/FAST_READ.md` — engine + window + 4 đường vào
+  (Alt-click, menu chuột phải icon, nút "Đọc nhanh" trong panel dịch, tray);
+  phím tắt global chỉ là fallback, chưa làm.**
 
 ## Liên kết
 

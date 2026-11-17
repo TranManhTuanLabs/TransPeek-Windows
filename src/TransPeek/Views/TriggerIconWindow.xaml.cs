@@ -12,9 +12,13 @@
 // because the click also opened the panel, which hid the icon at once).
 
 using Microsoft.UI.Dispatching;
+using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using TransPeek.Interop;
+using Windows.System;
+using Windows.UI.Core;
 
 namespace TransPeek.Views;
 
@@ -42,6 +46,15 @@ public sealed partial class TriggerIconWindow : Window
     /// <summary>Raised when the user clicks the icon again to stop
     /// listening (the speaker mark goes back to "A").</summary>
     public event Action? SpeakStopped;
+
+    /// <summary>Raised on Alt+click, on a plain click when the click
+    /// action setting is Fast Read, or from the right-click menu's
+    /// "Fast Read" item: App opens the Fast Read (RSVP) window with
+    /// the current selection.</summary>
+    public event Action? FastReadRequested;
+
+    /// <summary>Raised from the right-click menu's "Settings…" item.</summary>
+    public event Action? SettingsRequested;
 
     public TriggerIconWindow()
     {
@@ -71,6 +84,42 @@ public sealed partial class TriggerIconWindow : Window
         }
         IconBorder.PointerEntered += OnPointerEntered;
         IconBorder.PointerExited += OnPointerExited;
+        // Right-click menu (Manh 2026-11-17, entry point 2): Translate /
+        // Listen / Fast Read / Settings. The icon is a 32 px window, so
+        // the menu is the only way to discover the actions without the
+        // hover delay. While the menu is open the auto-hide timer stops,
+        // or the icon would vanish under the open menu.
+        var menu = new MenuFlyout();
+        var translateItem = new MenuFlyoutItem { Text = "Translate", Icon = new FontIcon { Glyph = "\uE70F" } };
+        translateItem.Click += (_, _) => OpenRequested?.Invoke();
+        var listenItem = new MenuFlyoutItem { Text = "Listen", Icon = new FontIcon { Glyph = "\uE767" } };
+        listenItem.Click += (_, _) =>
+        {
+            _hoverTimer.Stop();
+            SetSpeaking(true);
+            SpeakRequested?.Invoke();
+            _autoHideTimer.Interval = TimeSpan.FromSeconds(App.Settings.TriggerIconAutoHideSeconds);
+            _autoHideTimer.Start();
+        };
+        var fastReadItem = new MenuFlyoutItem { Text = "Fast Read", Icon = new FontIcon { Glyph = "\uE736" } };
+        fastReadItem.Click += (_, _) => FastReadRequested?.Invoke();
+        var settingsItem = new MenuFlyoutItem { Text = "Settings…", Icon = new FontIcon { Glyph = "\uE713" } };
+        settingsItem.Click += (_, _) => SettingsRequested?.Invoke();
+        menu.Items.Add(translateItem);
+        menu.Items.Add(listenItem);
+        menu.Items.Add(fastReadItem);
+        menu.Items.Add(new MenuFlyoutSeparator());
+        menu.Items.Add(settingsItem);
+        menu.Opened += (_, _) => _autoHideTimer.Stop();
+        menu.Closed += (_, _) =>
+        {
+            if (_visible)
+            {
+                _autoHideTimer.Interval = TimeSpan.FromSeconds(App.Settings.TriggerIconAutoHideSeconds);
+                _autoHideTimer.Start();
+            }
+        };
+        IconBorder.ContextFlyout = menu;
         // Click = listen mode (mac handleIconClick, .speak): toggle the
         // speaker mark. It must NOT open the panel (the old code raised
         // OpenRequested here, and opening the panel hid the icon at once,
@@ -80,8 +129,29 @@ public sealed partial class TriggerIconWindow : Window
         // raises SpeakRequested / SpeakStopped so App can speak (or
         // stop) the current selection — the click is the listen action,
         // not just the icon state (Manh 2026-11-16).
+        // Fast Read changes the click (feature/fast-read-rsvp, Manh
+        // 2026-11-17): Alt+click ALWAYS opens Fast Read (entry point 1),
+        // and a plain click follows the click-action setting (Settings
+        // -> General -> "Click icon": Speak, the default, or Fast Read).
+        // A Fast Read click also stops a running speech first.
         IconBorder.Tapped += (_, _) =>
         {
+            var altHeld = (InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Menu)
+                & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down;
+            var clickReads = string.Equals(App.Settings.IconClickAction, "FastRead", StringComparison.OrdinalIgnoreCase);
+            if (altHeld || clickReads)
+            {
+                _hoverTimer.Stop();
+                if (_isSpeaking)
+                {
+                    SetSpeaking(false);
+                    SpeakStopped?.Invoke();
+                }
+                FastReadRequested?.Invoke();
+                _autoHideTimer.Interval = TimeSpan.FromSeconds(App.Settings.TriggerIconAutoHideSeconds);
+                _autoHideTimer.Start();
+                return;
+            }
             if (_isSpeaking)
             {
                 SetSpeaking(false);

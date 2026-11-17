@@ -148,6 +148,24 @@ public sealed class AppSettings
     /// translation finishes.</summary>
     public bool AutoPlayTranslation { get; set; } = false;
 
+    // --- Fast Read / RSVP (feature/fast-read-rsvp) ---
+    /// <summary>What a click on the float icon does: "Speak" (read the
+    /// selection aloud, default) or "FastRead" (open the Fast Read
+    /// window). Alt+click always opens Fast Read regardless of this
+    /// setting. ComboBox in Settings -&gt; General.</summary>
+    public string IconClickAction { get; set; } = "Speak";
+    /// <summary>Fast Read speed in words per minute (100-2000,
+    /// default 275 — SwiftRead's default). Slider in the reader window.</summary>
+    public int RsvpWpm { get; set; } = 275;
+    /// <summary>Fast Read words shown per slide (1-6, default 1).</summary>
+    public int RsvpChunkSize { get; set; } = 1;
+    /// <summary>Fast Read word font size in points (50-110, default 110).</summary>
+    public double RsvpFontSize { get; set; } = 110;
+    /// <summary>Fast Read window size in physical pixels, remembered
+    /// after resize (0 = auto: 70% x 55% of the work area, min 880x550).</summary>
+    public double RsvpWindowWidth { get; set; } = 0;
+    public double RsvpWindowHeight { get; set; } = 0;
+
     // --- General ---
     public bool LaunchAtLogin { get; set; } = false;
     public bool HasCompletedOnboarding { get; set; } = false;

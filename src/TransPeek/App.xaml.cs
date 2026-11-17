@@ -18,6 +18,7 @@ using TransPeek.Core.Dictionary;
 using TransPeek.Core.Ocr;
 using TransPeek.Core.Settings;
 using TransPeek.Core.Translation;
+using TransPeek.FastRead;
 using TransPeek.Interop;
 using TransPeek.Services;
 using TransPeek.Views;
@@ -38,6 +39,7 @@ public sealed partial class App : Application
     private GlobalHotkeyService? _hotkeys;
     private TriggerIconWindow? _triggerIcon;
     private TranslatePanelWindow? _panel;
+    private FastReadWindow? _fastReadWindow;
     private RegionSelectWindow? _regionSelectWindow;
     private ToastWindow? _toast;
     private SettingsWindow? _settingsWindow;
@@ -90,9 +92,11 @@ public sealed partial class App : Application
         NativeMethods.ShowWindow(hwnd, NativeMethods.SW_HIDE);
 
         _toast = new ToastWindow();
-        _panel = new TranslatePanelWindow(TranslateAsync, () => _ocrFlow!.RunOcrAsync(), ShowSettings, BuildShortcutEntries());
+        _panel = new TranslatePanelWindow(TranslateAsync, () => _ocrFlow!.RunOcrAsync(), ShowSettings, BuildShortcutEntries(), text => _ = OpenFastReadAsync(text));
         _triggerIcon = new TriggerIconWindow();
         _triggerIcon.OpenRequested += OnTriggerIconOpenRequested;
+        _triggerIcon.FastReadRequested += () => _ = OpenFastReadFromSelectionAsync();
+        _triggerIcon.SettingsRequested += ShowSettings;
         _iconSpeech = new SystemSpeechService();
         _triggerIcon.SpeakRequested += OnTriggerIconSpeakRequested;
         _triggerIcon.SpeakStopped += () => _iconSpeech?.Stop();
@@ -118,6 +122,7 @@ public sealed partial class App : Application
             clipboardOcr: () => _ = _ocrFlow!.RunSilentOcrAsync(),
             clipboardOcrTranslated: () => _ = _ocrFlow!.RunSilentOcrTranslatedAsync(),
             selectionTranslation: () => _ = TranslateCurrentSelectionAsync(),
+            fastRead: () => _ = OpenFastReadFromSelectionAsync(),
             clipboardTranslation: () => _ = TranslateClipboardAsync(),
             screenshotCopy: () => _ = _screenshotCopy!.RunAsync(),
             scanBarcodes: () => _ = ScanBarcodesAsync(),
@@ -289,6 +294,60 @@ public sealed partial class App : Application
         }
         var (cx, cy) = WindowHelpers.CursorPosition();
         _panel?.ShowTranslationFlow(text, cx, cy);
+    }
+
+    // ----- Fast Read (RSVP, feature/fast-read-rsvp) -----
+
+    /// <summary>Open the Fast Read window with the given text (panel
+    /// button: the text being translated). Empty text falls back to the
+    /// current selection / clipboard, like the translate hotkey path.</summary>
+    private async Task OpenFastReadAsync(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            await OpenFastReadFromSelectionAsync();
+            return;
+        }
+        ShowFastReadWindow(text);
+    }
+
+    /// <summary>Open the Fast Read window with the current selection
+    /// (tray menu, Alt-click on the float icon): fresh selection, else
+    /// the clipboard re-grab, else the clipboard text. Nothing to read
+    /// shows a toast, like the no-selection translate case.</summary>
+    private async Task OpenFastReadFromSelectionAsync()
+    {
+        var text = _lastSelection;
+        if (string.IsNullOrWhiteSpace(text)
+            || DateTimeOffset.UtcNow - _lastSelectionAt > TimeSpan.FromSeconds(10))
+        {
+            text = await ClipboardHelper.TryGetSelectionViaClipboardAsync()
+                ?? _lastSelection;
+        }
+        if (string.IsNullOrWhiteSpace(text))
+            text = (await ClipboardHelper.GetTextAsync())?.Trim();
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            _toast?.Show(AppStrings.Get("App.Toast.NoTextToRead", "No text to read. Select some text first, or copy it."));
+            return;
+        }
+        ShowFastReadWindow(text);
+    }
+
+    private void ShowFastReadWindow(string text)
+    {
+        // The reader is a separate window and the panel is topmost, so
+        // the panel would float above the reader — hide it first. (The
+        // panel button already hid it; HidePanel is a no-op then.)
+        _triggerIcon?.HideIcon();
+        _panel?.HidePanel();
+        if (_fastReadWindow is null)
+        {
+            _fastReadWindow = new FastReadWindow();
+            _fastReadWindow.Closed += (_, _) => _fastReadWindow = null;
+        }
+        _fastReadWindow.LoadText(text);
+        _fastReadWindow.ShowReader();
     }
 
     /// <summary>Translate Clipboard (mac parity): read the clipboard

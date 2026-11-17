@@ -186,6 +186,9 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     private int _epoch;
     private readonly Action _openSettings;
     private readonly IReadOnlyList<PanelShortcutEntry> _shortcuts;
+    /// <summary>Fast Read (feature/fast-read-rsvp): open the RSVP reader
+    /// with the text being translated (the panel hides first).</summary>
+    private readonly Func<string, Task> _fastReadRequested;
     /// <summary>True while the shortcuts popover (Flyout) is open: the
     /// popover is a separate popup window outside the panel's rect, so
     /// without this a click inside it would look like a click outside
@@ -229,12 +232,14 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         Func<string, Task<(string? Translation, string ProviderName, string? DetectedSourceLanguage)>> translateAsync,
         Func<Task> ocrRequested,
         Action openSettings,
-        IReadOnlyList<PanelShortcutEntry> shortcuts)
+        IReadOnlyList<PanelShortcutEntry> shortcuts,
+        Func<string, Task> fastReadRequested)
     {
         _translateAsync = translateAsync;
         _ocrRequested = ocrRequested;
         _openSettings = openSettings;
         _shortcuts = shortcuts;
+        _fastReadRequested = fastReadRequested;
         InitializeComponent();
         PopulateLangCombos();
         SyncLangCombos();
@@ -1291,6 +1296,15 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         _openSettings();
     }
 
+    private void OnFastReadClicked(object sender, RoutedEventArgs e)
+    {
+        // The reader is a separate window: hide the panel first (same
+        // as the Settings path — the topmost panel would float above
+        // the reader), then open it with the text being translated.
+        HidePanel();
+        _ = _fastReadRequested(_sourceText);
+    }
+
     /// <summary>Shortcuts popover opened: suppress the panel's
     /// click-outside + Esc auto-hide (the popover is a separate popup
     /// window outside the panel's rect — a click inside it would
@@ -1378,7 +1392,12 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     private static string DisplayBinding(string spec)
         => spec.Replace("Control", "Ctrl", StringComparison.Ordinal);
 
-    private void HidePanel()
+    /// <summary>Hide the panel (public so App can hide it when opening
+    /// the Fast Read window — the panel is topmost and would otherwise
+    /// float above the reader). Idempotent: safe to call when already
+    /// hidden (0.1.3.54 — the early return on !_visible once stuck the
+    /// panel visible).</summary>
+    public void HidePanel()
     {
         // No early return on !_visible (0.1.3.54): the panel got stuck
         // visible — HidePanel had run (setting _visible = false) while

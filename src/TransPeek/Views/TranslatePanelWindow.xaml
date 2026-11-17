@@ -257,6 +257,17 @@
                     ToolTipService.ToolTip="Settings" Click="OnOpenSettings">
                 <FontIcon Glyph="&#xE713;" FontSize="12" />
             </Button>
+            <!-- Fast Read (feature/fast-read-rsvp): open the RSVP reader
+                 with the text being translated. Glyph E736 ReadingMode
+                 (Segoe Fluent Icons, verified on Microsoft Learn
+                 2026-11-17). Sits last in the Actions row, after
+                 Settings — it leaves the panel (opens a separate
+                 window), so it is not part of the "?" + Pin + Settings
+                 group. -->
+            <Button x:Name="FastReadButton" Padding="6,2"
+                    ToolTipService.ToolTip="Fast Read (RSVP)" Click="OnFastReadClicked">
+                <FontIcon Glyph="&#xE736;" FontSize="12" />
+            </Button>
         </StackPanel>
 
         <!-- Dictionary links -->
