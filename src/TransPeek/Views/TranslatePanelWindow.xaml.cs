@@ -185,6 +185,13 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// the panel that click re-showed.</summary>
     private int _epoch;
     private readonly Action _openSettings;
+    private readonly IReadOnlyList<PanelShortcutEntry> _shortcuts;
+    /// <summary>True while the shortcuts popover (Flyout) is open: the
+    /// popover is a separate popup window outside the panel's rect, so
+    /// without this a click inside it would look like a click outside
+    /// the panel and hide the panel (same for Esc). Set on Flyout
+    /// Opened, cleared on Closed — only the popover suppresses it.</summary>
+    private bool _suppressAutoHide;
     /// <summary>Windows system TTS (Windows.Media.SpeechSynthesis):
     /// the panel speaker buttons speak through this. One instance for
     /// the window's lifetime; it owns a MediaPlayer + synthesizer.</summary>
@@ -196,14 +203,24 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// arrives, so a manual speak never chains into a translation.</summary>
     private bool _autoPlayPendingTranslation;
 
+    /// <summary>One row in the shortcuts popover ("?" button, Manh
+    /// 2026-11-17): display name, current key binding (read fresh from
+    /// Settings every time the popover opens), and the action to run —
+    /// the same code path as the hotkey and the tray menu item, so the
+    /// user never needs a physical key press. Built by App, which owns
+    /// all ten handlers.</summary>
+    public sealed record PanelShortcutEntry(string Name, Func<string> Binding, Action Run);
+
     public TranslatePanelWindow(
         Func<string, Task<(string? Translation, string ProviderName, string? DetectedSourceLanguage)>> translateAsync,
         Func<Task> ocrRequested,
-        Action openSettings)
+        Action openSettings,
+        IReadOnlyList<PanelShortcutEntry> shortcuts)
     {
         _translateAsync = translateAsync;
         _ocrRequested = ocrRequested;
         _openSettings = openSettings;
+        _shortcuts = shortcuts;
         InitializeComponent();
         PopulateLangCombos();
         SyncLangCombos();
@@ -288,7 +305,10 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
             // the hook already cover Esc.
             contentRoot.KeyDown += (_, e) =>
             {
-                if (e.Key == VirtualKey.Escape)
+                // While the shortcuts popover is open, Esc closes the
+                // popover itself (native Flyout behaviour) — it must
+                // not also hide the panel underneath it.
+                if (e.Key == VirtualKey.Escape && !_suppressAutoHide)
                 {
                     HidePanel();
                     e.Handled = true;
@@ -304,7 +324,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
             // instance DispatcherQueue property (CS0176) instead of the
             // Microsoft.UI.Dispatching type.
             Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread(),
-            isActive: () => _visible,
+            isActive: () => _visible && !_suppressAutoHide,
             getRect: () =>
             {
                 var pos = AppWindow.Position;
@@ -323,7 +343,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         // Esc whatever window has focus.
         _escapeKey = new EscapeKeyMonitor(
             Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread(),
-            isActive: () => _visible,
+            isActive: () => _visible && !_suppressAutoHide,
             getEpoch: () => _epoch,
             onEscape: epoch =>
             {
@@ -1194,6 +1214,78 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         HidePanel();
         _openSettings();
     }
+
+    /// <summary>Shortcuts popover opened: suppress the panel's
+    /// click-outside + Esc auto-hide (the popover is a separate popup
+    /// window outside the panel's rect — a click inside it would
+    /// otherwise hide the panel) and rebuild the rows so the key
+    /// bindings are the current Settings values.</summary>
+    private void OnShortcutsFlyoutOpened(Flyout sender, object args)
+    {
+        _suppressAutoHide = true;
+        ShortcutsRowsPanel.Children.Clear();
+        foreach (var entry in _shortcuts)
+        {
+            var row = new Grid { ColumnSpacing = 8 };
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            var name = new TextBlock
+            {
+                Text = entry.Name,
+                FontSize = 13,
+                VerticalAlignment = VerticalAlignment.Center,
+                TextTrimming = TextTrimming.CharacterEllipsis,
+            };
+            Grid.SetColumn(name, 0);
+            row.Children.Add(name);
+
+            var binding = new TextBlock
+            {
+                Text = DisplayBinding(entry.Binding()),
+                FontSize = 12,
+                Opacity = 0.6,
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+            Grid.SetColumn(binding, 1);
+            row.Children.Add(binding);
+
+            // Run (Segoe Fluent Icons Play E768, verified on Microsoft
+            // Learn 2026-11-17): same code path as the hotkey and the
+            // tray menu item — no physical key press needed. Only this
+            // button runs the action; clicking the row itself does
+            // nothing, so reading the list cannot trigger anything.
+            // The popover closes after running: the action takes over
+            // (OCR opens the region picker, Settings opens its window,
+            // a translation re-shows the panel with the result).
+            var run = new Button
+            {
+                Padding = new Thickness(6, 2, 6, 2),
+                ToolTipService.ToolTip = "Run this action",
+            };
+            run.Content = new FontIcon { Glyph = "\uE768", FontSize = 10 };
+            run.Click += (_, _) =>
+            {
+                entry.Run();
+                ShortcutsFlyout.Hide();
+            };
+            Grid.SetColumn(run, 2);
+            row.Children.Add(run);
+
+            ShortcutsRowsPanel.Children.Add(row);
+        }
+    }
+
+    private void OnShortcutsFlyoutClosed(Flyout sender, object args)
+    {
+        _suppressAutoHide = false;
+    }
+
+    /// <summary>Hotkey spec ("Control+Alt+T") as shown in the popover:
+    /// "Control" shortens to "Ctrl", like the tray's accelerator hints.</summary>
+    private static string DisplayBinding(string spec)
+        => spec.Replace("Control", "Ctrl", StringComparison.Ordinal);
 
     private void HidePanel()
     {

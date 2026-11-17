@@ -212,6 +212,33 @@
              (to the dictionary links) was only 8 — the buttons sat
              visibly low. With top 0 both gaps are 8. -->
         <StackPanel Grid.Row="5" Orientation="Horizontal" Spacing="4" HorizontalAlignment="Right" Margin="0,0,0,8">
+            <!-- Shortcuts "?" (Manh 2026-11-17): opens a popover listing
+                 the 10 keyboard shortcuts (Settings order), each row with
+                 a Run button that calls the same code path as the hotkey.
+                 The "?" sits BEFORE Pin (Manh's choice 17/11): Pin is a
+                 stateful toggle, so "?" stays outside the Pin+Settings
+                 pair. The Flyout is WinUI-native: anchored to the button,
+                 closes on click-outside or on clicking "?" again, and
+                 flips above the button when there is no room below. -->
+            <Button x:Name="ShortcutsButton" Padding="6,2"
+                    ToolTipService.ToolTip="Keyboard shortcuts">
+                <TextBlock Text="?" FontSize="12" FontWeight="SemiBold" />
+                <Button.Flyout>
+                    <Flyout x:Name="ShortcutsFlyout" Placement="Bottom"
+                            Opened="OnShortcutsFlyoutOpened" Closed="OnShortcutsFlyoutClosed">
+                        <Flyout.FlyoutPresenterStyle>
+                            <Style TargetType="FlyoutPresenter">
+                                <Setter Property="MinWidth" Value="340" />
+                                <Setter Property="MaxWidth" Value="340" />
+                            </Style>
+                        </Flyout.FlyoutPresenterStyle>
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="Keyboard shortcuts" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,4" />
+                            <StackPanel x:Name="ShortcutsRowsPanel" Spacing="2" />
+                        </StackPanel>
+                    </Flyout>
+                </Button.Flyout>
+            </Button>
             <!-- Pin (Manh 2026-11-14): keep the panel fixed and always
                  visible — while pinned, click-outside and Esc do NOT
                  hide it. Toggle again to unpin. Segoe MDL2 Pin E718. -->

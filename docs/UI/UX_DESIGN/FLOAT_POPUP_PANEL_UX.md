@@ -3,7 +3,7 @@
 > **Trạng thái: CHỐT — 17/11/2026, theo build #162 (commit `2053f9b`).**
 > Các con số trong doc này là **spec**. Đổi bất kỳ số đã chốt nào cũng cần Manh duyệt trước.
 > Spec đã bao gồm: cấu trúc card 4 hàng (#160) + hint 1 dòng (#161) + loa/Copy overlay
-> trong ô output (#162).
+> trong ô output (#162) + nút "?" + popover shortcut (17/11, "?" trước Pin).
 > Doc này chỉ cho **Windows**. Bên mac có yêu cầu tương tự nhưng **chưa viết panel UX vì chưa chốt size** — khi nào mac chốt thì viết riêng, đối chiếu với doc này.
 
 ## 1. Kích thước chốt (locked sizes)
@@ -32,7 +32,7 @@ Hàng `*` là hàng duy nhất dãn theo chiều cao; các hàng `Auto` chỉ ca
 | Row 2 | Auto | **Hint** — 11pt, **PHẢI ở 1 dòng ở mọi chiều rộng** (xem §6) | "Select a word, then click Dictionary to look it up" (rút ngắn 17/11 #161 — câu cũ dài ~103 ký tự, xuống 2 dòng khi kéo hẹp, gây che loa) |
 | Row 3 | Auto | **Hàng ngôn ngữ** — Source ⇄ Target + Capture OCR | ComboBox Source/Target **rộng 112**, nút Swap ⇄ Padding `4,2`, Spacing `4`. Nút "Capture OCR" ở bên phải |
 | Row 4 | `*` | **Output card** (`ProviderCardBorder`) | Margin `0,0,0,8`, CornerRadius 6, BorderThickness 1, `MinHeight 218`. Bên trong **3 hàng**: header (tên provider 13pt SemiBold + trạng thái) / divider / TextBox (`*`, FontSize 14, MinHeight 60, MaxHeight 260) với **loa/Copy overlay trong ô TextBox** (góc dưới-phải, Margin `0,0,6,8` như ô nhập) — xem §6 |
-| Row 5 | Auto | **Actions** — Pin + Settings | Căn phải, Spacing 4, Margin `0,0,0,8`. Pin (glyph E718) trước, Settings (E713) sau |
+| Row 5 | Auto | **Actions** — "?" + Pin + Settings | Căn phải, Spacing 4, Margin `0,0,0,8`. "?" (chữ "?", SemiBold 12pt, tooltip "Keyboard shortcuts") trước, Pin (glyph E718) giữa, Settings (E713) sau. "?" mở popover shortcut — xem §3 |
 | Row 6 | Auto | **DictionaryBarControl** — link tra từ điển | |
 | Row 7 | Auto | **Footer** — link GitHub căn giữa + build text căn phải | |
 
@@ -54,6 +54,7 @@ Hàng `*` là hàng duy nhất dãn theo chiều cao; các hàng `Auto` chỉ ca
 - **Kéo di chuyển:** bằng vùng caption là TitleBar (Row 0). **Kéo resize:** viền native (BottomBorder 7, RightBorder 8) + grip trang trí 12×12 ở góc dưới-phải (chỉ trang trí, không phải tay nắm thật).
 - **Ẩn panel:** click chuột ra chỗ khác (ClickOutsideMonitor) hoặc Esc. **KHÔNG có nút đóng tay, và cũng KHÔNG CẦN** — workflow của Manh là tra xong click ra chỗ khác, rồi tra cái mới.
 - **Mở panel:** mặc định ở kích thước Settings (420×450), không mở compact, không nhớ cỡ kéo cũ.
+- **Nút "?" — popover shortcut (Manh 17/11, "?" trước Pin):** bấm mở Flyout native neo vào nút (rộng 340, mở xuống dưới, tự lật lên trên khi không đủ chỗ). Nội dung: tiêu đề "Keyboard shortcuts" + 10 dòng theo đúng thứ tự Settings → Keyboard Shortcuts (Open translate panel đầu tiên). Mỗi dòng: tên hành động + phím tắt hiện tại (lấy từ Settings lúc mở, "Control" rút gọn thành "Ctrl") + nút ▶ (glyph Play E768) chạy trực tiếp — gọi đúng code path như bấm phím tắt/tray; chỉ nút ▶ mới chạy, bấm vào dòng thì không. Chạy xong popover đóng lại. Lúc popover mở, panel tạm tắt tự ẩn khi bấm ra ngoài + Esc (popover là cửa sổ riêng ngoài khung panel); đóng popover là bật lại. Loa/Copy KHÔNG đụng — giữ trong ô output.
 
 ## 4. Text dài / text ngắn
 
@@ -213,6 +214,7 @@ Lịch sử mò số (để tránh lặp lại): min output card 150 → 160 (#1
 - **Slider font:** kéo "Source & Translation Text Size" và "App name & Slogan Font Size"
   trong Settings — panel giãn live theo, không che, không tràn.
 - **Mở lại:** đóng panel rồi mở lại — về đúng mặc định 420×450, không nhớ cỡ kéo cũ.
+- **Popover shortcut:** bấm "?" → bảng hiện đủ 10 dòng theo thứ tự Settings, phím tắt đúng giá trị hiện tại; bấm nút ▶ chạy đúng hành động (vd OCR mở khung chọn vùng, Settings mở cửa sổ Settings); bấm ra ngoài/bấm lại "?" → bảng đóng, panel ở lại; Esc lúc bảng mở → chỉ đóng bảng, panel ở lại.
 
 ## Liên kết
 

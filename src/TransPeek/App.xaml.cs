@@ -90,7 +90,7 @@ public sealed partial class App : Application
         NativeMethods.ShowWindow(hwnd, NativeMethods.SW_HIDE);
 
         _toast = new ToastWindow();
-        _panel = new TranslatePanelWindow(TranslateAsync, () => _ocrFlow!.RunOcrAsync(), ShowSettings);
+        _panel = new TranslatePanelWindow(TranslateAsync, () => _ocrFlow!.RunOcrAsync(), ShowSettings, BuildShortcutEntries());
         _triggerIcon = new TriggerIconWindow();
         _triggerIcon.OpenRequested += OnTriggerIconOpenRequested;
         _iconSpeech = new SystemSpeechService();
@@ -435,6 +435,33 @@ public sealed partial class App : Application
     {
         try { _tray?.Dispose(); } catch { }
         Environment.Exit(0);
+    }
+
+    /// <summary>The 10 shortcuts for the panel's "?" popover (Manh
+    /// 2026-11-17): same names and order as Settings → Keyboard
+    /// Shortcuts, same actions as the hotkeys (StartHotkeys) and the
+    /// tray menu items. Bindings are read from Settings at popover
+    /// open time, so a changed hotkey shows up without restarting.
+    /// The lambdas only capture App methods — nothing runs at build
+    /// time, so the panel can be constructed before _ocrFlow and
+    /// _screenshotCopy exist (same lazy pattern as StartHotkeys).</summary>
+    private IReadOnlyList<TranslatePanelWindow.PanelShortcutEntry> BuildShortcutEntries()
+    {
+        TranslatePanelWindow.PanelShortcutEntry Entry(string name, Func<string> binding, Action run)
+            => new(name, binding, run);
+        return new[]
+        {
+            Entry("Open translate panel", () => Settings.TranslateHotkey, () => _ = TranslateCurrentSelectionAsync()),
+            Entry("Manual Translation", () => Settings.ManualHotkey, () => _panel?.ShowInputMode()),
+            Entry("OCR Screen Translate", () => Settings.OcrHotkey, () => _ = _ocrFlow!.RunOcrAsync()),
+            Entry("OCR to Clipboard", () => Settings.ClipboardOcrHotkey, () => _ = _ocrFlow!.RunSilentOcrAsync()),
+            Entry("OCR to Clipboard - Translated", () => Settings.ClipboardOcrTranslatedHotkey, () => _ = _ocrFlow!.RunSilentOcrTranslatedAsync()),
+            Entry("Translate Selection", () => Settings.SelectionHotkey, () => _ = TranslateCurrentSelectionAsync()),
+            Entry("Translate Clipboard", () => Settings.ClipboardTranslationHotkey, () => _ = TranslateClipboardAsync()),
+            Entry("Screenshot Copy", () => Settings.ScreenshotCopyHotkey, () => _ = _screenshotCopy!.RunAsync()),
+            Entry("Scan Barcodes/QR Codes", () => Settings.ScanHotkey, () => _ = ScanBarcodesAsync()),
+            Entry("Settings…", () => Settings.SettingsHotkey, () => ShowSettings()),
+        };
     }
 
     // ----- hotkeys -----
