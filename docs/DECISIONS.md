@@ -2221,6 +2221,27 @@ an OS limit.)
   doc screenshot showed the version sitting too far in from the edge).
   The 1 px corner touch with the flush grip is negligible.
 
+## Feature modules: one folder per feature, never inside the translate code (Manh 2026-11-17)
+
+- New features (tomato/focus/rest-eyes, Fast Read/RSVP, ...) live in their
+  own folder/module — never stuffed into the main/translate code. Reason:
+  to avoid conflicts and to stop breaking the translate panel, which has
+  already been through too many fix rounds.
+- Same structure on mac + Windows, one folder per feature, UI + logic
+  together in it (not split too small — one file per function is hard to
+  find): `FastRead/` (RSVP engine + reader window + view), `BreakTimer/`
+  (Pomodoro/focus/20-20-20 timer + tab, later), `Shortcuts/` (one shortcut
+  table shared by the "?" embed and the multi-tab shortcut panel, no
+  copy-paste of two versions — TODO refactor).
+- The tab frame stays thin: one tab = one view + one name, never calling
+  translation code directly. Only the thin joints touch shared code
+  (button, menubar/tray, Alt+click, Settings toggle). Things truly shared
+  (float icon, panel show/hide, Settings, translation provider) stay
+  shared, never duplicated.
+- Windows first application: `FastRead/` on branch `feature/fast-read-rsvp`
+  (engine `src/TransPeek.Core/FastRead/`, window `src/TransPeek/FastRead/`);
+  rule also recorded in `AGENTS.md` §6 and `ARCHITECTURE.md` §2.
+
 ## Liên kết
 
 - [Bối cảnh AI](AI_CONTEXT.md)
