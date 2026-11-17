@@ -10,7 +10,8 @@ to rediscover any of this.
 
 ## Workflow at a glance
 
-- Trigger: push to `main`, PRs, `workflow_dispatch`.
+- Trigger: push to `main` and `feature/**`, PRs to `main`,
+  `workflow_dispatch`.
 - Runner: `windows-latest`. One job (`build`), timeout 30 minutes.
 - Concurrency group `build-${{ github.event.pull_request.number || github.ref }}` with `cancel-in-progress`: a new
   push cancels the run that is still going. Push related files in ONE commit
@@ -19,10 +20,12 @@ to rediscover any of this.
   `-p:Version=0.1.3.<run>`) → Test → Publish self-contained win-x64 →
   Download bundled Tesseract language data (eng+vie) → Verify publish has
   WinUI resources (`.pri` + ≥12 `.xbf`) → Upload artifact
-  `TransPeek-Windows-v0.1` (7-day retention) + delete older artifacts,
-  keeping only the newest → Zip → Create pre-release `v0.1.3.<run number>`
-  (direct download link on the Releases page, keeps only the newest) →
-  Delete older pre-releases. All steps from Publish on are gated on
+  (7-day retention; name `TransPeek-Windows-v0.1` on main,
+  `TransPeek-Windows-<run>-branch` on feature branches) + delete older
+  artifacts on main only, keeping only the newest → Zip → Create
+  pre-release `v0.1.3.<run number>` on main only (direct download link
+  on the Releases page, keeps only the newest) → Delete older
+  pre-releases on main only. All steps from Publish on are gated on
   `[build-app]` in the commit message.
 
 ## When CI runs, and when the app is built
@@ -32,6 +35,15 @@ To avoid wasting CI runs:
 - **Docs-only changes do not trigger CI at all.** The `push` and
   `pull_request` triggers have `paths-ignore` for `docs/**` and `**.md`.
   Editing a doc costs zero CI runs.
+- **Feature branches build the app too** (Manh 2026-11-17): a push to
+  `feature/**` runs Build + Test, and with `[build-app]` also publishes
+  + uploads an artifact — but never creates a pre-release and never
+  deletes older artifacts/pre-releases (those steps are main-only). The
+  branch artifact is named `TransPeek-Windows-<run>-branch`, so the
+  downloaded file is `TransPeek-Windows-<run>-branch.zip`. A branch
+  only builds with the new setup if it contains the new `build.yml` —
+  create it from latest `main`. This is the standard for every feature
+  branch, current and future.
 - **Tests run on every code commit**, but the app artifact is only built
   when the commit message contains `[build-app]`. The Publish / Tesseract
   / Verify / Upload / Delete artifacts / Zip / Create pre-release /
@@ -45,7 +57,10 @@ To avoid wasting CI runs:
 
 - The artifact `TransPeek-Windows-v0.1` (Actions tab, 7-day retention,
   only the newest kept) is a CI build artefact — it expires and notifies
-  nobody. The pre-release `v0.1.3.<run>` (Releases page, zip
+  nobody. On a feature branch the artifact is
+  `TransPeek-Windows-<run>-branch` instead (same content, downloaded as
+  `TransPeek-Windows-<run>-branch.zip`); branch builds never create a
+  pre-release. The pre-release `v0.1.3.<run>` (Releases page, zip
   `TransPeek-Windows-<run>.zip`, ~150 MB) is the direct download link.
   A real stable release (0.1.4) is created manually later; there is no
   `release.yml` in this repo yet.
@@ -105,6 +120,10 @@ To avoid wasting CI runs:
 - **The browser cannot upload a 150 MB zip, and the connector cannot
   create releases.** A saved pre-release needs Manh to take over the
   browser to pick the file and press Publish.
+- **A feature branch only builds if the branch contains the new
+  `build.yml`.** The workflow runs from the file in the pushed branch —
+  create the branch from latest `main` after the workflow change, or
+  the branch push runs nothing (or the old setup).
 - **Version "0.1.3" in `build.yml` is the marketing version.** Bump it
   in the workflow when the app version bumps, or the stamp lies.
 

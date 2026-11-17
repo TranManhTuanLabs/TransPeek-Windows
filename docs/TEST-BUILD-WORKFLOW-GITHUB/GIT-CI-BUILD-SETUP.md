@@ -28,8 +28,9 @@ investigator reading stale setup. The same rule applies to the mac repo
 ### Repo
 
 - GitHub: `TranManhTuanLabs/TransPeek-Windows` (public).
-- Default branch: `main`. No long-lived feature branches — work lands on
-  `main` in batches; `main` stays clean and green.
+- Default branch: `main`. Bigger features (e.g. Fast Read) are built on
+  `feature/<name>` branches (see §3, branch standard) and merged via PR;
+  small fixes land on `main` in batches; `main` stays clean and green.
 - Local copies:
   - Manh's Windows PC (primary, live testing).
   - This VM: `~/workspace/projects/transpeek-windows/` (snapshot, no
@@ -81,7 +82,8 @@ investigator reading stale setup. The same rule applies to the mac repo
 
 - File: `.github/workflows/build.yml`. Runner: `windows-latest`. One job
   (`build`), timeout 30 minutes.
-- Triggers: push to `main`, PRs to `main`, `workflow_dispatch`.
+- Triggers: push to `main` and `feature/**`, PRs to `main`,
+  `workflow_dispatch`.
 - `paths-ignore`: `docs/**`, `**.md` (both push and PR) — a docs-only
   push runs NO CI at all.
 - Concurrency group
@@ -95,10 +97,12 @@ investigator reading stale setup. The same rule applies to the mac repo
 - Steps: Checkout → Setup .NET (`8.0.x`) → Restore → Build → Test →
   Publish (only `[build-app]`) → Download bundled Tesseract language
   data (only `[build-app]`) → Verify publish has WinUI resources (only
-  `[build-app]`) → Upload artifact (only `[build-app]`) → Delete older
-  artifacts (only `[build-app]`) → Zip published app (only
-  `[build-app]`) → Create pre-release (only `[build-app]`) → Delete older
-  pre-releases (only `[build-app]`).
+  `[build-app]`) → Upload artifact (only `[build-app]`; name
+  `TransPeek-Windows-v0.1` on main, `TransPeek-Windows-<run>-branch` on
+  feature branches) → Delete older artifacts (only `[build-app]` AND only
+  on main) → Zip published app (only `[build-app]`) → Create pre-release
+  (only `[build-app]` AND only on main) → Delete older pre-releases (only
+  `[build-app]` AND only on main).
 
 ### How tests run
 
@@ -149,20 +153,45 @@ investigator reading stale setup. The same rule applies to the mac repo
 - **Verify publish has WinUI resources:** fails the build if
   `TransPeek.pri`/`resources.pri` is missing or there are fewer than 12
   `.xbf` files (one per XAML file).
-- **Upload artifact:** name `TransPeek-Windows-v0.1`, 7-day retention.
+- **Upload artifact:** name `TransPeek-Windows-v0.1` on main,
+  `TransPeek-Windows-<run>-branch` on feature branches (the name decides
+  the downloaded file: `TransPeek-Windows-<run>-branch.zip`), 7-day
+  retention.
 - **Delete older artifacts:** keeps only the newest
-  `TransPeek-Windows-v0.1` artifact (`continue-on-error: true`).
+  `TransPeek-Windows-v0.1` artifact (`continue-on-error: true`) — main
+  only.
 - **Zip published app:** `Compress-Archive` to
   `TransPeek-Windows-<run>.zip`.
 - **Create pre-release:** tag `v0.1.3.<run number>`, prerelease, title
   `TransPeek Windows 0.1.3 (CI#<run>) (preview)`, notes "Preview build
   from CI run <run>. Not a stable release." If the tag already exists
   (a re-run), uploads the zip to it with `--clobber` instead of
-  creating a new release.
+  creating a new release — main only.
 - **Delete older pre-releases:** deletes every pre-release whose tag
   matches `^v0\.1\.3\.[0-9]+$` except the newest (`continue-on-error:
   true`). The regex only matches the 4-part preview tags, never the
-  stable `v0.1.4` later.
+  stable `v0.1.4` later — main only.
+
+### Feature branches (branch standard, Manh 2026-11-17)
+
+- A `feature/**` push runs the same Build + Test steps. With
+  `[build-app]` it also publishes and uploads an artifact — but never
+  creates a pre-release and never deletes older artifacts/pre-releases
+  (those three steps are main-only), so a branch build cannot delete
+  main's newest pre-release.
+- The branch artifact is named `TransPeek-Windows-<run>-branch`
+  (downloaded as `TransPeek-Windows-<run>-branch.zip`); main's artifact
+  stays `TransPeek-Windows-v0.1`. The run number in the branch name
+  keeps branch builds distinct.
+- The workflow runs from the file in the branch being pushed — a branch
+  only builds with the new setup if it contains the new `build.yml`.
+  Create the branch from latest `main` after the workflow change (or
+  edit the workflow on the branch).
+- This standard applies to the current branch
+  (`feature/fast-read-rsvp`) AND every future feature branch. Verify it
+  with one `[build-app]` push on the branch: CI runs and the `-branch`
+  artifact is downloadable from the run page; no pre-release appears
+  and nothing of main's is deleted.
 
 ### No signing in CI
 
@@ -230,6 +259,18 @@ setup changes.
   and `BUILD-TEST-WORKFLOW-GITHUB-CI.md` created (following the mac
   template). **Rule: update these docs on EVERY workflow change, in the
   same round — never deferred.**
+- **2026-11-17 — Feature branches can build + `-branch` artifact names
+  (Manh 09:40/11:25/11:29).** `build.yml` (commit `f1d595b`, via browser
+  — the connector cannot edit workflows): push trigger `[main,
+  'feature/**']` (PR trigger unchanged); Delete older artifacts /
+  Create pre-release / Delete older pre-releases now also require
+  `github.ref == 'refs/heads/main'`; Upload artifact name is
+  `TransPeek-Windows-v0.1` on main, `TransPeek-Windows-<run>-branch` on
+  feature branches. Branch standard: applies to the current branch
+  (`feature/fast-read-rsvp`) and all future branches; a branch must
+  contain the new `build.yml` (create from latest `main`); verify with
+  one `[build-app]` push on the branch. The edit itself triggered a
+  test-only run (#168, no `[build-app]`).
 
 ## Liên kết
 
