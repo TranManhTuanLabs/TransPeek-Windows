@@ -74,22 +74,8 @@
 
 ## 6. Tách module tính năng (mỗi tính năng 1 thư mục)
 
-- **Tính năng mới (tomato/focus/rest-eyes/Fast Read/RSVP...) viết riêng
-  file/module — KHÔNG nhét vào code chính/code dịch.** Lý do (Manh 17/11
-  13:08): tránh conflict và tránh làm vỡ panel dịch (đã qua quá nhiều vòng sửa).
-- **Cấu trúc song song mac + Windows** (1 thư mục/tính năng, UI + logic nằm
-  chung trong đó; không tách quá nhỏ — 1 file cho 1 hàm thì khó tìm):
-  `FastRead/` (engine RSVP + cửa sổ đọc + view), `BreakTimer/` (timer
-  Pomodoro/focus/20-20-20 + tab, làm sau), `Shortcuts/` (1 view dùng chung
-  cho nút "?" nhúng + panel shortcut trong khung multi-tab, không copy-paste
-  2 bản — TODO refactor, chưa làm).
-- **Khung tab giữ mỏng:** 1 tab = 1 view + 1 tên, không gọi thẳng code dịch.
-- **Chỉ chạm code chung ở chỗ nối mỏng:** nút, menubar/tray, Alt+click,
-  toggle Settings. Cái dùng chung thật (icon float, hiện/ẩn panel, Settings,
-  provider dịch) thì giữ chung, không nhân bản.
-- Windows hiện tại: `FastRead/` đã làm trên nhánh `feature/fast-read-rsvp`
-  (engine `src/TransPeek.Core/FastRead/` + window `src/TransPeek/FastRead/`);
-  chi tiết ở `FEATURES/FAST_READ.md`.
+- Tính năng mới viết riêng thư mục/module, không nhét vào code chính/code
+  dịch. Chi tiết + lý do: xem `ARCHITECTURE.md` §5 (quyết định kiến trúc).
 
 ## 7. Về Manh
 
