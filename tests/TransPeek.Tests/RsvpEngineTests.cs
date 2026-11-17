@@ -136,9 +136,12 @@ public sealed class RsvpEngineTests
     [Fact]
     public void TotalDuration_SumsSlideDelays()
     {
+        // "one" is plain (218.18 - 30 = 188.2); "two" is the paragraph's
+        // last word, so it carries the +1.1 paragraph-end pause
+        // (218.18 x 2.1 - 30 = 428.2). Total 188.2 + 428.2 = 616.4.
         var doc = RsvpEngine.Build("one two", 275, 1);
-        Assert.Equal(376.4, doc.TotalDuration.TotalMilliseconds, precision: 1);
-        Assert.Equal(188.2, doc.RemainingDuration(1).TotalMilliseconds, precision: 1);
+        Assert.Equal(616.4, doc.TotalDuration.TotalMilliseconds, precision: 1);
+        Assert.Equal(428.2, doc.RemainingDuration(1).TotalMilliseconds, precision: 1);
         Assert.Equal(TimeSpan.Zero, doc.RemainingDuration(99));
     }
 
