@@ -1,7 +1,7 @@
 name: Build
 
 # When this workflow runs:
-# - On every push to main and every pull request to main (but NOT for docs-only
+# - On every push to main and to feature/** branches, and every pull request to main (but NOT for docs-only
 #   changes — see paths-ignore below, so editing a .md file never starts a run).
 # - Manually, from the GitHub Actions tab ("Run workflow").
 # Tests run on every code push. The app is only published + uploaded as an
@@ -9,6 +9,7 @@ name: Build
 # the mac repo (TransPeek test.yml) and SeekZip (ci.yml). Only put
 # "[build-app]" in a commit message when Manh says the word "build-app"
 # himself; Muse never adds it on its own.
+# Feature branches build + upload an artifact only (no pre-release, no deleting older artifacts/pre-releases) — the branch artifact is named TransPeek-Windows-<run>-branch so it cannot be confused with main's TransPeek-Windows-v0.1.
 on:
   pull_request:
     branches: [main]
@@ -16,7 +17,7 @@ on:
       - 'docs/**'
       - '**.md'
   push:
-    branches: [main]
+    branches: [main, 'feature/**']
     paths-ignore:
       - 'docs/**'
       - '**.md'
@@ -83,11 +84,11 @@ jobs:
         if: contains(github.event.head_commit.message, '[build-app]')
         uses: actions/upload-artifact@v4
         with:
-          name: TransPeek-Windows-v0.1
+          name: "${{ github.ref == 'refs/heads/main' && 'TransPeek-Windows-v0.1' || format('TransPeek-Windows-{0}-branch', github.run_number) }}"
           path: publish
           retention-days: 7
       - name: Delete older artifacts (keep only the newest)
-        if: contains(github.event.head_commit.message, '[build-app]')
+        if: contains(github.event.head_commit.message, '[build-app]') && github.ref == 'refs/heads/main'
         shell: bash
         continue-on-error: true
         env:
@@ -109,7 +110,7 @@ jobs:
         shell: pwsh
         run: Compress-Archive -Path publish\* -DestinationPath TransPeek-Windows-${{ github.run_number }}.zip
       - name: Create pre-release
-        if: contains(github.event.head_commit.message, '[build-app]')
+        if: contains(github.event.head_commit.message, '[build-app]') && github.ref == 'refs/heads/main'
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -126,7 +127,7 @@ jobs:
               --prerelease "$ZIP"
           fi
       - name: Delete older pre-releases (keep only the newest)
-        if: contains(github.event.head_commit.message, '[build-app]')
+        if: contains(github.event.head_commit.message, '[build-app]') && github.ref == 'refs/heads/main'
         shell: bash
         continue-on-error: true
         env:
