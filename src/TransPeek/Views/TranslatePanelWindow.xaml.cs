@@ -1220,7 +1220,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// window outside the panel's rect — a click inside it would
     /// otherwise hide the panel) and rebuild the rows so the key
     /// bindings are the current Settings values.</summary>
-    private void OnShortcutsFlyoutOpened(Flyout sender, object args)
+    private void OnShortcutsFlyoutOpened(object sender, object e)
     {
         _suppressAutoHide = true;
         ShortcutsRowsPanel.Children.Clear();
@@ -1280,7 +1280,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         }
     }
 
-    private void OnShortcutsFlyoutClosed(Flyout sender, object args)
+    private void OnShortcutsFlyoutClosed(object sender, object e)
     {
         _suppressAutoHide = false;
     }
