@@ -1262,8 +1262,11 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
             var run = new Button
             {
                 Padding = new Thickness(6, 2, 6, 2),
-                ToolTipService.ToolTip = "Run this action",
             };
+            // Attached property: in code it needs SetToolTip — the XAML
+            // attribute syntax "ToolTipService.ToolTip = ..." is NOT
+            // valid in an object initializer (CS0117 + CS0747, CI #165).
+            ToolTipService.SetToolTip(run, "Run this action");
             run.Content = new FontIcon { Glyph = "\uE768", FontSize = 10 };
             run.Click += (_, _) =>
             {
