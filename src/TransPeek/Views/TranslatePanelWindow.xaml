@@ -27,6 +27,12 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <!-- Dots row (Manh 2026-11-17, chose 12:51): a NEW row, centered
+                 below the GitHub icon in the footer — the panel is now 9
+                 rows. A new Auto row adds its height (~20) to
+                 ComputeMinPanelHeight, so the panel may open a little
+                 taller than the old 450 — Manh approved the increase. -->
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <!-- Title: app name centered, slogan on the line below (Manh
@@ -88,7 +94,7 @@
              Copy second (mac order). Speak uses the Windows system
              voices (SystemSpeechService) — click to listen, click
              again to stop. -->
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="4"
+        <StackPanel x:Name="SourceOverlayPanel" Grid.Row="1" Orientation="Horizontal" Spacing="4"
                     HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,6,8">
             <Button x:Name="SpeakSourceButton" Padding="8,4"
                     ToolTipService.ToolTip="Listen to source text"
@@ -102,7 +108,7 @@
              * output row pays for by clipping the speaker row at the card's
              bottom edge (root cause of the covered-speaker bug, #160/#161).
              Keep the text short enough to fit on one line at 400px wide. -->
-        <TextBlock x:Uid="Panel.Hint" Grid.Row="2" Text="Select a word, then click Dictionary to look it up"
+        <TextBlock x:Name="HintTextBlock" x:Uid="Panel.Hint" Grid.Row="2" Text="Select a word, then click Dictionary to look it up"
                    FontSize="11" Foreground="Gray" TextWrapping="Wrap" Margin="0,0,0,8" />
 
         <!-- Language pickers + Capture OCR (Manh 2026-11-15): ABOVE
@@ -119,7 +125,7 @@
              the pickers are 112 (the longest label, "Auto Detect",
              still fits with room) and the gaps are 4, leaving ~40 of
              slack for the Capture button. -->
-        <Grid Grid.Row="3" Margin="0,0,0,8">
+        <Grid x:Name="LanguageBarGrid" Grid.Row="3" Margin="0,0,0,8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
@@ -211,7 +217,7 @@
              here made the gap above the buttons 16 while the gap below
              (to the dictionary links) was only 8 — the buttons sat
              visibly low. With top 0 both gaps are 8. -->
-        <StackPanel Grid.Row="5" Orientation="Horizontal" Spacing="4" HorizontalAlignment="Right" Margin="0,0,0,8">
+        <StackPanel x:Name="ActionsPanel" Grid.Row="5" Orientation="Horizontal" Spacing="4" HorizontalAlignment="Right" Margin="0,0,0,8">
             <!-- Shortcuts "?" (Manh 2026-11-17): opens a popover listing
                  the 10 keyboard shortcuts (Settings order), each row with
                  a Run button that calls the same code path as the hotkey.
@@ -256,6 +262,37 @@
         <!-- Dictionary links -->
         <local:DictionaryBar x:Name="DictionaryBarControl" Grid.Row="6" />
 
+        <!-- Tab 1 — Keyboard shortcuts (Manh 2026-11-17): the same 10
+             rows as the "?" popover, as a full tab. Temporary
+             placeholder — later this tab becomes rest-eyes / focus /
+             tomato. The rows are built in code (BuildShortcutRows)
+             from the same _shortcuts list as the popover, so the two
+             can never drift apart. Spans rows 1-6 (the whole tab
+             content area); the ScrollViewer takes the leftover height
+             and scrolls if the 10 rows do not fit. -->
+        <Grid x:Name="ShortcutsTabPanel" Grid.Row="1" Grid.RowSpan="6" Visibility="Collapsed">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <TextBlock Text="Keyboard shortcuts" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,4" />
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <StackPanel x:Name="ShortcutsTabRowsPanel" Spacing="2" />
+            </ScrollViewer>
+        </Grid>
+
+        <!-- Tab 3 — Fast Read placeholder (Manh 2026-11-17): the real
+             Fast Read window comes later, on branch
+             feature/fast-read-rsvp. ReadingMode glyph E736 (Segoe
+             Fluent Icons, verified on Microsoft Learn 2026-11-17). -->
+        <Grid x:Name="FastReadTabPanel" Grid.Row="1" Grid.RowSpan="6" Visibility="Collapsed">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="4">
+                <FontIcon Glyph="&#xE736;" FontSize="32" Foreground="Gray" HorizontalAlignment="Center" />
+                <TextBlock Text="Fast Read" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                <TextBlock Text="Coming soon" FontSize="12" Foreground="Gray" HorizontalAlignment="Center" />
+            </StackPanel>
+        </Grid>
+
         <!-- Footer: GitHub repo link centered, dimmed build number right. -->
         <Grid Grid.Row="7" Margin="0,8,0,0">
             <HyperlinkButton x:Name="GithubLink" Padding="0" VerticalAlignment="Center" HorizontalAlignment="Center">
@@ -269,6 +306,23 @@
             <TextBlock x:Name="FooterBuildText" Foreground="Gray" FontSize="11"
                        VerticalAlignment="Center" HorizontalAlignment="Right" Opacity="0.7" />
         </Grid>
+
+        <!-- Tab dots (Manh 2026-11-17, chose 12:51): a NEW row, centered
+             below the GitHub icon in the footer — NOT in the footer row
+             and NOT in the Actions row. A new Auto row adds its height
+             (~20) to ComputeMinPanelHeight, so the panel may open a
+             little taller than the old 450 — Manh approved the increase.
+             Bottom margin 8 = ResizeStripThickness: the native resize
+             strip owns the bottom 8 px of the window, so the dots sit
+             fully above it and stay clickable. Dots are 8 px, 8 px
+             apart; the selected dot is #0EA5E9, the others #C8C8C8
+             (set in ShowTab). No swipe — WinUI has no native swipe
+             for a panel like this; that would be custom work. -->
+        <StackPanel x:Name="TabDotsPanel" Grid.Row="8" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" Margin="0,4,0,8">
+            <Button x:Name="TabDotShortcuts" MinWidth="0" MinHeight="0" Width="8" Height="8" Padding="0" BorderThickness="0" CornerRadius="4" Background="#C8C8C8" Click="OnTabDotClicked" Tag="0" ToolTipService.ToolTip="Keyboard shortcuts" />
+            <Button x:Name="TabDotTranslate" MinWidth="0" MinHeight="0" Width="8" Height="8" Padding="0" BorderThickness="0" CornerRadius="4" Background="#0EA5E9" Click="OnTabDotClicked" Tag="1" ToolTipService.ToolTip="Translate" />
+            <Button x:Name="TabDotFastRead" MinWidth="0" MinHeight="0" Width="8" Height="8" Padding="0" BorderThickness="0" CornerRadius="4" Background="#C8C8C8" Click="OnTabDotClicked" Tag="2" ToolTipService.ToolTip="Fast Read" />
+        </StackPanel>
 
         <!-- Resize grip (Manh 2026-11-15 — like mac's ResizeGripView):
              three diagonal lines at the bottom-right corner, the
@@ -289,7 +343,7 @@
              all at the content edge — the 1 px corner touch with the
              grip is negligible. Replaces the single "↘" arrow, which
              read as a plain arrow rather than a resize grip. -->
-        <Canvas Grid.RowSpan="8" Width="12" Height="12"
+        <Canvas Grid.RowSpan="9" Width="12" Height="12"
                 HorizontalAlignment="Right" VerticalAlignment="Bottom"
                 Margin="0,0,-11,-11" IsHitTestVisible="False">
             <Line X1="3" Y1="12" X2="12" Y2="3"

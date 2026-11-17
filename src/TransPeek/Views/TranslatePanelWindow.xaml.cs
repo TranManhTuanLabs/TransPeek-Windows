@@ -192,6 +192,20 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// the panel and hide the panel (same for Esc). Set on Flyout
     /// Opened, cleared on Closed — only the popover suppresses it.</summary>
     private bool _suppressAutoHide;
+
+    /// <summary>Multi-tab hub (Manh 2026-11-17): Shortcuts (left,
+    /// temporary), Translate (middle, default), Fast Read (right,
+    /// placeholder). Dots only for now — no swipe (WinUI has no native
+    /// swipe for a panel like this; that would be custom work and Manh
+    /// has not approved it).</summary>
+    private enum PanelTab { Shortcuts = 0, Translate = 1, FastRead = 2 }
+
+    private PanelTab _activeTab = PanelTab.Translate;
+
+    private static readonly SolidColorBrush DotSelectedBrush =
+        new(Microsoft.UI.ColorHelper.FromArgb(0xFF, 0x0E, 0xA5, 0xE9));
+    private static readonly SolidColorBrush DotUnselectedBrush =
+        new(Microsoft.UI.ColorHelper.FromArgb(0xFF, 0xC8, 0xC8, 0xC8));
     /// <summary>Windows system TTS (Windows.Media.SpeechSynthesis):
     /// the panel speaker buttons speak through this. One instance for
     /// the window's lifetime; it owns a MediaPlayer + synthesizer.</summary>
@@ -458,6 +472,8 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         _visible = true;
         _clickOutside.Start();
         _escapeKey.Start();
+        // Multi-tab: every show opens on the translate tab.
+        ShowTab(PanelTab.Translate);
         RequestResizeToFit();
         SourceTextBox.Focus(FocusState.Keyboard);
     }
@@ -672,6 +688,8 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         _clickOutside.Start();
         _escapeKey.Start();
         UpdateCopyButtons();
+        // Multi-tab: every show opens on the translate tab.
+        ShowTab(PanelTab.Translate);
         RequestResizeToFit();
     }
 
@@ -1117,8 +1135,11 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         // the speaker/Copy buttons — raising the box cap alone could
         // not help, the box had no room to grow into. Cannot measure
         // (card collapsed / ScrollViewer not ready): keep the dragged
-        // height, previous behaviour.
-        if (TryGetTranslationTextHeights(out var fullText, out var visibleText))
+        // height, previous behaviour. Snap-back only applies on the
+        // translate tab: the other tabs have no translation text to
+        // measure (the shortcuts list is fixed-height rows), so there
+        // is nothing to snap back to — a drag there just clamps.
+        if (_activeTab == PanelTab.Translate && TryGetTranslationTextHeights(out var fullText, out var visibleText))
         {
             var neededH = Math.Clamp(clampedH + (fullText - visibleText), minPanelH, maxH);
             if (clampedH > neededH + 8)
@@ -1154,7 +1175,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         // height is genuinely useful. Cannot measure: keep the dragged
         // width, previous behaviour.
         var defaultW = App.Settings.PanelWidth; // 420
-        if (clampedW > defaultW + 8 && Content is FrameworkElement snapRoot)
+        if (_activeTab == PanelTab.Translate && clampedW > defaultW + 8 && Content is FrameworkElement snapRoot)
         {
             var hAtDefault = MeasureContentHeight(snapRoot, defaultW);
             var hAtDragged = MeasureContentHeight(snapRoot, clampedW);
@@ -1199,6 +1220,61 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// <summary>Pin toggle: while pinned the panel stays put — click-outside
     /// and Esc do not hide it. Toggle again to unpin. (The panel is
     /// already topmost; pin is about not auto-hiding, not z-order.)</summary>
+    /// <summary>Switch tabs (Manh 2026-11-17): show one tab's content,
+    /// hide the others, and repaint the dots. The panel size does NOT
+    /// change on a switch — the overlays span rows 1-6, the same area
+    /// the translate tab uses. One exception (safety net): a drag on
+    /// another tab can leave the panel shorter than the translate
+    /// tab's minimum (its rows were collapsed, so the clamp floor was
+    /// the 450 floor, not the translate minimum) — switching back to
+    /// Translate grows the panel to the minimum so the output card
+    /// never overflows under the Actions row (the #164 pattern). Only
+    /// grows, never shrinks, width untouched. The panel always opens
+    /// on the Translate tab (ShowPanelNear / ShowInputMode call this).</summary>
+    private void ShowTab(PanelTab tab)
+    {
+        if (_activeTab != tab && tab != PanelTab.Translate)
+            ShortcutsFlyout.Hide();
+        _activeTab = tab;
+        var showTranslate = tab == PanelTab.Translate;
+        var translateVisibility = showTranslate ? Visibility.Visible : Visibility.Collapsed;
+        SourceTextBox.Visibility = translateVisibility;
+        SourceOverlayPanel.Visibility = translateVisibility;
+        HintTextBlock.Visibility = translateVisibility;
+        LanguageBarGrid.Visibility = translateVisibility;
+        ProviderCardBorder.Visibility = translateVisibility;
+        ActionsPanel.Visibility = translateVisibility;
+        DictionaryBarControl.Visibility = translateVisibility;
+        ShortcutsTabPanel.Visibility = tab == PanelTab.Shortcuts ? Visibility.Visible : Visibility.Collapsed;
+        FastReadTabPanel.Visibility = tab == PanelTab.FastRead ? Visibility.Visible : Visibility.Collapsed;
+        if (tab == PanelTab.Shortcuts)
+            BuildShortcutRows(ShortcutsTabRowsPanel, () => ShowTab(PanelTab.Translate));
+        TabDotShortcuts.Background = tab == PanelTab.Shortcuts ? DotSelectedBrush : DotUnselectedBrush;
+        TabDotTranslate.Background = tab == PanelTab.Translate ? DotSelectedBrush : DotUnselectedBrush;
+        TabDotFastRead.Background = tab == PanelTab.FastRead ? DotSelectedBrush : DotUnselectedBrush;
+        if (showTranslate && _visible)
+        {
+            RootGrid.UpdateLayout();
+            var minH = ComputeMinPanelHeight();
+            var scale = WindowHelpers.DpiScale(this);
+            var currentH = AppWindow.Size.Height / scale;
+            if (currentH < minH)
+            {
+                var w = AppWindow.Size.Width;
+                var h = Math.Max(1, (int)Math.Round(minH * scale));
+                _lastProgrammaticSize = new Windows.Graphics.SizeInt32(w, h);
+                WindowHelpers.MoveAndResize(this, AppWindow.Position.X, AppWindow.Position.Y, w, h);
+            }
+        }
+    }
+
+    private void OnTabDotClicked(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button dot && int.TryParse(dot.Tag?.ToString(), out var index)
+            && index >= 0 && index <= 2)
+            ShowTab((PanelTab)index);
+    }
+
     private void OnPinToggled(object sender, RoutedEventArgs e)
     {
         _pinned = PinButton.IsChecked == true;
@@ -1223,7 +1299,19 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     private void OnShortcutsFlyoutOpened(object sender, object e)
     {
         _suppressAutoHide = true;
-        ShortcutsRowsPanel.Children.Clear();
+        BuildShortcutRows(ShortcutsRowsPanel, () => ShortcutsFlyout.Hide());
+    }
+
+    /// <summary>Build the 10 shortcut rows (Settings order) into a
+    /// StackPanel — shared by the "?" popover and the shortcuts tab,
+    /// so the two can never drift apart. Only the Run button runs the
+    /// action; clicking the row itself does nothing, so reading the
+    /// list cannot trigger anything. afterRun runs after the action:
+    /// the popover hides itself; the tab switches back to the
+    /// translate tab so the result is visible.</summary>
+    private void BuildShortcutRows(StackPanel panel, Action afterRun)
+    {
+        panel.Children.Clear();
         foreach (var entry in _shortcuts)
         {
             var row = new Grid { ColumnSpacing = 8 };
@@ -1271,12 +1359,12 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
             run.Click += (_, _) =>
             {
                 entry.Run();
-                ShortcutsFlyout.Hide();
+                afterRun();
             };
             Grid.SetColumn(run, 2);
             row.Children.Add(run);
 
-            ShortcutsRowsPanel.Children.Add(row);
+            panel.Children.Add(row);
         }
     }
 
