@@ -12,8 +12,8 @@
 ## 2. Cài đặt liên quan
 
 - **Watch selection automatically** (General → behaviour): bật/tắt theo dõi selection.
-- **How long to hover** (mặc định 500ms; chọn được 300/500/800/1000).
-- **Trigger icon hides after**: icon tự ẩn sau bao lâu.
+- **How long to hover**: ComboBox 300/500/800/1000ms, mặc định 500ms.
+- **Trigger icon hides after**: NumberBox (gõ số giây), mặc định 3s.
 
 ## 3. Nợ
 
