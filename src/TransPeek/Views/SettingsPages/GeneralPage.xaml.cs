@@ -41,14 +41,16 @@ public sealed partial class GeneralPage : Page
         _loading = true;
         var s = App.Settings;
         WatchSelectionToggle.IsOn = s.WatchSelection;
-        HoverDelayCombo.SelectedIndex = s.HoverDelayMs switch
-        {
-            500 => 1,
-            800 => 2,
-            1000 => 3,
-            _ => 0, // 300 ms (or an older saved value) -> first item.
-        };
-        AutoHideBox.Value = s.TriggerIconAutoHideSeconds;
+        // Sliders (Manh 2026-11-17): hover 300-800 ms step 100, auto-hide
+        // 3-10 s step 1. A saved value outside the slider range (e.g. the
+        // old 1000 ms hover option, or an auto-hide over 10 s) is
+        // grandfathered: the slider shows the clamped value, but _loading
+        // is still true here, so the handler returns early and the saved
+        // setting is left untouched until the user moves the slider.
+        HoverDelaySlider.Value = s.HoverDelayMs;
+        HoverDelaySlider.Header = HoverDelayLabel(HoverDelaySlider.Value);
+        AutoHideSlider.Value = s.TriggerIconAutoHideSeconds;
+        AutoHideSlider.Header = AutoHideLabel(AutoHideSlider.Value);
         MainFontSizeSlider.Value = s.PopupFontSize;
         MainFontSizeSlider.Header = MainFontSizeLabel(s.PopupFontSize);
         FontSizeSlider.Value = s.PopupTopBarFontSize;
@@ -83,21 +85,40 @@ public sealed partial class GeneralPage : Page
         Save();
     }
 
-    private void OnHoverDelayChanged(object sender, SelectionChangedEventArgs e)
+    // Hover delay (Manh 2026-11-17): slider 300-800 ms, step 100, default
+    // 500 — like mac. The current value shows on the SAME line as the
+    // label (Header reads "How long to hover...: 500 ms (default:
+    // 500 ms)", same pattern as the font-size sliders below). Same
+    // _loading guard: ValueChanged firing during OnNavigatedTo (Value
+    // being set from the saved setting) returns early.
+    private void OnHoverDelayChanged(object sender, Microsoft.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
     {
-        if (HoverDelayCombo.SelectedItem is ComboBoxItem item
-            && item.Tag is string tag && int.TryParse(tag, out var ms))
-        {
-            App.Settings.HoverDelayMs = ms;
-            Save();
-        }
-    }
-
-    private void OnAutoHideChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
-    {
-        App.Settings.TriggerIconAutoHideSeconds = Math.Max(1, (int)args.NewValue);
+        if (_loading)
+            return;
+        App.Settings.HoverDelayMs = (int)e.NewValue;
+        HoverDelaySlider.Header = HoverDelayLabel(e.NewValue);
         Save();
     }
+
+    private static string HoverDelayLabel(double ms)
+        => $"How long to hover before the panel opens: {ms:0} ms (default: 500 ms)";
+
+    // Trigger auto-hide (Manh 2026-11-17): slider 3-10 s, step 1, default
+    // 5 — like mac, replacing the old free-form NumberBox (1-30 s).
+    // The icon window already reads this setting everywhere (no hardcoded
+    // number), so only the Settings control changes. Same _loading guard
+    // and Header pattern as the hover slider above.
+    private void OnAutoHideChanged(object sender, Microsoft.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
+    {
+        if (_loading)
+            return;
+        App.Settings.TriggerIconAutoHideSeconds = (int)e.NewValue;
+        AutoHideSlider.Header = AutoHideLabel(e.NewValue);
+        Save();
+    }
+
+    private static string AutoHideLabel(double seconds)
+        => $"Trigger icon hides after: {seconds:0} s (default: 5 s)";
 
     // Main content font size (Manh 2026-11-15): the panel's source +
     // translation text size (mac popupFontSize, default 14). Like mac's

@@ -92,17 +92,18 @@
             <TextBlock x:Uid="Settings.General.WatchSelectionHint" Text="When on, the trigger icon appears whenever you select text. When off, the app only responds to hotkeys and the tray menu."
                        FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
 
-            <ComboBox x:Name="HoverDelayCombo" x:Uid="Settings.General.HoverDelay" Header="How long to hover before the panel opens"
-                      SelectionChanged="OnHoverDelayChanged">
-                <ComboBoxItem Content="300 ms" Tag="300" />
-                <ComboBoxItem Content="500 ms" Tag="500" />
-                <ComboBoxItem Content="800 ms" Tag="800" />
-                <ComboBoxItem Content="1000 ms" Tag="1000" />
-            </ComboBox>
+            <!-- Hover delay + auto-hide (Manh 2026-11-17, như mac): 2 slider
+                 thay cho ComboBox/NumberBox cũ — hover 300-800 ms (step
+                 100, mặc định 500), auto-hide 3-10 s (step 1, mặc định 5),
+                 nằm ngay dưới Hover delay. Label hiện giá trị + default
+                 trong Header (theo mẫu các slider cỡ chữ bên dưới). -->
+            <Slider x:Name="HoverDelaySlider" x:Uid="Settings.General.HoverDelay" Header="How long to hover before the panel opens"
+                    Minimum="300" Maximum="800" StepFrequency="100"
+                    ValueChanged="OnHoverDelayChanged" />
 
-            <NumberBox x:Name="AutoHideBox" x:Uid="Settings.General.AutoHide" Header="Trigger icon hides after (seconds)"
-                       Minimum="1" Maximum="30" SpinButtonPlacementMode="Compact"
-                       ValueChanged="OnAutoHideChanged" />
+            <Slider x:Name="AutoHideSlider" x:Uid="Settings.General.AutoHide" Header="Trigger icon hides after"
+                    Minimum="3" Maximum="10" StepFrequency="1"
+                    ValueChanged="OnAutoHideChanged" />
 
             <!-- Appearance (Manh 2026-11-15): a section INSIDE General,
                  NOT a separate tab. "Setting Text Size" sits directly
