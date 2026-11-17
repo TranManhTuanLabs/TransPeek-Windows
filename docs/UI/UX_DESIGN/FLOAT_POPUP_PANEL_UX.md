@@ -3,7 +3,8 @@
 > **Trạng thái: CHỐT — 17/11/2026, theo build #162 (commit `2053f9b`).**
 > Các con số trong doc này là **spec**. Đổi bất kỳ số đã chốt nào cũng cần Manh duyệt trước.
 > Spec đã bao gồm: cấu trúc card 4 hàng (#160) + hint 1 dòng (#161) + loa/Copy overlay
-> trong ô output (#162) + nút "?" + popover shortcut (17/11, "?" trước Pin).
+> trong ô output (#162) + nút "?" + popover shortcut (17/11, "?" trước Pin) +
+> layout đa tab hub (§10, 17/11, chưa triển khai tab).
 > Doc này chỉ cho **Windows**. Bên mac có yêu cầu tương tự nhưng **chưa viết panel UX vì chưa chốt size** — khi nào mac chốt thì viết riêng, đối chiếu với doc này.
 
 ## 1. Kích thước chốt (locked sizes)
@@ -215,6 +216,31 @@ Lịch sử mò số (để tránh lặp lại): min output card 150 → 160 (#1
   trong Settings — panel giãn live theo, không che, không tràn.
 - **Mở lại:** đóng panel rồi mở lại — về đúng mặc định 420×450, không nhớ cỡ kéo cũ.
 - **Popover shortcut:** bấm "?" → bảng hiện đủ 10 dòng theo thứ tự Settings, phím tắt đúng giá trị hiện tại; bấm nút ▶ chạy đúng hành động (vd OCR mở khung chọn vùng, Settings mở cửa sổ Settings); bấm ra ngoài/bấm lại "?" → bảng đóng, panel ở lại; Esc lúc bảng mở → chỉ đóng bảng, panel ở lại.
+
+## 10. Layout đa tab (hub) — quyết định 17/11 (CHƯA triển khai tab)
+
+**Chỉ ghi quyết định — chưa triển khai tab.** Khung multi-tab làm trên main trước,
+rồi mới tạo nhánh `feature/fast-read-rsvp` làm Fast Read window (xem dưới).
+
+- **Kiểu "hub":** panel có 3 tab, chấm giữa là màn chính, 2 bên là 2 nhánh.
+  **Chấm 2 (giữa) = Dịch — panel hiện tại, làm mặc định:** mở panel là thấy Dịch.
+- **Chấm 1 (trái) = panel shortcut tạm thời** — ô linh hoạt, sau này thay được
+  (không cố định là shortcut).
+- **Chấm 3 (phải) = Fast Read** — tạm trống/placeholder tới khi Fast Read ship.
+- **3 chấm hiện từ đầu để trải nghiệm** (thay điều kiện cũ "chấm 3 chỉ hiện khi tab
+  có nội dung thật"; ngoại lệ chỉ áp cho tab 3 đã có kế hoạch cụ thể).
+- **Lý do (Manh):** Dịch ở giữa thì vuốt sang 2 bên đều 1 lần; để Dịch ở chấm 1
+  thì sang Fast Read phải qua 2 lần. Có tiền lệ (Snapchat: camera ở giữa làm mặc
+  định, vuốt trái sang chat, vuốt phải sang stories). Khác thứ tự research cũ
+  (Dịch là 1) nhưng lý do chính đáng nên làm theo hướng này.
+- **Nút "?" bảng shortcut nằm trong panel 2 (Dịch)**, ngay trước nút Pin (§3).
+- **Thứ tự làm:** khung multi-tab → Fast Read window → TTS (Fast Read làm trước
+  TTS, như mac). **Tab RSVP trong panel chỉ là thử nghiệm sau này**, không làm
+  trong nhánh Fast Read — nhánh đó chỉ làm **window riêng chạy RSVP, UX copy y xì
+  SwiftRead, CHỈ ĐỌC, không gồm TTS trong read** (SwiftRead có Listen nhưng
+  TransPeek không copy phần đó; nghe là việc của TTS). Engine + luồng vào theo
+  `docs/RESEARCH/tts-speechify-naturalreader/rsvp-report.md` trên repo mac
+  (§6.1 + §6.3 cho Windows/C#).
 
 ## Liên kết
 
