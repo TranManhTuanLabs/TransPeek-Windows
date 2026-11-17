@@ -19,6 +19,13 @@
 | Cap ô nguồn | **120** | `SourceTextBox MaxHeight="120"` |
 | Min ô dịch | **60** | `TranslationTextBox MinHeight="60"` |
 
+**Giải slider Default Width / Height trong Settings — Windows KHÔNG CÓ (khác mac):**
+mục "Popup Panel" trong Settings → General chỉ có 2 slider cỡ chữ (12–24), không có
+slider rộng/cao. Mặc định 420×450 cố định trong code (`AppSettings.PanelWidth = 420`,
+`PanelHeight = 450`, migration SettingsVersion 2). Giải kích thước cho phép của panel là
+**rộng 400–600, cao 450–800** (= min/max ở bảng trên, OS kẹp qua `WM_GETMINMAXINFO`) —
+nếu sau này thêm slider thì giải chính là khoảng này.
+
 Baseline tham chiếu: **#153** (mở mặc định 420×450, min 400×450, max rộng 600 / cao 800, cap output 260, auto-fit + snap-back ngang/dọc, thu provider gọn card). Nếu một bản sau phá layout thì quay về số của #153 rồi sửa lại từ đó.
 
 ## 2. Khung layout (RootGrid — 8 hàng, Padding 12)
@@ -48,8 +55,13 @@ Hàng `*` là hàng duy nhất dãn theo chiều cao; các hàng `Auto` chỉ ca
 ## 3. Hành vi (behaviour)
 
 - **Auto-fit mỗi lần panel hiện:** đo nội dung rồi vừa khung; text dài cuộn trong ô output (cap 260), panel không tự dãn.
-- **Snap-back NGANG:** kéo rộng thừa cho text ngắn → thả ra co về rộng mặc định 420; text dài thì giữ nguyên rộng đã kéo.
-- **Snap-back DỌC:** kéo cao thừa → thả ra co về chiều cao nội dung.
+- **Snap-back NGANG (ngưỡng +8):** kéo rộng hơn mặc định 420 quá 8pt mà không giảm được
+  chiều cao nội dung quá 8pt → thả ra co về 420; text dài (rộng thêm giúp bớt dòng, chiều
+  cao giảm hơn 8pt) thì giữ nguyên rộng đã kéo. Nguồn: `SettleResizedSize`
+  (`clampedW > defaultW + 8` và `hAtDefault <= hAtDragged + 8`).
+- **Snap-back DỌC (ngưỡng +8):** kéo cao hơn chiều cao cần quá 8pt → thả ra co về chiều
+  cao nội dung (`clampedH > neededH + 8` trong `SettleResizedSize`). Ngưỡng +8 cả 2 chiều
+  — giống mac.
 - **Kéo tay chỉ to ra thêm trong phiên đó.** Settings chỉ đặt giá trị mặc định; **mỗi lần mở panel về đúng mặc định (420×450)**. Cỡ kéo tay KHÔNG lưu vào Settings.
 - **Thu/mở provider card:** thu thì card về MinHeight 0, panel thụt theo (auto-fit lại ngay cả sau khi đã kéo tay).
 - **Kéo di chuyển:** bằng vùng caption là TitleBar (Row 0). **Kéo resize:** viền native (BottomBorder 7, RightBorder 8) + grip trang trí 12×12 ở góc dưới-phải (chỉ trang trí, không phải tay nắm thật).
@@ -192,7 +204,7 @@ Lịch sử mò số (để tránh lặp lại): min output card 150 → 160 (#1
 
 ## 8. Tham chiếu code
 
-- `src/TransPeek/Views/TranslatePanelWindow.xaml` — layout (RootGrid 8 hàng, card 4 hàng trong, loa/Copy ở hàng Auto riêng)
+- `src/TransPeek/Views/TranslatePanelWindow.xaml` — layout (RootGrid 8 hàng, card 3 hàng trong, loa/Copy overlay trong ô output)
 - `src/TransPeek/Views/TranslatePanelWindow.xaml.cs` — hằng số (~dòng 50–121),
   `ComputeMinPanelHeight` (~940), `ResizeToFitContent` (~705), `SettleResizedSize` (~1070),
   `RefreshTopBarFontSize` / `RefreshPopupFontSize` (~355–385)
@@ -233,7 +245,7 @@ rồi mới tạo nhánh `feature/fast-read-rsvp` làm Fast Read window (xem dư
   thì sang Fast Read phải qua 2 lần. Có tiền lệ (Snapchat: camera ở giữa làm mặc
   định, vuốt trái sang chat, vuốt phải sang stories). Khác thứ tự research cũ
   (Dịch là 1) nhưng lý do chính đáng nên làm theo hướng này.
-- **Nút "?" bảng shortcut nằm trong panel 2 (Dịch)**, ngay trước nút Pin (§3).
+- **Nút "?" bảng shortcut nằm trong panel dịch (chấm 2, ở giữa, mặc định)**, ngay trước nút Pin (§3).
 - **Thứ tự làm:** khung multi-tab → Fast Read window → TTS (Fast Read làm trước
   TTS, như mac). **Tab RSVP trong panel chỉ là thử nghiệm sau này**, không làm
   trong nhánh Fast Read — nhánh đó chỉ làm **window riêng chạy RSVP, UX copy y xì
