@@ -7,7 +7,7 @@
 
 - Icon tròn nhỏ hiện gần text user bôi chọn (theo dõi selection tự động).
 - **Hover → mở panel dịch.** **Click → phát TTS** của text đã chọn.
-- Alt-click → đọc nhanh (RSVP) thẳng. Chuột phải → menu có "Đọc nhanh".
+- Alt-click → Fast Read (RSVP) thẳng. Chuột phải → menu có "Fast Read".
 
 ## 2. Cài đặt liên quan
 

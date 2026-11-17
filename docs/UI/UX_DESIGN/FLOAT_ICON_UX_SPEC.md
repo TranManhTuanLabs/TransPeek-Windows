@@ -19,9 +19,9 @@
 - **Hover icon → luồng dịch:** mở panel dịch.
 - **Click icon → luồng TTS nghe:** phát tiếng của text đã chọn (glyph đổi thành loa E767
   lúc đang phát; bấm lần nữa để dừng).
-- **Option-click (Mac) / Alt-click (Windows) → đọc nhanh (RSVP) thẳng** — đã chốt
+- **Option-click (Mac) / Alt-click (Windows) → Fast Read (RSVP) thẳng** — đã chốt
   luồng vào RSVP 17/11, xem `FEATURES/SPEECH_PLAYER.md`.
-- **Chuột phải icon → menu** có mục "Đọc nhanh".
+- **Chuột phải icon → menu** có mục "Fast Read".
 - Icon thỉnh thoảng lúc hiện lúc không khi select text — **đang chờ Manh test thêm**
   trên các bản mới (nợ phiên).
 

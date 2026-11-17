@@ -237,7 +237,7 @@ Lịch sử mò số (để tránh lặp lại): min output card 150 → 160 (#1
   **panel dịch (ở giữa, mặc định):** mở panel là thấy Dịch.
 - **panel shortcut (tạm thời, ở trái)** — ô linh hoạt, sau này thay được
   (không cố định là shortcut).
-- **panel Fast Read (tên tạm, ở phải)** — tạm trống/placeholder tới khi Fast Read ship.
+- **panel Fast Read (ở phải)** — tạm trống/placeholder tới khi Fast Read ship.
 - **3 chấm hiện từ đầu để trải nghiệm** (thay điều kiện cũ "chấm của panel Fast Read chỉ hiện khi tab
   có nội dung thật"; ngoại lệ chỉ áp cho panel Fast Read đã có kế hoạch cụ thể).
 - **Lý do (Manh):** panel dịch ở giữa thì vuốt sang 2 bên đều 1 lần; để panel dịch ở trái
@@ -257,7 +257,7 @@ Lịch sử mò số (để tránh lặp lại): min output card 150 → 160 (#1
   `docs/RESEARCH/tts-speechify-naturalreader/rsvp-report.md` trên repo mac
   (§6.1 + §6.3 cho Windows/C#). **Đã triển khai trên nhánh `feature/fast-read-rsvp`
   (17/11): xem `docs/FEATURES/FAST_READ.md` — engine + window + 4 đường vào
-  (Alt-click, menu chuột phải icon, nút "Đọc nhanh" trong panel dịch, tray);
+  (Alt-click, menu chuột phải icon, nút "Fast Read" trong panel dịch, tray);
   phím tắt global chỉ là fallback, chưa làm.**
 
 ## Liên kết

@@ -16,11 +16,11 @@
 - Tab TTS Speech: Auto-play source, Auto-play translation (nguồn trước, dịch sau
   qua event `SpeechEnded`). Nối vào `ShowResult` → `AutoPlayIfEnabled()`.
 
-## 3. Đọc nhanh (RSVP) — đã chốt luồng vào 17/11, CHƯA LÀM
+## 3. Fast Read (RSVP) — đã chốt luồng vào 17/11, CHƯA LÀM
 
 - (1) Alt-click (Windows) / Option-click (Mac) → RSVP thẳng.
-- (2) Chuột phải icon → menu "Đọc nhanh".
-- (3) Nút "Đọc nhanh" trong panel dịch.
+- (2) Chuột phải icon → menu "Fast Read".
+- (3) Nút "Fast Read" trong panel dịch.
 - (4) Menubar/tray. (5) Shortcut global chỉ là fallback.
 - + Settings toggle đổi click → RSVP cho người dùng RSVP là chính.
 - Vị trí view đọc: **giữ cả 2 phương án** (tab dãn / panel riêng), quyết ở lúc prototype.

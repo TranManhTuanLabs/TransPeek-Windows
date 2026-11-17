@@ -107,8 +107,8 @@
                  always opens Fast Read regardless of this setting. -->
             <ComboBox x:Name="IconClickActionCombo" x:Uid="Settings.General.IconClickAction" Header="Click icon"
                       SelectionChanged="OnIconClickActionChanged">
-                <ComboBoxItem Content="Listen (read aloud)" Tag="Speak" />
-                <ComboBoxItem Content="Fast Read (speed reading)" Tag="FastRead" />
+                <ComboBoxItem Content="Listen" Tag="Speak" />
+                <ComboBoxItem Content="Fast Read" Tag="FastRead" />
             </ComboBox>
 
             <NumberBox x:Name="AutoHideBox" x:Uid="Settings.General.AutoHide" Header="Trigger icon hides after (seconds)"

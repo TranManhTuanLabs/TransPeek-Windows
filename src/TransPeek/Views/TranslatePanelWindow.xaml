@@ -265,7 +265,7 @@
                  window), so it is not part of the "?" + Pin + Settings
                  group. -->
             <Button x:Name="FastReadButton" Padding="6,2"
-                    ToolTipService.ToolTip="Fast Read (RSVP)" Click="OnFastReadClicked">
+                    ToolTipService.ToolTip="Fast Read" Click="OnFastReadClicked">
                 <FontIcon Glyph="&#xE736;" FontSize="12" />
             </Button>
         </StackPanel>
