@@ -36,6 +36,8 @@ Hàng `*` là hàng duy nhất dãn theo chiều cao; các hàng `Auto` chỉ ca
 | Row 6 | Auto | **DictionaryBarControl** — link tra từ điển | |
 | Row 7 | Auto | **Footer** — link GitHub căn giữa + build text căn phải | |
 
+**Loa/Copy ở trong ô output — GIỮ NGUYÊN (Manh chốt 17/11, cả 2 repo):** mỗi provider có nút loa/Copy riêng ngay dưới text của nó. Đưa ra ngoài thành hàng cố định thì phải thêm logic định tuyến nút về đúng provider (nút thuộc provider nào, provider đang load thì sao) — phức tạp hơn mà không đáng. Nhược điểm đã biết: text dài phải kéo xuống đáy ô mới thấy nút Copy — chấp nhận.
+
 ### Cỡ chữ theo Settings (chạy lúc mở panel và khi lưu Settings)
 
 - **"App name & Slogan Font Size"** (`PopupTopBarFontSize`, mặc định **17**, slider 12–24): tên app = N, slogan = N−1 (sàn 8), hint = N−4 (sàn 8). Mặc định: 17 / 16 / 13. Đáy TitleBar = cỡ hint.
