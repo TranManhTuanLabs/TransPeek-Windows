@@ -15,7 +15,7 @@
 - Một nghiên cứu = một thư mục: `docs/RESEARCH/<ten-nghien-cuu>/report.md`.
 - Ghi rõ ngày nghiên cứu, nguồn, và những gì **chưa xác minh**.
 - Khi Manh chốt hướng từ research, cập nhật doc liên quan (vd `MASTER_PLAN.md`,
-  `FEATURES/SPEECH_ENGINE.MD`) trong cùng đợt, và ghi link tới báo cáo.
+  `FEATURES/SPEECH_ENGINE.md`) trong cùng đợt, và ghi link tới báo cáo.
 
 ## Nghiên cứu đã có (riêng Windows)
 

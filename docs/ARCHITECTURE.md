@@ -24,11 +24,11 @@ docs/
   WINDOWS-v0.1-TESTING.md
   FEATURES/           # mô tả từng tính năng
   UI/UX_DESIGN/       # spec UX (panel đã CHỐT)
-  ARCHITECTURE.MD     # doc này
+  ARCHITECTURE.md     # doc này
   MASTER_PLAN.md      # lộ trình
   STRUCTURE_MAP.md    # bản đồ repo + docs
-  TASK_QUEUE.MD       # việc đang làm / chờ
-  UI_DESIGN.MD        # chỉ mục UX
+  TASK_QUEUE.md       # việc đang làm / chờ
+  UI_DESIGN.md        # chỉ mục UX
 ```
 
 ## 3. Thành phần chính
@@ -42,8 +42,8 @@ docs/
   `TranslationResult(Text, ProviderName, DetectedSourceLanguage)`. Google Translate,
   retry 429 tối đa 3 lần backoff 1s/2s/4s, KHÔNG fallback provider.
 - **TTS:** `SystemSpeechService` (`Windows.Media.SpeechSynthesis`) — xem
-  `FEATURES/SPEECH_ENGINE.MD`.
-- **OCR:** Windows OCR + Tesseract — xem `FEATURES/OCR_TEXT_CAPTURE.MD`.
+  `FEATURES/SPEECH_ENGINE.md`.
+- **OCR:** Windows OCR + Tesseract — xem `FEATURES/OCR_TEXT_CAPTURE.md`.
 - **Settings:** `AppSettings` (JSON, `%LOCALAPPDATA%\TransPeek\settings.json`),
   `SettingsStore.Load/Save`, migration `SettingsVersion`.
 - **Hotkey:** `GlobalHotkeyService` (WndProc static + ConcurrentDictionary).
@@ -61,5 +61,5 @@ docs/
 - [Quyết định đã chốt](DECISIONS.md)
 - [Lộ trình](MASTER_PLAN.md)
 - [Bản đồ docs](STRUCTURE_MAP.md)
-- [Bối cảnh AI](AI_CONTEXT.MD)
-- [Trạng thái dự án](PROJECT_STATE.MD)
+- [Bối cảnh AI](AI_CONTEXT.md)
+- [Trạng thái dự án](PROJECT_STATE.md)

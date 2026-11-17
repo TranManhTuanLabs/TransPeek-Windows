@@ -25,16 +25,16 @@
 
 ## 4. Các doc UX chi tiết
 
-- `FLOAT_POPUP_PANEL_UX.MD` — **CHỐT** (17/11/2026, build #161): size panel, khung layout, snap-back.
-- `FLOAT_ICON_UX_SPEC.MD` — bản nháp: hình dạng + hành vi icon float.
-- `MAIN_NAVIGATION_UX.MD` — bản nháp: menu tray + cửa sổ Settings.
-- `SETTING_UX.MD` — **CHƯA VIẾT**.
+- `FLOAT_POPUP_PANEL_UX.md` — **CHỐT** (17/11/2026, build #161): size panel, khung layout, snap-back.
+- `FLOAT_ICON_UX_SPEC.md` — bản nháp: hình dạng + hành vi icon float.
+- `MAIN_NAVIGATION_UX.md` — bản nháp: menu tray + cửa sổ Settings.
+- `SETTING_UX.md` — **CHƯA VIẾT**.
 
 ## Liên kết
 
-- [Panel UX (CHỐT)](FLOAT_POPUP_PANEL_UX.MD)
-- [Icon float UX](FLOAT_ICON_UX_SPEC.MD)
-- [Điều hướng chính](MAIN_NAVIGATION_UX.MD)
-- [Settings UX (chưa viết)](SETTING_UX.MD)
-- [Speech Player](../../FEATURES/SPEECH_PLAYER.MD)
-- [Quy tắc làm việc](../../AGENTS.MD)
+- [Panel UX (CHỐT)](FLOAT_POPUP_PANEL_UX.md)
+- [Icon float UX](FLOAT_ICON_UX_SPEC.md)
+- [Điều hướng chính](MAIN_NAVIGATION_UX.md)
+- [Settings UX (chưa viết)](SETTING_UX.md)
+- [Speech Player](../../FEATURES/SPEECH_PLAYER.md)
+- [Quy tắc làm việc](../../AGENTS.md)

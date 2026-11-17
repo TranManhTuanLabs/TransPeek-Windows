@@ -1,7 +1,7 @@
 # Float Icon — UX Spec (bản nháp)
 
 > Trạng thái: **bản nháp** — ghi lại những gì đã chốt, chờ Manh duyệt rồi mới thành spec chốt
-> như panel (`FLOAT_POPUP_PANEL_UX.MD`).
+> như panel (`FLOAT_POPUP_PANEL_UX.md`).
 
 ## 1. Hình dạng (đã chốt)
 
@@ -20,7 +20,7 @@
 - **Click icon → luồng TTS nghe:** phát tiếng của text đã chọn (glyph đổi thành loa E767
   lúc đang phát; bấm lần nữa để dừng).
 - **Option-click (Mac) / Alt-click (Windows) → đọc nhanh (RSVP) thẳng** — đã chốt
-  luồng vào RSVP 17/11, xem `FEATURES/SPEECH_PLAYER.MD`.
+  luồng vào RSVP 17/11, xem `FEATURES/SPEECH_PLAYER.md`.
 - **Chuột phải icon → menu** có mục "Đọc nhanh".
 - Icon thỉnh thoảng lúc hiện lúc không khi select text — **đang chờ Manh test thêm**
   trên các bản mới (nợ phiên).
@@ -37,7 +37,7 @@
 
 ## Liên kết
 
-- [Panel UX (CHỐT)](FLOAT_POPUP_PANEL_UX.MD)
-- [Tổng quan UX](APP_UX_OVERVIEW.MD)
-- [Tính năng Float Icon](../../FEATURES/FLOAT_ICON.MD)
-- [Điều hướng chính](MAIN_NAVIGATION_UX.MD)
+- [Panel UX (CHỐT)](FLOAT_POPUP_PANEL_UX.md)
+- [Tổng quan UX](APP_UX_OVERVIEW.md)
+- [Tính năng Float Icon](../../FEATURES/FLOAT_ICON.md)
+- [Điều hướng chính](MAIN_NAVIGATION_UX.md)

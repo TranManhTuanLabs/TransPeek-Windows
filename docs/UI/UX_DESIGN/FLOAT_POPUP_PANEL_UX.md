@@ -214,9 +214,9 @@ Lịch sử mò số (để tránh lặp lại): min output card 150 → 160 (#1
 
 ## Liên kết
 
-- [Icon float UX](FLOAT_ICON_UX_SPEC.MD)
-- [Tổng quan UX](APP_UX_OVERVIEW.MD)
-- [Kiến trúc](../../ARCHITECTURE.MD)
-- [Việc đang làm / chờ](../../TASK_QUEUE.MD)
-- [Trạng thái dự án](../../PROJECT_STATE.MD)
-- [Chỉ mục UX](../../UI_DESIGN.MD)
+- [Icon float UX](FLOAT_ICON_UX_SPEC.md)
+- [Tổng quan UX](APP_UX_OVERVIEW.md)
+- [Kiến trúc](../../ARCHITECTURE.md)
+- [Việc đang làm / chờ](../../TASK_QUEUE.md)
+- [Trạng thái dự án](../../PROJECT_STATE.md)
+- [Chỉ mục UX](../../UI_DESIGN.md)

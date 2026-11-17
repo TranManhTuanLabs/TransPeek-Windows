@@ -1,7 +1,7 @@
 # AI Context — TransPeek-Windows
 
-> Bối cảnh cho AI làm việc trong repo này. Quy tắc làm việc: `AGENTS.MD`.
-> Trạng thái hiện tại: `PROJECT_STATE.MD`. Bản đồ docs: `STRUCTURE_MAP.md`.
+> Bối cảnh cho AI làm việc trong repo này. Quy tắc làm việc: `AGENTS.md`.
+> Trạng thái hiện tại: `PROJECT_STATE.md`. Bản đồ docs: `STRUCTURE_MAP.md`.
 
 ## 1. App là gì
 
@@ -29,7 +29,7 @@
   KHÔNG SAPI, KHÔNG Edge, KHÔNG Azure giai đoạn này.
 - **OCR:** Tesseract (vie + eng nhúng sẵn, zip ~150MB; 123 ngôn ngữ tải thêm trong app)
   + Windows OCR (không nhúng/tải ngầm được, chỉ mở Settings cho user tự cài).
-- **Panel:** xem spec chốt `UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.MD` — mở mặc định
+- **Panel:** xem spec chốt `UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md` — mở mặc định
   420×450, min 400×450, max rộng 600 / cao 800, cap output 260, min card 218,
   auto-fit + snap-back, mỗi lần mở về mặc định.
 - **Phát hành:** 1 git flow, 1 version → Velopack (GitHub) + MSIX (Store); Privacy Policy
@@ -64,8 +64,8 @@
 
 ## Liên kết
 
-- [Quy tắc làm việc](AGENTS.MD)
-- [Trạng thái dự án](PROJECT_STATE.MD)
+- [Quy tắc làm việc](AGENTS.md)
+- [Trạng thái dự án](PROJECT_STATE.md)
 - [Bản đồ docs](STRUCTURE_MAP.md)
-- [Kiến trúc](ARCHITECTURE.MD)
+- [Kiến trúc](ARCHITECTURE.md)
 - [Quyết định đã chốt](DECISIONS.md)

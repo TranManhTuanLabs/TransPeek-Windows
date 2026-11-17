@@ -36,11 +36,11 @@ Quit TransPeek (E711).
   behaviour (Launch with Windows → Watch selection automatically → How long to hover →
   Trigger icon hides after) → **Appearance** → **Setting Text Size** → **Popup Panel** →
   **Source & Translation Text Size** → **App name & Slogan Font Size** → footer đường dẫn settings.
-- 10 ô hotkey = tên item tray (xem `FEATURES/SETTINGS.MD` khi viết xong).
-- Chi tiết từng trang Settings: xem `SETTING_UX.MD` — **CHƯA VIẾT**.
+- 10 ô hotkey = tên item tray (xem `FEATURES/SETTINGS.md` khi viết xong).
+- Chi tiết từng trang Settings: xem `SETTING_UX.md` — **CHƯA VIẾT**.
 
 ## Liên kết
 
-- [Settings UX (chưa viết)](SETTING_UX.MD)
-- [Tính năng Settings (chưa viết)](../../FEATURES/SETTINGS.MD)
-- [Tổng quan UX](APP_UX_OVERVIEW.MD)
+- [Settings UX (chưa viết)](SETTING_UX.md)
+- [Tính năng Settings (chưa viết)](../../FEATURES/SETTINGS.md)
+- [Tổng quan UX](APP_UX_OVERVIEW.md)

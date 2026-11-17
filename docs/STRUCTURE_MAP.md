@@ -17,25 +17,25 @@
 | `docs/TEST-BUILD-WORKFLOW-GITHUB/BUILD-TEST-WORKFLOW-GITHUB-CI.md` | CI workflow chi tiết (đọc run đỏ, gotcha) | Đang dùng |
 | `docs/DECISIONS.md` | Mọi quyết định đã chốt + lý do | Đang dùng |
 | `docs/WINDOWS-v0.1-TESTING.md` | Checklist build + test live | Đang dùng |
-| `docs/ARCHITECTURE.MD` | Kiến trúc tổng | Bản nháp |
+| `docs/ARCHITECTURE.md` | Kiến trúc tổng | Bản nháp |
 | `docs/MASTER_PLAN.md` | Lộ trình 0.1.4 | Bản nháp |
 | `docs/STRUCTURE_MAP.md` | Doc này | Bản nháp |
-| `docs/TASK_QUEUE.MD` | Việc đang làm / chờ | Bản nháp |
-| `docs/UI_DESIGN.MD` | Chỉ mục UX | Bản nháp |
-| `docs/FEATURES/FLOAT_ICON.MD` | Tính năng icon float | Bản nháp |
-| `docs/FEATURES/SPEECH_ENGINE.MD` | Engine TTS | Bản nháp |
-| `docs/FEATURES/SPEECH_PLAYER.MD` | Player TTS + RSVP | Bản nháp |
-| `docs/FEATURES/OCR_TEXT_CAPTURE.MD` | OCR | Bản nháp |
-| `docs/FEATURES/SETTINGS.MD` | Tính năng Settings | **CHƯA VIẾT** |
-| `docs/UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.MD` | **Panel UX — size đã CHỐT** | **CHỐT 17/11/2026 (#161)** |
-| `docs/UI/UX_DESIGN/FLOAT_ICON_UX_SPEC.MD` | Icon float UX | Bản nháp |
-| `docs/UI/UX_DESIGN/APP_UX_OVERVIEW.MD` | Tổng quan UX | Bản nháp |
-| `docs/UI/UX_DESIGN/SETTING_UX.MD` | Settings UX | **CHƯA VIẾT** |
-| `docs/UI/UX_DESIGN/MAIN_NAVIGATION_UX.MD` | Menu tray + Settings | Bản nháp |
-| `docs/AGENTS.MD` | Quy tắc làm việc cho AI trong repo | Đang dùng |
-| `docs/AI_CONTEXT.MD` | Bối cảnh cho AI | Đang dùng |
-| `docs/PROJECT_STATE.MD` | Trạng thái dự án hiện tại | Đang dùng |
-| `docs/BUILD_FROM_ZERO.MD` | Build app từ máy trắng | Đang dùng |
+| `docs/TASK_QUEUE.md` | Việc đang làm / chờ | Bản nháp |
+| `docs/UI_DESIGN.md` | Chỉ mục UX | Bản nháp |
+| `docs/FEATURES/FLOAT_ICON.md` | Tính năng icon float | Bản nháp |
+| `docs/FEATURES/SPEECH_ENGINE.md` | Engine TTS | Bản nháp |
+| `docs/FEATURES/SPEECH_PLAYER.md` | Player TTS + RSVP | Bản nháp |
+| `docs/FEATURES/OCR_TEXT_CAPTURE.md` | OCR | Bản nháp |
+| `docs/FEATURES/SETTINGS.md` | Tính năng Settings | **CHƯA VIẾT** |
+| `docs/UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md` | **Panel UX — size đã CHỐT** | **CHỐT 17/11/2026 (#161)** |
+| `docs/UI/UX_DESIGN/FLOAT_ICON_UX_SPEC.md` | Icon float UX | Bản nháp |
+| `docs/UI/UX_DESIGN/APP_UX_OVERVIEW.md` | Tổng quan UX | Bản nháp |
+| `docs/UI/UX_DESIGN/SETTING_UX.md` | Settings UX | **CHƯA VIẾT** |
+| `docs/UI/UX_DESIGN/MAIN_NAVIGATION_UX.md` | Menu tray + Settings | Bản nháp |
+| `docs/AGENTS.md` | Quy tắc làm việc cho AI trong repo | Đang dùng |
+| `docs/AI_CONTEXT.md` | Bối cảnh cho AI | Đang dùng |
+| `docs/PROJECT_STATE.md` | Trạng thái dự án hiện tại | Đang dùng |
+| `docs/BUILD_FROM_ZERO.md` | Build app từ máy trắng | Đang dùng |
 | `docs/RESEARCH/README.md` | Chỉ mục research | Đang dùng |
 | `docs/RESEARCH/transpeek-windows-packaging-signing/report.md` | Research đóng gói/ký/Store | Đang dùng |
 
@@ -48,31 +48,31 @@ docs/
 │   └── BUILD-TEST-WORKFLOW-GITHUB-CI.md  # CI workflow chi tiết
 ├── DECISIONS.md                  # mọi quyết định đã chốt + lý do
 ├── WINDOWS-v0.1-TESTING.md       # checklist build + test live
-├── AGENTS.MD                     # quy tắc làm việc cho AI
-├── AI_CONTEXT.MD                 # bối cảnh cho AI
-├── PROJECT_STATE.MD              # trạng thái dự án hiện tại
-├── BUILD_FROM_ZERO.MD            # build app từ máy trắng
+├── AGENTS.md                     # quy tắc làm việc cho AI
+├── AI_CONTEXT.md                 # bối cảnh cho AI
+├── PROJECT_STATE.md              # trạng thái dự án hiện tại
+├── BUILD_FROM_ZERO.md            # build app từ máy trắng
 ├── RESEARCH/
 │   ├── README.md                     # chỉ mục research
 │   └── transpeek-windows-packaging-signing/  # đóng gói/ký/Store (Windows)
-├── ARCHITECTURE.MD               # kiến trúc tổng
+├── ARCHITECTURE.md               # kiến trúc tổng
 ├── MASTER_PLAN.md                # lộ trình 0.1.4
 ├── STRUCTURE_MAP.md              # doc này (bản đồ + cây docs)
-├── TASK_QUEUE.MD                 # việc đang làm / chờ
-├── UI_DESIGN.MD                  # chỉ mục UX
+├── TASK_QUEUE.md                 # việc đang làm / chờ
+├── UI_DESIGN.md                  # chỉ mục UX
 ├── FEATURES/
-│   ├── FLOAT_ICON.MD             # tính năng icon float
-│   ├── SPEECH_ENGINE.MD          # engine TTS
-│   ├── SPEECH_PLAYER.MD          # player TTS + RSVP
-│   ├── OCR_TEXT_CAPTURE.MD       # OCR
-│   └── SETTINGS.MD               # tính năng Settings (CHƯA VIẾT)
+│   ├── FLOAT_ICON.md             # tính năng icon float
+│   ├── SPEECH_ENGINE.md          # engine TTS
+│   ├── SPEECH_PLAYER.md          # player TTS + RSVP
+│   ├── OCR_TEXT_CAPTURE.md       # OCR
+│   └── SETTINGS.md               # tính năng Settings (CHƯA VIẾT)
 └── UI/
     └── UX_DESIGN/
-        ├── FLOAT_POPUP_PANEL_UX.MD   # panel UX — size đã CHỐT
-        ├── FLOAT_ICON_UX_SPEC.MD     # icon float UX
-        ├── APP_UX_OVERVIEW.MD        # tổng quan UX
-        ├── MAIN_NAVIGATION_UX.MD     # menu tray + Settings
-        └── SETTING_UX.MD             # Settings UX (CHƯA VIẾT)
+        ├── FLOAT_POPUP_PANEL_UX.md   # panel UX — size đã CHỐT
+        ├── FLOAT_ICON_UX_SPEC.md     # icon float UX
+        ├── APP_UX_OVERVIEW.md        # tổng quan UX
+        ├── MAIN_NAVIGATION_UX.md     # menu tray + Settings
+        └── SETTING_UX.md             # Settings UX (CHƯA VIẾT)
 ```
 
 ## 4. Quy ước
@@ -83,8 +83,8 @@ docs/
 
 ## Liên kết
 
-- [Quy tắc làm việc](AGENTS.MD)
-- [Bối cảnh AI](AI_CONTEXT.MD)
-- [Trạng thái dự án](PROJECT_STATE.MD)
-- [Panel UX (CHỐT)](UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.MD)
-- [Chỉ mục UX](UI_DESIGN.MD)
+- [Quy tắc làm việc](AGENTS.md)
+- [Bối cảnh AI](AI_CONTEXT.md)
+- [Trạng thái dự án](PROJECT_STATE.md)
+- [Panel UX (CHỐT)](UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md)
+- [Chỉ mục UX](UI_DESIGN.md)

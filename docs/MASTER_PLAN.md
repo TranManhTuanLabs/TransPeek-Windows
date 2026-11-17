@@ -26,7 +26,7 @@
   sau đó tự động qua Store Submission API.
 - Ký SignPath chỉ áp cho bản GitHub.
 
-## 4. Việc đang mở (xem chi tiết `TASK_QUEUE.MD`)
+## 4. Việc đang mở (xem chi tiết `TASK_QUEUE.md`)
 
 - Bug che loa/Copy panel — ĐANG MỞ (#149→#159).
 - Doc UI/UX — panel đã chốt, còn lại đang viết dần.
@@ -35,7 +35,7 @@
 
 ## Liên kết
 
-- [Việc đang làm / chờ](TASK_QUEUE.MD)
-- [Trạng thái dự án](PROJECT_STATE.MD)
-- [Kiến trúc](ARCHITECTURE.MD)
-- [Chỉ mục UX](UI_DESIGN.MD)
+- [Việc đang làm / chờ](TASK_QUEUE.md)
+- [Trạng thái dự án](PROJECT_STATE.md)
+- [Kiến trúc](ARCHITECTURE.md)
+- [Chỉ mục UX](UI_DESIGN.md)

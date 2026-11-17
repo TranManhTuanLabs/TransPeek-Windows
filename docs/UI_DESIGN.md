@@ -7,11 +7,11 @@
 
 | Doc | Nội dung | Trạng thái |
 |---|---|---|
-| `UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.MD` | Panel dịch: size chốt, khung layout 8 hàng, auto-fit, snap-back, text dài/ngắn | **CHỐT** |
-| `UI/UX_DESIGN/FLOAT_ICON_UX_SPEC.MD` | Icon float: hình dạng, hover=dịch, click=nghe | Bản nháp |
-| `UI/UX_DESIGN/APP_UX_OVERVIEW.MD` | Tổng quan UX toàn app | Bản nháp |
-| `UI/UX_DESIGN/MAIN_NAVIGATION_UX.MD` | Menu tray + cấu trúc Settings | Bản nháp |
-| `UI/UX_DESIGN/SETTING_UX.MD` | UX từng trang Settings | **CHƯA VIẾT** |
+| `UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md` | Panel dịch: size chốt, khung layout 8 hàng, auto-fit, snap-back, text dài/ngắn | **CHỐT** |
+| `UI/UX_DESIGN/FLOAT_ICON_UX_SPEC.md` | Icon float: hình dạng, hover=dịch, click=nghe | Bản nháp |
+| `UI/UX_DESIGN/APP_UX_OVERVIEW.md` | Tổng quan UX toàn app | Bản nháp |
+| `UI/UX_DESIGN/MAIN_NAVIGATION_UX.md` | Menu tray + cấu trúc Settings | Bản nháp |
+| `UI/UX_DESIGN/SETTING_UX.md` | UX từng trang Settings | **CHƯA VIẾT** |
 
 ## Nguyên tắc UX chung
 
@@ -24,9 +24,9 @@
 
 ## Liên kết
 
-- [Panel UX (CHỐT)](UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.MD)
-- [Icon float UX](UI/UX_DESIGN/FLOAT_ICON_UX_SPEC.MD)
-- [Tổng quan UX](UI/UX_DESIGN/APP_UX_OVERVIEW.MD)
-- [Điều hướng chính](UI/UX_DESIGN/MAIN_NAVIGATION_UX.MD)
-- [Settings UX (chưa viết)](UI/UX_DESIGN/SETTING_UX.MD)
-- [Trạng thái dự án](PROJECT_STATE.MD)
+- [Panel UX (CHỐT)](UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md)
+- [Icon float UX](UI/UX_DESIGN/FLOAT_ICON_UX_SPEC.md)
+- [Tổng quan UX](UI/UX_DESIGN/APP_UX_OVERVIEW.md)
+- [Điều hướng chính](UI/UX_DESIGN/MAIN_NAVIGATION_UX.md)
+- [Settings UX (chưa viết)](UI/UX_DESIGN/SETTING_UX.md)
+- [Trạng thái dự án](PROJECT_STATE.md)

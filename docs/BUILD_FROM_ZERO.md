@@ -2,7 +2,7 @@
 
 > Hướng dẫn build app từ máy trắng (chưa cài gì), từ lúc clone tới lúc chạy được.
 > Checklist test sau khi build xong: `WINDOWS-v0.1-TESTING.md`.
-> Kiến trúc tổng: `ARCHITECTURE.MD`. Quy tắc làm việc: `AGENTS.MD`.
+> Kiến trúc tổng: `ARCHITECTURE.md`. Quy tắc làm việc: `AGENTS.md`.
 
 ## 1. Cần gì (máy Windows)
 
@@ -99,7 +99,7 @@ dotnet test tests\TransPeek.Tests\TransPeek.Tests.csproj
 - [Setup git, CI test + build workflow](TEST-BUILD-WORKFLOW-GITHUB/GIT-CI-BUILD-SETUP.md)
 - [CI workflow chi tiết](TEST-BUILD-WORKFLOW-GITHUB/BUILD-TEST-WORKFLOW-GITHUB-CI.md)
 - [Checklist build + test live](WINDOWS-v0.1-TESTING.md)
-- [Kiến trúc](ARCHITECTURE.MD)
-- [Quy tắc làm việc](AGENTS.MD)
-- [Trạng thái dự án](PROJECT_STATE.MD)
+- [Kiến trúc](ARCHITECTURE.md)
+- [Quy tắc làm việc](AGENTS.md)
+- [Trạng thái dự án](PROJECT_STATE.md)
 - [Bản đồ docs](STRUCTURE_MAP.md)

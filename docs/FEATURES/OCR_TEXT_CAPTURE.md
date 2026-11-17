@@ -39,5 +39,5 @@
 
 ## Liên kết
 
-- [Điều hướng chính](../UI/UX_DESIGN/MAIN_NAVIGATION_UX.MD)
-- [Kiến trúc](../ARCHITECTURE.MD)
+- [Điều hướng chính](../UI/UX_DESIGN/MAIN_NAVIGATION_UX.md)
+- [Kiến trúc](../ARCHITECTURE.md)

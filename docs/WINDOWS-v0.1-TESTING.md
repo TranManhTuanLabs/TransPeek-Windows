@@ -167,6 +167,6 @@ Chụp màn hình lỗi + ghi lại bước làm trước đó. Nếu app crash 
 
 ## Liên kết
 
-- [Trạng thái dự án](PROJECT_STATE.MD)
+- [Trạng thái dự án](PROJECT_STATE.md)
 - [Bản đồ docs](STRUCTURE_MAP.md)
-- [Việc đang làm / chờ](TASK_QUEUE.MD)
+- [Việc đang làm / chờ](TASK_QUEUE.md)

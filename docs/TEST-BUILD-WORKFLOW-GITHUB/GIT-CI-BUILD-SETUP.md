@@ -10,9 +10,9 @@ Related docs:
 
 - `BUILD-TEST-WORKFLOW-GITHUB-CI.md` — the CI workflow in detail (how
   to read a red run, caching, .NET/API gotchas).
-- `../BUILD_FROM_ZERO.MD` — build the app from a blank machine.
+- `../BUILD_FROM_ZERO.md` — build the app from a blank machine.
 - `../WINDOWS-v0.1-TESTING.md` — build + live-test checklist.
-- `../ARCHITECTURE.MD` — architecture overview.
+- `../ARCHITECTURE.md` — architecture overview.
 
 ## Maintenance rule — update this doc on EVERY workflow change
 
@@ -234,7 +234,7 @@ setup changes.
 ## Liên kết
 
 - [CI workflow chi tiết](BUILD-TEST-WORKFLOW-GITHUB-CI.md)
-- [Build từ máy trắng](../BUILD_FROM_ZERO.MD)
+- [Build từ máy trắng](../BUILD_FROM_ZERO.md)
 - [Checklist build + test live](../WINDOWS-v0.1-TESTING.md)
-- [Quy tắc làm việc](../AGENTS.MD)
+- [Quy tắc làm việc](../AGENTS.md)
 - [Bản đồ docs](../STRUCTURE_MAP.md)

@@ -8,10 +8,10 @@
 - [ ] **Bug che loa/Copy panel** (Windows — TransPeek-Windows, #149→#159, vẫn MỞ):
   tra 1–5 line bị che, từ 6 line trở lên không bị. Nguyên nhân thật CHƯA RA.
   Đang chờ video/ảnh so sánh 3-line (bị) vs 6-line (không bị) từ Manh.
-  KHÔNG đẩy thêm bản mò. Chi tiết: `docs/UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.MD` (§6).
+  KHÔNG đẩy thêm bản mò. Chi tiết: `docs/UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md` (§6).
 - [ ] **Doc UI/UX** (Windows — TransPeek-Windows): panel đã chốt + viết xong;
   các doc còn lại là bản nháp, cập nhật dần khi hoàn thiện hoặc Manh yêu cầu.
-  `SETTINGS.MD` và `SETTING_UX.MD` CHƯA VIẾT.
+  `SETTINGS.md` và `SETTING_UX.md` CHƯA VIẾT.
 
 ## CHỜ MANH
 
@@ -39,6 +39,6 @@
 
 ## Liên kết
 
-- [Trạng thái dự án](PROJECT_STATE.MD)
+- [Trạng thái dự án](PROJECT_STATE.md)
 - [Lộ trình](MASTER_PLAN.md)
-- [Panel UX (bug che loa)](UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.MD)
+- [Panel UX (bug che loa)](UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md)

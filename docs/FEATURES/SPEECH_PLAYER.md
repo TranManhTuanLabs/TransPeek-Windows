@@ -9,7 +9,7 @@
 - **Loa icon float**: click = phát text đã chọn; bấm lần nữa để dừng.
 - Nút loa ở output đã chuyển **vào trong ô text** như input (#157) — overlay góc
   dưới-phải, Margin `0,0,6,8`. Xem bug che loa trong
-  `docs/UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.MD` (§6).
+  `docs/UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md` (§6).
 
 ## 2. Auto-play
 
@@ -30,6 +30,6 @@
 
 ## Liên kết
 
-- [Speech Engine](SPEECH_ENGINE.MD)
-- [Float Icon](FLOAT_ICON.MD)
-- [Panel UX (CHỐT)](../UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.MD)
+- [Speech Engine](SPEECH_ENGINE.md)
+- [Float Icon](FLOAT_ICON.md)
+- [Panel UX (CHỐT)](../UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md)

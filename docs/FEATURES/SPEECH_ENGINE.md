@@ -31,6 +31,6 @@
 
 ## Liên kết
 
-- [Speech Player](SPEECH_PLAYER.MD)
-- [Kiến trúc](../ARCHITECTURE.MD)
-- [Tổng quan UX](../UI/UX_DESIGN/APP_UX_OVERVIEW.MD)
+- [Speech Player](SPEECH_PLAYER.md)
+- [Kiến trúc](../ARCHITECTURE.md)
+- [Tổng quan UX](../UI/UX_DESIGN/APP_UX_OVERVIEW.md)

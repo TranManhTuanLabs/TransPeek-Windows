@@ -1,7 +1,7 @@
-# AGENTS.MD — TransPeek-Windows
+# AGENTS.md — TransPeek-Windows
 
 > Quy tắc làm việc cho AI (Muse) trong repo này. Đọc trước khi làm việc.
-> Bối cảnh tổng: `AI_CONTEXT.MD`. Trạng thái hiện tại: `PROJECT_STATE.MD`.
+> Bối cảnh tổng: `AI_CONTEXT.md`. Trạng thái hiện tại: `PROJECT_STATE.md`.
 > Bản đồ docs: `STRUCTURE_MAP.md`.
 
 ## 1. Commit và đẩy code
@@ -41,8 +41,8 @@
   **sửa đúng tầng chưa**; (2) quan sát hành vi của user (kéo rộng/hẹp) tìm ra nguyên
   nhân mà đọc code không thấy — **hỏi user "nó thay đổi theo cái gì" trước khi đoán**;
   (3) comment trong code cũng có thể sai — tin bằng chứng, không tin comment.
-  Chi tiết kỹ thuật đầy đủ ở `UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.MD` §6.
-- Số đã chốt trong `UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.MD` là spec — đổi số cần Manh duyệt,
+  Chi tiết kỹ thuật đầy đủ ở `UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md` §6.
+- Số đã chốt trong `UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md` là spec — đổi số cần Manh duyệt,
   và cập nhật doc trong cùng đợt.
 - **Native trước, tự chế sau:** tính năng nào control native không có thì **báo Manh
   1 câu trước** rồi mới làm custom.
@@ -81,7 +81,7 @@
 
 ## Liên kết
 
-- [Bối cảnh AI](AI_CONTEXT.MD)
-- [Trạng thái dự án](PROJECT_STATE.MD)
+- [Bối cảnh AI](AI_CONTEXT.md)
+- [Trạng thái dự án](PROJECT_STATE.md)
 - [Bản đồ docs](STRUCTURE_MAP.md)
-- [Panel UX (CHỐT)](UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.MD)
+- [Panel UX (CHỐT)](UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md)

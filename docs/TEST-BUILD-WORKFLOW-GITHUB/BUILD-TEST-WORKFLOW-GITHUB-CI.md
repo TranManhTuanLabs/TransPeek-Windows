@@ -111,7 +111,7 @@ To avoid wasting CI runs:
 ## Liên kết
 
 - [Setup + intervention log](GIT-CI-BUILD-SETUP.md)
-- [Build từ máy trắng](../BUILD_FROM_ZERO.MD)
+- [Build từ máy trắng](../BUILD_FROM_ZERO.md)
 - [Checklist build + test live](../WINDOWS-v0.1-TESTING.md)
-- [Quy tắc làm việc](../AGENTS.MD)
+- [Quy tắc làm việc](../AGENTS.md)
 - [Bản đồ docs](../STRUCTURE_MAP.md)

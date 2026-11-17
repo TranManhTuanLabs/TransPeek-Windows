@@ -2223,6 +2223,6 @@ an OS limit.)
 
 ## Liên kết
 
-- [Bối cảnh AI](AI_CONTEXT.MD)
-- [Kiến trúc](ARCHITECTURE.MD)
+- [Bối cảnh AI](AI_CONTEXT.md)
+- [Kiến trúc](ARCHITECTURE.md)
 - [Bản đồ docs](STRUCTURE_MAP.md)
