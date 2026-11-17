@@ -75,7 +75,7 @@
 ## 6. Tách module tính năng (mỗi tính năng 1 thư mục)
 
 - Tính năng mới viết riêng thư mục/module, không nhét vào code chính/code
-  dịch. Chi tiết + lý do: xem `ARCHITECTURE.md` §5 (quyết định kiến trúc).
+  dịch. Chi tiết + lý do: xem `ARCHITECTURE.md` §5 (nguyên tắc kiến trúc).
 
 ## 7. Về Manh
 

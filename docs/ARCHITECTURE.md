@@ -60,7 +60,17 @@ Tính năng mới sống trong thư mục riêng của nó (quy tắc tách modu
   tạo thủ công.
 - Bundle Tesseract eng+vie tải ở bước CI (fail nếu file < 1MB).
 
-## 5. Quyết định kiến trúc
+## 5. Nguyên tắc kiến trúc
+
+Chuẩn chung cho MỌI dự án, MỌI repo của Manh (chốt 17/11 17:22, mở rộng
+từ quy tắc tách module 13:08). Lý do: code phải dễ bảo trì, dễ nâng cấp,
+linh động (flexible).
+
+- **Dễ bảo trì, dễ nâng cấp, linh động** — sửa 1 chỗ không vỡ chỗ khác.
+- **Tách code/tách folder khi cần:** 1 tính năng = 1 module/thư mục riêng.
+- **Dùng chung hàm/component:** cái gì dùng nhiều chỗ thì viết 1 lần,
+  không copy-paste.
+- **Cấu trúc rõ ràng như dự án lớn:** ai mới vào cũng tìm được file cần sửa.
 
 ### Tách module: mỗi tính năng 1 thư mục, không nhét vào code dịch (Manh 2026-11-17)
 
