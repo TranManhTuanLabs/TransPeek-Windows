@@ -15,8 +15,8 @@
 
 ```
 src/
-  TransPeek/          # app WinUI 3 (Views, Services, Assets)
-  TransPeek.Core/     # logic thuần (Settings, Translation, Ocr, Dictionary)
+  TransPeek/          # app WinUI 3 (Views, Services, Assets, FastRead/)
+  TransPeek.Core/     # logic thuần (Settings, Translation, Ocr, Dictionary, FastRead/)
 tests/
   TransPeek.Tests/    # chỉ test logic Core trên net8.0
 docs/
@@ -30,6 +30,10 @@ docs/
   TASK_QUEUE.md       # việc đang làm / chờ
   UI_DESIGN.md        # chỉ mục UX
 ```
+
+Tính năng mới sống trong thư mục riêng của nó (quy tắc ở `AGENTS.md` §6):
+`FastRead/` là tính năng đầu tiên theo cấu trúc này (engine ở Core, window
+ở app, cùng tên thư mục để 2 repo song song).
 
 ## 3. Thành phần chính
 
