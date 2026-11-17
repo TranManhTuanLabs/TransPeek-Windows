@@ -1,6 +1,6 @@
 # Speech Player (bản nháp)
 
-> Trạng thái: **bản nháp** — mô tả player TTS (nút loa, auto-play, đọc nhanh RSVP).
+> Trạng thái: **bản nháp** — mô tả player TTS (nút loa, auto-play, Fast Read RSVP).
 
 ## 1. Nút loa
 
