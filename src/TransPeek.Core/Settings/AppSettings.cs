@@ -30,7 +30,7 @@ public sealed class AppSettings
     public List<CustomProviderDefinition> CustomProviders { get; set; } = [];
 
     // --- Trigger icon / float panel ---
-    /// <summary>Hover delay before the panel opens, in milliseconds (slider 300-800, step 100; default 500).</summary>
+    /// <summary>Hover delay before the panel opens, in milliseconds (300 or 500).</summary>
     public int HoverDelayMs { get; set; } = 500;
     /// <summary>Panel content font size in points (the source and
     /// translation text). Mac parity: same setting name
@@ -81,8 +81,8 @@ public sealed class AppSettings
     /// the default width 440 to 420 (Manh: the horizontal snap-back
     /// was a touch wide) — files at version 1 get PanelWidth 420.</summary>
     public int SettingsVersion { get; set; } = 0;
-    /// <summary>How long the trigger icon stays after the selection changes, in seconds (slider 3-10, step 1; default 5).</summary>
-    public int TriggerIconAutoHideSeconds { get; set; } = 5;
+    /// <summary>How long the trigger icon stays after the selection changes, in seconds.</summary>
+    public int TriggerIconAutoHideSeconds { get; set; } = 3;
     /// <summary>Global hotkey that shows the panel for the current selection.
     /// Win32 RegisterHotKey modifiers+key, e.g. "Control+Alt+T".</summary>
     public string TranslateHotkey { get; set; } = "Control+Alt+T";

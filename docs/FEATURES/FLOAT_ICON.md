@@ -12,8 +12,8 @@
 ## 2. Cài đặt liên quan
 
 - **Watch selection automatically** (General → behaviour): bật/tắt theo dõi selection.
-- **How long to hover**: slider 300–800ms (step 100ms), mặc định 500ms.
-- **Trigger icon hides after**: slider 3–10s (step 1s), mặc định 5s.
+- **How long to hover** (mặc định 500ms; chọn được 300/500/800/1000).
+- **Trigger icon hides after**: icon tự ẩn sau bao lâu.
 
 ## 3. Nợ
 
