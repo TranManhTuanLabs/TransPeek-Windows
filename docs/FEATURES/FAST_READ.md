@@ -74,9 +74,9 @@ and the shortcut panel — still a TODO refactor, not this branch).
    Click = Speak; Speak when Click = Fast Read). Stops a running speech first.
 2. **Right-click on the float icon** → menu: Translate / Listen /
    Fast Read / Settings. (The auto-hide timer stops while the menu is open.)
-3. **"Fast Read" button in the translate panel** (Actions row, last,
-   glyph E736 ReadingMode): opens the reader with the text being
-   translated; the panel hides first (it is topmost).
+3. **"Fast Read" button in the translate panel** (Actions row, left end,
+   glyph E736 ReadingMode + text "Fast Read", like mac): opens the reader
+   with the text being translated; the panel hides first (it is topmost).
 4. **Tray menu** → "Fast Read" (right under "Translate Selection").
 5. **Global shortcut** — fallback only, not in v1.
 
