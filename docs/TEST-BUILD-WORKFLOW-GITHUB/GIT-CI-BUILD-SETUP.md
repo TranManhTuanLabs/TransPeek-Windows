@@ -291,6 +291,26 @@ setup changes.
   parsing the YAML before calling it done. This supersedes the
   2026-11-08 `[build-app]` gating entry above.
 
+- **2026-11-18 — Branch runs can go GREEN with NO app if the branch
+  carries a stale workflow (learned from TransPeek mac, run #233).**
+  TransPeek's `feature/fast-read-feedback` was created before the
+  always-build change, so it still had the old `test.yml` with the
+  `[build-app]` gate; a commit without `[build-app]` passed tests but
+  skipped Build/Sign/Zip/Upload, uploading only test results — no
+  artifact to test. The same trap applies here: a Windows feature branch
+  created before `build.yml` commit `55ab3b2` still has the old
+  `build.yml` with the steps gated on `[build-app]`, so its runs will
+  pass tests but never build the app (this includes the current
+  `feature/fast-read-rsvp` branch — sync main's `build.yml` into it
+  before relying on its runs). The fix on TransPeek was syncing main's
+  `test.yml` into the branch (commit `338fd5c`) plus a code change to
+  trigger a run. Lesson: when a workflow changes on main, sync the
+  workflow file into existing feature branches before relying on their
+  runs — a green run does NOT guarantee an app artifact. Always check
+  the run's steps/artifacts, not just its conclusion. A workflow-only
+  push does not trigger a run (`paths-ignore`), so include a code change
+  (or dispatch manually) after syncing.
+
 ## Liên kết
 
 - [CI workflow chi tiết](BUILD-TEST-WORKFLOW-GITHUB-CI.md)
