@@ -23,10 +23,13 @@ re-opening focuses the existing window and loads the new text.
 
 Layout (top to bottom, Manh 2026-11-19 — temporary, mac RSVPView round 7):
 
-- **Top bar:** "Rapid Serial Visual Presentation" truly centered on the
-  window (full-width TextBlock, buttons overlay at the right like mac);
-  Settings gear (E713) + "?" at the right. Left stays empty — mac's left
-  pickers live in the bottom bar on Windows.
+- **Top bar:** "Rapid Serial Visual Presentation — RSVP" (15pt semibold)
+  truly centered on the window (full-width TextBlock, buttons overlay
+  at the right like mac); Settings gear (E713) + "?" at the right.
+  Window title: "TransPeek — Fast Read RSVP" (Manh 2026-11-19 — one
+  dash, same as mac; the "TransPeek: Fast Read — RSVP" variant has two
+  separators and splits "Fast Read" from "RSVP"). Left stays empty —
+  mac's left pickers live in the bottom bar on Windows.
 - **Word area:** the current slide, centered on its ORP pivot (see below),
   with two short focal ticks above/below it. **Reading time** top-left
   inside the block text ("Reading time: 2mins", under a minute "0min");

@@ -46,7 +46,7 @@ public sealed partial class FastReadWindow : Window
     public FastReadWindow()
     {
         InitializeComponent();
-        Title = "Fast Read — TransPeek";
+        Title = "TransPeek — Fast Read RSVP";
         _timer.Tick += (_, _) => AdvanceSlide();
         if (Content is FrameworkElement contentRoot)
             contentRoot.KeyDown += OnKeyDown;

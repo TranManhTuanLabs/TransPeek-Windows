@@ -37,7 +37,7 @@
              side stays empty on Windows: mac's left pickers (Speed /
              Focus / Context / Words) live in the bottom bar here. -->
         <Grid Grid.Row="0" Margin="0,0,0,8">
-            <TextBlock Text="Rapid Serial Visual Presentation" FontSize="12" Foreground="Gray"
+            <TextBlock Text="Rapid Serial Visual Presentation — RSVP" FontSize="15" FontWeight="SemiBold" Foreground="Gray"
                        HorizontalAlignment="Center" VerticalAlignment="Center" />
             <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right" VerticalAlignment="Center">
                 <Button x:Name="SettingsButton" Padding="6,4" ToolTipService.ToolTip="Settings">
