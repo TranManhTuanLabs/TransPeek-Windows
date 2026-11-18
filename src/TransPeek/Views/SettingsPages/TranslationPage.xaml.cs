@@ -16,6 +16,8 @@ public sealed partial class TranslationPage : Page
     private Action? _onSaved;
     private bool _loading;
     private CustomProviderDefinition? _editing;
+    private LanguageComboBoxHelper? _sourceLangHelper;
+    private LanguageComboBoxHelper? _targetLangHelper;
 
     public TranslationPage()
     {
@@ -46,16 +48,16 @@ public sealed partial class TranslationPage : Page
 
     private void BuildLanguageCombos()
     {
-        SourceLanguageCombo.Items.Clear();
-        SourceLanguageCombo.Items.Add(new ComboBoxItem { Content = AppStrings.Get("Settings.Translation.Auto", "Automatic"), Tag = LanguageCode.Auto });
-        foreach (var (code, name) in LanguageCode.Supported)
-            SourceLanguageCombo.Items.Add(new ComboBoxItem { Content = name, Tag = code });
-        SelectComboByTag(SourceLanguageCombo, App.Settings.SourceLanguage);
-
-        TargetLanguageCombo.Items.Clear();
-        foreach (var (code, name) in LanguageCode.Supported)
-            TargetLanguageCombo.Items.Add(new ComboBoxItem { Content = name, Tag = code });
-        SelectComboByTag(TargetLanguageCombo, App.Settings.TargetLanguage);
+        // Searchable pickers (Manh 2026-11-19): the helper owns the
+        // items, the popular-first order, and the live filter. The
+        // SelectionChanged handlers below still save on pick.
+        _sourceLangHelper = new LanguageComboBoxHelper(
+            SourceLanguageCombo, includeAuto: true,
+            () => App.Settings.SourceLanguage,
+            AppStrings.Get("Settings.Translation.Auto", "Automatic"));
+        _targetLangHelper = new LanguageComboBoxHelper(
+            TargetLanguageCombo, includeAuto: false,
+            () => App.Settings.TargetLanguage, string.Empty);
     }
 
     // ----- providers -----
@@ -126,7 +128,8 @@ public sealed partial class TranslationPage : Page
 
     private void OnSourceLanguageChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (SourceLanguageCombo.SelectedItem is ComboBoxItem item && item.Tag is string id)
+        if (SourceLanguageCombo.SelectedItem is ComboBoxItem item && item.Tag is string id
+            && !string.Equals(id, App.Settings.SourceLanguage, StringComparison.Ordinal))
         {
             App.Settings.SourceLanguage = id;
             Save();
@@ -135,7 +138,8 @@ public sealed partial class TranslationPage : Page
 
     private void OnTargetLanguageChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (TargetLanguageCombo.SelectedItem is ComboBoxItem item && item.Tag is string id)
+        if (TargetLanguageCombo.SelectedItem is ComboBoxItem item && item.Tag is string id
+            && !string.Equals(id, App.Settings.TargetLanguage, StringComparison.Ordinal))
         {
             App.Settings.TargetLanguage = id;
             Save();

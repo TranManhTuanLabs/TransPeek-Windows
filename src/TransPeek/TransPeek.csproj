@@ -14,7 +14,7 @@
          (AppInfo.Version reads the assembly version). Bump per release —
          keep in step with Package.appxmanifest, which the manifest-only
          bump to 0.1.3.0 forgot: About showed 0.1.0 until this fix. -->
-    <Version>0.1.3</Version>
+    <Version>0.1.4</Version>
     <!-- ScreenCaptureService uses an unsafe block to copy D3D frame rows. -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <ImplicitUsings>enable</ImplicitUsings>

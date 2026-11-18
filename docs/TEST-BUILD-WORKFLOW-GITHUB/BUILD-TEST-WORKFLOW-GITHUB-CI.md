@@ -17,13 +17,13 @@ to rediscover any of this.
   push cancels the run that is still going. Push related files in ONE commit
   so CI only ever sees a complete version.
 - Steps: Checkout → Setup .NET (`8.0.x`) → Restore → Build (Release,
-  `-p:Version=0.1.3.<run>`) → Test → Publish self-contained win-x64 →
+  `-p:Version=0.1.4.<run>`) → Test → Publish self-contained win-x64 →
   Download bundled Tesseract language data (eng+vie) → Verify publish has
   WinUI resources (`.pri` + ≥12 `.xbf`) → Upload artifact
   (7-day retention; name `TransPeek-Windows-v0.1` on main,
   `TransPeek-Windows-<run>-branch` on feature branches) + delete older
   artifacts on main only, keeping only the newest → Zip → Create
-  pre-release `v0.1.3.<run number>` on main only (direct download link
+  pre-release `v0.1.4.<run number>` on main only (direct download link
   on the Releases page, keeps only the newest) → Delete older
   pre-releases on main only. All steps from Publish on run on every
   code push (always build — Manh 2026-11-18, no more `[build-app]` gate).
@@ -59,17 +59,17 @@ To avoid wasting CI runs:
   nobody. On a feature branch the artifact is
   `TransPeek-Windows-<run>-branch` instead (same content, downloaded as
   `TransPeek-Windows-<run>-branch.zip`); branch builds never create a
-  pre-release. The pre-release `v0.1.3.<run>` (Releases page, zip
+  pre-release. The pre-release `v0.1.4.<run>` (Releases page, zip
   `TransPeek-Windows-<run>.zip`, ~150 MB) is the direct download link.
   A real stable release (0.1.4) is created manually later; there is no
   `release.yml` in this repo yet.
-- The version stamp `-p:Version=0.1.3.<run>` makes the run number the
-  build number shown in About as "Release 0.1.3 (Build CI #N)".
+- The version stamp `-p:Version=0.1.4.<run>` makes the run number the
+  build number shown in About as "Release 0.1.4 (Build CI #N)".
 - **The CI app is unsigned** — `build.yml` has no signing step.
   SmartScreen warns on first launch; that is expected until 0.1.4
   (SignPath for the GitHub build, Store signing for the Store build).
 - **Saved pre-release:** a known-good build is saved as tag
-  `0.1.3.<run>-saved` (no "v"), title "(saved preview)" — only after
+  `0.1.4.<run>-saved` (no "v"), title "(saved preview)" — only after
   Manh tests that build OK. See `GIT-CI-BUILD-SETUP.md` §3.
 
 ## Reading a red run
@@ -123,7 +123,7 @@ To avoid wasting CI runs:
   `build.yml`.** The workflow runs from the file in the pushed branch —
   create the branch from latest `main` after the workflow change, or
   the branch push runs nothing (or the old setup).
-- **Version "0.1.3" in `build.yml` is the marketing version.** Bump it
+- **Version "0.1.4" in `build.yml` is the marketing version.** Bump it
   in the workflow when the app version bumps, or the stamp lies.
 
 ## Liên kết

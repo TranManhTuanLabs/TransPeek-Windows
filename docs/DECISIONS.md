@@ -256,7 +256,7 @@ LanguageBarView / Settings) với Windows, làm trước nhóm panel + từ đi�
   picker ("Tiếng Việt", "中文 (简体)", "한국어", … — a language is always
   shown in its own name), provider/dictionary proper nouns ("Google
   Translate", "Oxford"), developer comments, and test data.
-- **Version:** 0.1.3.0. Verified by script before push: resw XML valid,
+- **Version:** 0.1.4.0. Verified by script before push: resw XML valid,
   no duplicate keys, every `x:Uid` property and every `AppStrings.Get`
   key exists in the resw, no key unreferenced, no Vietnamese left in UI
   string literals (comments + endonyms only).
@@ -297,15 +297,15 @@ LanguageBarView / Settings) với Windows, làm trước nhóm panel + từ đi�
 ## Tray header shows the CI build number (2026-11-11, Manh)
 
 - **Decision (Manh): the tray header shows the CI build number like
-  the mac menubar** — "TransPeek 0.1.3 (36)", where 36 is the GitHub
+  the mac menubar** — "TransPeek 0.1.4 (36)", where 36 is the GitHub
   Actions run number of the build that produced the running app.
 - **How:** `build.yml` stamps it at build time with
-  `-p:Version=0.1.3.${{ github.run_number }}` on both the Build and
-  the Publish steps, so the assembly version becomes 0.1.3.36.
+  `-p:Version=0.1.4.${{ github.run_number }}` on both the Build and
+  the Publish steps, so the assembly version becomes 0.1.4.36.
   `AppInfo.CiBuildNumber` reads the 4th version part (0 for local
   builds, where the csproj `<Version>` has no 4th part — the header
   then shows no number, as before). The About page shows
-  "Version 0.1.3 (build 36)" from the same value.
+  "Version 0.1.4 (build 36)" from the same value.
 - **Local copy of build.yml is STALE** (predates the browser commit
   8d912bb that added paths-ignore + [build-app] gating + concurrency):
   never push the local file — workflow edits go through the browser
@@ -2241,6 +2241,18 @@ an OS limit.)
 - Windows first application: `FastRead/` on branch `feature/fast-read-rsvp`
   (engine `src/TransPeek.Core/FastRead/`, window `src/TransPeek/FastRead/`);
   rule also recorded in `AGENTS.md` §6 and `ARCHITECTURE.md` §2.
+
+## Google Translate: full 249 languages + searchable picker + About share (2026-11-19, Manh)
+
+- **Full language list:** `LanguageCode.Supported` now has all 249 languages Google Translate supports (was 14), for both source and target. Google's free endpoint translates server-side — the app only sends the language code, so 250 entries cost a few KB and the app does not get bigger. Verified against Wikipedia's Google Translate list (249, counted by script), Google Cloud's NMT table, and the `google-translate-api-x` language file.
+- **"pt" alias:** Google's 249 list only `pt-BR` and `pt-PT` — plain `pt` is NOT in it. Kept `pt` as a 250th entry anyway: it is a valid code the endpoint accepts, and settings saved before 0.1.4 may already use it. `pt-BR` / `pt-PT` are in the list too.
+- **`ForGoogle` fix (same round):** the old code cut every code at `-` (`Split('-')[0]`), which turned Dari (`fa-AF`) into Persian (`fa`) and dropped scripts (`crh-Latn`, `ms-Arab`, ...). Codes now pass through unchanged except `zh-Hans`→`zh-CN` and `zh-Hant`→`zh-TW`.
+- **Popular first:** the 20 most-used languages are pinned at the top of the picker (Manh's pick from 14/20/30/50): the 14 the app already had + Hindi, Indonesian, Turkish, Dutch, Polish, Ukrainian — then the full list A–Z by English name.
+- **Searchable dropdown:** the language ComboBoxes are editable — typing filters the list live (native name, English name, or code). The dropdown height is capped (`MaxDropDownHeight` 320) so it scrolls inside instead of expanding to 249 rows. One shared helper (`LanguageComboBoxHelper`, used by Settings + the translate panel) — no copy-paste of the filter logic. Closing without a pick restores the saved language.
+- **About share row (Manh):** Settings > About has the same row of share buttons as the Fast Read completion window on mac (Facebook / Threads / X / Reddit / LinkedIn / Mail), sharing the app tagline + the Windows repo link. URLs live in one place (`SharePlatform`, mirroring mac `RSVPSharePlatform`); the row is built by `ShareRowBuilder` (mirroring mac `ShareRowView`). Facebook and LinkedIn share the link only (Facebook removed the `quote` param). Mail glyph is E715 (verified on Microsoft Learn — E8A5 is Document).
+- **Alt+click fix (Manh):** when Click icon = Fast Read, Alt+click opened Read instead of speaking. Cause: `Tapped` fires on pointer release and Alt released just before pointer-up was missed. Fix: the click now reads Alt from the pointer event at press time (`PointerPressed` + `KeyModifiers.Menu`, mirroring mac `handleIconClick` reading `event.modifierFlags`); the 0.1s `GetAsyncKeyState` poll + pointer events drive only the preview glyph.
+- **Version 0.1.4:** bumped to match mac (`TransPeek.csproj` `<Version>`, `Package.appxmanifest`, `build.yml` version stamp + pre-release tag/title + delete regex, workflow docs). The `0.1.3.<run>-saved` releases stay valid (the delete regex only matches `v0.1.3.*`).
+- **Quality note:** the ~69 languages added by Google in June 2024 are mostly low-resource languages; their translation quality is lower than the big languages. Google publishes no per-language quality table.
 
 ## Liên kết
 

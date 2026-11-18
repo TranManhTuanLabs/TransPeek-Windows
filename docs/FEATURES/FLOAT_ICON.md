@@ -14,6 +14,9 @@
 - **Style B (Manh 2026-11-18): icon luôn hiện việc click tiếp theo sẽ làm** —
   Speak = bong bóng E8BD xanh, Fast Read = A+ nghệ tự vẽ; giữ Alt thì đổi sang
   việc còn lại. Sau bất kỳ lần bấm Read nào icon hiện A+ trong **2.5s** rồi mới ẩn.
+- Alt cho click đọc từ event con trỏ lúc bấm (`PointerPressed` + `KeyModifiers.Menu`),
+  không đọc trạng thái global lúc tap (sửa 0.1.4 — Alt+click khi Click = Read trước
+  đây mở Read thay vì nghe; xem spec §2).
 
 ## 2. Cài đặt liên quan
 

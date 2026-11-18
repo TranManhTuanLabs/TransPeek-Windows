@@ -1,6 +1,8 @@
 // About (Settings > About): app icon + name + slogan, GitHub icon +
 // repo link, link to all releases (with the running version + CI build
-// in its text), and the simple update check (Check for Updates).
+// in its text), the share row (one button per platform, same as the
+// Fast Read completion window on mac), and the simple update check
+// (Check for Updates).
 //
 // Update check (Manh's decision, 2026-11-08): SIMPLE CHECK ONLY — call
 // the GitHub Releases API, compare the latest tag with the running
@@ -16,6 +18,7 @@ using Microsoft.UI.Xaml.Media.Imaging;
 using TransPeek.Assets;
 using TransPeek.Core.Update;
 using TransPeek.Services;
+using TransPeek.Share;
 using Windows.System;
 
 namespace TransPeek.Views.SettingsPages;
@@ -42,6 +45,10 @@ public sealed partial class AboutPage : Page
             GithubMarkImage.Source = GitHubMark.Image();
             AppIconImage.Source = EmbeddedIcon.Image();
             SupportAccountText.Text = AppInfo.DonateAccountBlock;
+            // Share row (Manh 2026-11-19, mirrors mac About): the
+            // shared text is the tagline; the repo link is appended
+            // by each platform's share URL (see SharePlatform).
+            ShareRowBuilder.Populate(ShareRowPanel, AppInfo.Tagline);
         };
     }
 

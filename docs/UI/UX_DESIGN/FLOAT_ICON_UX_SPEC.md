@@ -3,7 +3,8 @@
 > Trạng thái: **bản nháp** — ghi lại những gì đã chốt, chờ Manh duyệt rồi mới thành spec chốt
 > như panel (`FLOAT_POPUP_PANEL_UX.md`). Chi tiết đầy đủ theo mac:
 > `docs/UI/UX_DESIGN/FLOAT_ICON_UX_SPEC.md` trên repo TransPeek (commit `0200788`,
-> §3, §5, §6 — Alt thay Option, `GetAsyncKeyState(VK_MENU)` thay `NSEvent.modifierFlags`).
+> §3, §5, §6 — Alt thay Option; click đọc modifier từ event con trỏ
+> `PointerPressed` thay `NSEvent.modifierFlags`, preview poll `GetAsyncKeyState(VK_MENU)`).
 
 ## 1. Hình dạng (đã chốt)
 
@@ -44,13 +45,17 @@
 - **Linger A+ 2.5s:** sau bất kỳ lần bấm Read nào (click thường, Alt+Click, menu
   chuột phải) icon hiện A+ trong **2.5s** để xác nhận đã bấm Read, rồi mới ẩn —
   trong 2.5s đó bỏ qua click thêm. App không ẩn icon sớm (`IsReadLingerActive`).
-- **Alt đọc từ trạng thái phím GLOBAL (mac §5 — lỗi vừa dính bên mac, build #235):**
-  KHÔNG dùng handler chỉ nghe trong cửa sổ TransPeek (phím đi tới app khác nơi
-  user đang chọn chữ, handler local không thấy). Poll `GetAsyncKeyState(VK_MENU)`
-  mỗi **0.1s** khi icon hiện; chỉ tác động khi trạng thái đổi thật (không reset
-  auto-hide vô cớ); đọc trạng thái ban đầu lúc icon hiện; kiểm tra lại khi
-  chuột vào icon (safety net). Trong lúc giữ Alt thì auto-hide tạm dừng, thả
-  Alt ra thì auto-hide chạy lại từ đầu (5s mới).
+- **Alt cho CLICK đọc từ event con trỏ lúc bấm (mac `handleIconClick` đọc
+  `event.modifierFlags`):** `PointerPressed` + `KeyModifiers.Menu` — KHÔNG đọc
+  trạng thái phím global lúc tap nữa. Lý do (Manh 2026-11-19, Click = Read):
+  `Tapped` chỉ chạy lúc NHẢ chuột, Alt nhả trước lúc nhả chuột là mất, nên
+  Alt+click chạy như click thường (mở Read thay vì nghe). **Preview glyph
+  vẫn đọc từ trạng thái phím GLOBAL (mac §5 — lỗi vừa dính bên mac, build
+  #235):** poll `GetAsyncKeyState(VK_MENU)` mỗi **0.1s** khi icon hiện +
+  `PointerEntered`/`PointerMoved` (modifier từ event); chỉ tác động khi
+  trạng thái đổi thật (không reset auto-hide vô cớ); đọc trạng thái ban đầu
+  lúc icon hiện. Trong lúc giữ Alt thì auto-hide tạm dừng, thả Alt ra thì
+  auto-hide chạy lại từ đầu (5s mới).
 - **Auto-hide:** mặc định **5s** (đổi từ 3s ngày 2026-11-18, giống mac). Tạm dừng
   khi: chuột đang trên icon; đang phát tiếng; đang giữ Alt; đang trong linger 2.5s.
 - **Chuột phải icon → menu** có mục "Fast Read".

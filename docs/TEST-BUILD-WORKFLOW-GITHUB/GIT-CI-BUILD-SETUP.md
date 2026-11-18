@@ -137,12 +137,12 @@ investigator reading stale setup. The same rule applies to the mac repo
 ### Build steps (always run on every code push)
 
 - **Build:** `dotnet build TransPeek.sln -c Release --no-restore
-  -p:Version=0.1.3.${{ github.run_number }}`. The run number becomes the
-  version shown in About as "Release 0.1.3 (Build CI #N)". The "0.1.3"
+  -p:Version=0.1.4.${{ github.run_number }}`. The run number becomes the
+  version shown in About as "Release 0.1.4 (Build CI #N)". The "0.1.4"
   in the version is the current marketing version — update it in
-  `build.yml` when the app version bumps (stable 0.1.4 comes later).
+  `build.yml` when the app version bumps.
 - **Publish:** `dotnet publish src/TransPeek/TransPeek.csproj -c Release
-  -r win-x64 --self-contained -o publish -p:Version=0.1.3.${{
+  -r win-x64 --self-contained -o publish -p:Version=0.1.4.${{
   github.run_number }}`. Self-contained, so the zip runs on a Windows
   10/11 machine with nothing installed.
 - **Download bundled Tesseract language data (eng+vie):** downloads
@@ -163,8 +163,8 @@ investigator reading stale setup. The same rule applies to the mac repo
   only.
 - **Zip published app:** `Compress-Archive` to
   `TransPeek-Windows-<run>.zip`.
-- **Create pre-release:** tag `v0.1.3.<run number>`, prerelease, title
-  `TransPeek Windows 0.1.3 (CI#<run>) (preview)`, notes "Preview build
+- **Create pre-release:** tag `v0.1.4.<run number>`, prerelease, title
+  `TransPeek Windows 0.1.4 (CI#<run>) (preview)`, notes "Preview build
   from CI run <run>. Not a stable release." If the tag already exists
   (a re-run), uploads the zip to it with `--clobber` instead of
   creating a new release — main only.
@@ -208,12 +208,12 @@ investigator reading stale setup. The same rule applies to the mac repo
 
 - The `TransPeek-Windows-v0.1` artifact is a CI build artefact (7-day
   retention, only the newest kept, no user notification). The
-  pre-release `v0.1.3.<run>` is the direct download link (Releases
+  pre-release `v0.1.4.<run>` is the direct download link (Releases
   page). A real stable release (0.1.4) is created manually later —
   there is no `release.yml` in this repo yet.
 - **Saved pre-release (baseline):** a known-good build is saved as a
-  separate pre-release whose tag has NO "v" — `0.1.3.<run>-saved`
-  (e.g. `0.1.3.132-saved`), title "TransPeek Windows 0.1.3 (CI#<run>)
+  separate pre-release whose tag has NO "v" — `0.1.4.<run>-saved`
+  (e.g. `0.1.3.132-saved`), title "TransPeek Windows 0.1.4 (CI#<run>)
   (saved preview)". The missing "v" keeps it out of the auto-delete
   regex. A saved pre-release is only made AFTER Manh tests that build
   OK. Saving needs Manh to take over the browser (the browser cannot
@@ -253,7 +253,7 @@ setup changes.
   deleted (one green run had no download because of this). Never push a
   new `[build-app]` commit while the previous run is still running.
 - **2026-11-16 — Saved pre-release convention (Manh).** Tag has NO "v"
-  (`0.1.3.<run>-saved`); title uses "(saved preview)", never "— saved
+  (`0.1.4.<run>-saved`); title uses "(saved preview)", never "— saved
   copy".
 - **2026-11-17 — Workflow docs created + sync rule (Manh).** This doc
   and `BUILD-TEST-WORKFLOW-GITHUB-CI.md` created (following the mac

@@ -6,15 +6,20 @@
 // always previews the NEXT click — Speak = speech bubble (E8BD),
 // Fast Read = custom A+ (turmeric); Alt held flips the preview to the
 // OTHER action. After any Fast Read trigger the icon shows A+ for
-// 2.5s as a confirmation, then hides. Alt is read from the GLOBAL key
-// state (GetAsyncKeyState, polled every 0.1s while visible) — a local
-// handler cannot see Alt held in another app (mac bug, build #235).
+// 2.5s as a confirmation, then hides. Alt for the CLICK comes straight
+// from the pointer event (mac handleIconClick reads
+// event.modifierFlags); the preview also polls the GLOBAL key state
+// (GetAsyncKeyState, every 0.1s while visible) and the pointer events.
+// Reading Alt at tap time from the global state missed it (Manh
+// 2026-11-19, Click = Read: Alt+click opened Read instead of
+// speaking), so the click no longer depends on the poll.
 
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using TransPeek.Interop;
+using Windows.System;
 
 namespace TransPeek.Views;
 
@@ -29,7 +34,10 @@ public sealed partial class TriggerIconWindow : Window
     /// <summary>Alt preview poll (Style B, mac §5): every 0.1s while
     /// the icon is visible, read the GLOBAL Alt state. Only a real
     /// state change acts — a no-change poll must never restart the
-    /// auto-hide timer, or the icon would never auto-hide.</summary>
+    /// auto-hide timer, or the icon would never auto-hide. Preview
+    /// only: the CLICK reads Alt from the pointer event (see
+    /// PointerPressed), so a missed poll can never turn Alt+click
+    /// into a plain click.</summary>
     private readonly DispatcherTimer _altPollTimer = new();
     /// <summary>2.5s A+ confirmation after a Fast Read trigger (mac
     /// §3): the icon shows A+ while the Read window opens, then hides.
@@ -159,15 +167,20 @@ public sealed partial class TriggerIconWindow : Window
         // so App's ShowFastReadWindow sees IsReadLingerActive and does
         // not hide the icon early. During the linger further clicks
         // are ignored (no double window, no speaking over the reader).
-        IconBorder.Tapped += (_, _) =>
+        // PointerPressed, not Tapped: the modifier must be read from
+        // the event AT PRESS TIME (mac handleIconClick reads
+        // event.modifierFlags). Tapped fires on release, and Alt
+        // released just before pointer-up was missed, so Alt+click
+        // behaved like a plain click (Manh 2026-11-19, Click = Read).
+        // Left button only: right-click opens the context menu.
+        IconBorder.PointerPressed += (_, e) =>
         {
+            if (!e.GetCurrentPoint(IconBorder).Properties.IsLeftButtonPressed)
+                return;
+            e.Handled = true;
             if (_inReadLinger)
                 return;
-            // Global Alt state, not GetKeyStateForCurrentThread: the
-            // user selects text in another app, so the thread-local
-            // state may be stale; GetAsyncKeyState reads the hardware
-            // state whatever app is frontmost (mac bug, build #235).
-            var altHeld = IsAltHeldGlobally();
+            var altHeld = e.KeyModifiers.HasFlag(VirtualKeyModifiers.Menu);
             _altHeld = altHeld;
             var clickReads = string.Equals(App.Settings.IconClickAction, "FastRead", StringComparison.OrdinalIgnoreCase);
             if (altHeld || clickReads)
@@ -200,6 +213,19 @@ public sealed partial class TriggerIconWindow : Window
                 _autoHideTimer.Interval = TimeSpan.FromSeconds(App.Settings.TriggerIconAutoHideSeconds);
                 _autoHideTimer.Start();
             }
+        };
+        // Preview from the pointer event too (mac-style): the glyph
+        // flips as soon as Alt is pressed/released while the pointer
+        // moves over the icon, instead of waiting for the 0.1s poll.
+        // The poll below stays as the fallback for Alt pressed while
+        // hovering without moving.
+        IconBorder.PointerMoved += (_, e) =>
+        {
+            var held = e.KeyModifiers.HasFlag(VirtualKeyModifiers.Menu);
+            if (held == _altHeld)
+                return;
+            _altHeld = held;
+            UpdateGlyph();
         };
         _hoverTimer.Tick += (_, _) =>
         {
@@ -377,8 +403,9 @@ public sealed partial class TriggerIconWindow : Window
     {
         _autoHideTimer.Stop(); // stay while the user is hovering
         // Safety net (mac §5): re-read the Alt state on mouse-enter, in
-        // case a poll was missed.
-        var held = IsAltHeldGlobally();
+        // case a poll was missed. The event's own modifier is the
+        // primary source; the global poll is the fallback.
+        var held = e.KeyModifiers.HasFlag(VirtualKeyModifiers.Menu) || IsAltHeldGlobally();
         if (held != _altHeld)
         {
             _altHeld = held;

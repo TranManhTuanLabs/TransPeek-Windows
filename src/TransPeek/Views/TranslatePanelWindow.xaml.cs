@@ -1610,14 +1610,20 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
 
     // ----- language pickers + swap (mac LanguageBarView) -----
 
+    private LanguageComboBoxHelper? _sourceLangHelper;
+    private LanguageComboBoxHelper? _targetLangHelper;
+
     private void PopulateLangCombos()
     {
-        SourceLangCombo.Items.Add(new ComboBoxItem { Content = "Auto Detect", Tag = LanguageCode.Auto });
-        foreach (var (code, name) in LanguageCode.Supported)
-        {
-            SourceLangCombo.Items.Add(new ComboBoxItem { Content = name, Tag = code });
-            TargetLangCombo.Items.Add(new ComboBoxItem { Content = name, Tag = code });
-        }
+        // Searchable pickers (Manh 2026-11-19): the helper owns the
+        // items, the popular-first order, and the live filter. The
+        // SelectionChanged handlers below still save on pick.
+        _sourceLangHelper = new LanguageComboBoxHelper(
+            SourceLangCombo, includeAuto: true,
+            () => App.Settings.SourceLanguage, "Auto Detect");
+        _targetLangHelper = new LanguageComboBoxHelper(
+            TargetLangCombo, includeAuto: false,
+            () => App.Settings.TargetLanguage, string.Empty);
     }
 
     private void SyncLangCombos()
@@ -1625,27 +1631,13 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         _syncingCombos = true;
         try
         {
-            SelectComboByTag(SourceLangCombo, App.Settings.SourceLanguage);
-            SelectComboByTag(TargetLangCombo, App.Settings.TargetLanguage);
+            _sourceLangHelper?.Refresh(App.Settings.SourceLanguage);
+            _targetLangHelper?.Refresh(App.Settings.TargetLanguage);
         }
         finally
         {
             _syncingCombos = false;
         }
-    }
-
-    private static void SelectComboByTag(ComboBox combo, string tag)
-    {
-        foreach (var item in combo.Items.OfType<ComboBoxItem>())
-        {
-            if (string.Equals(item.Tag as string, tag, StringComparison.Ordinal))
-            {
-                combo.SelectedItem = item;
-                return;
-            }
-        }
-        if (combo.Items.Count > 0)
-            combo.SelectedIndex = 0;
     }
 
     private static string SelectedTag(ComboBox combo)
@@ -1655,7 +1647,11 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     {
         if (_syncingCombos || SourceLangCombo.SelectedItem is not ComboBoxItem)
             return;
-        App.Settings.SourceLanguage = SelectedTag(SourceLangCombo);
+        var tag = SelectedTag(SourceLangCombo);
+        // Reselect of the same language (dropdown restore): nothing to do.
+        if (string.Equals(tag, App.Settings.SourceLanguage, StringComparison.Ordinal))
+            return;
+        App.Settings.SourceLanguage = tag;
         SettingsStore.Save(App.Settings);
         RetranslateCurrent();
     }
@@ -1664,7 +1660,11 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     {
         if (_syncingCombos || TargetLangCombo.SelectedItem is not ComboBoxItem)
             return;
-        App.Settings.TargetLanguage = SelectedTag(TargetLangCombo);
+        var tag = SelectedTag(TargetLangCombo);
+        // Reselect of the same language (dropdown restore): nothing to do.
+        if (string.Equals(tag, App.Settings.TargetLanguage, StringComparison.Ordinal))
+            return;
+        App.Settings.TargetLanguage = tag;
         SettingsStore.Save(App.Settings);
         RetranslateCurrent();
     }

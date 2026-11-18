@@ -84,6 +84,13 @@
                 </Button>
             </StackPanel>
 
+            <!-- Share (Manh 2026-11-19, mirrors mac About): the same
+                 row of share buttons as the Fast Read completion
+                 window — one per platform. The row is built in code
+                 (ShareRowBuilder) so the URLs live in one place. -->
+            <TextBlock x:Uid="Settings.About.Share" Text="Share TransPeek" FontSize="15" FontWeight="SemiBold" Margin="0,8,0,0" />
+            <StackPanel x:Name="ShareRowPanel" Orientation="Horizontal" Spacing="10" />
+
             <!-- Restart: recovery when the app misbehaves (e.g. after an
                  OCR engine switch that crashes it, Manh 2026-11-14). The
                  tray menu has the same action, but the tray menu itself

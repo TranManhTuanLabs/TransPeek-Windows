@@ -49,10 +49,10 @@ public static class AppInfo
 
     /// <summary>CI build number (the GitHub Actions run number), stamped
     /// into the 4th version part by build.yml:
-    /// <c>-p:Version=0.1.3.${{ github.run_number }}</c> turns 0.1.3.36
+    /// <c>-p:Version=0.1.4.${{ github.run_number }}</c> turns 0.1.4.36
     /// into 36. 0 for local builds, where the csproj &lt;Version&gt; has
     /// no 4th part. The tray header shows it mac-style:
-    /// "TransPeek 0.1.3 (36)".</summary>
+    /// "TransPeek 0.1.4 (36)".</summary>
     public static int CiBuildNumber =>
         Assembly.GetExecutingAssembly().GetName().Version?.Revision ?? 0;
 
