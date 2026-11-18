@@ -14,7 +14,10 @@
     trên Microsoft Learn 18/11), xanh `#0078D4` — click tiếp theo sẽ Speak.
   - **APlusMark:** mark Fast Read tự vẽ — chữ "A" đậm 15pt + dấu "+" đậm 8pt
     superscript ở góc trên-phải của A, màu vàng nghệ **#C7800D** (rgb 0.78/0.50/0.05)
-    để đọc được cả nền sáng/tối — click tiếp theo sẽ Fast Read.
+    để đọc được cả nền sáng/tối — click tiếp theo sẽ Fast Read. Cấu tạo: **Grid
+    chứa 2 TextBlock riêng** ("A" căn giữa + "+" căn Top/Right) — KHÔNG dùng 1
+    TextBlock 2 Run với `BaselineAlignment="Superscript"`: thuộc tính đó chỉ có
+    ở WPF, WinUI không có, dùng là vỡ build #178 (WMC0011).
   - **SpeakerMark:** loa **E767** Volume — lúc đang phát tiếng.
 - Chữ "A" 14pt cũ (Manh 2026-11-14) đã bỏ; bubble Path tự vẽ (0.1.3.72) từng bị
   revert vì xấu, nhưng glyph font thì sạch nên dùng glyph.
