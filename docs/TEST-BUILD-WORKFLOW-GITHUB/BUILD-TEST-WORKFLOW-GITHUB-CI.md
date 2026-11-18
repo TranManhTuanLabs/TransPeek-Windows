@@ -25,8 +25,8 @@ to rediscover any of this.
   artifacts on main only, keeping only the newest → Zip → Create
   pre-release `v0.1.3.<run number>` on main only (direct download link
   on the Releases page, keeps only the newest) → Delete older
-  pre-releases on main only. All steps from Publish on are gated on
-  `[build-app]` in the commit message.
+  pre-releases on main only. All steps from Publish on run on every
+  code push (always build — Manh 2026-11-18, no more `[build-app]` gate).
 
 ## When CI runs, and when the app is built
 
@@ -36,7 +36,7 @@ To avoid wasting CI runs:
   `pull_request` triggers have `paths-ignore` for `docs/**` and `**.md`.
   Editing a doc costs zero CI runs.
 - **Feature branches build the app too** (Manh 2026-11-17): a push to
-  `feature/**` runs Build + Test, and with `[build-app]` also publishes
+  `feature/**` runs Build + Test and also publishes
   + uploads an artifact — but never creates a pre-release and never
   deletes older artifacts/pre-releases (those steps are main-only). The
   branch artifact is named `TransPeek-Windows-<run>-branch`, so the
@@ -44,14 +44,13 @@ To avoid wasting CI runs:
   only builds with the new setup if it contains the new `build.yml` —
   create it from latest `main`. This is the standard for every feature
   branch, current and future.
-- **Tests run on every code commit**, but the app artifact is only built
-  when the commit message contains `[build-app]`. The Publish / Tesseract
-  / Verify / Upload / Delete artifacts / Zip / Create pre-release /
-  Delete pre-releases steps have
-  `if: contains(github.event.head_commit.message, '[build-app]')`.
-  A plain code commit runs tests only; add `[build-app]` to the message
-  when a testable app build is actually needed. Only add it when Manh
-  explicitly says "build-app". (Same pattern as the mac repo and SeekZip.)
+- **Tests run on every code commit, and the app is built on every code
+  commit too** (always build — Manh 2026-11-18, no more `[build-app]`
+  gate). The Publish / Tesseract / Verify / Upload / Delete artifacts /
+  Zip / Create pre-release / Delete pre-releases steps run
+  unconditionally; the Delete artifacts / Create pre-release / Delete
+  pre-releases steps additionally require main. (Same as the mac repo
+  and SeekZip — all three dropped the gate the same day.)
 
 ## The artifact and the pre-release
 
@@ -116,7 +115,7 @@ To avoid wasting CI runs:
   Poll CI status sparsely (5–10 min, only while a run is running).
 - **Tests only cover Core logic on `net8.0`.** A green Test step says
   nothing about the WinUI panel, the tray icon, or OCR on a real
-  machine — those need a `[build-app]` run + Manh's live test.
+  machine — those need a CI build + Manh's live test.
 - **The browser cannot upload a 150 MB zip, and the connector cannot
   create releases.** A saved pre-release needs Manh to take over the
   browser to pick the file and press Publish.

@@ -71,11 +71,12 @@ investigator reading stale setup. The same rule applies to the mac repo
 - **Gate (milestone flow):** work locally → push one batch → CI green →
   Manh tests live on his Windows PC → ok / reports bugs → fix → only then
   move to the next milestone.
-- **Commit message marker `[build-app]`:** the app artifact is only built
-  when the commit message contains `[build-app]` (see §3). Only put
-  `[build-app]` in a commit when Manh explicitly says "build-app". Do not
-  decide it yourself, even if the change is visible in the app.
-- **Do NOT push a new `[build-app]` commit while the previous run is
+- **Always build (Manh 2026-11-18):** every code push builds the app
+  artifact (see §3) — no more `[build-app]` commit-message gate. The gate
+  was removed because the repo is public (Actions minutes are free) and
+  forgetting the tag used to cost a whole second CI run. The `[build-app]`
+  marker is now meaningless; do not add it to commit messages.
+- **Do NOT push a new commit while the previous run is
   still running.** Two runs racing each other make the Create/Delete
   pre-release steps delete the newer build (see §4, 2026-11-16).
 
@@ -98,14 +99,11 @@ investigator reading stale setup. The same rule applies to the mac repo
   needed to create/delete pre-releases; `actions: write` to delete old
   artifacts).
 - Steps: Checkout → Setup .NET (`8.0.x`) → Restore → Build → Test →
-  Publish (only `[build-app]`) → Download bundled Tesseract language
-  data (only `[build-app]`) → Verify publish has WinUI resources (only
-  `[build-app]`) → Upload artifact (only `[build-app]`; name
-  `TransPeek-Windows-v0.1` on main, `TransPeek-Windows-<run>-branch` on
-  feature branches) → Delete older artifacts (only `[build-app]` AND only
-  on main) → Zip published app (only `[build-app]`) → Create pre-release
-  (only `[build-app]` AND only on main) → Delete older pre-releases (only
-  `[build-app]` AND only on main).
+  Publish → Download bundled Tesseract language data → Verify publish
+  has WinUI resources → Upload artifact (name `TransPeek-Windows-v0.1`
+  on main, `TransPeek-Windows-<run>-branch` on feature branches) →
+  Delete older artifacts (main-only) → Zip published app → Create
+  pre-release (main-only) → Delete older pre-releases (main-only).
 
 ### How tests run
 
@@ -113,7 +111,7 @@ investigator reading stale setup. The same rule applies to the mac repo
   --no-build` — tests only the pure Core logic on `net8.0` (no Windows
   UI). UI/Windows-only behaviour is verified by CI build + live test on
   Manh's PC.
-- Typical run time: ~3–3.5 minutes for a `[build-app]` run.
+- Typical run time: ~3–3.5 minutes per run.
 
 ### Diagnostics: what reaches the CI log and what does NOT
 
@@ -136,7 +134,7 @@ investigator reading stale setup. The same rule applies to the mac repo
 
 ## 3. Build workflow (app artifact + pre-release)
 
-### Build steps (all gated on `[build-app]`)
+### Build steps (always run on every code push)
 
 - **Build:** `dotnet build TransPeek.sln -c Release --no-restore
   -p:Version=0.1.3.${{ github.run_number }}`. The run number becomes the
@@ -177,11 +175,10 @@ investigator reading stale setup. The same rule applies to the mac repo
 
 ### Feature branches (branch standard, Manh 2026-11-17)
 
-- A `feature/**` push runs the same Build + Test steps. With
-  `[build-app]` it also publishes and uploads an artifact — but never
-  creates a pre-release and never deletes older artifacts/pre-releases
-  (those three steps are main-only), so a branch build cannot delete
-  main's newest pre-release.
+- A `feature/**` push runs the same Build + Test steps. It also
+  publishes and uploads an artifact — but never creates a pre-release
+  and never deletes older artifacts/pre-releases (those three steps are
+  main-only), so a branch build cannot delete main's newest pre-release.
 - The branch artifact is named `TransPeek-Windows-<run>-branch`
   (downloaded as `TransPeek-Windows-<run>-branch.zip`); main's artifact
   stays `TransPeek-Windows-v0.1`. The run number in the branch name
@@ -192,7 +189,7 @@ investigator reading stale setup. The same rule applies to the mac repo
   edit the workflow on the branch).
 - This standard applies to the current branch
   (`feature/fast-read-rsvp`) AND every future feature branch. Verify it
-  with one `[build-app]` push on the branch: CI runs and the `-branch`
+  with one push on the branch: CI runs and the `-branch`
   artifact is downloadable from the run page; no pre-release appears
   and nothing of main's is deleted.
 
@@ -274,6 +271,25 @@ setup changes.
   contain the new `build.yml` (create from latest `main`); verify with
   one `[build-app]` push on the branch. The edit itself triggered a
   test-only run (#168, no `[build-app]`).
+
+- **2026-11-18 — `[build-app]` gate REMOVED, always build (Manh;
+  `build.yml` commit `55ab3b2` + indent fix `12ae47a`, same change in
+  TransPeek mac `test.yml` `1932a47` and SeekZip `ci.yml` `280a386`).**
+  Manh noticed the mac CI #228 took only 4m53s including the full app
+  build and asked why every commit doesn't just build: the repo is
+  public (Actions minutes are free), the build adds only a couple of
+  minutes to a run that already happens, and forgetting the tag used to
+  cost a whole second run. The `[build-app]` condition was removed from
+  all 8 steps in `build.yml`; the three main-only steps keep
+  `if: github.ref == 'refs/heads/main'`. Every code push now builds +
+  uploads an artifact (branch: `-branch` suffix; main: plain name +
+  pre-release, keep-newest). The `[build-app]` marker is now meaningless
+  — do not add it to commit messages. Lesson: browser YAML edits can
+  silently break indentation (the Publish step got 18 spaces instead
+  of 6, which made the YAML invalid — fixed in `12ae47a`) — ALWAYS
+  verify a browser-edited workflow by fetching the file via the API and
+  parsing the YAML before calling it done. This supersedes the
+  2026-11-08 `[build-app]` gating entry above.
 
 ## Liên kết
 

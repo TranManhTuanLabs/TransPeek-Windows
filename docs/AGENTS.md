@@ -8,7 +8,7 @@
 
 - **Đẩy các file liên quan GỘP 1 COMMIT**, không đẩy từng file qua web editor
   (mỗi lần sửa web là 1 commit, repo đi qua trạng thái dở dang, CI đỏ giữa chừng).
-- **KHÔNG đẩy commit `[build-app]` mới khi run trước còn đang chạy**
+- **KHÔNG đẩy commit mới khi run trước còn đang chạy**
   (2 run chồng nhau làm bước Create/Delete pre-release đua nhau xoá bản mới hơn).
 - **Commit chỉ sửa docs (`docs/**`, `*.md`) KHÔNG trigger CI** (do `paths-ignore`).
   Muốn chạy lại build phải có thay đổi ở file code.
