@@ -162,8 +162,25 @@ public sealed class AppSettings
     public int RsvpWpm { get; set; } = 275;
     /// <summary>Fast Read words shown per slide (1-6, default 1).</summary>
     public int RsvpChunkSize { get; set; } = 1;
-    /// <summary>Fast Read word font size in points (50-110, default 110).</summary>
+    /// <summary>Fast Read word font size in points (40-450, default 110).
+    /// Picker in the reader window (mac round 7 options: 40, 48, 56,
+    /// 64, 72, 80, 88, 96, 104, 110, 120, 140, 160, 200, 250, 300,
+    /// 350, 400, 450); wheel over the focus word changes it by 2pt.</summary>
     public double RsvpFontSize { get; set; } = 110;
+    /// <summary>Fast Read context (around) text size as a fraction of
+    /// the focus font size (0.25-1.00, default 0.40 — mac round 7).
+    /// "Context size" picker in the reader window; wheel over the
+    /// context text changes it by 5%.</summary>
+    public double RsvpContextSizeRatio { get; set; } = 0.40;
+    /// <summary>When the context around the focus word shows (mac
+    /// round 7, SwiftRead's contextDisplayStyle): "Always", "Paused"
+    /// (only show when paused, default) or "Never". Settings popover
+    /// in the reader window.</summary>
+    public string RsvpContextDisplay { get; set; } = "Paused";
+    /// <summary>Fast Read reader color scheme: "Light" (Black on White,
+    /// default) or "Dark" (White on Black). Settings popover in the
+    /// reader window (mac round 7).</summary>
+    public string RsvpColorScheme { get; set; } = "Light";
     /// <summary>Fast Read window size in physical pixels, remembered
     /// after resize (0 = auto: 70% x 55% of the work area, min 880x550).</summary>
     public double RsvpWindowWidth { get; set; } = 0;

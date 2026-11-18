@@ -15,21 +15,47 @@ the float icon's job (click = listen); reading is Fast Read's job.
 ## The window
 
 Separate `FastReadWindow` (`src/TransPeek/FastRead/`), not a panel tab: RSVP
-needs a big word (50–110 pt), one fixed focal point, a progress bar and a
+needs a big word (40–450 pt), one fixed focal point, a progress bar and a
 pause context — none of that fits the 420 px translate panel. Default
 70% × 55% of the work area, min 880×550, size remembered after resize
 (`RsvpWindowWidth` / `RsvpWindowHeight` in Settings). Single instance:
 re-opening focuses the existing window and loads the new text.
 
-Layout (top to bottom):
+Layout (top to bottom, Manh 2026-11-19 — temporary, mac RSVPView round 7):
 
+- **Top bar:** "Rapid Serial Visual Presentation" truly centered on the
+  window (full-width TextBlock, buttons overlay at the right like mac);
+  Settings gear (E713) + "?" at the right. Left stays empty — mac's left
+  pickers live in the bottom bar on Windows.
 - **Word area:** the current slide, centered on its ORP pivot (see below),
-  with two short focal ticks above/below it.
+  with two short focal ticks above/below it. **Reading time** top-left
+  inside the block text ("Reading time: 2mins", under a minute "0min");
+  **hint** top-right ("Space play/pause • ←/→ step • ↑/↓ speed •
+  Scroll ↑/↓ font size").
 - **Pause context:** ±150 words around the current slide, the current
-  words bold + orange. Shown only while paused.
+  words bold + orange. When it shows follows the Settings popover
+  (Always / Only show when paused / Never); its size is the focus size
+  times the "Context size" percent (default 40%).
 - **Progress:** seek slider + status (`Slide 12 / 240 • 1:23 left • 240 words`).
-- **Controls:** Play/Pause, Restart, WPM slider (100–2000), chunk
-  ComboBox (1–6 words/slide), font-size slider (50–110 pt).
+- **Bottom bar:** Words chunk picker (1–6) + Speed slider (100–2000) at
+  the left; Restart, Rewind, Play/Pause, Fast-forward, Maximize centered
+  (Restart first, before Rewind); "Context size" picker (25–100%) +
+  "Focus size" picker (40–450, mac round 7 options) at the right.
+  Transport is truly centered (overlay layout like mac's ZStack).
+
+Settings popover (gear, like mac): Color Scheme (Black on White / White
+on Black — dark = black page + light controls via `RequestedTheme`) +
+"Show context around focus word" (Always / Only show when paused /
+Never) + Reset to default (speed 275, focus 110, context 40%, display
+Paused — color scheme is NOT reset). "?" popover: Space play/pause,
+←/→ step, ↑/↓ speed ±10, R restart, Esc close.
+
+Wheel (Manh 2026-11-19): over the progress slider = step one word
+(scroll down = next); over the focus word = focus size ±2pt (40–450,
+picker shows the nearest option); over the context = context size
+±5% (25–100%, replaces scrolling the context). A Slider and a
+ScrollViewer consume the wheel themselves, so those two handlers are
+attached in code with `AddHandler(..., handledEventsToo: true)`.
 
 Keyboard (only while the window has focus): `Space` play/pause,
 `Left`/`Right` step a slide, `Up`/`Down` WPM ±10, `R` restart,
@@ -95,9 +121,11 @@ text. Nothing to read shows a toast.
 - `IconClickAction` (`"Speak"` default / `"FastRead"`): what a plain
   click on the float icon does. ComboBox in Settings → General
   ("Click icon"). Alt+click does the OTHER action.
-- `RsvpWpm` (275), `RsvpChunkSize` (1), `RsvpFontSize` (110) — changed
-  live from the reader window's controls (saved immediately, like the
-  other sliders); changing WPM/chunk rebuilds the document keeping the
+- `RsvpWpm` (275), `RsvpChunkSize` (1), `RsvpFontSize` (110),
+  `RsvpContextSizeRatio` (0.40), `RsvpContextDisplay` ("Paused"),
+  `RsvpColorScheme` ("Light") — changed live from the reader window's
+  controls (saved immediately, like the other sliders); changing
+  WPM/chunk rebuilds the document keeping the
   current word.
 - `RsvpWindowWidth` / `RsvpWindowHeight` — remembered window size (0 = auto).
 

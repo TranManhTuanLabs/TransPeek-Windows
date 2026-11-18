@@ -8,6 +8,7 @@
 
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Text;
+using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Documents;
@@ -49,6 +50,15 @@ public sealed partial class FastReadWindow : Window
         _timer.Tick += (_, _) => AdvanceSlide();
         if (Content is FrameworkElement contentRoot)
             contentRoot.KeyDown += OnKeyDown;
+        // Wheel over the progress slider steps one word, and wheel
+        // over the context resizes it — but a Slider and a ScrollViewer
+        // both consume the wheel themselves (seek / scroll) and mark
+        // it handled, so a plain XAML handler would never fire. Attach
+        // with handledEventsToo so the reader's wheel wins (Manh
+        // 2026-11-19). The focus word area is a plain Grid, so its
+        // wheel handler lives in XAML.
+        ProgressSlider.AddHandler(UIElement.PointerWheelChangedEvent, new PointerEventHandler(OnProgressWheelChanged), true);
+        ContextScroller.AddHandler(UIElement.PointerWheelChangedEvent, new PointerEventHandler(OnContextWheelChanged), true);
         Closed += (_, _) => SaveWindowSize();
     }
 
@@ -67,12 +77,16 @@ public sealed partial class FastReadWindow : Window
         WpmSlider.Value = App.Settings.RsvpWpm;
         WpmText.Text = $"{App.Settings.RsvpWpm} WPM";
         ChunkCombo.SelectedIndex = Math.Clamp(App.Settings.RsvpChunkSize, 1, 6) - 1;
-        FontSlider.Value = App.Settings.RsvpFontSize;
-        FontText.Text = $"{App.Settings.RsvpFontSize:0} pt";
+        SelectComboByTag(FocusSizeCombo, NearestFocusSize(App.Settings.RsvpFontSize).ToString());
+        SelectComboByTag(ContextSizeCombo, NearestContextPercent(App.Settings.RsvpContextSizeRatio * 100).ToString());
+        SelectComboByTag(ColorSchemeCombo, App.Settings.RsvpColorScheme);
+        SelectComboByTag(ContextDisplayCombo, App.Settings.RsvpContextDisplay);
+        ApplyColorScheme();
         WordTextBlock.FontSize = App.Settings.RsvpFontSize;
         _loading = false;
         ShowSlide(0);
         UpdateProgress();
+        UpdateReadingTime();
     }
 
     public void ShowReader()
@@ -238,6 +252,7 @@ public sealed partial class FastReadWindow : Window
             _timer.Interval = _document.Slides[_currentSlide].Delay;
             _timer.Start();
         }
+        UpdateReadingTime();
     }
 
     private void UpdateProgress()
@@ -263,11 +278,24 @@ public sealed partial class FastReadWindow : Window
 
     private void UpdateContext()
     {
-        if (_playing || _document.Slides.Count == 0)
+        // When the context shows depends on the Settings popover
+        // (mac round 7, SwiftRead's contextDisplayStyle): Always =
+        // even while playing; Paused = only while paused (default);
+        // Never = never. An unknown value behaves like Paused.
+        var display = App.Settings.RsvpContextDisplay;
+        var show = _document.Slides.Count > 0
+            && (string.Equals(display, "Always", StringComparison.OrdinalIgnoreCase)
+                || (!_playing && !string.Equals(display, "Never", StringComparison.OrdinalIgnoreCase)));
+        if (!show)
         {
             ContextScroller.Visibility = Visibility.Collapsed;
             return;
         }
+        // Context size = focus size x the "Context size" percent
+        // (mac round 7, default 40%); line height follows at 1.5x.
+        var contextSize = WordTextBlock.FontSize * App.Settings.RsvpContextSizeRatio;
+        ContextTextBlock.FontSize = contextSize;
+        ContextTextBlock.LineHeight = contextSize * 1.5;
         var context = _document.Context(_currentSlide);
         ContextTextBlock.Inlines.Clear();
         var before = string.Join(" ", context.Words.Take(context.CurrentStart));
@@ -339,18 +367,212 @@ public sealed partial class FastReadWindow : Window
         }
     }
 
-    private void OnFontSizeChanged(object sender, Microsoft.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
+    /// <summary>Focus size picker (Manh 2026-11-19, mac round 7
+    /// options 40-450): apply the size, remember it, re-render the
+    /// current slide (the pivot shift depends on the size) — the
+    /// context font follows the focus size in UpdateContext.</summary>
+    private void OnFocusSizeChanged(object sender, SelectionChangedEventArgs e)
     {
         if (_loading)
             return;
-        var size = e.NewValue;
-        FontText.Text = $"{size:0} pt";
+        if (FocusSizeCombo.SelectedItem is ComboBoxItem item
+            && item.Tag is string tag && double.TryParse(tag, out var size))
+            ApplyFocusSize(size);
+    }
+
+    private void ApplyFocusSize(double size)
+    {
         WordTextBlock.FontSize = size;
         App.Settings.RsvpFontSize = size;
         SettingsStore.Save(App.Settings);
-        // Re-render the current slide: the pivot shift depends on the size.
         ShowSlide(_currentSlide);
     }
+
+    /// <summary>"Context size" picker (Manh 2026-11-19, mac round 7
+    /// options 25-100%): the context font is the focus size times
+    /// this percent — no rebuild, just re-render the context.</summary>
+    private void OnContextSizeChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_loading)
+            return;
+        if (ContextSizeCombo.SelectedItem is ComboBoxItem item
+            && item.Tag is string tag && int.TryParse(tag, out var percent))
+        {
+            App.Settings.RsvpContextSizeRatio = percent / 100.0;
+            SettingsStore.Save(App.Settings);
+            UpdateContext();
+        }
+    }
+
+    private void OnColorSchemeChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_loading)
+            return;
+        if (ColorSchemeCombo.SelectedItem is ComboBoxItem item && item.Tag is string tag)
+        {
+            App.Settings.RsvpColorScheme = tag;
+            SettingsStore.Save(App.Settings);
+            ApplyColorScheme();
+        }
+    }
+
+    private void OnContextDisplayChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_loading)
+            return;
+        if (ContextDisplayCombo.SelectedItem is ComboBoxItem item && item.Tag is string tag)
+        {
+            App.Settings.RsvpContextDisplay = tag;
+            SettingsStore.Save(App.Settings);
+            UpdateContext();
+        }
+    }
+
+    /// <summary>Reset to default (Manh 2026-11-19, mac round 7):
+    /// speed 275, focus size 110, context size 40%, context display
+    /// "Only show when paused". The color scheme is a theme
+    /// preference, so it is NOT reset.</summary>
+    private void OnResetClicked(object sender, RoutedEventArgs e)
+    {
+        _loading = true;
+        App.Settings.RsvpWpm = 275;
+        App.Settings.RsvpFontSize = 110;
+        App.Settings.RsvpContextSizeRatio = 0.40;
+        App.Settings.RsvpContextDisplay = "Paused";
+        SettingsStore.Save(App.Settings);
+        WpmSlider.Value = 275;
+        WpmText.Text = "275 WPM";
+        SelectComboByTag(FocusSizeCombo, "110");
+        SelectComboByTag(ContextSizeCombo, "40");
+        SelectComboByTag(ContextDisplayCombo, "Paused");
+        _loading = false;
+        RebuildKeepingPosition();
+        ShowSlide(_currentSlide);
+    }
+
+    private void OnRewindClicked(object sender, RoutedEventArgs e) => SeekTo(_currentSlide - 1);
+
+    private void OnFastForwardClicked(object sender, RoutedEventArgs e) => SeekTo(_currentSlide + 1);
+
+    /// <summary>Maximize / restore the reader window (Manh 2026-11-19,
+    /// like mac's toggle-maximize button).</summary>
+    private void OnMaximizeClicked(object sender, RoutedEventArgs e)
+    {
+        if (AppWindow.Presenter is OverlappedPresenter presenter)
+        {
+            if (presenter.State == OverlappedPresenterState.Maximized)
+                presenter.Restore();
+            else
+                presenter.Maximize();
+        }
+    }
+
+    /// <summary>Wheel over the progress slider (Manh 2026-11-19):
+    /// scroll down = next word, scroll up = previous word — one slide
+    /// per tick, like a fast seek.</summary>
+    private void OnProgressWheelChanged(object sender, PointerRoutedEventArgs e)
+    {
+        var delta = e.GetCurrentPoint((UIElement)sender).Properties.MouseWheelDelta;
+        if (delta == 0)
+            return;
+        SeekTo(_currentSlide + (delta < 0 ? 1 : -1));
+        e.Handled = true;
+    }
+
+    /// <summary>Wheel over the focus word (Manh 2026-11-19): scroll up
+    /// grows the focus size, scroll down shrinks it, 2pt per tick
+    /// (the old slider step), clamped 40-450. The picker shows the
+    /// nearest option — the value itself stays exact, like mac.</summary>
+    private void OnFocusWheelChanged(object sender, PointerRoutedEventArgs e)
+    {
+        var delta = e.GetCurrentPoint((UIElement)sender).Properties.MouseWheelDelta;
+        if (delta == 0)
+            return;
+        var size = Math.Clamp(WordTextBlock.FontSize + (delta > 0 ? 2 : -2), 40, 450);
+        ApplyFocusSize(size);
+        _loading = true;
+        SelectComboByTag(FocusSizeCombo, NearestFocusSize(size).ToString());
+        _loading = false;
+        e.Handled = true;
+    }
+
+    /// <summary>Wheel over the context text (Manh 2026-11-19): scroll
+    /// up grows the context size, scroll down shrinks it, 5% per tick,
+    /// clamped 25-100%. This replaces scrolling the context — the
+    /// wheel is the size control here.</summary>
+    private void OnContextWheelChanged(object sender, PointerRoutedEventArgs e)
+    {
+        var delta = e.GetCurrentPoint((UIElement)sender).Properties.MouseWheelDelta;
+        if (delta == 0)
+            return;
+        var ratio = Math.Clamp(App.Settings.RsvpContextSizeRatio + (delta > 0 ? 0.05 : -0.05), 0.25, 1.00);
+        App.Settings.RsvpContextSizeRatio = ratio;
+        SettingsStore.Save(App.Settings);
+        _loading = true;
+        SelectComboByTag(ContextSizeCombo, NearestContextPercent(ratio * 100).ToString());
+        _loading = false;
+        UpdateContext();
+        e.Handled = true;
+    }
+
+    /// <summary>Color scheme (mac round 7): White on Black = dark
+    /// theme (black page, light controls) via RequestedTheme + a black
+    /// page background; Black on White = the default light theme. The
+    /// Flyout contents get the same theme — a Flyout is a separate
+    /// popup, so it does not inherit the Grid's theme.</summary>
+    private void ApplyColorScheme()
+    {
+        var dark = string.Equals(App.Settings.RsvpColorScheme, "Dark", StringComparison.OrdinalIgnoreCase);
+        var theme = dark ? ElementTheme.Dark : ElementTheme.Light;
+        RootGrid.RequestedTheme = theme;
+        if (dark)
+            RootGrid.Background = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(0xFF, 0x00, 0x00, 0x00));
+        else
+            RootGrid.ClearValue(Grid.BackgroundProperty);
+        if (SettingsFlyout.Content is FrameworkElement settingsContent)
+            settingsContent.RequestedTheme = theme;
+        if (HotkeysFlyout.Content is FrameworkElement hotkeysContent)
+            hotkeysContent.RequestedTheme = theme;
+    }
+
+    /// <summary>Total estimated reading time (mac: "Reading time:
+    /// 2mins", under a minute -> "0min"). Top-left inside the block
+    /// text (Manh 2026-11-19).</summary>
+    private void UpdateReadingTime()
+    {
+        var mins = (int)Math.Round(_document.TotalDuration.TotalMinutes);
+        ReadingTimeText.Text = mins <= 0 ? "Reading time: 0min" : $"Reading time: {mins}mins";
+    }
+
+    private static void SelectComboByTag(ComboBox combo, string tag)
+    {
+        foreach (var item in combo.Items)
+        {
+            if (item is ComboBoxItem comboItem
+                && string.Equals(comboItem.Tag?.ToString(), tag, StringComparison.OrdinalIgnoreCase))
+            {
+                combo.SelectedItem = item;
+                return;
+            }
+        }
+    }
+
+    /// <summary>Focus size picker options (mac round 7: 40-450, steps
+    /// grow past 110 so the menu stays short). The picker shows the
+    /// option nearest to a value — the wheel moves the size by 2pt,
+    /// so the value is not always one of the options.</summary>
+    private static readonly int[] FocusSizeOptions =
+        [40, 48, 56, 64, 72, 80, 88, 96, 104, 110, 120, 140, 160, 200, 250, 300, 350, 400, 450];
+
+    private static int NearestFocusSize(double size)
+        => FocusSizeOptions.MinBy(option => Math.Abs(option - size));
+
+    /// <summary>Context size picker options (mac round 7: 25-100%),
+    /// same nearest-option rule as the focus size.</summary>
+    private static readonly int[] ContextSizeOptions = [25, 30, 35, 40, 50, 60, 75, 100];
+
+    private static int NearestContextPercent(double percent)
+        => ContextSizeOptions.MinBy(option => Math.Abs(option - percent));
 
     private void OnKeyDown(object sender, KeyRoutedEventArgs e)
     {
