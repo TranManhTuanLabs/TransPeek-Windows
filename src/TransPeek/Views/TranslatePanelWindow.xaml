@@ -337,6 +337,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <!-- Card "How the icon works" (mac parity, FlowIntroCard):
                  the flow in one place — Hover icon to translate, Click
@@ -414,6 +415,23 @@
                     </ScrollViewer>
                 </Grid>
             </Border>
+            <!-- Share (Manh 2026-11-19, mirrors mac d414700): the same
+                 row of share buttons as the Fast Read completion window
+                 and About — no card around it, no Spacer pushing it to
+                 the bottom (the space left when the 2 cards collapse is
+                 reserved for a future focus timer). It sits below the
+                 shortcuts card, so it shows without scrolling when the
+                 cards collapse; the shortcuts card keeps its own
+                 scroller for the 10 rows. Windows adaptation: mac puts
+                 it at the end of the left panel's single ScrollView;
+                 Windows has no such ScrollView (each card scrolls
+                 itself), so the row is a third Auto row in this Grid —
+                 it takes ~50pt from the shortcuts card, never from the
+                 panel height, so auto-fit needs no change. -->
+            <StackPanel Grid.Row="2" Margin="0,8,0,0" Spacing="4">
+                <TextBlock Text="Share TransPeek" FontSize="11" Foreground="Gray" HorizontalAlignment="Center" />
+                <StackPanel x:Name="LeftShareRowPanel" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center" />
+            </StackPanel>
         </Grid>
 
         <!-- Panel right — Fast Read placeholder (Manh 2026-11-17): the real

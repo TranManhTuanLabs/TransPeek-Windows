@@ -2254,6 +2254,15 @@ an OS limit.)
 - **Version 0.1.4:** bumped to match mac (`TransPeek.csproj` `<Version>`, `Package.appxmanifest`, `build.yml` version stamp + pre-release tag/title + delete regex, workflow docs). The `0.1.3.<run>-saved` releases stay valid (the delete regex only matches `v0.1.3.*`).
 - **Quality note:** the ~69 languages added by Google in June 2024 are mostly low-resource languages; their translation quality is lower than the big languages. Google publishes no per-language quality table.
 
+## Share row on panel left (2026-11-19, Manh)
+
+- **Why:** the panel is where users spend the most time; Settings is rarely opened — share must be on the panel, not just About (Manh 2026-11-19 04:15, mac d414700).
+- **Placement (Manh 04:25–04:33, kept):** at the end of panel left's content, right after the shortcuts table — label "Share TransPeek" (caption, secondary) + the same 6-icon row, both centered. No new card, no Spacer pushing it to the bottom (the space left when the 2 cards collapse is reserved for a future focus timer).
+- **Alternatives considered and rejected:** (a) next to the cat icon in the bottom bar — too cramped at 420pt (6 icons ~218pt + GitHub ~65pt + version ~120pt) and the 28pt share icons dwarf the 16pt cat; (b) a fixed line above the cat icon (panel left only) — always visible and clean, but needs auto-fit changes + ~50pt fixed extra height — complex.
+- **Windows adaptation:** mac puts the row at the end of the left panel's single ScrollView; Windows has no such ScrollView (each card scrolls itself), so the row is a third Auto row in the left tab's Grid — it takes ~50pt from the shortcuts card, never from the panel height, so auto-fit needs no change.
+- **About cross-check (same round):** the Windows About share row (0.1.4) matches mac's ShareRowView exactly — same 6 badges (28px, spacing 10, same brand colors and adaptive Threads/X/Mail), same tagline text + repo link, Facebook/LinkedIn link-only. Mail uses FontIcon E715 (mac: SF envelope.fill).
+- **Future idea (NOT implemented):** later, hide the cat + GitHub link on panel left and put share in that exact spot (middle of the bottom bar) — share becomes the main call-to-action on panel left. Note: the bottom bar is shared by all 3 tabs, so that change must know which tab is showing and hide only on panel left.
+
 ## Liên kết
 
 - [Bối cảnh AI](AI_CONTEXT.md)

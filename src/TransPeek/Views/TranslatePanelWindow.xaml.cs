@@ -30,6 +30,7 @@ using TransPeek.Core.Settings;
 using TransPeek.Core.Translation;
 using TransPeek.Interop;
 using TransPeek.Services;
+using TransPeek.Share;
 using Windows.System;
 using Windows.UI.Core;
 using WinRT.Interop;
@@ -256,6 +257,10 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         InitializeComponent();
         PopulateLangCombos();
         SyncLangCombos();
+        // Share row at the bottom of panel left (Manh 2026-11-19,
+        // mirrors mac d414700): the same 6 buttons as About, built
+        // once here — the row itself is in XAML (LeftShareRowPanel).
+        ShareRowBuilder.Populate(LeftShareRowPanel, AppInfo.Tagline);
         // Auto-play chain: when the auto-played source finishes and
         // Auto-play translation is also on, speak the translation.
         _speech.SpeechEnded += (_, _) =>
