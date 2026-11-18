@@ -112,8 +112,11 @@ public static class ShareRowBuilder
     }
 
     /// <summary>Resolve a theme brush by name, falling back to a solid
-    /// color when the resource is missing (e.g. in a test host).</summary>
-    private static Brush ThemeBrush(string name, Microsoft.UI.Color fallback)
+    /// color when the resource is missing (e.g. in a test host).
+    /// NOTE (CI #188): the Color struct is Windows.UI.Color — there is
+    /// no Microsoft.UI.Color (only Microsoft.UI.Colors, the static
+    /// class, and Microsoft.UI.ColorHelper resolve).</summary>
+    private static Brush ThemeBrush(string name, Windows.UI.Color fallback)
     {
         if (Application.Current.Resources.TryGetValue(name, out var value) && value is Brush brush)
             return brush;

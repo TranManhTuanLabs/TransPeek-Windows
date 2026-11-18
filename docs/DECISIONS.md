@@ -2263,6 +2263,24 @@ an OS limit.)
 - **About cross-check (same round):** the Windows About share row (0.1.4) matches mac's ShareRowView exactly — same 6 badges (28px, spacing 10, same brand colors and adaptive Threads/X/Mail), same tagline text + repo link, Facebook/LinkedIn link-only. Mail uses FontIcon E715 (mac: SF envelope.fill).
 - **Future idea (NOT implemented):** later, hide the cat + GitHub link on panel left and put share in that exact spot (middle of the bottom bar) — share becomes the main call-to-action on panel left. Note: the bottom bar is shared by all 3 tabs, so that change must know which tab is showing and hide only on panel left.
 
+## CI #188 red: Microsoft.UI.Color does not exist (2026-11-19)
+
+- Run #188 (head 5e9734b) failed at Build in 16s: CS0234 in
+  `ShareRowBuilder.cs:116` — the type `Color` does not exist in the
+  namespace `Microsoft.UI`. The WMC9999 was a consequence, as usual.
+  FIX: the Color struct is `Windows.UI.Color` — only the parameter type
+  changed (`Microsoft.UI.Color` → `Windows.UI.Color`); `Microsoft.UI.Colors`
+  (static class, used in SettingsWindow) and `Microsoft.UI.ColorHelper`
+  (used in FastReadWindow/TranslatePanelWindow) DO resolve in this project.
+- Runs #186/#187 failed the same way, not concurrency-cancelled: the
+  same broken file was in all three commits (1c3a8fa introduced it), and
+  the build fails in ~16s — each run concluded as failure before the
+  next push could cancel it.
+- Lesson: `Microsoft.UI` has `Colors` and `ColorHelper`, but the `Color`
+  struct itself lives in `Windows.UI` — check the namespace per type,
+  not per family (same family as the CI #80 `Windows.UI.Colors` trap,
+  but the opposite direction).
+
 ## Liên kết
 
 - [Bối cảnh AI](AI_CONTEXT.md)
