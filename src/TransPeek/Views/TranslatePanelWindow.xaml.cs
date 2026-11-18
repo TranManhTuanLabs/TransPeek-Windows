@@ -196,14 +196,23 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// Opened, cleared on Closed — only the popover suppresses it.</summary>
     private bool _suppressAutoHide;
 
-    /// <summary>Multi-tab hub (Manh 2026-11-17): Shortcuts (left,
-    /// temporary), Translate (middle, default), Fast Read (right,
-    /// placeholder). Dots only for now — no swipe (WinUI has no native
-    /// swipe for a panel like this; that would be custom work and Manh
-    /// has not approved it).</summary>
+    /// <summary>Multi-tab hub (Manh 2026-11-17): panel left = Shortcuts
+    /// (temporary), panel center = Translate (default, CHỐT), panel
+    /// right = Fast Read (placeholder). Names settled 2026-11-18 (mac):
+    /// use "panel left / center / right" in docs, code and conversation
+    /// — never "panel 1/2/3" in docs, to avoid the mac mix-up that put
+    /// the "How the icon works" card in the wrong panel. Dots only for
+    /// now — no swipe (WinUI has no native swipe for a panel like this;
+    /// that would be custom work and Manh has not approved it). The
+    /// dots row DOES scroll (mouse wheel) and has ‹ › arrows.</summary>
     private enum PanelTab { Shortcuts = 0, Translate = 1, FastRead = 2 }
 
     private PanelTab _activeTab = PanelTab.Translate;
+
+    /// <summary>Panel left: the shortcuts card's collapsed state within
+    /// this panel session (in-memory only — unlike the "How the icon
+    /// works" card, whose state is remembered in Settings).</summary>
+    private bool _shortcutsCardCollapsed;
 
     private static readonly SolidColorBrush DotSelectedBrush =
         new(Microsoft.UI.ColorHelper.FromArgb(0xFF, 0x0E, 0xA5, 0xE9));
@@ -1253,7 +1262,10 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         ShortcutsTabPanel.Visibility = tab == PanelTab.Shortcuts ? Visibility.Visible : Visibility.Collapsed;
         FastReadTabPanel.Visibility = tab == PanelTab.FastRead ? Visibility.Visible : Visibility.Collapsed;
         if (tab == PanelTab.Shortcuts)
-            BuildShortcutRows(ShortcutsTabRowsPanel, () => ShowTab(PanelTab.Translate));
+        {
+            BuildShortcutRows(ShortcutsTabRowsPanel, static () => { });
+            ApplyPanelLeftCardStates();
+        }
         TabDotShortcuts.Background = tab == PanelTab.Shortcuts ? DotSelectedBrush : DotUnselectedBrush;
         TabDotTranslate.Background = tab == PanelTab.Translate ? DotSelectedBrush : DotUnselectedBrush;
         TabDotFastRead.Background = tab == PanelTab.FastRead ? DotSelectedBrush : DotUnselectedBrush;
@@ -1278,6 +1290,64 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         if (sender is Button dot && int.TryParse(dot.Tag?.ToString(), out var index)
             && index >= 0 && index <= 2)
             ShowTab((PanelTab)index);
+    }
+
+    /// <summary>‹ › arrows beside the dots (Manh 2026-11-18): switch
+    /// tabs by click. Wraps around (left from panel left goes to panel
+    /// right, right from panel right goes to panel left) so the arrows
+    /// are always clickable.</summary>
+    private void OnTabPrevClicked(object sender, RoutedEventArgs e) => CycleTab(-1);
+
+    private void OnTabNextClicked(object sender, RoutedEventArgs e) => CycleTab(1);
+
+    /// <summary>Mouse wheel over the dots row (Manh 2026-11-18, like
+    /// mac): scroll down = next tab, scroll up = previous tab.</summary>
+    private void OnTabDotsWheel(object sender, PointerRoutedEventArgs e)
+    {
+        var delta = e.GetCurrentPoint((UIElement)sender).Properties.MouseWheelDelta;
+        if (delta == 0)
+            return;
+        e.Handled = true;
+        CycleTab(delta < 0 ? 1 : -1);
+    }
+
+    private void CycleTab(int direction)
+    {
+        const int count = 3;
+        var next = ((int)_activeTab + direction % count + count) % count;
+        ShowTab((PanelTab)next);
+    }
+
+    /// <summary>Panel left card states (Manh 2026-11-18, mac parity):
+    /// the "How the icon works" card's collapsed state is remembered
+    /// in Settings; the shortcuts card's state lives only for this
+    /// panel session. Chevron ⌄ = expanded, › = collapsed.</summary>
+    private void ApplyPanelLeftCardStates()
+    {
+        var howCollapsed = App.Settings.HowIconWorksCollapsed;
+        HowIconWorksBody.Visibility = howCollapsed ? Visibility.Collapsed : Visibility.Visible;
+        HowIconWorksChevronText.Text = howCollapsed ? "›" : "⌄";
+        ShortcutsCardBody.Visibility = _shortcutsCardCollapsed ? Visibility.Collapsed : Visibility.Visible;
+        ShortcutsCardChevronText.Text = _shortcutsCardCollapsed ? "›" : "⌄";
+    }
+
+    /// <summary>"How the icon works" header = the whole top bar: click
+    /// it to collapse/expand the card. The state is remembered in
+    /// Settings, so once Manh knows the flow the shortcuts card is the
+    /// main one.</summary>
+    private void OnHowIconWorksHeaderClicked(object sender, RoutedEventArgs e)
+    {
+        App.Settings.HowIconWorksCollapsed = !App.Settings.HowIconWorksCollapsed;
+        SettingsStore.Save(App.Settings);
+        ApplyPanelLeftCardStates();
+    }
+
+    /// <summary>Shortcuts card header = the whole top bar: click it to
+    /// close/open the card (in-memory for this panel session).</summary>
+    private void OnShortcutsCardHeaderClicked(object sender, RoutedEventArgs e)
+    {
+        _shortcutsCardCollapsed = !_shortcutsCardCollapsed;
+        ApplyPanelLeftCardStates();
     }
 
     private void OnPinToggled(object sender, RoutedEventArgs e)
@@ -1320,9 +1390,13 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// StackPanel — shared by the "?" popover and the shortcuts tab,
     /// so the two can never drift apart. Only the Run button runs the
     /// action; clicking the row itself does nothing, so reading the
-    /// list cannot trigger anything. afterRun runs after the action:
-    /// the popover hides itself; the tab switches back to the
-    /// translate tab so the result is visible.</summary>
+    /// list cannot trigger anything. Run HIDES THE PANEL FIRST, then
+    /// runs the action (Manh 2026-11-18, mac parity): the panel would
+    /// otherwise cover the screen the action needs (OCR opens the
+    /// region picker, Settings opens its window). afterRun runs after
+    /// the action: the popover hides itself. The tab passes a no-op —
+    /// it used to switch back to the translate tab, but the panel is
+    /// hidden now, so there is nothing to switch back to.</summary>
     private void BuildShortcutRows(StackPanel panel, Action afterRun)
     {
         panel.Children.Clear();
@@ -1372,6 +1446,12 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
             run.Content = new FontIcon { Glyph = "\uE768", FontSize = 10 };
             run.Click += (_, _) =>
             {
+                // Hide the panel FIRST (Manh 2026-11-18): the action
+                // takes over the screen (OCR opens the region picker,
+                // Settings opens its window, a translation re-shows
+                // the panel with the result) — the topmost panel must
+                // not cover it. The flyout closes via afterRun below.
+                HidePanel();
                 entry.Run();
                 afterRun();
             };

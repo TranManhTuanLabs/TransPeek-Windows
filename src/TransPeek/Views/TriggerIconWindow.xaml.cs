@@ -1,24 +1,20 @@
 // Trigger icon (SPEC §3.1): the small bubble tile that appears near
 // the text selection. Hover (~500 ms, configurable) opens the float
-// panel (translate); click switches the mark to a speaker (listen/TTS
-// mode) and does NOT open the panel — the mac model
-// (TriggerIconController: click-to-speak cancels the hover timer and
-// never opens the panel; while speaking, hover must not re-trigger
-// translation). TTS audio itself is NOT built yet (see README: TTS
-// comes after mac is stable), so the click is only the speaker visual
-// for now; the second click turns it back. The two paths must not
-// conflict: a click cancels the pending hover, and hover is blocked
-// while the speaker shows (0.1.3.70 test: the speaker never appeared
-// because the click also opened the panel, which hid the icon at once).
+// panel (translate); click does the configured click action (Settings
+// -> General -> "Click icon": Speak, the default, or Fast Read).
+// Style B (Manh 2026-11-18, mac FLOAT_ICON_UX_SPEC §3 + §6): the icon
+// always previews the NEXT click — Speak = speech bubble (E8BD),
+// Fast Read = custom A+ (turmeric); Alt held flips the preview to the
+// OTHER action. After any Fast Read trigger the icon shows A+ for
+// 2.5s as a confirmation, then hides. Alt is read from the GLOBAL key
+// state (GetAsyncKeyState, polled every 0.1s while visible) — a local
+// handler cannot see Alt held in another app (mac bug, build #235).
 
 using Microsoft.UI.Dispatching;
-using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using TransPeek.Interop;
-using Windows.System;
-using Windows.UI.Core;
 
 namespace TransPeek.Views;
 
@@ -30,11 +26,31 @@ public sealed partial class TriggerIconWindow : Window
 
     private readonly DispatcherTimer _hoverTimer = new();
     private readonly DispatcherTimer _autoHideTimer = new();
+    /// <summary>Alt preview poll (Style B, mac §5): every 0.1s while
+    /// the icon is visible, read the GLOBAL Alt state. Only a real
+    /// state change acts — a no-change poll must never restart the
+    /// auto-hide timer, or the icon would never auto-hide.</summary>
+    private readonly DispatcherTimer _altPollTimer = new();
+    /// <summary>2.5s A+ confirmation after a Fast Read trigger (mac
+    /// §3): the icon shows A+ while the Read window opens, then hides.
+    /// Clicks are ignored until it fires.</summary>
+    private readonly DispatcherTimer _readLingerTimer = new();
     private bool _visible;
     /// <summary>True while the speaker mark shows (click = listen mode).
     /// While speaking, hover must not open the translate panel (mac:
     /// startHoverTimer has guard !isSpeaking).</summary>
     private bool _isSpeaking;
+    /// <summary>Last Alt state seen by the poll timer (or at ShowAt).
+    /// Compared each poll so only a real change flips the preview.</summary>
+    private bool _altHeld;
+    /// <summary>True during the 2.5s A+ confirmation after a Fast Read
+    /// trigger. App reads this (IsReadLingerActive) so it does not hide
+    /// the icon early in ShowFastReadWindow.</summary>
+    private bool _inReadLinger;
+    /// <summary>True while the right-click menu is open: the Alt poll
+    /// must not restart the auto-hide timer then, or the icon could
+    /// vanish under the open menu.</summary>
+    private bool _menuOpen;
 
     /// <summary>Raised on click, or when the hover delay elapses.</summary>
     public event Action? OpenRequested;
@@ -44,7 +60,7 @@ public sealed partial class TriggerIconWindow : Window
     public event Action? SpeakRequested;
 
     /// <summary>Raised when the user clicks the icon again to stop
-    /// listening (the speaker mark goes back to "A").</summary>
+    /// listening (the speaker mark goes back to the preview mark).</summary>
     public event Action? SpeakStopped;
 
     /// <summary>Raised on Alt+click, on a plain click when the click
@@ -102,7 +118,13 @@ public sealed partial class TriggerIconWindow : Window
             _autoHideTimer.Start();
         };
         var fastReadItem = new MenuFlyoutItem { Text = "Fast Read", Icon = new FontIcon { Glyph = "\uE736" } };
-        fastReadItem.Click += (_, _) => FastReadRequested?.Invoke();
+        fastReadItem.Click += (_, _) =>
+        {
+            if (_inReadLinger)
+                return;
+            BeginReadLinger();
+            FastReadRequested?.Invoke();
+        };
         var settingsItem = new MenuFlyoutItem { Text = "Settings…", Icon = new FontIcon { Glyph = "\uE713" } };
         settingsItem.Click += (_, _) => SettingsRequested?.Invoke();
         menu.Items.Add(translateItem);
@@ -110,34 +132,43 @@ public sealed partial class TriggerIconWindow : Window
         menu.Items.Add(fastReadItem);
         menu.Items.Add(new MenuFlyoutSeparator());
         menu.Items.Add(settingsItem);
-        menu.Opened += (_, _) => _autoHideTimer.Stop();
+        menu.Opened += (_, _) =>
+        {
+            _menuOpen = true;
+            _autoHideTimer.Stop();
+        };
         menu.Closed += (_, _) =>
         {
-            if (_visible)
+            _menuOpen = false;
+            if (_visible && !_inReadLinger)
             {
                 _autoHideTimer.Interval = TimeSpan.FromSeconds(App.Settings.TriggerIconAutoHideSeconds);
                 _autoHideTimer.Start();
             }
         };
         IconBorder.ContextFlyout = menu;
-        // Click = listen mode (mac handleIconClick, .speak): toggle the
-        // speaker mark. It must NOT open the panel (the old code raised
-        // OpenRequested here, and opening the panel hid the icon at once,
-        // so the speaker never showed). A click also cancels the pending
-        // hover timer, so hover and click never both fire. A second click
-        // while speaking turns the speaker back off. The click also
-        // raises SpeakRequested / SpeakStopped so App can speak (or
-        // stop) the current selection — the click is the listen action,
-        // not just the icon state (Manh 2026-11-16).
-        // Fast Read changes the click (feature/fast-read-rsvp, Manh
-        // 2026-11-17): Alt+click ALWAYS opens Fast Read (entry point 1),
-        // and a plain click follows the click-action setting (Settings
-        // -> General -> "Click icon": Speak, the default, or Fast Read).
-        // A Fast Read click also stops a running speech first.
+        // Click (mac handleIconClick + Style B): a plain click does the
+        // configured click action (Speak, the default, or Fast Read);
+        // Alt+click ALWAYS does the OTHER action (entry point 1 for
+        // Fast Read). A click cancels the pending hover timer, so hover
+        // and click never both fire — and it must NOT open the panel
+        // (the old code raised OpenRequested here, and opening the
+        // panel hid the icon at once, so the speaker never showed).
+        // A Fast Read click also stops a running speech first, then
+        // starts the 2.5s A+ linger BEFORE raising FastReadRequested,
+        // so App's ShowFastReadWindow sees IsReadLingerActive and does
+        // not hide the icon early. During the linger further clicks
+        // are ignored (no double window, no speaking over the reader).
         IconBorder.Tapped += (_, _) =>
         {
-            var altHeld = (InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Menu)
-                & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down;
+            if (_inReadLinger)
+                return;
+            // Global Alt state, not GetKeyStateForCurrentThread: the
+            // user selects text in another app, so the thread-local
+            // state may be stale; GetAsyncKeyState reads the hardware
+            // state whatever app is frontmost (mac bug, build #235).
+            var altHeld = IsAltHeldGlobally();
+            _altHeld = altHeld;
             var clickReads = string.Equals(App.Settings.IconClickAction, "FastRead", StringComparison.OrdinalIgnoreCase);
             if (altHeld || clickReads)
             {
@@ -147,9 +178,8 @@ public sealed partial class TriggerIconWindow : Window
                     SetSpeaking(false);
                     SpeakStopped?.Invoke();
                 }
+                BeginReadLinger();
                 FastReadRequested?.Invoke();
-                _autoHideTimer.Interval = TimeSpan.FromSeconds(App.Settings.TriggerIconAutoHideSeconds);
-                _autoHideTimer.Start();
                 return;
             }
             if (_isSpeaking)
@@ -181,6 +211,35 @@ public sealed partial class TriggerIconWindow : Window
             _autoHideTimer.Stop();
             HideIcon();
         };
+        _altPollTimer.Interval = TimeSpan.FromMilliseconds(100);
+        _altPollTimer.Tick += (_, _) =>
+        {
+            var held = IsAltHeldGlobally();
+            if (held == _altHeld)
+                return; // no-change poll: never restart the auto-hide.
+            _altHeld = held;
+            UpdateGlyph();
+            if (held)
+            {
+                // Pause the auto-hide while Alt is held (mac §4), so
+                // the A+ preview does not vanish before the user can
+                // click it.
+                _autoHideTimer.Stop();
+            }
+            else if (!_menuOpen)
+            {
+                // Fresh delay on release — unless the menu is open
+                // (then the menu's Closed handler restarts it).
+                _autoHideTimer.Interval = TimeSpan.FromSeconds(App.Settings.TriggerIconAutoHideSeconds);
+                _autoHideTimer.Start();
+            }
+        };
+        _readLingerTimer.Tick += (_, _) =>
+        {
+            _readLingerTimer.Stop();
+            _inReadLinger = false;
+            HideIcon();
+        };
     }
 
     /// <summary>Show the icon just below-right of the selection point
@@ -192,7 +251,16 @@ public sealed partial class TriggerIconWindow : Window
     /// "abnormal size" Manh saw in 0.1.3.68.</summary>
     public void ShowAt(int x, int y)
     {
-        SetSpeaking(false); // fresh selection: back to the bubble mark.
+        // A new selection cancels a pending Read linger (fresh icon
+        // state for the new text).
+        _inReadLinger = false;
+        _readLingerTimer.Stop();
+        // Initial Alt state at show time (mac §5): the user may already
+        // be holding Alt when the icon appears — read it before the
+        // glyph refresh below, so the preview is right at once.
+        _altHeld = IsAltHeldGlobally();
+        SetSpeaking(false); // fresh selection: back to the preview mark.
+        UpdateGlyph(); // SetSpeaking returns early when already not speaking.
         var scale = WindowHelpers.DpiScale(this);
         var w = Math.Max(1, (int)Math.Round(WidthPx * scale));
         var h = Math.Max(1, (int)Math.Round(HeightPx * scale));
@@ -210,9 +278,14 @@ public sealed partial class TriggerIconWindow : Window
         ApplyCircularRegion(w, h);
         WindowHelpers.ShowWithoutActivation(this);
         _visible = true;
+        _altPollTimer.Start();
         _hoverTimer.Interval = TimeSpan.FromMilliseconds(App.Settings.HoverDelayMs);
-        _autoHideTimer.Interval = TimeSpan.FromSeconds(App.Settings.TriggerIconAutoHideSeconds);
-        _autoHideTimer.Start();
+        // Pause the auto-hide if Alt is already held (mac §4).
+        if (!_altHeld)
+        {
+            _autoHideTimer.Interval = TimeSpan.FromSeconds(App.Settings.TriggerIconAutoHideSeconds);
+            _autoHideTimer.Start();
+        }
     }
 
     /// <summary>Clip the icon window to a circle inscribed in its
@@ -239,29 +312,83 @@ public sealed partial class TriggerIconWindow : Window
         _visible = false;
         _hoverTimer.Stop();
         _autoHideTimer.Stop();
+        _altPollTimer.Stop();
+        _readLingerTimer.Stop();
+        _inReadLinger = false;
         SetSpeaking(false);
         WindowHelpers.Hide(this);
     }
 
+    /// <summary>True during the 2.5s A+ confirmation after a Fast Read
+    /// trigger: App must not hide the icon yet (ShowFastReadWindow
+    /// skips HideIcon while this is true; the linger timer hides it).</summary>
+    public bool IsReadLingerActive => _inReadLinger;
+
+    /// <summary>Global Alt state (mac §5): GetAsyncKeyState reads the
+    /// hardware state whatever app is frontmost. The high bit (0x8000)
+    /// means the key is down.</summary>
+    private static bool IsAltHeldGlobally()
+        => (NativeMethods.GetAsyncKeyState(NativeMethods.VK_MENU) & 0x8000) != 0;
+
+    /// <summary>Start the 2.5s A+ confirmation (mac §3): after ANY Fast
+    /// Read trigger the icon shows A+ while the Read window opens, then
+    /// hides. Call BEFORE raising FastReadRequested, so App sees
+    /// IsReadLingerActive and does not hide the icon early.</summary>
+    private void BeginReadLinger()
+    {
+        _inReadLinger = true;
+        _hoverTimer.Stop();
+        _altPollTimer.Stop();
+        _autoHideTimer.Stop();
+        UpdateGlyph();
+        _readLingerTimer.Interval = TimeSpan.FromSeconds(2.5);
+        _readLingerTimer.Start();
+    }
+
+    /// <summary>Style B (Manh 2026-11-18, mac §3): the icon always
+    /// previews the NEXT click. Speak = speech bubble (E8BD, blue);
+    /// Fast Read = custom A+ (turmeric). Alt held flips the preview to
+    /// the OTHER action (next click = Alt+click). While speaking the
+    /// speaker shows for every setting; during the 2.5s Read linger
+    /// the A+ shows. Exactly one mark is visible.</summary>
+    private void UpdateGlyph()
+    {
+        var clickReads = string.Equals(App.Settings.IconClickAction, "FastRead", StringComparison.OrdinalIgnoreCase);
+        // Alt held => the next click is the other action.
+        var showSpeaker = _isSpeaking && !_inReadLinger;
+        var showRead = _inReadLinger || (!showSpeaker && (_altHeld != clickReads));
+        BubbleMark.Visibility = !showSpeaker && !showRead ? Visibility.Visible : Visibility.Collapsed;
+        APlusMark.Visibility = showRead ? Visibility.Visible : Visibility.Collapsed;
+        SpeakerMark.Visibility = showSpeaker ? Visibility.Visible : Visibility.Collapsed;
+    }
+
     /// <summary>Switch the mark to the speaker glyph (click = listen
-    /// mode) or back to the "A". TTS audio is not built yet — this
-    /// is only the icon state for now.</summary>
+    /// mode) or back to the preview mark. TTS audio is not built yet —
+    /// this is only the icon state for now.</summary>
     private void SetSpeaking(bool speaking)
     {
         if (_isSpeaking == speaking)
             return;
         _isSpeaking = speaking;
-        LetterMark.Visibility = speaking ? Visibility.Collapsed : Visibility.Visible;
-        SpeakerMark.Visibility = speaking ? Visibility.Visible : Visibility.Collapsed;
+        UpdateGlyph();
     }
 
     private void OnPointerEntered(object sender, PointerRoutedEventArgs e)
     {
         _autoHideTimer.Stop(); // stay while the user is hovering
+        // Safety net (mac §5): re-read the Alt state on mouse-enter, in
+        // case a poll was missed.
+        var held = IsAltHeldGlobally();
+        if (held != _altHeld)
+        {
+            _altHeld = held;
+            UpdateGlyph();
+        }
         // While speaking, hover must not open the translate panel (mac:
         // startHoverTimer has guard !isSpeaking) — the click already
-        // consumed the interaction.
-        if (_isSpeaking)
+        // consumed the interaction. During the Read linger the hover
+        // must not open it either.
+        if (_isSpeaking || _inReadLinger)
             return;
         _hoverTimer.Interval = TimeSpan.FromMilliseconds(App.Settings.HoverDelayMs);
         _hoverTimer.Start();
@@ -270,6 +397,8 @@ public sealed partial class TriggerIconWindow : Window
     private void OnPointerExited(object sender, PointerRoutedEventArgs e)
     {
         _hoverTimer.Stop();
+        if (_inReadLinger)
+            return; // the linger timer hides the icon; do not restart.
         _autoHideTimer.Interval = TimeSpan.FromSeconds(App.Settings.TriggerIconAutoHideSeconds);
         _autoHideTimer.Start();
     }

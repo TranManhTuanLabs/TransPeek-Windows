@@ -82,7 +82,7 @@ public sealed class AppSettings
     /// was a touch wide) — files at version 1 get PanelWidth 420.</summary>
     public int SettingsVersion { get; set; } = 0;
     /// <summary>How long the trigger icon stays after the selection changes, in seconds.</summary>
-    public int TriggerIconAutoHideSeconds { get; set; } = 3;
+    public int TriggerIconAutoHideSeconds { get; set; } = 5;
     /// <summary>Global hotkey that shows the panel for the current selection.
     /// Win32 RegisterHotKey modifiers+key, e.g. "Control+Alt+T".</summary>
     public string TranslateHotkey { get; set; } = "Control+Alt+T";
@@ -151,9 +151,12 @@ public sealed class AppSettings
     // --- Fast Read / RSVP (feature/fast-read-rsvp) ---
     /// <summary>What a click on the float icon does: "Speak" (read the
     /// selection aloud, default) or "FastRead" (open the Fast Read
-    /// window). Alt+click always opens Fast Read regardless of this
-    /// setting. ComboBox in Settings -&gt; General.</summary>
+    /// window). Alt+click does the OTHER action. ComboBox in Settings -&gt; General.</summary>
     public string IconClickAction { get; set; } = "Speak";
+    /// <summary>Panel left: the "How the icon works" card starts
+    /// collapsed (remembered — Manh 2026-11-18, mac parity). Set when
+    /// the user collapses/expands the card by clicking its top bar.</summary>
+    public bool HowIconWorksCollapsed { get; set; } = false;
     /// <summary>Fast Read speed in words per minute (100-2000,
     /// default 275 — SwiftRead's default). Slider in the reader window.</summary>
     public int RsvpWpm { get; set; } = 275;

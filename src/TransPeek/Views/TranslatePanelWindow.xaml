@@ -273,26 +273,83 @@
         <!-- Dictionary links -->
         <local:DictionaryBar x:Name="DictionaryBarControl" Grid.Row="6" />
 
-        <!-- Tab 1 — Keyboard shortcuts (Manh 2026-11-17): the same 10
-             rows as the "?" popover, as a full tab. Temporary
-             placeholder — later this tab becomes rest-eyes / focus /
-             tomato. The rows are built in code (BuildShortcutRows)
-             from the same _shortcuts list as the popover, so the two
-             can never drift apart. Spans rows 1-6 (the whole tab
-             content area); the ScrollViewer takes the leftover height
-             and scrolls if the 10 rows do not fit. -->
+        <!-- Panel left — shortcuts (Manh 2026-11-18, tên gọi CHỐT:
+             panel left = panel 1, shortcuts, tạm thời; panel center =
+             panel 2, dịch, CHỐT; panel right = panel 3, Fast Read,
+             tạm thời. Nói mồm có thể nói panel 1/2/3 hay panel dịch
+             1/2/3). Hai card như mac: card "How the icon works" (trên)
+             + card shortcuts (dưới). Bấm toàn thanh top của mỗi card
+             là thu gọn/mở ra — không cần bấm riêng nút góc phải. Trạng
+             thái thu gọn của card "How the icon works" được nhớ trong
+             Settings (HowIconWorksCollapsed); card shortcuts mở lại
+             mỗi lần vào tab. Spans rows 1-6 (the whole tab content
+             area); the shortcuts card takes the leftover height and
+             scrolls if the 10 rows do not fit. -->
         <Grid x:Name="ShortcutsTabPanel" Grid.Row="1" Grid.RowSpan="6" Visibility="Collapsed">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
-            <TextBlock Text="Keyboard shortcuts" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,4" />
-            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                <StackPanel x:Name="ShortcutsTabRowsPanel" Spacing="2" />
-            </ScrollViewer>
+            <!-- Card "How the icon works" (mac parity): the flow in
+                 one place — Hover to translate, Click to listen,
+                 Alt+Click for Fast Read, and where to change what a
+                 click does. The header button IS the whole top bar
+                 (like the provider card header): click it to collapse
+                 or expand the body. -->
+            <Border Grid.Row="0" Margin="0,0,0,8" CornerRadius="6" BorderThickness="1"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Button x:Name="HowIconWorksHeaderButton" Grid.Row="0" Click="OnHowIconWorksHeaderClicked"
+                            Background="Transparent" BorderThickness="0" Padding="8,6"
+                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <TextBlock x:Name="HowIconWorksChevronText" Text="⌄" FontSize="12" Foreground="Gray" VerticalAlignment="Center" />
+                            <TextBlock Text="How the icon works" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <StackPanel x:Name="HowIconWorksBody" Grid.Row="1" Margin="8,0,8,8" Spacing="2">
+                        <TextBlock Text="Not just a translator — it improves your learning experience" FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
+                        <TextBlock Text="Hover the icon to translate" FontSize="13" TextWrapping="Wrap" />
+                        <TextBlock Text="Click the icon to listen" FontSize="13" TextWrapping="Wrap" />
+                        <TextBlock Text="Alt + Click the icon for Fast Read" FontSize="13" TextWrapping="Wrap" />
+                        <TextBlock Text="Change what a click does in Settings" FontSize="13" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+            <!-- Card shortcuts: the same 10 rows as the "?" popover,
+                 built in code (BuildShortcutRows) from the same
+                 _shortcuts list as the popover, so the two can never
+                 drift apart. Header button = whole top bar: click it
+                 to close/open the card. -->
+            <Border Grid.Row="1" CornerRadius="6" BorderThickness="1"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Button x:Name="ShortcutsCardHeaderButton" Grid.Row="0" Click="OnShortcutsCardHeaderClicked"
+                            Background="Transparent" BorderThickness="0" Padding="8,6"
+                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <TextBlock x:Name="ShortcutsCardChevronText" Text="⌄" FontSize="12" Foreground="Gray" VerticalAlignment="Center" />
+                            <TextBlock Text="Keyboard shortcuts" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <ScrollViewer x:Name="ShortcutsCardBody" Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <StackPanel x:Name="ShortcutsTabRowsPanel" Spacing="2" Margin="8,0,8,8" />
+                    </ScrollViewer>
+                </Grid>
+            </Border>
         </Grid>
 
-        <!-- Tab 3 — Fast Read placeholder (Manh 2026-11-17): the real
+        <!-- Panel right — Fast Read placeholder (Manh 2026-11-17): the real
              Fast Read window comes later, on branch
              feature/fast-read-rsvp. ReadingMode glyph E736 (Segoe
              Fluent Icons, verified on Microsoft Learn 2026-11-17). -->
@@ -318,7 +375,7 @@
                        VerticalAlignment="Center" HorizontalAlignment="Right" Opacity="0.7" />
         </Grid>
 
-        <!-- Tab dots (Manh 2026-11-17, chose 12:51): a NEW row, centered
+        <!-- Panel dots (Manh 2026-11-17, chose 12:51): a NEW row, centered
              below the GitHub icon in the footer — NOT in the footer row
              and NOT in the Actions row. A new Auto row adds its height
              (~20) to ComputeMinPanelHeight, so the panel may open a
@@ -327,13 +384,30 @@
              strip owns the bottom 8 px of the window, so the dots sit
              fully above it and stay clickable. Dots are 8 px, 8 px
              apart; the selected dot is #0EA5E9, the others #C8C8C8
-             (set in ShowTab). No swipe — WinUI has no native swipe
-             for a panel like this; that would be custom work. -->
-        <StackPanel x:Name="TabDotsPanel" Grid.Row="8" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" Margin="0,4,0,8">
-            <Button x:Name="TabDotShortcuts" MinWidth="0" MinHeight="0" Width="8" Height="8" Padding="0" BorderThickness="0" CornerRadius="4" Background="#C8C8C8" Click="OnTabDotClicked" Tag="0" ToolTipService.ToolTip="Keyboard shortcuts" />
-            <Button x:Name="TabDotTranslate" MinWidth="0" MinHeight="0" Width="8" Height="8" Padding="0" BorderThickness="0" CornerRadius="4" Background="#0EA5E9" Click="OnTabDotClicked" Tag="1" ToolTipService.ToolTip="Translate" />
-            <Button x:Name="TabDotFastRead" MinWidth="0" MinHeight="0" Width="8" Height="8" Padding="0" BorderThickness="0" CornerRadius="4" Background="#C8C8C8" Click="OnTabDotClicked" Tag="2" ToolTipService.ToolTip="Fast Read" />
-        </StackPanel>
+             (set in ShowTab). The row also has ‹ › arrows (Manh
+             2026-11-18) to switch tabs by click, and the mouse wheel
+             over the row switches tabs too (like mac) — PointerWheelChanged
+             on the row Grid (Background Transparent so the whole row,
+             not just the dots, is hit-testable). No swipe — WinUI has
+             no native swipe for a panel like this; that would be
+             custom work. -->
+        <Grid x:Name="TabDotsRow" Grid.Row="8" Background="Transparent" Margin="0,4,0,8" PointerWheelChanged="OnTabDotsWheel">
+            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Button x:Name="TabPrevButton" MinWidth="0" MinHeight="0" Padding="4,2" Background="Transparent" BorderThickness="0"
+                        Click="OnTabPrevClicked" ToolTipService.ToolTip="Previous tab">
+                    <FontIcon Glyph="&#xE76B;" FontSize="10" Foreground="Gray" />
+                </Button>
+                <StackPanel x:Name="TabDotsPanel" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <Button x:Name="TabDotShortcuts" MinWidth="0" MinHeight="0" Width="8" Height="8" Padding="0" BorderThickness="0" CornerRadius="4" Background="#C8C8C8" Click="OnTabDotClicked" Tag="0" ToolTipService.ToolTip="Keyboard shortcuts" />
+                    <Button x:Name="TabDotTranslate" MinWidth="0" MinHeight="0" Width="8" Height="8" Padding="0" BorderThickness="0" CornerRadius="4" Background="#0EA5E9" Click="OnTabDotClicked" Tag="1" ToolTipService.ToolTip="Translate" />
+                    <Button x:Name="TabDotFastRead" MinWidth="0" MinHeight="0" Width="8" Height="8" Padding="0" BorderThickness="0" CornerRadius="4" Background="#C8C8C8" Click="OnTabDotClicked" Tag="2" ToolTipService.ToolTip="Fast Read" />
+                </StackPanel>
+                <Button x:Name="TabNextButton" MinWidth="0" MinHeight="0" Padding="4,2" Background="Transparent" BorderThickness="0"
+                        Click="OnTabNextClicked" ToolTipService.ToolTip="Next tab">
+                    <FontIcon Glyph="&#xE76C;" FontSize="10" Foreground="Gray" />
+                </Button>
+            </StackPanel>
+        </Grid>
 
         <!-- Resize grip (Manh 2026-11-15 — like mac's ResizeGripView):
              three diagonal lines at the bottom-right corner, the

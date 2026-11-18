@@ -70,8 +70,8 @@ and the shortcut panel — still a TODO refactor, not this branch).
 
 ## Entry points (Manh's order, 2026-11-17)
 
-1. **Alt+click on the float icon** → Fast Read straight (whatever the
-   click-action setting says). Stops a running speech first.
+1. **Alt+click on the float icon** → the OTHER action (Fast Read when
+   Click = Speak; Speak when Click = Fast Read). Stops a running speech first.
 2. **Right-click on the float icon** → menu: Translate / Listen /
    Fast Read / Settings. (The auto-hide timer stops while the menu is open.)
 3. **"Fast Read" button in the translate panel** (Actions row, last,
@@ -79,6 +79,12 @@ and the shortcut panel — still a TODO refactor, not this branch).
    translated; the panel hides first (it is topmost).
 4. **Tray menu** → "Fast Read" (right under "Translate Selection").
 5. **Global shortcut** — fallback only, not in v1.
+
+**A+ linger (Style B, Manh 2026-11-18):** after any Read trigger from the
+float icon (plain click with Click = Fast Read, Alt+click, right-click menu)
+the icon shows A+ for **2.5s** as a confirmation, then hides; clicks are
+ignored during those 2.5s. The icon always previews the next click (Speak =
+bubble E8BD, Fast Read = A+); see `docs/UI/UX_DESIGN/FLOAT_ICON_UX_SPEC.md`.
 
 **Text source** (in order): the panel's source text (button path) →
 fresh selection (< 10 s old, else the clipboard re-grab) → clipboard
@@ -88,7 +94,7 @@ text. Nothing to read shows a toast.
 
 - `IconClickAction` (`"Speak"` default / `"FastRead"`): what a plain
   click on the float icon does. ComboBox in Settings → General
-  ("Click icon"). Alt+click always opens Fast Read regardless.
+  ("Click icon"). Alt+click does the OTHER action.
 - `RsvpWpm` (275), `RsvpChunkSize` (1), `RsvpFontSize` (110) — changed
   live from the reader window's controls (saved immediately, like the
   other sliders); changing WPM/chunk rebuilds the document keeping the

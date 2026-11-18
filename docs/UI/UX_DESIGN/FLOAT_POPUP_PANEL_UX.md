@@ -227,27 +227,35 @@ Lịch sử mò số (để tránh lặp lại): min output card 150 → 160 (#1
 - **Slider font:** kéo "Source & Translation Text Size" và "App name & Slogan Font Size"
   trong Settings — panel giãn live theo, không che, không tràn.
 - **Mở lại:** đóng panel rồi mở lại — về đúng mặc định 420×450, không nhớ cỡ kéo cũ.
-- **Popover shortcut:** bấm "?" → bảng hiện đủ 10 dòng theo thứ tự Settings, phím tắt đúng giá trị hiện tại; bấm nút ▶ chạy đúng hành động (vd OCR mở khung chọn vùng, Settings mở cửa sổ Settings); bấm ra ngoài/bấm lại "?" → bảng đóng, panel ở lại; Esc lúc bảng mở → chỉ đóng bảng, panel ở lại.
+- **Popover shortcut:** bấm "?" → bảng hiện đủ 10 dòng theo thứ tự Settings, phím tắt đúng giá trị hiện tại; bấm nút ▶ → **ẩn panel trước rồi chạy hành động** (Manh 2026-11-18, như mac — vd OCR mở khung chọn vùng, Settings mở cửa sổ Settings); bấm ra ngoài/bấm lại "?" → bảng đóng, panel ở lại; Esc lúc bảng mở → chỉ đóng bảng, panel ở lại.
 
 ## 10. Layout đa tab (hub) — quyết định 17/11 (ĐÃ triển khai trên main)
 
 **Khung đã lên main.** Sau đó mới tạo nhánh `feature/fast-read-rsvp` làm Fast Read window (xem dưới).
 
+**Tên gọi — CHÍNH THỨC (Manh chốt 2026-11-18, thay cách gọi panel 1/2/3
+trong doc): panel left** (panel 1, shortcuts — tạm thời), **panel center**
+(panel 2, dịch — CHỐT), **panel right** (panel 3, Fast Read — tạm thời).
+Nói mồm có thể nói panel 1/2/3 hay panel dịch 1/2/3. Dùng tên này trong
+doc + code + trao đổi để khỏi nhầm (bài học bên mac: gọi nhầm panel nên
+card "How the icon works" bị đặt nhầm vào panel center thay vì panel left).
+
 - **Kiểu "hub":** panel có 3 tab, tab ở giữa là màn chính, 2 bên là 2 nhánh.
-  **panel dịch (ở giữa, mặc định):** mở panel là thấy Dịch.
-- **panel shortcut (tạm thời, ở trái)** — ô linh hoạt, sau này thay được
+  **panel center (panel dịch, ở giữa, mặc định):** mở panel là thấy Dịch.
+- **panel left (panel shortcut, ở trái, tạm thời)** — ô linh hoạt, sau này thay được
   (không cố định là shortcut).
-- **panel Fast Read (ở phải)** — tạm trống/placeholder tới khi Fast Read ship.
+- **panel right (panel Fast Read, ở phải)** — tạm trống/placeholder tới khi Fast Read ship.
 - **3 chấm hiện từ đầu để trải nghiệm** (thay điều kiện cũ "chấm của panel Fast Read chỉ hiện khi tab
   có nội dung thật"; ngoại lệ chỉ áp cho panel Fast Read đã có kế hoạch cụ thể).
 - **Lý do (Manh):** panel dịch ở giữa thì vuốt sang 2 bên đều 1 lần; để panel dịch ở trái
   thì sang panel Fast Read phải qua 2 lần. Có tiền lệ (Snapchat: camera ở giữa làm mặc
   định, vuốt trái sang chat, vuốt phải sang stories). Khác thứ tự research cũ
   (panel dịch từng đứng đầu) nhưng lý do chính đáng nên làm theo hướng này.
-- **Nút "?" bảng shortcut nằm trong panel dịch (ở giữa, mặc định)**, ngay trước nút Pin (§3).
-- **Hàng chấm — triển khai (Manh chốt vị trí 12:51): hàng MỚI (row 8), center, nằm dưới icon GitHub ở footer** (không nằm trong hàng Footer, không nằm trong hàng Actions). RootGrid 8 → 9 hàng; TitleBar (row 0) và Footer (row 7) giữ nguyên mọi tab; vùng nội dung tab = rows 1–6. Chấm 8px, cách nhau 8px, chấm đang chọn xanh #0EA5E9, còn lại xám #C8C8C8. Hàng cao ~20 (top margin 4 + chấm 8 + bottom margin 8); **bottom margin 8 = ResizeStripThickness** — dải resize native chiếm 8px dưới đáy cửa sổ, nên chấm phải nằm hẳn trên dải đó mới bấm được. **Hàng mới cộng ~20 vào chiều cao tối thiểu (ComputeMinPanelHeight cộng mọi hàng Auto), panel mở cao hơn 450 cũ — Manh duyệt tăng height (12:51).** Số chính xác đo khi test bản build.
-- **panel shortcut — triển khai:** tiêu đề "Keyboard shortcuts" + 10 dòng y hệt bảng "?" (tên + phím tắt + nút Run ▶), dựng bằng cùng hàm `BuildShortcutRows` từ cùng list `_shortcuts` nên 2 chỗ không bao giờ lệch nhau; bấm Run xong về lại panel dịch để thấy kết quả. Nội dung cuộn được (ScrollViewer) nếu 10 dòng không vừa.
-- **panel Fast Read — triển khai (placeholder):** icon ReadingMode (glyph E736, Segoe Fluent Icons, đã kiểm chứng trên Microsoft Learn 17/11) + "Fast Read" + "Coming soon", căn giữa.
+- **Nút "?" bảng shortcut nằm trong panel center (panel dịch, ở giữa, mặc định)**, ngay trước nút Pin (§3).
+- **Hàng chấm — triển khai (Manh chốt vị trí 12:51): hàng MỚI (row 8), center, nằm dưới icon GitHub ở footer** (không nằm trong hàng Footer, không nằm trong hàng Actions). RootGrid 8 → 9 hàng; TitleBar (row 0) và Footer (row 7) giữ nguyên mọi tab; vùng nội dung tab = rows 1–6. Chấm 8px, cách nhau 8px, chấm đang chọn xanh #0EA5E9, còn lại xám #C8C8C8. Hàng cao ~20 (top margin 4 + chấm 8 + bottom margin 8); **bottom margin 8 = ResizeStripThickness** — dải resize native chiếm 8px dưới đáy cửa sổ, nên chấm phải nằm hẳn trên dải đó mới bấm được. **Hàng mới cộng ~20 vào chiều cao tối thiểu (ComputeMinPanelHeight cộng mọi hàng Auto), panel mở cao hơn 450 cũ — Manh duyệt tăng height (12:51).** Số chính xác đo khi test bản build. **Chuyển tab (Manh 2026-11-18):** ngoài bấm chấm, còn có **nút ‹ ›** (ChevronLeft E76B / ChevronRight E76C, đã kiểm chứng trên Microsoft Learn 18/11) ở 2 bên hàng chấm — bấm để sang tab trước/sau, vòng tròn (trái từ panel left sang panel right); và **cuộn chuột (scroll) trên hàng chấm** — xuống = tab sau, lên = tab trước (như mac).
+- **panel left — triển khai (Manh 2026-11-18, như mac): 2 card** — card **"How the icon works"** (trên) + card **shortcuts** (dưới). Card "How the icon works" giải thích luồng: Hover to translate, Click to listen, Alt + Click for Fast Read, đổi click trong Settings; dưới dòng "Not just a translator — it improves your learning experience". Bấm **toàn thanh top** của mỗi card là thu gọn/mở ra (không cần bấm riêng nút góc phải); trạng thái thu gọn của card "How the icon works" được nhớ trong Settings (`HowIconWorksCollapsed`), card shortcuts mở lại mỗi lần vào tab. Card shortcuts: 10 dòng y hệt bảng "?" (tên + phím tắt + nút Run ▶), dựng bằng cùng hàm `BuildShortcutRows` từ cùng list `_shortcuts` nên 2 chỗ không bao giờ lệch nhau. Nội dung cuộn được (ScrollViewer) nếu 10 dòng không vừa.
+- **Bấm Run thì ẨN PANEL TRƯỚC rồi mới chạy (Manh 2026-11-18, như mac — sửa lỗi cũ):** trước đây bấm Run ở tab shortcut thì về lại panel dịch, bấm Run ở bảng "?" thì chỉ đóng bảng, panel vẫn ở lại che màn hình mà action cần (OCR mở khung chọn vùng, Settings mở cửa sổ). Giờ `BuildShortcutRows` gọi `HidePanel()` trước `entry.Run()` ở cả 2 chỗ; action nào cần panel (vd dịch lại) thì tự mở panel lên sau.
+- **panel right — triển khai (placeholder):** icon ReadingMode (glyph E736, Segoe Fluent Icons, đã kiểm chứng trên Microsoft Learn 17/11) + "Fast Read" + "Coming soon", căn giữa.
 - **Hành vi:** mở panel luôn về panel dịch (`ShowPanelNear`/`ShowInputMode` gọi `ShowTab`); chuyển tab chỉ trong phiên, không lưu; panel không đổi kích thước khi chuyển tab — trừ safety net: chuyển về panel dịch mà panel đang thấp hơn chiều cao tối thiểu của panel dịch (do kéo nhỏ ở tab khác, lúc đó các hàng dịch thu lại nên mức kẹp chỉ là 450) thì tự cao lên tới min, chỉ cao lên, không đổi rộng, để card output không tràn dưới hàng Actions (kiểu lỗi #164). **Snap-back (dọc + ngang) chỉ chạy ở panel dịch** — tab khác không có text dịch để đo nên kéo ở đó chỉ kẹp min/max. Pin/Settings chỉ ở panel dịch. **KHÔNG vuốt** — WinUI không có sẵn vuốt cho panel tự làm, phải tự chế (Manh chưa duyệt).
 - **Thứ tự làm:** khung multi-tab → Fast Read window → TTS (Fast Read làm trước
   TTS, như mac). **Tab RSVP trong panel chỉ là thử nghiệm sau này**, không làm

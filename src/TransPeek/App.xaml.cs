@@ -339,7 +339,13 @@ public sealed partial class App : Application
         // The reader is a separate window and the panel is topmost, so
         // the panel would float above the reader — hide it first. (The
         // panel button already hid it; HidePanel is a no-op then.)
-        _triggerIcon?.HideIcon();
+        // The 2.5s A+ linger (mac §3): when the FLOAT ICON triggered
+        // the Read, it shows A+ for 2.5s as a confirmation and hides
+        // itself after — App must not hide it early, or the
+        // confirmation never shows. Other paths (tray, panel button)
+        // have no linger, so the icon hides at once there.
+        if (_triggerIcon is { } icon && !icon.IsReadLingerActive)
+            icon.HideIcon();
         _panel?.HidePanel();
         if (_fastReadWindow is null)
         {
