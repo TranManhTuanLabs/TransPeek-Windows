@@ -56,6 +56,7 @@
 
 ## 5. Quy tắc chung
 
+- **Ngắn, hiểu rõ thì làm luôn; dài, chưa rõ, việc nhiều thì hỏi lại** (Manh 18/11/2026, áp dụng mọi repo): (1) trình khung cho anh duyệt trước khi làm; (2) xong rồi thì tóm tắt những gì đã làm.
 - **KHÔNG hardcode** — mọi thứ không nên fix cứng trừ khi thật sự cần; phải có tính
   mở rộng hoặc tự nhận diện.
 - GitHub App/connector **không sửa được `.github/workflows/*` (403)**, không xoá được
