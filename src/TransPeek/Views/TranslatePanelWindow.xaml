@@ -60,7 +60,8 @@
              gear button is in the header row below it), so the whole
              row is the drag region. -->
         <StackPanel x:Name="TitleBar" Grid.Row="0" Margin="0,0,0,16"
-                    Background="Transparent" HorizontalAlignment="Stretch">
+                    Background="Transparent" HorizontalAlignment="Stretch"
+                    PointerWheelChanged="OnTabSwitchWheel">
             <TextBlock x:Name="AppNameText" FontWeight="Bold" FontSize="13" HorizontalAlignment="Center" Foreground="#0EA5E9" />
             <!-- Tagline (slogan): 12 pt — exactly 1 size smaller than the
                  app name (13 pt), not 2 (Manh 2026-11-14). At 11 pt it
@@ -316,8 +317,9 @@
             </StackPanel>
         </Grid>
 
-        <!-- Dictionary links -->
-        <local:DictionaryBar x:Name="DictionaryBarControl" Grid.Row="7" />
+        <!-- Dictionary links — wheel over this row also switches tabs
+             (OnTabSwitchWheel, same as the top bar and the dots row). -->
+        <local:DictionaryBar x:Name="DictionaryBarControl" Grid.Row="7" PointerWheelChanged="OnTabSwitchWheel" />
 
         <!-- Panel left — shortcuts (Manh 2026-11-18, tên gọi CHỐT:
              panel left = panel 1, shortcuts, tạm thời; panel center =
@@ -367,17 +369,17 @@
                         <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,4,0,0">
                             <TextBlock Text="Hover icon" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
                             <TextBlock Text="→" FontSize="13" Foreground="Gray" VerticalAlignment="Center" />
-                            <TextBlock Text="Translate" FontSize="13" VerticalAlignment="Center" />
+                            <TextBlock Text="Translate the selected text" FontSize="13" VerticalAlignment="Center" />
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <TextBlock Text="Click icon" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
                             <TextBlock Text="→" FontSize="13" Foreground="Gray" VerticalAlignment="Center" />
-                            <TextBlock Text="Listen — hear it read aloud" FontSize="13" VerticalAlignment="Center" />
+                            <TextBlock x:Name="HowClickActionText" Text="Listen — hear it read aloud" FontSize="13" VerticalAlignment="Center" />
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <TextBlock Text="Alt + Click" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
                             <TextBlock Text="→" FontSize="13" Foreground="Gray" VerticalAlignment="Center" />
-                            <TextBlock Text="Fast Read — read it faster" FontSize="13" VerticalAlignment="Center" />
+                            <TextBlock x:Name="HowAltClickActionText" Text="Fast Read — read it faster" FontSize="13" VerticalAlignment="Center" />
                         </StackPanel>
                         <TextBlock Text="Tip: swap Click and Alt + Click in Settings." FontSize="12" Foreground="Gray" TextWrapping="Wrap" Margin="0,4,0,0" />
                     </StackPanel>
@@ -426,8 +428,9 @@
             </StackPanel>
         </Grid>
 
-        <!-- Footer: GitHub repo link centered, dimmed build number right. -->
-        <Grid Grid.Row="8" Margin="0,8,0,0">
+        <!-- Footer: GitHub repo link centered, dimmed build number right.
+             Wheel over this row also switches tabs (OnTabSwitchWheel). -->
+        <Grid Grid.Row="8" Margin="0,8,0,0" Background="Transparent" PointerWheelChanged="OnTabSwitchWheel">
             <HyperlinkButton x:Name="GithubLink" Padding="0" VerticalAlignment="Center" HorizontalAlignment="Center">
                 <StackPanel Orientation="Horizontal" Spacing="4">
                     <Border Width="16" Height="16" CornerRadius="3" Background="White" VerticalAlignment="Center">
@@ -453,13 +456,18 @@
              2026-11-18) to switch tabs by click, and the mouse wheel
              over the row switches tabs too (like mac) — PointerWheelChanged
              on the row Grid (Background Transparent so the whole row,
-             not just the dots, is hit-testable). One long wheel gesture
-             = one tab switch (Manh 2026-11-18): after a wheel switch the
-             next 0.4s of wheel ticks are ignored, or a long scroll
-             would flip through several tabs at once. No swipe — WinUI has
-             no native swipe for a panel like this; that would be
-             custom work. -->
-        <Grid x:Name="TabDotsRow" Grid.Row="9" Background="Transparent" Margin="0,4,0,8" PointerWheelChanged="OnTabDotsWheel">
+             not just the dots, is hit-testable). The same handler is
+             attached to the top bar (TitleBar) and the whole bottom
+             bar — DictionaryBar row down through the footer (GitHub
+             icon + version) — so the wheel switches tabs from the top
+             and bottom edges too (Manh 2026-11-18); the throttle is
+             shared, so scrolling across zones cannot double-switch.
+             One long wheel gesture = one tab switch (Manh 2026-11-18):
+             after a wheel switch the next 0.4s of wheel ticks are
+             ignored, or a long scroll would flip through several tabs
+             at once. No swipe — WinUI has no native swipe for a panel
+             like this; that would be custom work. -->
+        <Grid x:Name="TabDotsRow" Grid.Row="9" Background="Transparent" Margin="0,4,0,8" PointerWheelChanged="OnTabSwitchWheel">
             <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <Button x:Name="TabPrevButton" MinWidth="0" MinHeight="0" Padding="4,2" Background="Transparent" BorderThickness="0"
                         Click="OnTabPrevClicked" ToolTipService.ToolTip="Previous tab">

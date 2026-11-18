@@ -1303,12 +1303,18 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
 
     private void OnTabNextClicked(object sender, RoutedEventArgs e) => CycleTab(1);
 
-    /// <summary>Mouse wheel over the dots row (Manh 2026-11-18, like
-    /// mac): scroll down = next tab, scroll up = previous tab. One long
-    /// scroll gesture sends many wheel ticks, so ticks within 0.4s of
-    /// a switch are ignored — one long scroll = one tab switch,
-    /// instead of flipping through several tabs at once.</summary>
-    private void OnTabDotsWheel(object sender, PointerRoutedEventArgs e)
+    /// <summary>Mouse wheel to switch tabs (Manh 2026-11-18, like mac):
+    /// scroll down = next tab, scroll up = previous tab. Attached to
+    /// the top bar (TitleBar), the whole bottom bar (DictionaryBar row
+    /// down through the footer with the GitHub icon + version), and
+    /// the dots row — so the wheel switches tabs from the top and
+    /// bottom edges, not only over the dots. One long scroll gesture
+    /// sends many wheel ticks, so ticks within 0.4s of a switch are
+    /// ignored — one long scroll = one tab switch, instead of flipping
+    /// through several tabs at once. The throttle is shared across
+    /// all three zones, so scrolling across a zone boundary cannot
+    /// double-switch.</summary>
+    private void OnTabSwitchWheel(object sender, PointerRoutedEventArgs e)
     {
         var delta = e.GetCurrentPoint((UIElement)sender).Properties.MouseWheelDelta;
         if (delta == 0)
@@ -1339,6 +1345,28 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         HowIconWorksChevronText.Text = howCollapsed ? "›" : "⌄";
         ShortcutsCardBody.Visibility = _shortcutsCardCollapsed ? Visibility.Collapsed : Visibility.Visible;
         ShortcutsCardChevronText.Text = _shortcutsCardCollapsed ? "›" : "⌄";
+        ApplyHowIconWorksFlow();
+    }
+
+    /// <summary>Card "How the icon works" is DYNAMIC (Manh 2026-11-18,
+    /// mac round 8, FlowIntroCard): the Click / Alt+Click rows read the
+    /// Settings "Click icon" choice (IconClickAction) and show what a
+    /// click actually does right now — never a hardcoded mapping that
+    /// goes stale when the default changes (mac's card used to say
+    /// "Click → Listen" even after the default became Read). Windows
+    /// only has 2 click actions (Speak / FastRead — no Translate
+    /// option, unlike mac's triggerClickAction), so: FastRead → Click
+    /// = Fast Read, Alt+Click = Listen; Speak (default) → Click =
+    /// Listen, Alt+Click = Fast Read. Runs from
+    /// ApplyPanelLeftCardStates every time panel left shows, so the
+    /// card is always fresh — including after a Settings change (the
+    /// panel hides when Settings opens, and panel left refreshes on
+    /// the next show).</summary>
+    private void ApplyHowIconWorksFlow()
+    {
+        var clickReads = string.Equals(App.Settings.IconClickAction, "FastRead", StringComparison.OrdinalIgnoreCase);
+        HowClickActionText.Text = clickReads ? "Fast Read — read it faster" : "Listen — hear it read aloud";
+        HowAltClickActionText.Text = clickReads ? "Listen — hear it read aloud" : "Fast Read — read it faster";
     }
 
     /// <summary>"How the icon works" header = the whole top bar: click
