@@ -139,11 +139,9 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                <ComboBox x:Name="SourceLangCombo" Width="112"
-                          SelectionChanged="OnSourceLangChanged" />
+                <AutoSuggestBox x:Name="SourceLangCombo" Width="112" />
                 <Button x:Name="SwapButton" Content="⇄" Padding="4,2" Click="OnSwapLanguages" />
-                <ComboBox x:Name="TargetLangCombo" Width="112"
-                          SelectionChanged="OnTargetLangChanged" />
+                <AutoSuggestBox x:Name="TargetLangCombo" Width="112" />
             </StackPanel>
             <Button x:Name="OcrButton" Grid.Column="1" x:Uid="Panel.CaptureOcr" Content="Capture OCR" VerticalAlignment="Center" />
         </Grid>

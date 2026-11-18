@@ -16,8 +16,8 @@ public sealed partial class TranslationPage : Page
     private Action? _onSaved;
     private bool _loading;
     private CustomProviderDefinition? _editing;
-    private LanguageComboBoxHelper? _sourceLangHelper;
-    private LanguageComboBoxHelper? _targetLangHelper;
+    private LanguageSuggestBoxHelper? _sourceLangHelper;
+    private LanguageSuggestBoxHelper? _targetLangHelper;
 
     public TranslationPage()
     {
@@ -50,14 +50,34 @@ public sealed partial class TranslationPage : Page
     {
         // Searchable pickers (Manh 2026-11-19): the helper owns the
         // items, the popular-first order, and the live filter. The
-        // SelectionChanged handlers below still save on pick.
-        _sourceLangHelper = new LanguageComboBoxHelper(
+        // onPicked callbacks below save on pick. Create once: this
+        // page can be navigated to repeatedly, and a second helper
+        // on the same box would double-subscribe its events.
+        _sourceLangHelper ??= new LanguageSuggestBoxHelper(
             SourceLanguageCombo, includeAuto: true,
             () => App.Settings.SourceLanguage,
-            AppStrings.Get("Settings.Translation.Auto", "Automatic"));
-        _targetLangHelper = new LanguageComboBoxHelper(
+            AppStrings.Get("Settings.Translation.Auto", "Automatic"),
+            code =>
+            {
+                if (!string.Equals(code, App.Settings.SourceLanguage, StringComparison.Ordinal))
+                {
+                    App.Settings.SourceLanguage = code;
+                    Save();
+                }
+            });
+        _targetLangHelper ??= new LanguageSuggestBoxHelper(
             TargetLanguageCombo, includeAuto: false,
-            () => App.Settings.TargetLanguage, string.Empty);
+            () => App.Settings.TargetLanguage, string.Empty,
+            code =>
+            {
+                if (!string.Equals(code, App.Settings.TargetLanguage, StringComparison.Ordinal))
+                {
+                    App.Settings.TargetLanguage = code;
+                    Save();
+                }
+            });
+        _sourceLangHelper.Refresh(App.Settings.SourceLanguage);
+        _targetLangHelper.Refresh(App.Settings.TargetLanguage);
     }
 
     // ----- providers -----
@@ -122,26 +142,6 @@ public sealed partial class TranslationPage : Page
         if (FallbackProviderCombo.SelectedItem is ComboBoxItem item && item.Tag is string id)
         {
             App.Settings.FallbackProviderId = id;
-            Save();
-        }
-    }
-
-    private void OnSourceLanguageChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (SourceLanguageCombo.SelectedItem is ComboBoxItem item && item.Tag is string id
-            && !string.Equals(id, App.Settings.SourceLanguage, StringComparison.Ordinal))
-        {
-            App.Settings.SourceLanguage = id;
-            Save();
-        }
-    }
-
-    private void OnTargetLanguageChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (TargetLanguageCombo.SelectedItem is ComboBoxItem item && item.Tag is string id
-            && !string.Equals(id, App.Settings.TargetLanguage, StringComparison.Ordinal))
-        {
-            App.Settings.TargetLanguage = id;
             Save();
         }
     }

@@ -2248,7 +2248,22 @@ an OS limit.)
 - **"pt" alias:** Google's 249 list only `pt-BR` and `pt-PT` — plain `pt` is NOT in it. Kept `pt` as a 250th entry anyway: it is a valid code the endpoint accepts, and settings saved before 0.1.4 may already use it. `pt-BR` / `pt-PT` are in the list too.
 - **`ForGoogle` fix (same round):** the old code cut every code at `-` (`Split('-')[0]`), which turned Dari (`fa-AF`) into Persian (`fa`) and dropped scripts (`crh-Latn`, `ms-Arab`, ...). Codes now pass through unchanged except `zh-Hans`→`zh-CN` and `zh-Hant`→`zh-TW`.
 - **Popular first:** the 20 most-used languages are pinned at the top of the picker (Manh's pick from 14/20/30/50): the 14 the app already had + Hindi, Indonesian, Turkish, Dutch, Polish, Ukrainian — then the full list A–Z by English name.
-- **Searchable dropdown:** the language ComboBoxes are editable — typing filters the list live (native name, English name, or code). The dropdown height is capped (`MaxDropDownHeight` 320) so it scrolls inside instead of expanding to 249 rows. One shared helper (`LanguageComboBoxHelper`, used by Settings + the translate panel) — no copy-paste of the filter logic. Closing without a pick restores the saved language.
+- **Searchable picker (AutoSuggestBox, since CI #189):** the language
+  pickers are AutoSuggestBox — the native control built for type-to-search
+  (Microsoft Learn: "Use an AutoSuggestBox to provide a list of
+  suggestions for a user to select from as they type"). Typing filters
+  the list live (native name, English name, or code); focusing the box
+  shows the full list again. The suggestion list height is capped
+  (`MaxSuggestionListHeight` 320) so it scrolls inside instead of
+  expanding to 249 rows. One shared helper (`LanguageSuggestBoxHelper`,
+  used by Settings + the translate panel) — no copy-paste of the filter
+  logic. Leaving without a pick restores the saved language; Enter with
+  an exact name/code match picks it. The first version used an editable
+  ComboBox + `TextChanged` — but WinUI ComboBox HAS no `TextChanged`
+  event (CS1061, CI #189); it only has `TextSubmitted` (Enter/focus-loss),
+  so it cannot filter live. The helper file still named
+  `LanguageComboBoxHelper.cs` — rename it on the next browser-side edit
+  (snapshot push cannot rename files).
 - **About share row (Manh):** Settings > About has the same row of share buttons as the Fast Read completion window on mac (Facebook / Threads / X / Reddit / LinkedIn / Mail), sharing the app tagline + the Windows repo link. URLs live in one place (`SharePlatform`, mirroring mac `RSVPSharePlatform`); the row is built by `ShareRowBuilder` (mirroring mac `ShareRowView`). Facebook and LinkedIn share the link only (Facebook removed the `quote` param). Mail glyph is E715 (verified on Microsoft Learn — E8A5 is Document).
 - **Alt+click fix (Manh):** when Click icon = Fast Read, Alt+click opened Read instead of speaking. Cause: `Tapped` fires on pointer release and Alt released just before pointer-up was missed. Fix: the click now reads Alt from the pointer event at press time (`PointerPressed` + `KeyModifiers.Menu`, mirroring mac `handleIconClick` reading `event.modifierFlags`); the 0.1s `GetAsyncKeyState` poll + pointer events drive only the preview glyph.
 - **Version 0.1.4:** bumped to match mac (`TransPeek.csproj` `<Version>`, `Package.appxmanifest`, `build.yml` version stamp + pre-release tag/title + delete regex, workflow docs). The `0.1.3.<run>-saved` releases stay valid (the delete regex only matches `v0.1.3.*`).
@@ -2262,6 +2277,30 @@ an OS limit.)
 - **Windows adaptation:** mac puts the row at the end of the left panel's single ScrollView; Windows has no such ScrollView (each card scrolls itself), so the row is a third Auto row in the left tab's Grid — it takes ~50pt from the shortcuts card, never from the panel height, so auto-fit needs no change.
 - **About cross-check (same round):** the Windows About share row (0.1.4) matches mac's ShareRowView exactly — same 6 badges (28px, spacing 10, same brand colors and adaptive Threads/X/Mail), same tagline text + repo link, Facebook/LinkedIn link-only. Mail uses FontIcon E715 (mac: SF envelope.fill).
 - **Future idea (NOT implemented):** later, hide the cat + GitHub link on panel left and put share in that exact spot (middle of the bottom bar) — share becomes the main call-to-action on panel left. Note: the bottom bar is shared by all 3 tabs, so that change must know which tab is showing and hide only on panel left.
+
+## CI #189 red: ComboBox has no TextChanged — AutoSuggestBox instead (2026-11-19)
+
+- Run #189 (head 41acb70) failed at Build in 22s: CS1061 in
+  `LanguageComboBoxHelper.cs:49` — `ComboBox` has no definition for
+  `TextChanged`. The WMC9999 was a consequence, as usual. Cause: the
+  helper was written from memory (WPF-era assumption) without checking
+  Microsoft Learn. FIX: the picker is now an AutoSuggestBox
+  (`LanguageSuggestBoxHelper`): `TextChanged` with
+  `Reason == UserInput` filters live, `SuggestionChosen` commits,
+  `QuerySubmitted` handles Enter (exact name/code match picks, else
+  restore), `GotFocus` shows the full list, `LostFocus` restores the
+  saved language. All API names verified on the Microsoft Learn
+  AutoSuggestBox class page first (`MaxSuggestionListHeight`,
+  `IsSuggestionListOpen`, `TextMemberPath`, `UpdateTextOnSelect`,
+  `Header`, `ChosenSuggestion`, `QueryText`).
+- The switch also fixed a latent double-subscribe wart: Settings
+  rebuilt the helper on every navigation, subscribing the same box
+  twice. Helpers are now created once (`??=`) and `Refresh`ed after.
+- Lesson (same family as #188): WinUI ComboBox only has
+  `TextSubmitted` (fires on Enter/focus-loss, only for text not
+  matching an entry) — it cannot do live filtering. For a searchable
+  long list, AutoSuggestBox is the native control; do not reach for
+  template-part digging (custom, fragile) to force ComboBox to do it.
 
 ## CI #188 red: Microsoft.UI.Color does not exist (2026-11-19)
 

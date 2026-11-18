@@ -12,10 +12,8 @@
             <TextBlock x:Uid="Settings.Translation.FallbackNote" Text="When the primary provider fails, the app tries the fallback provider, then other enabled providers, and finally free Google Translate."
                        FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
 
-            <ComboBox x:Name="SourceLanguageCombo" x:Uid="Settings.Translation.SourceLanguage" Header="Source language"
-                      SelectionChanged="OnSourceLanguageChanged" />
-            <ComboBox x:Name="TargetLanguageCombo" x:Uid="Settings.Translation.TargetLanguage" Header="Target language"
-                      SelectionChanged="OnTargetLanguageChanged" />
+            <AutoSuggestBox x:Name="SourceLanguageCombo" x:Uid="Settings.Translation.SourceLanguage" Header="Source language" />
+            <AutoSuggestBox x:Name="TargetLanguageCombo" x:Uid="Settings.Translation.TargetLanguage" Header="Target language" />
 
             <TextBlock x:Uid="Settings.Translation.EnableProviders" Text="Enable / disable providers" FontWeight="SemiBold" Margin="0,8,0,0" />
             <StackPanel x:Name="ProviderToggles" Spacing="4" />

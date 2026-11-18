@@ -174,7 +174,6 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     private string? _lookupText;
     private bool _visible;
     private bool _ocrMode;
-    private bool _syncingCombos;
     /// <summary>Whether the provider output card body is expanded
     /// (Manh 2026-11-15, mac ProviderResultCard). A new translation
     /// always re-expands it.</summary>
@@ -1615,69 +1614,48 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
 
     // ----- language pickers + swap (mac LanguageBarView) -----
 
-    private LanguageComboBoxHelper? _sourceLangHelper;
-    private LanguageComboBoxHelper? _targetLangHelper;
+    private LanguageSuggestBoxHelper? _sourceLangHelper;
+    private LanguageSuggestBoxHelper? _targetLangHelper;
 
     private void PopulateLangCombos()
     {
         // Searchable pickers (Manh 2026-11-19): the helper owns the
         // items, the popular-first order, and the live filter. The
-        // SelectionChanged handlers below still save on pick.
-        _sourceLangHelper = new LanguageComboBoxHelper(
+        // onPicked callbacks below save + retranslate on pick.
+        _sourceLangHelper ??= new LanguageSuggestBoxHelper(
             SourceLangCombo, includeAuto: true,
-            () => App.Settings.SourceLanguage, "Auto Detect");
-        _targetLangHelper = new LanguageComboBoxHelper(
+            () => App.Settings.SourceLanguage, "Auto Detect",
+            code =>
+            {
+                if (string.Equals(code, App.Settings.SourceLanguage, StringComparison.Ordinal))
+                    return;
+                App.Settings.SourceLanguage = code;
+                SettingsStore.Save(App.Settings);
+                RetranslateCurrent();
+            });
+        _targetLangHelper ??= new LanguageSuggestBoxHelper(
             TargetLangCombo, includeAuto: false,
-            () => App.Settings.TargetLanguage, string.Empty);
+            () => App.Settings.TargetLanguage, string.Empty,
+            code =>
+            {
+                if (string.Equals(code, App.Settings.TargetLanguage, StringComparison.Ordinal))
+                    return;
+                App.Settings.TargetLanguage = code;
+                SettingsStore.Save(App.Settings);
+                RetranslateCurrent();
+            });
     }
 
     private void SyncLangCombos()
     {
-        _syncingCombos = true;
-        try
-        {
-            _sourceLangHelper?.Refresh(App.Settings.SourceLanguage);
-            _targetLangHelper?.Refresh(App.Settings.TargetLanguage);
-        }
-        finally
-        {
-            _syncingCombos = false;
-        }
-    }
-
-    private static string SelectedTag(ComboBox combo)
-        => (combo.SelectedItem as ComboBoxItem)?.Tag as string ?? LanguageCode.Auto;
-
-    private void OnSourceLangChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (_syncingCombos || SourceLangCombo.SelectedItem is not ComboBoxItem)
-            return;
-        var tag = SelectedTag(SourceLangCombo);
-        // Reselect of the same language (dropdown restore): nothing to do.
-        if (string.Equals(tag, App.Settings.SourceLanguage, StringComparison.Ordinal))
-            return;
-        App.Settings.SourceLanguage = tag;
-        SettingsStore.Save(App.Settings);
-        RetranslateCurrent();
-    }
-
-    private void OnTargetLangChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (_syncingCombos || TargetLangCombo.SelectedItem is not ComboBoxItem)
-            return;
-        var tag = SelectedTag(TargetLangCombo);
-        // Reselect of the same language (dropdown restore): nothing to do.
-        if (string.Equals(tag, App.Settings.TargetLanguage, StringComparison.Ordinal))
-            return;
-        App.Settings.TargetLanguage = tag;
-        SettingsStore.Save(App.Settings);
-        RetranslateCurrent();
+        _sourceLangHelper?.Refresh(App.Settings.SourceLanguage);
+        _targetLangHelper?.Refresh(App.Settings.TargetLanguage);
     }
 
     private void OnSwapLanguages(object sender, RoutedEventArgs e)
     {
-        var oldSource = SelectedTag(SourceLangCombo);
-        var oldTarget = SelectedTag(TargetLangCombo);
+        var oldSource = _sourceLangHelper?.CommittedTag ?? App.Settings.SourceLanguage;
+        var oldTarget = _targetLangHelper?.CommittedTag ?? App.Settings.TargetLanguage;
         // Target can never be Auto: swapping out of Auto targets English.
         App.Settings.SourceLanguage = oldTarget;
         App.Settings.TargetLanguage = oldSource == LanguageCode.Auto ? LanguageCode.English : oldSource;

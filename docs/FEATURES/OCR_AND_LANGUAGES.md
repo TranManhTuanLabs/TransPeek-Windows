@@ -17,7 +17,9 @@
 - **`pt` alias (250th entry):** `pt` is NOT in Google's 249 (only
   `pt-BR` and `pt-PT` are), but the endpoint still accepts it and old
   settings may already store it — so it is kept as an alias, not dropped.
-- **Picker UX:** 20 popular languages first, in this order —
+- **Picker UX:** AutoSuggestBox (native searchable picker — ComboBox
+  has no live-filter event, see DECISIONS.md CI #189): 20 popular
+  languages first, in this order —
   English, Vietnamese, Chinese (Simplified), Chinese (Traditional),
   Japanese, Korean, French, German, Spanish, Portuguese, Russian,
   Italian, Thai, Arabic, Hindi, Indonesian, Turkish, Dutch, Polish,

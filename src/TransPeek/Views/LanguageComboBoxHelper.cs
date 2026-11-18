@@ -2,21 +2,35 @@
 // the translate panel (TranslatePanelWindow): one helper, no copy-paste
 // of the filter logic (Manh 2026-11-19, 249 languages).
 //
-// Behaviour (Manh's pick): the dropdown does NOT expand to the full
-// list — MaxDropDownHeight caps it so it scrolls inside. The ComboBox
-// is editable: the text field IS the search box, typing filters the
-// list live (native name, English name, or code). The 20 popular
-// languages come first, then the full list A–Z. Opening the dropdown
-// always shows the full list again; closing without a pick restores
-// the saved language.
+// NOTE (2026-11-19): the picker is an AutoSuggestBox, NOT a ComboBox.
+// The first version used an editable ComboBox + TextChanged — but
+// WinUI ComboBox HAS no TextChanged event (CS1061, CI #189; ComboBox
+// only has TextSubmitted, which fires on Enter/focus-loss, so it
+// cannot filter live). AutoSuggestBox is the native control built for
+// type-to-search (Microsoft Learn: "Use an AutoSuggestBox to provide
+// a list of suggestions for a user to select from as they type").
+// The file keeps its old name because a snapshot push cannot rename
+// or delete files — rename it to LanguageSuggestBoxHelper.cs on the
+// next browser-side edit (see DECISIONS.md, CI #189).
+//
+// Behaviour (Manh's pick): the suggestion list does NOT expand to the
+// full list — MaxSuggestionListHeight caps it so it scrolls inside.
+// Typing filters the list live (native name, English name, or code).
+// The 20 popular languages come first, then the full list A–Z.
+// Focusing the box shows the full list again; leaving it without a
+// pick restores the saved language.
 
 using Microsoft.UI.Xaml.Controls;
 using TransPeek.Core.Translation;
 
 namespace TransPeek.Views;
 
-public sealed class LanguageComboBoxHelper
+public sealed class LanguageSuggestBoxHelper
 {
+    /// <summary>One suggestion: the language code and the name shown
+    /// in the box and the list (native name, as before).</summary>
+    public record LanguageItem(string Code, string DisplayName);
+
     private static readonly HashSet<string> PopularSet = new(LanguageCode.Popular, StringComparer.Ordinal);
     private static readonly Dictionary<string, (string Name, string EnglishName)> ByCode =
         LanguageCode.Supported.ToDictionary(
@@ -24,135 +38,185 @@ public sealed class LanguageComboBoxHelper
             lang => (lang.Name, lang.EnglishName),
             StringComparer.Ordinal);
 
-    private readonly ComboBox _combo;
+    private readonly AutoSuggestBox _box;
     private readonly bool _includeAuto;
     private readonly Func<string> _getCommittedTag;
+    private readonly Action<string> _onPicked;
     private readonly string _autoLabel;
-    private bool _suppressFilter;
-    private string? _lastSelectedTag;
+    private bool _suppress;
 
-    /// <param name="combo">The ComboBox to turn into a language picker.</param>
+    /// <summary>The last committed language code (what the box shows).
+    /// Pages read this for the swap button instead of the box text,
+    /// which may hold uncommitted typing.</summary>
+    public string CommittedTag { get; private set; } = LanguageCode.Auto;
+
+    /// <param name="box">The AutoSuggestBox to turn into a language picker.</param>
     /// <param name="includeAuto">Prepend the "Automatic" item (source only).</param>
     /// <param name="getCommittedTag">Returns the currently saved language
-    /// code, for restoring the selection when the dropdown closes without
-    /// a pick.</param>
+    /// code, for restoring the text when the user leaves without a pick.</param>
     /// <param name="autoLabel">Label for the Automatic item.</param>
-    public LanguageComboBoxHelper(ComboBox combo, bool includeAuto, Func<string> getCommittedTag, string autoLabel)
+    /// <param name="onPicked">Called (once) when the user picks a
+    /// language — the page saves it there.</param>
+    public LanguageSuggestBoxHelper(
+        AutoSuggestBox box,
+        bool includeAuto,
+        Func<string> getCommittedTag,
+        string autoLabel,
+        Action<string> onPicked)
     {
-        _combo = combo;
+        _box = box;
         _includeAuto = includeAuto;
         _getCommittedTag = getCommittedTag;
         _autoLabel = autoLabel;
-        combo.IsEditable = true;
-        combo.IsTextSearchEnabled = false;
-        combo.MaxDropDownHeight = 320;
-        combo.TextChanged += OnTextChanged;
-        combo.DropDownOpened += (_, _) => RebuildFullList();
-        combo.DropDownClosed += (_, _) => RestoreCommitted();
-        combo.SelectionChanged += (_, _) =>
-        {
-            if (combo.SelectedItem is ComboBoxItem item && item.Tag is string tag)
-                _lastSelectedTag = tag;
-        };
+        _onPicked = onPicked;
+        box.TextMemberPath = "DisplayName";
+        box.DisplayMemberPath = "DisplayName";
+        box.UpdateTextOnSelect = true;
+        box.MaxSuggestionListHeight = 320;
+        box.TextChanged += OnTextChanged;
+        box.SuggestionChosen += OnSuggestionChosen;
+        box.QuerySubmitted += OnQuerySubmitted;
+        box.GotFocus += (_, _) => ShowFullList();
+        box.LostFocus += (_, _) => RestoreCommitted();
         Refresh(_getCommittedTag());
     }
 
-    /// <summary>Rebuild the full list (popular first) and select the
-    /// given tag. Call when the saved language changes elsewhere
-    /// (e.g. the panel's swap button).</summary>
+    /// <summary>Show the full list (popular first) for the given tag.
+    /// Call when the saved language changes elsewhere (e.g. the
+    /// panel's swap button).</summary>
     public void Refresh(string committedTag)
     {
-        _suppressFilter = true;
+        CommittedTag = committedTag;
+        _suppress = true;
         try
         {
-            RebuildFullList();
-            SelectTag(committedTag);
+            _box.ItemsSource = FullList();
+            SetTextFor(committedTag);
+            _box.IsSuggestionListOpen = false;
         }
         finally
         {
-            _suppressFilter = false;
+            _suppress = false;
         }
     }
 
-    private void OnTextChanged(object sender, TextChangedEventArgs e)
+    private void OnTextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
     {
-        if (_suppressFilter)
+        if (_suppress || args.Reason != AutoSuggestionBoxTextChangeReason.UserInput)
             return;
-        // Text set by picking an item (not by typing): the text equals
-        // the selected item's name — do not filter the list down to it.
-        if (_combo.SelectedItem is ComboBoxItem selected
-            && string.Equals(_combo.Text, selected.Content as string, StringComparison.Ordinal))
-            return;
-        Rebuild(_combo.Text);
+        // Live filter while typing; an empty query shows the full list.
+        _box.ItemsSource = FilteredList(args.QueryText);
     }
 
-    private void RebuildFullList() => Rebuild(null);
+    private void OnSuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
+    {
+        if (args.SelectedItem is LanguageItem item)
+        {
+            // TextMemberPath + UpdateTextOnSelect already put the item
+            // name in the box; only the commit is ours.
+            CommittedTag = item.Code;
+            _onPicked(item.Code);
+        }
+    }
+
+    private void OnQuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
+    {
+        // Enter with a highlighted suggestion: SuggestionChosen already
+        // handled it. Enter with typed text only: pick the exact match
+        // (name, English name, or code) if there is one, else restore.
+        if (args.ChosenSuggestion is LanguageItem)
+            return;
+        var query = args.QueryText?.Trim();
+        if (!string.IsNullOrEmpty(query))
+        {
+            // Exact match only (full name, English name, or code).
+            // Note: the Auto item has no ByCode entry — look the
+            // English name up safely instead of indexing ByCode.
+            var exact = FullList().FirstOrDefault(item =>
+                string.Equals(item.DisplayName, query, StringComparison.OrdinalIgnoreCase)
+                || (ByCode.TryGetValue(item.Code, out var en)
+                    && string.Equals(en.EnglishName, query, StringComparison.OrdinalIgnoreCase))
+                || string.Equals(item.Code, query, StringComparison.OrdinalIgnoreCase));
+            if (exact is not null)
+            {
+                CommittedTag = exact.Code;
+                SetTextFor(exact.Code);
+                _onPicked(exact.Code);
+                return;
+            }
+        }
+        RestoreCommitted();
+    }
+
+    private void ShowFullList()
+    {
+        if (_suppress)
+            return;
+        _box.ItemsSource = FullList();
+        _box.IsSuggestionListOpen = true;
+    }
 
     private void RestoreCommitted()
     {
         // The user typed without picking: put the full list back and
-        // reselect the saved language (or the last picked one, which
-        // the page has already saved by now).
-        Refresh(_lastSelectedTag ?? _getCommittedTag());
+        // restore the saved language text.
+        _box.ItemsSource = FullList();
+        SetTextFor(CommittedTag);
+        _box.IsSuggestionListOpen = false;
     }
 
-    private void Rebuild(string? query)
+    private List<LanguageItem> FullList() => FilteredList(null);
+
+    private List<LanguageItem> FilteredList(string? query)
     {
-        _suppressFilter = true;
-        try
+        var list = new List<LanguageItem>();
+        if (_includeAuto && AutoMatches(query))
+            list.Add(new LanguageItem(LanguageCode.Auto, _autoLabel));
+        foreach (var code in LanguageCode.Popular)
         {
-            _combo.Items.Clear();
-            if (_includeAuto && AutoMatches(query))
-                _combo.Items.Add(new ComboBoxItem { Content = _autoLabel, Tag = LanguageCode.Auto });
-            foreach (var code in LanguageCode.Popular)
-            {
-                var (name, english) = ByCode[code];
-                if (Matches(name, english, code, query))
-                    _combo.Items.Add(new ComboBoxItem { Content = name, Tag = code });
-            }
-            foreach (var (code, name, english) in LanguageCode.Supported)
-            {
-                if (PopularSet.Contains(code))
-                    continue;
-                if (Matches(name, english, code, query))
-                    _combo.Items.Add(new ComboBoxItem { Content = name, Tag = code });
-            }
-            // Full list only: keep the selection highlight on the saved
-            // language. Never reselect while filtering — setting the
-            // selection would overwrite the typed query with the item
-            // name.
-            if (query is null && _lastSelectedTag is not null)
-                SelectTag(_lastSelectedTag);
+            var (name, english) = ByCode[code];
+            if (Matches(name, english, code, query))
+                list.Add(new LanguageItem(code, name));
         }
-        finally
+        foreach (var (code, name, english) in LanguageCode.Supported)
         {
-            _suppressFilter = false;
+            if (PopularSet.Contains(code))
+                continue;
+            if (Matches(name, english, code, query))
+                list.Add(new LanguageItem(code, name));
         }
+        return list;
     }
 
     private bool AutoMatches(string? query)
-        => query is null
+        => string.IsNullOrWhiteSpace(query)
         || _autoLabel.Contains(query, StringComparison.OrdinalIgnoreCase)
         || "Automatic".Contains(query, StringComparison.OrdinalIgnoreCase)
         || "Auto Detect".Contains(query, StringComparison.OrdinalIgnoreCase);
 
     private static bool Matches(string name, string english, string code, string? query)
-        => query is null
+        => string.IsNullOrWhiteSpace(query)
         || name.Contains(query, StringComparison.OrdinalIgnoreCase)
         || english.Contains(query, StringComparison.OrdinalIgnoreCase)
         || code.StartsWith(query, StringComparison.OrdinalIgnoreCase);
 
-    private void SelectTag(string tag)
+    private void SetTextFor(string tag)
     {
-        foreach (var item in _combo.Items.OfType<ComboBoxItem>())
+        // Setting Text fires TextChanged with Reason ProgrammaticChange,
+        // which OnTextChanged ignores — no _suppress flag needed here.
+        if (_includeAuto && string.Equals(tag, LanguageCode.Auto, StringComparison.Ordinal))
         {
-            if (string.Equals(item.Tag as string, tag, StringComparison.Ordinal))
-            {
-                _combo.SelectedItem = item;
-                return;
-            }
+            _box.Text = _autoLabel;
+            return;
         }
-        if (_combo.Items.Count > 0)
-            _combo.SelectedIndex = 0;
+        if (ByCode.TryGetValue(tag, out var entry))
+        {
+            _box.Text = entry.Name;
+            return;
+        }
+        // Unknown saved code (should not happen): fall back to the
+        // first item, as the old ComboBox helper did.
+        if (_box.ItemsSource is IReadOnlyList<LanguageItem> items && items.Count > 0)
+            _box.Text = items[0].DisplayName;
     }
 }
