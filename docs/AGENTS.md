@@ -44,8 +44,13 @@
   Chi tiết kỹ thuật đầy đủ ở `UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md` §6.
 - Số đã chốt trong `UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md` là spec — đổi số cần Manh duyệt,
   và cập nhật doc trong cùng đợt.
-- **Native trước, tự chế sau:** tính năng nào control native không có thì **báo Manh
-  1 câu trước** rồi mới làm custom.
+- **Native trước, tự chế sau (Manh 2026-11-19):** khi cần 1 tính năng/control,
+  CHECK NATIVE TRƯỚC — native có sẵn và hỗ trợ ngon (đủ dùng, đúng chuẩn hệ
+  thống) thì dùng native; chỉ tự chế khi native KHÔNG có hoặc KHÔNG hỗ trợ đủ
+  tốt. Tự chế thì **báo Manh 1 câu trước** rồi mới làm (native không có tính
+  năng đó, muốn làm phải tự chế, anh có đồng ý không). Ví dụ: dropdown tìm
+  kiếm 249 ngôn ngữ — AutoSuggestBox là control native sinh ra để gõ-tìm,
+  dùng luôn, không moi TextBox trong template ComboBox ra tự chế.
 
 ## 4. Tra tên API / enum / glyph
 
@@ -86,6 +91,24 @@
   tiếng Việt đơn giản, ví dụ từ chính dự án, không dạy dồn dập. Vừa làm vừa dạy dần.
 - Trả lời bằng tiếng Việt, ngắn, trực tiếp, cụ thể. Lần đầu nhắc thuật ngữ thì viết đủ,
   giữ nguyên từ kỹ thuật tiếng Anh (hash, certificate, ...), không dịch gượng.
+
+## 8. Chọn phương án triển khai — đọc mã nguồn thật trước (Manh 2026-11-19)
+
+- **Trước khi làm gì, đọc mã nguồn THẬT của dự án rồi mới chọn phương án
+  triển khai tốt nhất.** Phương án phải dựa trên code đang chạy trong repo
+  (cách code hiện tại viết, control/API nào đang dùng, hành vi thật của nó),
+  không dựa trên trí nhớ về "thường thì làm thế này".
+- **Không phụ thuộc hoàn toàn vào trí nhớ.** Trí nhớ chỉ là gợi ý.
+  **Tra lại nhanh cho chắc** (mở file code, mở tài liệu chính chủ) với mọi
+  thứ sẽ đưa vào code; **tra kỹ khi cần** (logic phức tạp, tên API/enum,
+  hành vi quyết định chọn phương án nào, thứ đã từng sai).
+- Dạng tổng quát của §4 (tra tên API/enum qua Microsoft Learn) và quy tắc
+  tra mã/cú pháp từ nguồn chính thống.
+- Bài học CI #189 (19/11): chọn ComboBox editable + `TextChanged` để lọc
+  live 249 ngôn ngữ — từ trí nhớ kiểu WPF, không tra WinUI trước. WinUI
+  ComboBox KHÔNG có `TextChanged` (chỉ có `TextSubmitted` khi Enter/mất
+  focus), build đỏ. Tra mã nguồn/API thật trước thì đã chọn AutoSuggestBox
+  ngay từ đầu.
 
 ## Liên kết
 
