@@ -21,7 +21,25 @@
 - **How long to hover**: ComboBox 300/500/800/1000ms, mặc định 500ms.
 - **Trigger icon hides after**: NumberBox (gõ số giây), mặc định 5s.
 
-## 3. Nợ
+## 3. Future idea — translate-first icon (NOT implemented, Manh 2026-11-19)
+
+The current A+ default (Style B above) has a real advantage: the user can tell at a
+glance that Click is set to Fast Read, without opening Settings. A possible future
+change — **not to be done now** — is to follow the translate-first concept instead.
+When the Click setting is Fast Read:
+
+- the icon shows the plain translate **A** as normal (hover = translate is the icon's
+  primary job);
+- a plain click shows **A+** (Fast Read);
+- Alt+Click shows the **speaker** (Speak).
+
+So the icon's idle state stays "translate", and A+ / speaker appear as the feedback
+for the action that was just triggered — instead of Style B's preview of the *next*
+click. Recorded here so the idea is not lost; implement only when Manh asks. Same
+note as mac (`docs/UI/UX_DESIGN/FLOAT_ICON_UX_SPEC.md` §3, commit `9818f6c` —
+Option on mac, Alt on Windows).
+
+## 4. Nợ
 
 - Icon theo dark/light system: **CHƯA LÀM**.
 - Icon lúc hiện lúc không khi select text: Manh test thêm.
