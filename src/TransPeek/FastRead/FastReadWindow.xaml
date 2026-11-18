@@ -1,0 +1,227 @@
+<Window
+    x:Class="TransPeek.FastRead.FastReadWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Fast Read (RSVP) reader window — feature/fast-read-rsvp.
+         A SEPARATE window, not a panel tab: RSVP needs a big word
+         (40-450 pt), one fixed focal point, a progress bar and a pause
+         context — none of that fits the 420 px translate panel.
+         UX copies SwiftRead's reader (rsvp-report.md §6.1) + the mac
+         reader window (RSVPView.swift, round 7): one word at a time at
+         a fixed ORP pivot (middle char, orange #F6861F), context
+         +/-150 words on pause, WPM 275 default, chunk 1-6.
+         READ ONLY — no TTS in the reader (listening is the float
+         icon's job). Layout (Manh 2026-11-19, temporary): top bar
+         (title centered, Settings + "?" at the right), reading area
+         (Reading time top-left, hint top-right inside it), progress,
+         bottom bar (Words + Speed left, transport centered, Context
+         size + Focus size right). Wheel: over the progress slider =
+         step word; over the focus word = focus size; over the context
+         = context size. Controls: Space play/pause, Left/Right step a
+         slide, Up/Down WPM +/-10, R restart, Esc/Q close. -->
+    <Grid x:Name="RootGrid" Padding="24,16,24,16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Top bar (Manh 2026-11-19, like mac): the title is TRULY
+             centered on the window — it sits in a full-width TextBlock
+             while the Settings + "?" buttons overlay at the right
+             (mac overlays the subtitle the same way, because the wide
+             left cluster would otherwise push it off-center). The left
+             side stays empty on Windows: mac's left pickers (Speed /
+             Focus / Context / Words) live in the bottom bar here. -->
+        <Grid Grid.Row="0" Margin="0,0,0,8">
+            <TextBlock Text="Rapid Serial Visual Presentation — RSVP" FontSize="15" FontWeight="SemiBold" Foreground="Gray"
+                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <Button x:Name="SettingsButton" Padding="6,4" ToolTipService.ToolTip="Settings">
+                    <FontIcon Glyph="&#xE713;" FontSize="14" />
+                    <Button.Flyout>
+                        <Flyout x:Name="SettingsFlyout">
+                            <StackPanel Spacing="8" Width="260">
+                                <TextBlock Text="Color Scheme" FontSize="14" FontWeight="SemiBold" />
+                                <ComboBox x:Name="ColorSchemeCombo" SelectionChanged="OnColorSchemeChanged" HorizontalAlignment="Stretch">
+                                    <ComboBoxItem Content="Black on White" Tag="Light" />
+                                    <ComboBoxItem Content="White on Black" Tag="Dark" />
+                                </ComboBox>
+                                <TextBlock Text="Show context around focus word" FontSize="14" FontWeight="SemiBold" />
+                                <ComboBox x:Name="ContextDisplayCombo" SelectionChanged="OnContextDisplayChanged" HorizontalAlignment="Stretch">
+                                    <ComboBoxItem Content="Always" Tag="Always" />
+                                    <ComboBoxItem Content="Only show when paused" Tag="Paused" />
+                                    <ComboBoxItem Content="Never" Tag="Never" />
+                                </ComboBox>
+                                <Button Content="Reset to default" Click="OnResetClicked"
+                                        ToolTipService.ToolTip="Reset speed, focus size, context size and context display to their defaults" />
+                            </StackPanel>
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
+                <Button x:Name="HotkeysButton" Padding="6,4" ToolTipService.ToolTip="Hotkeys">
+                    <TextBlock Text="?" FontSize="13" FontWeight="SemiBold" />
+                    <Button.Flyout>
+                        <Flyout x:Name="HotkeysFlyout">
+                            <StackPanel Spacing="6" Width="240">
+                                <TextBlock Text="Hotkeys" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,4" />
+                                <Grid>
+                                    <TextBlock Text="Space" FontWeight="SemiBold" HorizontalAlignment="Left" />
+                                    <TextBlock Text="Play / Pause" Foreground="Gray" HorizontalAlignment="Right" />
+                                </Grid>
+                                <Grid>
+                                    <TextBlock Text="← / →" FontWeight="SemiBold" HorizontalAlignment="Left" />
+                                    <TextBlock Text="Step one word" Foreground="Gray" HorizontalAlignment="Right" />
+                                </Grid>
+                                <Grid>
+                                    <TextBlock Text="↑ / ↓" FontWeight="SemiBold" HorizontalAlignment="Left" />
+                                    <TextBlock Text="Speed ±10 WPM" Foreground="Gray" HorizontalAlignment="Right" />
+                                </Grid>
+                                <Grid>
+                                    <TextBlock Text="R" FontWeight="SemiBold" HorizontalAlignment="Left" />
+                                    <TextBlock Text="Restart" Foreground="Gray" HorizontalAlignment="Right" />
+                                </Grid>
+                                <Grid>
+                                    <TextBlock Text="Esc" FontWeight="SemiBold" HorizontalAlignment="Left" />
+                                    <TextBlock Text="Close window" Foreground="Gray" HorizontalAlignment="Right" />
+                                </Grid>
+                            </StackPanel>
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- Word area: focal ticks above/below, the word centered on
+             its ORP pivot (code shifts it with a TranslateTransform so
+             the pivot char sits exactly at the center). Reading time
+             (top-left) and the hint (top-right) sit INSIDE the block
+             text (Manh 2026-11-19) — an overlay at the top of the
+             reading area, so the word stays vertically centered.
+             Wheel over the focus word changes the focus size. -->
+        <Grid x:Name="WordArea" Grid.Row="1" Background="Transparent" PointerWheelChanged="OnFocusWheelChanged">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <Rectangle Width="2" Height="16" Fill="#C8C8C8" HorizontalAlignment="Center" Margin="0,0,0,10" />
+                <TextBlock x:Name="WordTextBlock" FontSize="110" TextAlignment="Center">
+                    <Run x:Name="LeftRun" /><Run x:Name="PivotRun" Foreground="#F6861F" /><Run x:Name="RightRun" />
+                </TextBlock>
+                <Rectangle Width="2" Height="16" Fill="#C8C8C8" HorizontalAlignment="Center" Margin="0,10,0,0" />
+            </StackPanel>
+            <Grid VerticalAlignment="Top">
+                <TextBlock x:Name="ReadingTimeText" Text="Reading time: 0min" FontSize="12" Foreground="Gray"
+                           HorizontalAlignment="Left" VerticalAlignment="Top" ToolTipService.ToolTip="Estimated reading time" />
+                <TextBlock Text="Space play/pause • ←/→ step • ↑/↓ speed • Scroll ↑/↓ font size" FontSize="12" Foreground="Gray"
+                           HorizontalAlignment="Right" VerticalAlignment="Top" />
+            </Grid>
+        </Grid>
+
+        <!-- Pause context: +/-150 words around the current slide, the
+             current words bold + orange. When it shows depends on the
+             "Show context around focus word" setting (Always / Only
+             show when paused / Never); its size is the focus size
+             times the "Context size" percent. Wheel over it changes
+             the context size (not scroll — the wheel is the size
+             control here, Manh 2026-11-19). -->
+        <ScrollViewer x:Name="ContextScroller" Grid.Row="2" MaxHeight="120"
+                      VerticalScrollBarVisibility="Auto" Visibility="Collapsed" Margin="0,8,0,0">
+            <TextBlock x:Name="ContextTextBlock" TextWrapping="Wrap" FontSize="16" LineHeight="24" />
+        </ScrollViewer>
+
+        <!-- Progress: seek slider + status (slide x/y, time left).
+             Wheel over the slider steps one word (Manh 2026-11-19). -->
+        <Grid Grid.Row="3" Margin="0,12,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Slider x:Name="ProgressSlider" Minimum="0" ValueChanged="OnProgressChanged" VerticalAlignment="Center" />
+            <TextBlock x:Name="StatusText" Grid.Column="1" FontSize="13" Foreground="Gray" Margin="12,0,0,0" VerticalAlignment="Center" />
+        </Grid>
+
+        <!-- Bottom bar (Manh 2026-11-19, like mac's control row):
+             transport truly centered on the window (its own StackPanel
+             centered on the full width, like mac's ZStack) with Words
+             + Speed at the left edge and Context size + Focus size at
+             the right edge. At the 880 minimum width the three groups
+             just fit, so the spacing is tight on purpose. -->
+        <Grid Grid.Row="4" Margin="0,12,0,0">
+            <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Left" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <TextBlock Text="Words" FontSize="13" VerticalAlignment="Center" />
+                    <ComboBox x:Name="ChunkCombo" SelectionChanged="OnChunkChanged" VerticalAlignment="Center" Width="60">
+                        <ComboBoxItem Content="1" Tag="1" />
+                        <ComboBoxItem Content="2" Tag="2" />
+                        <ComboBoxItem Content="3" Tag="3" />
+                        <ComboBoxItem Content="4" Tag="4" />
+                        <ComboBoxItem Content="5" Tag="5" />
+                        <ComboBoxItem Content="6" Tag="6" />
+                    </ComboBox>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <TextBlock Text="Speed" FontSize="13" VerticalAlignment="Center" />
+                    <Slider x:Name="WpmSlider" Width="120" Minimum="100" Maximum="2000" StepFrequency="25" ValueChanged="OnWpmChanged" VerticalAlignment="Center" />
+                    <TextBlock x:Name="WpmText" FontSize="13" VerticalAlignment="Center" />
+                </StackPanel>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Button x:Name="RestartButton" Padding="8,4" Click="OnRestartClicked" ToolTipService.ToolTip="Restart from the beginning (R)">
+                    <FontIcon Glyph="&#xE72C;" FontSize="16" />
+                </Button>
+                <Button x:Name="RewindButton" Padding="8,4" Click="OnRewindClicked" ToolTipService.ToolTip="Previous word (←)">
+                    <FontIcon Glyph="&#xEB9E;" FontSize="16" />
+                </Button>
+                <Button x:Name="PlayPauseButton" Padding="8,4" Click="OnPlayPauseClicked" ToolTipService.ToolTip="Play / Pause (Space)">
+                    <FontIcon x:Name="PlayPauseIcon" Glyph="&#xE768;" FontSize="16" />
+                </Button>
+                <Button x:Name="FastForwardButton" Padding="8,4" Click="OnFastForwardClicked" ToolTipService.ToolTip="Next word (→)">
+                    <FontIcon Glyph="&#xEB9D;" FontSize="16" />
+                </Button>
+                <Button x:Name="MaximizeButton" Padding="8,4" Click="OnMaximizeClicked" ToolTipService.ToolTip="Maximize window">
+                    <FontIcon Glyph="&#xE922;" FontSize="16" />
+                </Button>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <TextBlock Text="Context size" FontSize="13" VerticalAlignment="Center" />
+                    <ComboBox x:Name="ContextSizeCombo" SelectionChanged="OnContextSizeChanged" VerticalAlignment="Center" Width="72">
+                        <ComboBoxItem Content="25%" Tag="25" />
+                        <ComboBoxItem Content="30%" Tag="30" />
+                        <ComboBoxItem Content="35%" Tag="35" />
+                        <ComboBoxItem Content="40%" Tag="40" />
+                        <ComboBoxItem Content="50%" Tag="50" />
+                        <ComboBoxItem Content="60%" Tag="60" />
+                        <ComboBoxItem Content="75%" Tag="75" />
+                        <ComboBoxItem Content="100%" Tag="100" />
+                    </ComboBox>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <TextBlock Text="Focus size" FontSize="13" VerticalAlignment="Center" />
+                    <ComboBox x:Name="FocusSizeCombo" SelectionChanged="OnFocusSizeChanged" VerticalAlignment="Center" Width="72">
+                        <ComboBoxItem Content="40" Tag="40" />
+                        <ComboBoxItem Content="48" Tag="48" />
+                        <ComboBoxItem Content="56" Tag="56" />
+                        <ComboBoxItem Content="64" Tag="64" />
+                        <ComboBoxItem Content="72" Tag="72" />
+                        <ComboBoxItem Content="80" Tag="80" />
+                        <ComboBoxItem Content="88" Tag="88" />
+                        <ComboBoxItem Content="96" Tag="96" />
+                        <ComboBoxItem Content="104" Tag="104" />
+                        <ComboBoxItem Content="110" Tag="110" />
+                        <ComboBoxItem Content="120" Tag="120" />
+                        <ComboBoxItem Content="140" Tag="140" />
+                        <ComboBoxItem Content="160" Tag="160" />
+                        <ComboBoxItem Content="200" Tag="200" />
+                        <ComboBoxItem Content="250" Tag="250" />
+                        <ComboBoxItem Content="300" Tag="300" />
+                        <ComboBoxItem Content="350" Tag="350" />
+                        <ComboBoxItem Content="400" Tag="400" />
+                        <ComboBoxItem Content="450" Tag="450" />
+                    </ComboBox>
+                </StackPanel>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

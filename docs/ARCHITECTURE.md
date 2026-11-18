@@ -15,8 +15,8 @@
 
 ```
 src/
-  TransPeek/          # app WinUI 3 (Views, Services, Assets)
-  TransPeek.Core/     # logic thuần (Settings, Translation, Ocr, Dictionary)
+  TransPeek/          # app WinUI 3 (Views, Services, Assets, FastRead/)
+  TransPeek.Core/     # logic thuần (Settings, Translation, Ocr, Dictionary, FastRead/)
 tests/
   TransPeek.Tests/    # chỉ test logic Core trên net8.0
 docs/
@@ -30,6 +30,10 @@ docs/
   TASK_QUEUE.md       # việc đang làm / chờ
   UI_DESIGN.md        # chỉ mục UX
 ```
+
+Tính năng mới sống trong thư mục riêng của nó (quy tắc tách module ở §5):
+`FastRead/` là tính năng đầu tiên theo cấu trúc này (engine ở Core, window
+ở app, cùng tên thư mục để 2 repo song song).
 
 ## 3. Thành phần chính
 
@@ -55,6 +59,36 @@ docs/
   `[build-app]` (tag `v0.1.3.<run>`, chỉ giữ mới nhất). Stable sau này là 0.1.4,
   tạo thủ công.
 - Bundle Tesseract eng+vie tải ở bước CI (fail nếu file < 1MB).
+
+## 5. Nguyên tắc kiến trúc
+
+Chuẩn chung cho MỌI dự án, MỌI repo của Manh (chốt 17/11 17:22, mở rộng
+từ quy tắc tách module 13:08). Lý do: code phải dễ bảo trì, dễ nâng cấp,
+linh động (flexible).
+
+- **Dễ bảo trì, dễ nâng cấp, linh động** — sửa 1 chỗ không vỡ chỗ khác.
+- **Tách code/tách folder khi cần:** 1 tính năng = 1 module/thư mục riêng.
+- **Dùng chung hàm/component:** cái gì dùng nhiều chỗ thì viết 1 lần,
+  không copy-paste.
+- **Cấu trúc rõ ràng như dự án lớn:** ai mới vào cũng tìm được file cần sửa.
+
+### Tách module: mỗi tính năng 1 thư mục, không nhét vào code dịch (Manh 2026-11-17)
+
+- Tính năng mới (tomato/focus/rest-eyes, Fast Read/RSVP, ...) viết riêng
+  file/module — không nhét vào code chính/code dịch. Lý do: tránh conflict
+  và tránh làm vỡ panel dịch (đã qua quá nhiều vòng sửa).
+- Cấu trúc song song mac + Windows, 1 thư mục/tính năng, UI + logic nằm
+  chung trong đó (không tách quá nhỏ — 1 file cho 1 hàm thì khó tìm):
+  `FastRead/` (engine RSVP + cửa sổ đọc + view), `BreakTimer/` (timer
+  Pomodoro/focus/20-20-20 + tab, làm sau), `Shortcuts/` (1 view dùng chung
+  cho nút "?" nhúng + panel shortcut trong khung multi-tab, không copy-paste
+  2 bản — TODO refactor).
+- Khung tab giữ mỏng: 1 tab = 1 view + 1 tên, không gọi thẳng code dịch.
+- Chỉ chạm code chung ở chỗ nối mỏng (nút, menubar/tray, Alt+click, toggle
+  Settings). Cái dùng chung thật (icon float, hiện/ẩn panel, Settings,
+  provider dịch) thì giữ chung, không nhân bản.
+- Áp dụng đầu tiên: `FastRead/` trên nhánh `feature/fast-read-rsvp`.
+  Ghi đầy đủ hơn ở `DECISIONS.md` (mục cùng tên).
 
 ## Liên kết
 

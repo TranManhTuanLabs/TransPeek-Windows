@@ -52,7 +52,9 @@
 - **Mở thẳng tài liệu chính chủ Microsoft Learn TRƯỚC khi viết code.**
   Không dùng tên nhớ từ WPF/UWP, không tin trang thứ ba.
 - Bài học: con trỏ resize ngang sai 3 lần (`SizeWe` → `SizeEastWest` → đúng
-  `SizeWestEast`), CI đỏ #82–#84.
+  `SizeWestEast`), CI đỏ #82–#84. Cùng lỗi lặp lại 18/11: `BaselineAlignment`
+  trên `Run` là thuộc tính chỉ có ở WPF, WinUI không có — dùng là vỡ build
+  #178 (WMC0011); A+ vẽ bằng Grid chứa 2 TextBlock riêng thay vì 2 Run.
 
 ## 5. Quy tắc chung
 
@@ -73,7 +75,12 @@
 - Quyết định sản phẩm phải hỏi Manh trước, trừ khi anh liệt kê phương án và bảo Muse chọn.
 - **Doc workflow phải sync cập nhật mỗi khi thay đổi workflow (Manh 17/11):** sửa `.github/workflows/*` hay cấu hình test/build thì cập nhật `TEST-BUILD-WORKFLOW-GITHUB/GIT-CI-BUILD-SETUP.md` + `TEST-BUILD-WORKFLOW-GITHUB/BUILD-TEST-WORKFLOW-GITHUB-CI.md` trong cùng đợt, không dồn sang sau.
 
-## 6. Về Manh
+## 6. Tách module tính năng (mỗi tính năng 1 thư mục)
+
+- Tính năng mới viết riêng thư mục/module, không nhét vào code chính/code
+  dịch. Chi tiết + lý do: xem `ARCHITECTURE.md` §5 (nguyên tắc kiến trúc).
+
+## 7. Về Manh
 
 - Manh **không phải dân IT gốc, đang học, làm theo kiểu vibecode**. Giải thích bằng
   tiếng Việt đơn giản, ví dụ từ chính dự án, không dạy dồn dập. Vừa làm vừa dạy dần.

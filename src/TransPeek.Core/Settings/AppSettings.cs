@@ -82,7 +82,7 @@ public sealed class AppSettings
     /// was a touch wide) — files at version 1 get PanelWidth 420.</summary>
     public int SettingsVersion { get; set; } = 0;
     /// <summary>How long the trigger icon stays after the selection changes, in seconds.</summary>
-    public int TriggerIconAutoHideSeconds { get; set; } = 3;
+    public int TriggerIconAutoHideSeconds { get; set; } = 5;
     /// <summary>Global hotkey that shows the panel for the current selection.
     /// Win32 RegisterHotKey modifiers+key, e.g. "Control+Alt+T".</summary>
     public string TranslateHotkey { get; set; } = "Control+Alt+T";
@@ -147,6 +147,44 @@ public sealed class AppSettings
     /// <summary>Read the translation aloud automatically after a
     /// translation finishes.</summary>
     public bool AutoPlayTranslation { get; set; } = false;
+
+    // --- Fast Read / RSVP (feature/fast-read-rsvp) ---
+    /// <summary>What a click on the float icon does: "Speak" (read the
+    /// selection aloud, default) or "FastRead" (open the Fast Read
+    /// window). Alt+click does the OTHER action. ComboBox in Settings -&gt; General.</summary>
+    public string IconClickAction { get; set; } = "Speak";
+    /// <summary>Panel left: the "How the icon works" card starts
+    /// collapsed (remembered — Manh 2026-11-18, mac parity). Set when
+    /// the user collapses/expands the card by clicking its top bar.</summary>
+    public bool HowIconWorksCollapsed { get; set; } = false;
+    /// <summary>Fast Read speed in words per minute (100-2000,
+    /// default 275 — SwiftRead's default). Slider in the reader window.</summary>
+    public int RsvpWpm { get; set; } = 275;
+    /// <summary>Fast Read words shown per slide (1-6, default 1).</summary>
+    public int RsvpChunkSize { get; set; } = 1;
+    /// <summary>Fast Read word font size in points (40-450, default 110).
+    /// Picker in the reader window (mac round 7 options: 40, 48, 56,
+    /// 64, 72, 80, 88, 96, 104, 110, 120, 140, 160, 200, 250, 300,
+    /// 350, 400, 450); wheel over the focus word changes it by 2pt.</summary>
+    public double RsvpFontSize { get; set; } = 110;
+    /// <summary>Fast Read context (around) text size as a fraction of
+    /// the focus font size (0.25-1.00, default 0.40 — mac round 7).
+    /// "Context size" picker in the reader window; wheel over the
+    /// context text changes it by 5%.</summary>
+    public double RsvpContextSizeRatio { get; set; } = 0.40;
+    /// <summary>When the context around the focus word shows (mac
+    /// round 7, SwiftRead's contextDisplayStyle): "Always", "Paused"
+    /// (only show when paused, default) or "Never". Settings popover
+    /// in the reader window.</summary>
+    public string RsvpContextDisplay { get; set; } = "Paused";
+    /// <summary>Fast Read reader color scheme: "Light" (Black on White,
+    /// default) or "Dark" (White on Black). Settings popover in the
+    /// reader window (mac round 7).</summary>
+    public string RsvpColorScheme { get; set; } = "Light";
+    /// <summary>Fast Read window size in physical pixels, remembered
+    /// after resize (0 = auto: 70% x 55% of the work area, min 880x550).</summary>
+    public double RsvpWindowWidth { get; set; } = 0;
+    public double RsvpWindowHeight { get; set; } = 0;
 
     // --- General ---
     public bool LaunchAtLogin { get; set; } = false;

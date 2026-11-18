@@ -100,6 +100,17 @@
                 <ComboBoxItem Content="1000 ms" Tag="1000" />
             </ComboBox>
 
+            <!-- Click icon (Fast Read, feature/fast-read-rsvp, Manh
+                 2026-11-17): what a click on the float icon does.
+                 "Listen" is the default (read the selection aloud);
+                 "Fast Read" opens the RSVP reader instead. Alt+click
+                 always opens Fast Read regardless of this setting. -->
+            <ComboBox x:Name="IconClickActionCombo" x:Uid="Settings.General.IconClickAction" Header="Click icon"
+                      SelectionChanged="OnIconClickActionChanged">
+                <ComboBoxItem Content="Listen" Tag="Speak" />
+                <ComboBoxItem Content="Fast Read" Tag="FastRead" />
+            </ComboBox>
+
             <NumberBox x:Name="AutoHideBox" x:Uid="Settings.General.AutoHide" Header="Trigger icon hides after (seconds)"
                        Minimum="1" Maximum="30" SpinButtonPlacementMode="Compact"
                        ValueChanged="OnAutoHideChanged" />

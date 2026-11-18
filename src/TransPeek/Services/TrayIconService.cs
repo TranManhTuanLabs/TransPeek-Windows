@@ -56,6 +56,7 @@ public sealed class TrayIconService : IDisposable
         Action clipboardOcr,
         Action clipboardOcrTranslated,
         Action selectionTranslation,
+        Action fastRead,
         Action clipboardTranslation,
         Action screenshotCopy,
         Action scanBarcodes,
@@ -86,6 +87,12 @@ public sealed class TrayIconService : IDisposable
         _clipboardOcrTranslatedItem = Item("Tray.Menu.ClipboardOcrTranslated", "OCR to Clipboard - Translated", "\uE774", clipboardOcrTranslated);
         menu.Items.Add(_clipboardOcrTranslatedItem);
         menu.Items.Add(Item("Tray.Menu.SelectionTranslation", "Translate Selection", "\uE70F", selectionTranslation));
+        // Fast Read (RSVP, feature/fast-read-rsvp): speed-read the
+        // current selection in its own window. Sits right under
+        // Translate Selection (same "selection" group). Glyph E736
+        // ReadingMode (Segoe Fluent Icons, verified on Microsoft Learn
+        // 2026-11-17).
+        menu.Items.Add(Item("Tray.Menu.FastRead", "Fast Read", "\uE736", fastRead));
         _clipboardTranslationItem = Item("Tray.Menu.ClipboardTranslation", "Translate Clipboard", "\uE77F", clipboardTranslation);
         menu.Items.Add(_clipboardTranslationItem);
         menu.Items.Add(Item("Tray.Menu.ScreenshotCopy", "Screenshot Copy", "\uE722", screenshotCopy));

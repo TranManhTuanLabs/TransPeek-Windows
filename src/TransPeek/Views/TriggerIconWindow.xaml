@@ -4,25 +4,41 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <!-- 32 px window with a 30 px circle — mac parity (TriggerIconPanel:
-         32 pt panel, 30 pt circle inset 1 pt; see the link Manh asked
-         for: Sources/UI/TriggerIcon/TriggerIconPanel.swift). The mark is
-         the letter "A" (Manh 2026-11-14: keep "A", drop the Chinese
-         character), 14 pt like the mac symbol, REGULAR weight (not
-         Bold) and sea blue #0078D4 (Manh 2026-11-15 — the mac glyph
-         went .systemBlue the same day; the Windows circle stays white
-         and does NOT follow system dark/light yet — that is planned
-         for later). The mac bubble port (0.1.3.72, a XAML Path bubble
-         outline with "A" inside) looked bad — shadowed and off-size —
-         so it was reverted to the plain "A" (Manh 2026-11-14).
-         Clicking switches the mark to a speaker glyph (the visual state
-         for the listen/TTS mode; TTS audio itself is NOT built yet —
-         planned M2, after mac is stable). -->
+         32 pt panel, 30 pt circle inset 1 pt). Style B (Manh
+         2026-11-18, mac FLOAT_ICON_UX_SPEC §3 + §6): the icon always
+         previews the NEXT click, so it has three marks, one visible at
+         a time (see UpdateGlyph in the code-behind):
+         - BubbleMark: speech bubble (Segoe Fluent Icons Message E8BD,
+           verified on Microsoft Learn 2026-11-18), blue #0078D4 —
+           the next click will Speak. The old plain "A" lettermark
+           (Manh 2026-11-14) is gone; the mac bubble port (0.1.3.72, a
+           XAML Path bubble outline with "A" inside) looked bad, but a
+           font glyph is clean.
+         - APlusMark: custom-drawn Fast Read mark — bold "A" (15pt)
+           with a small bold "+" (8pt) as a superscript at the A's
+           top-right corner, turmeric #C7800D (rgb 0.78/0.50/0.05) so
+           it reads on light and dark — the next click will Fast Read,
+           and it also shows for 2.5s after any Fast Read trigger.
+         - SpeakerMark: E767 Volume — while speaking.
+         The circle stays white and does NOT follow system dark/light
+         yet — that is planned for later. -->
     <Grid Background="Transparent">
         <Border x:Name="IconBorder" Width="30" Height="30" CornerRadius="15"
                 Background="White" BorderBrush="#C8C8C8" BorderThickness="1">
             <Grid>
-                <TextBlock x:Name="LetterMark" Text="A" FontSize="14" FontWeight="Normal" Foreground="#0078D4"
-                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                <FontIcon x:Name="BubbleMark" Glyph="&#xE8BD;" FontSize="16" Foreground="#0078D4"
+                          HorizontalAlignment="Center" VerticalAlignment="Center" />
+                <!-- A+ mark: two TextBlocks in a Grid (NOT one TextBlock
+                     with two Runs — WinUI's Run has no BaselineAlignment;
+                     that is a WPF-only property, and using it broke the
+                     build #178 with WMC0011). The "+" sits at the A's
+                     top-right corner via alignment + margin. -->
+                <Grid x:Name="APlusMark" Visibility="Collapsed">
+                    <TextBlock Text="A" FontSize="15" FontWeight="Bold" Foreground="#C7800D"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <TextBlock Text="+" FontSize="8" FontWeight="Bold" Foreground="#C7800D"
+                               HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,4,5,0" />
+                </Grid>
                 <!-- Speaker mark (click = listen/TTS mode): E767 Volume —
                      the Windows 11 system speaker WITH sound waves. The
                      plain cone E992 "Volume0" (no waves, Manh's first

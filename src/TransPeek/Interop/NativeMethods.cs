@@ -29,6 +29,19 @@ internal static class NativeMethods
     public const ushort VK_CONTROL = 0x11;
     public const ushort VK_C = 0x43;
 
+    // ----- user32: global key state (Alt preview, Style B) -----
+    // GetAsyncKeyState reads the GLOBAL hardware key state — it works
+    // whatever app is frontmost, unlike GetKeyStateForCurrentThread,
+    // which only reflects keys delivered to this thread's windows. The
+    // float icon must see Alt held while the user selects text in
+    // ANOTHER app (mac bug, build #235: a local flags monitor never
+    // fired there). High bit (0x8000) = key is down. Polled every 0.1s
+    // while the icon is visible; see TriggerIconWindow.
+    public const ushort VK_MENU = 0x12;
+
+    [DllImport("user32.dll")]
+    public static extern short GetAsyncKeyState(ushort vKey);
+
     [StructLayout(LayoutKind.Sequential)]
     public struct INPUT
     {
