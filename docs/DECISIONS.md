@@ -2301,6 +2301,17 @@ an OS limit.)
   matching an entry) — it cannot do live filtering. For a searchable
   long list, AutoSuggestBox is the native control; do not reach for
   template-part digging (custom, fragile) to force ComboBox to do it.
+- **CI #190 follow-up (same commit round):** the first AutoSuggestBox
+  version failed with CS1061 at `LanguageComboBoxHelper.cs:108` —
+  `AutoSuggestBoxTextChangedEventArgs` has NO `QueryText` (verified on
+  Microsoft Learn: that args class has only `Reason`; `QueryText`
+  belongs to `AutoSuggestBoxQuerySubmittedEventArgs` only). The Learn
+  sentence "the event args QueryText property contains the text" was
+  about QuerySubmitted, and I applied it to TextChanged. Fix: read
+  the text from the control itself (`sender.Text`) in the TextChanged
+  handler. Lesson: when one sentence in the docs covers several
+  events, check WHICH args class it belongs to — do not carry a
+  property across event-args classes.
 
 ## CI #188 red: Microsoft.UI.Color does not exist (2026-11-19)
 

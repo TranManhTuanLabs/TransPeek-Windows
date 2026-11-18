@@ -105,7 +105,11 @@ public sealed class LanguageSuggestBoxHelper
         if (_suppress || args.Reason != AutoSuggestionBoxTextChangeReason.UserInput)
             return;
         // Live filter while typing; an empty query shows the full list.
-        _box.ItemsSource = FilteredList(args.QueryText);
+        // NOTE: AutoSuggestBoxTextChangedEventArgs has NO QueryText
+        // (CI #190) — only Reason. The text lives on the control
+        // itself (sender.Text); QueryText belongs to
+        // AutoSuggestBoxQuerySubmittedEventArgs only.
+        _box.ItemsSource = FilteredList(sender.Text);
     }
 
     private void OnSuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
