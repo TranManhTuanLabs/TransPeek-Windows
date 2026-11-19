@@ -269,6 +269,96 @@ card "How the icon works" bị đặt nhầm vào panel center thay vì panel le
   (Alt-click, menu chuột phải icon, nút "Fast Read" trong panel dịch, tray);
   phím tắt global chỉ là fallback, chưa làm.**
 
+## 11. Panel center + Panel left — thiết kế CHỐT (19/11/2026, theo v0.1.4 / build 248 mac)
+
+> Mục này chốt thiết kế HIỆN TẠI của panel center (dịch) và panel left
+> (shortcut) như đã ship — theo doc mac §10 (commit `937f0b6`,
+> v0.1.4 / build 248). Nó bổ sung §10 ở những chỗ khác nhau, đặc biệt
+> là các điểm Windows khác mac (ghi rõ ở từng mục). Các số nền tảng ở
+> §1–§5 không đổi (420×450 / min 400×450 / max 600×800 / cap output
+> 260 / snap-back +8).
+
+### 11.1 Khung 3 tab (hub) — thứ tự và hàng chấm
+
+- Thứ tự: **shortcut (trái, 1) / translate (giữa, 2, mặc định) / Fast
+  Read (phải, 3)**. Panel dịch ở giữa thì sang 2 bên đều 1 lần.
+- Top bar + bottom bar giống nhau trên mọi tab; chỉ nội dung giữa đổi
+  theo tab. **Khác mac: Windows đổi tab KHÔNG có animation fade**
+  (`ShowTab` chỉ đổi `Visibility` — mac fade 0.15s ease-out; Windows
+  chưa có, chưa ai yêu cầu).
+- **Hàng chấm ở bottom bar, dưới icon GitHub (TẠM THỜI)** — vị trí +
+  kích thước + chevron + lăn chuột xem §10. Sau này có thể dời lên
+  dưới hint cho đồng bộ mac (Manh 19/11) — hiện tại để tạm, không đổi.
+- Panel right là placeholder ("Fast Read — coming soon") cho tới khi
+  Fast Read window ship (icon ReadingMode E736 + "Fast Read" +
+  "Coming soon", căn giữa — xem §10).
+
+### 11.2 Panel center (dịch, tab mặc định)
+
+- **Top bar:** tên app "TransPeek" (**Bold, màu accent #0EA5E9**,
+  cỡ N) + slogan "Translate anywhere, Peek instantly!" (N−1, màu Gray
+  — **khác mac: Windows KHÔNG nghiêng**, mac nghiêng) + hint "Hover
+  icon to translate, Click to listen" (N−4, màu tertiary), căn giữa.
+  Cả hàng là vùng kéo di chuyển (caption region native). N =
+  `PopupTopBarFontSize`, mặc định 17 (17 / 16 / 13, khớp mac).
+- **Nội dung dịch:** ô nhập + hàng ngôn ngữ (Source ⇄ Target + Capture
+  OCR) + card kết quả provider (text cap 260, loa/Copy cố định ở đáy
+  card) + bảng shortcut của nút "?" nhúng ở ĐẦU ô output khi bấm +
+  hàng Actions + DictionaryBar (xem §2).
+- **Hàng Actions:** nút "Fast Read" ở đầu trái + nút "?" + Pin +
+  Settings ở đầu phải.
+- **Bảng "?" :** nhúng ở đầu ô output (ngay trên các card provider),
+  tiêu đề "Keyboard shortcuts" + nút đóng [×]. Liệt kê 10 shortcut +
+  nút Run. **Khác mac: bấm Run thì ẨN PANEL TRƯỚC rồi mới chạy**
+  (xem §10 — mac bấm Run thì chạy rồi về lại panel dịch; Windows ẩn
+  panel trước vì action cần màn hình trống, vd OCR mở khung chọn
+  vùng).
+- **Bottom bar (giống nhau mọi tab):** ảnh mark GitHub 16pt + link
+  "GitHub" căn giữa, text version ("Version X (Build CI #N)", ẩn số
+  build khi = 1) mờ (Gray 11pt, opacity 0.7) ở bên phải.
+
+### 11.3 Panel left (shortcut, tab tạm thời)
+
+- Tab này là **TẠM THỜI** — sau này dành cho timer focus / tomato /
+  rest-eyes. Hiện tại nó chứa bảng shortcut. Triển khai chi tiết xem
+  §10 (2 card + dãy share); mục này chỉ chốt lại thiết kế:
+  1. **Thẻ "How the icon works"** — ĐỘNG theo setting Click (Hover →
+     dịch; Click → Fast Read / Nghe; Alt+Click → hành động còn lại).
+     Thu gọn được (bấm toàn thanh top), trạng thái lưu trong Settings
+     (`HowIconWorksCollapsed`). Windows chỉ có 2 lựa chọn Click (Speak
+     / Fast Read) nên không có trường hợp Click = Translate như mac.
+  2. **Bảng "Keyboard Shortcuts"** — cùng bảng với nút "?" ở panel
+     center (dựng bằng cùng hàm `BuildShortcutRows` nên 2 chỗ không
+     bao giờ lệch nhau). Thu gọn được; card shortcuts mở lại mỗi lần
+     vào tab.
+  3. **Dãy share** — ở cuối nội dung cuộn: nhãn "Share TransPeek"
+     (11pt, xám, căn giữa) + dãy 6 icon share (căn giữa). KHÔNG tạo
+     card mới, KHÔNG dùng Spacer đẩy xuống đáy — khi 2 thẻ trên thu
+     gọn thì khoảng trống còn lại đến đáy để sau này thêm timer focus,
+     share chỉ chảy tự nhiên sau bảng shortcut.
+- Panel left KHÔNG ẩn bottom bar (icon GitHub + version vẫn hiện).
+
+### 11.4 Hàng chấm — mac vs Windows
+
+| Hạng mục | mac | Windows |
+|---|---|---|
+| Vị trí hàng chấm | Ngay dưới top bar (tạm thời, vòng 5) + nút chevron 2 bên | Ở bottom bar, dưới icon GitHub (tạm thời) — xem §10 |
+| Chuyển tab | Bấm chấm/chevron, vuốt trên hàng chấm, vuốt trackpad (50pt = 1 tab) | Bấm chấm/chevron (E76B/E76C), **lăn chuột** trên hàng chấm + topbar + bottom bar (throttle 0.4s) — **KHÔNG vuốt** (WinUI không có sẵn vuốt cho panel, phải tự chế, Manh chưa duyệt) |
+| Sau này | Chờ Manh quyết vị trí cuối | Có thể dời lên dưới hint như mac (Manh 19/11) — hiện tại để tạm |
+
+### 11.5 Chưa chốt trong mục này (hoãn sang 0.1.5)
+
+- Nút Fast Read ở panel center: thêm chút padding giữa icon và chữ.
+- Vị trí cuối cùng của hàng chấm — Windows: có thể dời lên dưới hint
+  như mac, hiện tại để tạm ở bottom bar.
+- **Ngôn ngữ 20 → 249: Windows ĐÃ XONG ở 0.1.4** (249 ngôn ngữ +
+  alias `pt`, dropdown tìm kiếm AutoSuggestBox — CI #191), nên không
+  nằm trong danh sách hoãn của Windows. Các mục còn lại trong §10.5
+  của mac (đổi tên Window Read, tăng bước đổi cỡ chữ vuốt trackpad
+  dọc) không áp cho Windows: Windows đã có top bar "Rapid Serial
+  Visual Presentation — RSVP" + title "TransPeek — Fast Read RSVP",
+  và đổi cỡ chữ bằng lăn chuột/kéo chứ không vuốt trackpad.
+
 ## Liên kết
 
 - [Icon float UX](FLOAT_ICON_UX_SPEC.md)
