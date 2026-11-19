@@ -2401,6 +2401,26 @@ Manh test bản 0.1.4.191: Google 249 ngôn ngữ ngon. 4 việc còn lại làm
   code main: không còn handler wheel nào đổi cỡ chữ. Anh test lại
   trên bản 192 (nhớ thoát hẳn bản 191 ở tray trước).
 
+## CI đỏ #193–#196 — `IsLoaded` không có trên Window (2026-11-19) — sửa ngay
+
+- **CI đỏ thật (cron 20:30 báo #195, đã kiểm chứng qua API):** #193
+  (`270485c`), #194 (`a54e02e6`), #195 (`d0d567a6`), #196
+  (`3af01b52`) đều FAILURE ở bước Build, cùng 1 lỗi:
+  `TranslatePanelWindow.xaml.cs(1374,14)` CS0103 — `The name
+  'IsLoaded' does not exist in the current context` (+ WMC9999 hệ
+  quả). Lỗi từ code fade đổi tab ở `270485c`: em viết `if
+  (!IsLoaded) return;` trong `FadeInTabContent` — `Window` trong
+  WinUI 3 KHÔNG có `IsLoaded` (chỉ `FrameworkElement` mới có;
+  `Window` không phải `FrameworkElement`). Run #197 (commit highlight
+  `c8eb77bb`) cũng chứa lỗi này nên sẽ đỏ theo.
+- **Sửa:** hỏi `Content` (RootGrid, là `FrameworkElement`): `if
+  (Content is not FrameworkElement root || !root.IsLoaded) return;`
+  — trước lần hiện đầu thì skip fade như ý ban đầu, sau khi load thì
+  fade bình thường. Bài học: tra Microsoft Learn trước khi dùng
+  property — `IsLoaded` chỉ có trên `FrameworkElement`, không có trên
+  `Window` (cùng họ lỗi tra tên API #188–#190: dùng tên theo trí nhớ
+  mà không kiểm chứng).
+
 ## Highlight focus mất khi chunk 2+ từ — sửa theo SwiftRead/mac (2026-11-19)
 
 - **Bug (Manh 20:29):** chọn Words 2–3 trở lên thì mất highlight nghệ

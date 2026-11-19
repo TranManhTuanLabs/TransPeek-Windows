@@ -1371,7 +1371,10 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
 
     private void FadeInTabContent(params UIElement[] elements)
     {
-        if (!IsLoaded)
+        // Window has no IsLoaded of its own (it is not a
+        // FrameworkElement — CS0103, CI #193-#196) — ask the content
+        // root instead.
+        if (Content is not FrameworkElement root || !root.IsLoaded)
             return;
         _tabFadeStoryboard?.Stop();
         foreach (var element in new UIElement[]
