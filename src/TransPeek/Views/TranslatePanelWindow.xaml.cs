@@ -985,7 +985,63 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
             mmi.ptMinTrackSize = new NativeMethods.POINT { X = minW, Y = minH };
             Marshal.StructureToPtr(mmi, lParam, false);
         }
+        if (uMsg == NativeMethods.WM_MOUSEWHEEL)
+        {
+            // Wheel over the title bar switches tabs (Manh 2026-11-19):
+            // the title bar is the native caption region (drag to
+            // move), and the OS swallows XAML pointer input there, so
+            // the XAML PointerWheelChanged on TitleBar never fires —
+            // the wheel only reaches the app as a window message.
+            // WM_MOUSEWHEEL carries the cursor in screen coordinates
+            // (lParam) and the delta in the high word of wParam. Only
+            // the title bar rect is handled here; wheel anywhere else
+            // falls through to the normal proc (XAML input, e.g.
+            // scrolling the output).
+            var delta = (short)((wParam.ToInt64() >> 16) & 0xFFFF);
+            if (delta != 0 && TryGetTitleBarScreenRect(hWnd, out var titleBar))
+            {
+                var x = (short)(lParam.ToInt64() & 0xFFFF);
+                var y = (short)((lParam.ToInt64() >> 16) & 0xFFFF);
+                if (x >= titleBar.Left && x < titleBar.Right && y >= titleBar.Top && y < titleBar.Bottom)
+                {
+                    var now = DateTime.UtcNow;
+                    if (now - _lastWheelTabSwitch >= TimeSpan.FromMilliseconds(400))
+                    {
+                        _lastWheelTabSwitch = now;
+                        CycleTab(delta < 0 ? 1 : -1);
+                    }
+                    return IntPtr.Zero; // handled — do not pass on.
+                }
+            }
+        }
         return NativeMethods.DefSubclassProc(hWnd, uMsg, wParam, lParam);
+    }
+
+    /// <summary>Title bar bounds in PHYSICAL screen pixels (for the
+    /// WM_MOUSEWHEEL branch above): the window rect from GetWindowRect
+    /// plus the title bar's bounds within the window (same DIP-to-
+    /// physical math as UpdateCaptionRegion). False when the row has
+    /// not been laid out yet.</summary>
+    private bool TryGetTitleBarScreenRect(IntPtr hWnd, out NativeMethods.RECT rect)
+    {
+        rect = default;
+        if (TitleBar.ActualWidth <= 0 || TitleBar.ActualHeight <= 0)
+            return false;
+        if (Content is not UIElement root)
+            return false;
+        if (!NativeMethods.GetWindowRect(hWnd, out var windowRect))
+            return false;
+        var bounds = TitleBar.TransformToVisual(root).TransformBounds(
+            new Windows.Foundation.Rect(0, 0, TitleBar.ActualWidth, TitleBar.ActualHeight));
+        var scale = WindowHelpers.DpiScale(this);
+        rect = new NativeMethods.RECT
+        {
+            Left = windowRect.Left + (int)Math.Round(bounds.X * scale),
+            Top = windowRect.Top + (int)Math.Round(bounds.Y * scale),
+            Right = windowRect.Left + (int)Math.Round((bounds.X + bounds.Width) * scale),
+            Bottom = windowRect.Top + (int)Math.Round((bounds.Y + bounds.Height) * scale),
+        };
+        return true;
     }
 
     /// <summary>Minimum panel height in DIPs, from the CURRENT content:
@@ -1309,15 +1365,18 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
 
     /// <summary>Mouse wheel to switch tabs (Manh 2026-11-18, like mac):
     /// scroll down = next tab, scroll up = previous tab. Attached to
-    /// the top bar (TitleBar), the whole bottom bar (DictionaryBar row
-    /// down through the footer with the GitHub icon + version), and
-    /// the dots row — so the wheel switches tabs from the top and
-    /// bottom edges, not only over the dots. One long scroll gesture
-    /// sends many wheel ticks, so ticks within 0.4s of a switch are
-    /// ignored — one long scroll = one tab switch, instead of flipping
-    /// through several tabs at once. The throttle is shared across
-    /// all three zones, so scrolling across a zone boundary cannot
-    /// double-switch.</summary>
+    /// the hint row, the whole bottom bar (DictionaryBar row down
+    /// through the footer with the GitHub icon + version), and the
+    /// dots row — so the wheel switches tabs from the top and bottom
+    /// edges, not only over the dots. The title bar (app name +
+    /// slogan) is the native caption region, so its wheel never
+    /// reaches XAML — it is caught in the window subclass instead
+    /// (WM_MOUSEWHEEL in MinSizeSubclassProc) and shares this same
+    /// 400 ms throttle, so scrolling across a zone boundary cannot
+    /// double-switch. One long scroll gesture sends many wheel ticks,
+    /// so ticks within 0.4s of a switch are ignored — one long scroll
+    /// = one tab switch, instead of flipping through several tabs at
+    /// once. The throttle is shared across all zones.</summary>
     private void OnTabSwitchWheel(object sender, PointerRoutedEventArgs e)
     {
         var delta = e.GetCurrentPoint((UIElement)sender).Properties.MouseWheelDelta;

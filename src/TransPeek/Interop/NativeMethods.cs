@@ -11,6 +11,7 @@ internal static class NativeMethods
 {
     // ----- user32: hotkeys -----
     public const int WM_HOTKEY = 0x0312;
+    public const uint WM_MOUSEWHEEL = 0x020A;
     public const int WM_QUIT = 0x0012;
     public const uint MOD_ALT = 0x0001;
     public const uint MOD_CONTROL = 0x0002;

@@ -3,9 +3,10 @@
 // panel (translate); click does the configured click action (Settings
 // -> General -> "Click icon": Speak, the default, or Fast Read).
 // Style B (Manh 2026-11-18, mac FLOAT_ICON_UX_SPEC §3 + §6): the icon
-// always previews the NEXT click — Speak = speech bubble (E8BD),
-// Fast Read = custom A+ (turmeric); Alt held flips the preview to the
-// OTHER action. After any Fast Read trigger the icon shows A+ for
+// always previews the NEXT click — Speak = plain A (not bold, Manh
+// 2026-11-19; the bubble E8BD is a backup style now), Fast Read =
+// custom A+ (turmeric); Alt held flips the preview to the OTHER
+// action, and the flip to Speak shows the speaker (E767). After any Fast Read trigger the icon shows A+ for
 // 2.5s as a confirmation, then hides. Alt for the CLICK comes straight
 // from the pointer event (mac handleIconClick reads
 // event.modifierFlags); the preview also polls the GLOBAL key state
@@ -183,7 +184,12 @@ public sealed partial class TriggerIconWindow : Window
             var altHeld = e.KeyModifiers.HasFlag(VirtualKeyModifiers.Menu);
             _altHeld = altHeld;
             var clickReads = string.Equals(App.Settings.IconClickAction, "FastRead", StringComparison.OrdinalIgnoreCase);
-            if (altHeld || clickReads)
+            // XOR, not OR (Manh 2026-11-19, CI #191 test): Alt FLIPS
+            // the action — Click=Read + Alt speaks, Click=Speak + Alt
+            // reads. The old `altHeld || clickReads` always read when
+            // Click=Read, so Alt+click opened Read instead of speaking
+            // even though the preview (which already used XOR) flipped.
+            if (altHeld != clickReads)
             {
                 _hoverTimer.Stop();
                 if (_isSpeaking)
@@ -372,20 +378,26 @@ public sealed partial class TriggerIconWindow : Window
     }
 
     /// <summary>Style B (Manh 2026-11-18, mac §3): the icon always
-    /// previews the NEXT click. Speak = speech bubble (E8BD, blue);
-    /// Fast Read = custom A+ (turmeric). Alt held flips the preview to
-    /// the OTHER action (next click = Alt+click). While speaking the
-    /// speaker shows for every setting; during the 2.5s Read linger
-    /// the A+ shows. Exactly one mark is visible.</summary>
+    /// previews the NEXT click. Speak = plain A (not bold, Manh
+    /// 2026-11-19 — the bubble E8BD is now a backup style only, kept
+    /// defined but never shown); Fast Read = custom A+ (turmeric).
+    /// Alt held flips the preview to the OTHER action — and the flip
+    /// to Speak shows the SPEAKER (E767), not the bubble (Manh
+    /// 2026-11-19: Alt+icon must change to the speaker). While
+    /// speaking the speaker shows for every setting; during the 2.5s
+    /// Read linger the A+ shows. Exactly one mark is visible.</summary>
     private void UpdateGlyph()
     {
         var clickReads = string.Equals(App.Settings.IconClickAction, "FastRead", StringComparison.OrdinalIgnoreCase);
         // Alt held => the next click is the other action.
         var showSpeaker = _isSpeaking && !_inReadLinger;
         var showRead = _inReadLinger || (!showSpeaker && (_altHeld != clickReads));
-        BubbleMark.Visibility = !showSpeaker && !showRead ? Visibility.Visible : Visibility.Collapsed;
+        // Next click speaks with Alt held => the speaker preview.
+        var showAltSpeak = !showSpeaker && !showRead && _altHeld;
+        BubbleMark.Visibility = Visibility.Collapsed; // backup style — kept, not shown.
+        PlainAMark.Visibility = !showSpeaker && !showRead && !showAltSpeak ? Visibility.Visible : Visibility.Collapsed;
         APlusMark.Visibility = showRead ? Visibility.Visible : Visibility.Collapsed;
-        SpeakerMark.Visibility = showSpeaker ? Visibility.Visible : Visibility.Collapsed;
+        SpeakerMark.Visibility = showSpeaker || showAltSpeak ? Visibility.Visible : Visibility.Collapsed;
     }
 
     /// <summary>Switch the mark to the speaker glyph (click = listen

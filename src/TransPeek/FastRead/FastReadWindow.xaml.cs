@@ -42,6 +42,18 @@ public sealed partial class FastReadWindow : Window
     /// syncs them from Settings (same _loading pattern as the Settings
     /// pages).</summary>
     private bool _loading = true;
+    /// <summary>Drag-to-resize state for the context area (Manh
+    /// 2026-11-19): press-hold left-click + drag UP/DOWN grows/shrinks
+    /// the Context size % (5% per 24 px of vertical drag, clamped
+    /// 25-100%). Only a vertical-dominant drag resizes — a horizontal
+    /// drag is text selection (select words to look them up), so it
+    /// must pass through untouched. The drag latches into resize mode
+    /// once it is clearly vertical; until then nothing is handled.</summary>
+    private bool _contextResizing;
+    private double _dragStartX;
+    private double _dragStartY;
+    private double _dragLastY;
+    private double _dragAccumulated;
 
     public FastReadWindow()
     {
@@ -50,15 +62,21 @@ public sealed partial class FastReadWindow : Window
         _timer.Tick += (_, _) => AdvanceSlide();
         if (Content is FrameworkElement contentRoot)
             contentRoot.KeyDown += OnKeyDown;
-        // Wheel over the progress slider steps one word, and wheel
-        // over the context resizes it — but a Slider and a ScrollViewer
-        // both consume the wheel themselves (seek / scroll) and mark
-        // it handled, so a plain XAML handler would never fire. Attach
-        // with handledEventsToo so the reader's wheel wins (Manh
-        // 2026-11-19). The focus word area is a plain Grid, so its
-        // wheel handler lives in XAML.
+        // Wheel over the progress slider steps one word — a Slider
+        // consumes the wheel itself (seek) and marks it handled, so a
+        // plain XAML handler would never fire. Attach with
+        // handledEventsToo so the reader's wheel wins (Manh 2026-11-19).
+        // The focus word area is a plain Grid, so its wheel handler
+        // lives in XAML. The context ScrollViewer scrolls natively on
+        // the wheel (no hijack — the wheel is scroll again since
+        // 2026-11-19). The drag-to-resize handlers below also use
+        // AddHandler with handledEventsToo, so they still see presses
+        // the selectable context text handles for its own selection.
         ProgressSlider.AddHandler(UIElement.PointerWheelChangedEvent, new PointerEventHandler(OnProgressWheelChanged), true);
-        ContextScroller.AddHandler(UIElement.PointerWheelChangedEvent, new PointerEventHandler(OnContextWheelChanged), true);
+        ContextScroller.AddHandler(UIElement.PointerPressedEvent, new PointerEventHandler(OnContextPointerPressed), true);
+        ContextScroller.AddHandler(UIElement.PointerMovedEvent, new PointerEventHandler(OnContextPointerMoved), true);
+        ContextScroller.AddHandler(UIElement.PointerReleasedEvent, new PointerEventHandler(OnContextPointerReleased), true);
+        ContextScroller.AddHandler(UIElement.PointerCaptureLostEvent, new PointerEventHandler(OnContextPointerCaptureLost), true);
         Closed += (_, _) => SaveWindowSize();
     }
 
@@ -479,40 +497,105 @@ public sealed partial class FastReadWindow : Window
         e.Handled = true;
     }
 
-    /// <summary>Wheel over the focus word (Manh 2026-11-19): scroll up
-    /// grows the focus size, scroll down shrinks it, 2pt per tick
-    /// (the old slider step), clamped 40-450. The picker shows the
-    /// nearest option — the value itself stays exact, like mac.</summary>
-    private void OnFocusWheelChanged(object sender, PointerRoutedEventArgs e)
+    /// <summary>Wheel over the focus word area (Manh 2026-11-19):
+    /// scrolls the context. The word area is NOT inside the scroller,
+    /// so the wheel would do nothing there — forward it (one notch is
+    /// ~40 px, close to the scroller's native wheel step). The wheel
+    /// no longer changes the focus size: it used to, but it clashed
+    /// with scrolling the context. Focus size changes via the bottom
+    /// picker (or Settings).</summary>
+    private void OnWordAreaWheelChanged(object sender, PointerRoutedEventArgs e)
     {
         var delta = e.GetCurrentPoint((UIElement)sender).Properties.MouseWheelDelta;
         if (delta == 0)
             return;
-        var size = Math.Clamp(WordTextBlock.FontSize + (delta > 0 ? 2 : -2), 40, 450);
-        ApplyFocusSize(size);
-        _loading = true;
-        SelectComboByTag(FocusSizeCombo, NearestFocusSize(size).ToString());
-        _loading = false;
+        var target = Math.Clamp(ContextScroller.VerticalOffset - delta / 3.0, 0, ContextScroller.ScrollableHeight);
+        ContextScroller.ChangeView(null, target, null);
         e.Handled = true;
     }
 
-    /// <summary>Wheel over the context text (Manh 2026-11-19): scroll
-    /// up grows the context size, scroll down shrinks it, 5% per tick,
-    /// clamped 25-100%. This replaces scrolling the context — the
-    /// wheel is the size control here.</summary>
-    private void OnContextWheelChanged(object sender, PointerRoutedEventArgs e)
+    /// <summary>Drag-to-resize, press: record the start, decide
+    /// nothing yet — a horizontal drag is text selection and must not
+    /// be disturbed. Only a press on the context text itself starts
+    /// a possible resize (a press on the scrollbar is a scroll, not
+    /// a resize). Do NOT mark handled.</summary>
+    private void OnContextPointerPressed(object sender, PointerRoutedEventArgs e)
     {
-        var delta = e.GetCurrentPoint((UIElement)sender).Properties.MouseWheelDelta;
-        if (delta == 0)
+        if (e.OriginalSource is not TextBlock)
             return;
-        var ratio = Math.Clamp(App.Settings.RsvpContextSizeRatio + (delta > 0 ? 0.05 : -0.05), 0.25, 1.00);
+        if (!e.GetCurrentPoint(ContextScroller).Properties.IsLeftButtonPressed)
+            return;
+        var point = e.GetCurrentPoint(ContextScroller).Position;
+        _dragStartX = point.X;
+        _dragStartY = point.Y;
+        _dragLastY = point.Y;
+        _dragAccumulated = 0;
+        _contextResizing = false;
+    }
+
+    /// <summary>Drag-to-resize, move: latch into resize mode only on
+    /// a clearly vertical drag (at least 12 px up/down and more
+    /// vertical than horizontal). Anything else (a click, a horizontal
+    /// selection drag) passes through untouched. Once resizing, one 5%
+    /// step per 24 px of vertical drag, accumulated across moves so a
+    /// slow drag still steps smoothly. Up grows, down shrinks — the
+    /// same direction as the old wheel.</summary>
+    private void OnContextPointerMoved(object sender, PointerRoutedEventArgs e)
+    {
+        if (!e.GetCurrentPoint(ContextScroller).Properties.IsLeftButtonPressed)
+            return;
+        var point = e.GetCurrentPoint(ContextScroller).Position;
+        if (!_contextResizing)
+        {
+            var dx = point.X - _dragStartX;
+            var dy = point.Y - _dragStartY;
+            if (Math.Abs(dy) < 12 || Math.Abs(dy) <= Math.Abs(dx))
+                return;
+            _contextResizing = true;
+            // Turn selection off while resizing, so the drag stops
+            // extending the selection. Restored on release.
+            ContextTextBlock.IsTextSelectionEnabled = false;
+        }
+        _dragAccumulated += point.Y - _dragLastY;
+        _dragLastY = point.Y;
+        var ratio = App.Settings.RsvpContextSizeRatio;
+        while (_dragAccumulated <= -24)
+        {
+            ratio += 0.05;
+            _dragAccumulated += 24;
+        }
+        while (_dragAccumulated >= 24)
+        {
+            ratio -= 0.05;
+            _dragAccumulated -= 24;
+        }
+        ratio = Math.Clamp(ratio, 0.25, 1.00);
+        if (Math.Abs(ratio - App.Settings.RsvpContextSizeRatio) < 0.001)
+            return;
         App.Settings.RsvpContextSizeRatio = ratio;
-        SettingsStore.Save(App.Settings);
         _loading = true;
         SelectComboByTag(ContextSizeCombo, NearestContextPercent(ratio * 100).ToString());
         _loading = false;
         UpdateContext();
         e.Handled = true;
+    }
+
+    private void OnContextPointerReleased(object sender, PointerRoutedEventArgs e)
+        => FinishContextResize();
+
+    private void OnContextPointerCaptureLost(object sender, PointerRoutedEventArgs e)
+        => FinishContextResize();
+
+    /// <summary>End a context resize drag (release, cancel, or lost
+    /// capture): restore text selection and save the size. Idempotent
+    /// — release and capture-lost can both fire for one drag.</summary>
+    private void FinishContextResize()
+    {
+        if (!_contextResizing)
+            return;
+        _contextResizing = false;
+        ContextTextBlock.IsTextSelectionEnabled = true;
+        SettingsStore.Save(App.Settings);
     }
 
     /// <summary>Color scheme (mac round 7): White on Black = dark

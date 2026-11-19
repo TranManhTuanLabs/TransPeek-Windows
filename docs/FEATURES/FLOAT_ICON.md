@@ -12,11 +12,20 @@
 - Alt-click → hành động còn lại (Click = Speak thì Alt+Click mở Fast Read;
   Click = Fast Read thì Alt+Click nghe). Chuột phải → menu có "Fast Read".
 - **Style B (Manh 2026-11-18): icon luôn hiện việc click tiếp theo sẽ làm** —
-  Speak = bong bóng E8BD xanh, Fast Read = A+ nghệ tự vẽ; giữ Alt thì đổi sang
-  việc còn lại. Sau bất kỳ lần bấm Read nào icon hiện A+ trong **2.5s** rồi mới ẩn.
+  Speak = chữ **A thường** (15pt, KHÔNG bold, nghệ #C7800D — về lại như
+  trước Style B, Manh 2026-11-19), Fast Read = A+ nghệ tự vẽ; giữ Alt thì
+  đổi sang việc còn lại, và lúc đổi sang Speak thì icon hiện **loa E767**
+  (không phải bong bóng). Bong bóng E8BD xanh giờ chỉ là **mẫu style dự
+  phòng** — vẫn định nghĩa trong code (`BubbleMark`, luôn ẩn) để sau cần
+  thì bật lại. Sau bất kỳ lần bấm Read nào icon hiện A+ trong **2.5s**
+  rồi mới ẩn.
 - Alt cho click đọc từ event con trỏ lúc bấm (`PointerPressed` + `KeyModifiers.Menu`),
   không đọc trạng thái global lúc tap (sửa 0.1.4 — Alt+click khi Click = Read trước
-  đây mở Read thay vì nghe; xem spec §2).
+  đây mở Read thay vì nghe; xem spec §2). **Sửa tiếp sau test CI #191
+  (Manh 2026-11-19):** nguyên nhân thật là handler click viết `altHeld ||
+  clickReads` (OR) thay vì XOR — Click=Read thì Alt+click lúc nào cũng vào
+  Read, dù preview (đã dùng XOR) đổi đúng. Sửa 1 dòng thành
+  `altHeld != clickReads`: Alt ĐỔI hành động, không ép về Read.
 
 ## 2. Cài đặt liên quan
 

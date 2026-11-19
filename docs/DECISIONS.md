@@ -2313,6 +2313,41 @@ an OS limit.)
   events, check WHICH args class it belongs to — do not carry a
   property across event-args classes.
 
+## CI #191 test feedback batch (2026-11-19)
+
+Manh test bản 0.1.4.191: Google 249 ngôn ngữ ngon. 4 việc còn lại làm gộp
+1 commit sau khi duyệt khung:
+
+- **Window Read — wheel về cuộn, kéo để đổi cỡ:** wheel trên vùng đọc
+  (chữ focus + context) về lại cuộn context (trước đây wheel đổi cỡ chữ,
+  trùng với cuộn); kéo giữ left-click lên/xuống trên vùng context đổi
+  Context size % (±5% mỗi 24 px, kẹp 25–100%, lưu khi thả chuột). Chỉ kéo
+  dọc hẳn mới đổi cỡ (≥12 px, dọc nhiều hơn ngang) — kéo ngang là bôi
+  chọn text (context đã bật `IsTextSelectionEnabled` để tra từ). Kéo lăn
+  chuột trên thanh progress vẫn bước từng từ. Focus size chỉ đổi bằng
+  picker dưới đáy (không còn wheel).
+- **Panel — wheel chuyển tab trên topbar:** hàng hint gắn handler XAML
+  (trước đây thiếu); hàng tên app/slogan ĐÃ có handler XAML nhưng không
+  chạy — nguyên nhân: hàng này là vùng caption native (kéo di chuyển
+  panel) nên hệ thống nuốt mất event wheel, XAML không bao giờ nhận
+  được. Sửa bằng cách bắt `WM_MOUSEWHEEL` trong window subclass
+  (`MinSizeSubclassProc`, đã có sẵn cho min-size), kiểm tra con trỏ có
+  trong hình chữ nhật TitleBar không rồi chuyển tab, dùng chung throttle
+  0.4s với các vùng XAML. Sau này có thể đưa 3 chấm lên dưới hint cho
+  đồng bộ mac (chưa làm — chỉ ghi lại).
+- **Icon — A thường (không bold), bong bóng làm dự phòng:** icon thường
+  về chữ A 15pt không bold màu nghệ (như trước Style B); bong bóng E8BD
+  giữ nguyên trong code (`BubbleMark`, luôn ẩn) + ghi doc làm mẫu style
+  dự phòng.
+- **Alt+click — nguyên nhân thật (CI #191):** handler click viết
+  `altHeld || clickReads` (OR) thay vì XOR — Click=Read thì Alt+click
+  lúc nào cũng vào Read, dù preview đã dùng XOR nên icon đổi đúng mà
+  click thì không. Sửa 1 dòng thành `altHeld != clickReads`. Preview Alt
+  cũng đổi: giữ Alt + Click=Read thì icon hiện loa E767 thay vì bong
+  bóng. Bài học: khi preview và hành động dùng 2 công thức khác nhau
+  (preview XOR, click OR) thì icon nói một đằng, click làm một nẻo —
+  phải dùng cùng 1 công thức cho cả 2.
+
 ## CI #188 red: Microsoft.UI.Color does not exist (2026-11-19)
 
 - Run #188 (head 5e9734b) failed at Build in 16s: CS0234 in
