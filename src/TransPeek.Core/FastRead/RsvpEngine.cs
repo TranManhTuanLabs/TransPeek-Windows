@@ -113,9 +113,19 @@ public static class RsvpEngine
                 }
                 var delay = ComputeSlideDelay(chunk, paragraphEnd, wpm, chunkSize);
                 var slideText = string.Join(" ", chunk);
-                // ORP highlight only for a single word (Sprint Reader):
-                // a multi-word slide has no single pivot character.
-                var pivot = chunk.Count == 1 ? PivotCharIndex(chunk[0]) : -1;
+                // ORP highlight (SwiftRead, like mac): the middle word
+                // of the chunk (floor(n/2)) carries the pivot — its
+                // middle character, as an offset into the joined text
+                // — so the orange highlight never disappears at chunk
+                // 2+. (Was: pivot -1 for multi-word, Sprint Reader
+                // style — the highlight vanished, Manh 2026-11-19.)
+                var pivotWordIndex = chunk.Count / 2;
+                // Offset of the pivot word inside the joined text:
+                // every earlier word plus its joining space.
+                var pivotOffset = 0;
+                for (var i = 0; i < pivotWordIndex; i++)
+                    pivotOffset += chunk[i].Length + 1;
+                var pivot = pivotOffset + PivotCharIndex(chunk[pivotWordIndex]);
                 slides.Add(new RsvpSlide(slideText, chunk, index, pivot, delay, paragraphEnd));
                 total += delay;
                 index += chunk.Count;

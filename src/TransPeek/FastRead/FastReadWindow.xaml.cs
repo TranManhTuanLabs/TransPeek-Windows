@@ -176,7 +176,8 @@ public sealed partial class FastReadWindow : Window
         }
         else
         {
-            // Multi-word slide: no single pivot, center the whole text.
+            // No pivot (should not happen — every slide has one since
+            // 2026-11-19, SwiftRead-style): center the whole text.
             LeftRun.Text = slide.Text;
             PivotRun.Text = "";
             RightRun.Text = "";

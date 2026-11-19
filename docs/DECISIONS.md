@@ -2401,6 +2401,28 @@ Manh test bản 0.1.4.191: Google 249 ngôn ngữ ngon. 4 việc còn lại làm
   code main: không còn handler wheel nào đổi cỡ chữ. Anh test lại
   trên bản 192 (nhớ thoát hẳn bản 191 ở tray trước).
 
+## Highlight focus mất khi chunk 2+ từ — sửa theo SwiftRead/mac (2026-11-19)
+
+- **Bug (Manh 20:29):** chọn Words 2–3 trở lên thì mất highlight nghệ
+  ở focus. Nguyên nhân: `RsvpEngine.Build` đặt `PivotCharIndex = -1`
+  cho slide nhiều từ (kiểu Sprint Reader — "multi-word slide has no
+  single pivot"), nên `ShowSlide` đi nhánh else, cả chunk nằm trong
+  `LeftRun`, không còn ký tự pivot nghệ.
+- **Cách SwiftRead làm (đối chiếu thẳng mã mac `RSVPEngine.swift`
+  `buildSlides` + `RSVPView.orpLine`):** từ giữa chunk (`floor(n/2)`)
+  mang pivot — ký tự giữa của từ đó, tính thành offset trong chuỗi
+  nối; view tách chuỗi tại offset đó: trước (màu thường) + ký tự
+  pivot (cam) + sau (màu thường), ghim pivot tại điểm cố định.
+  Highlight không bao giờ mất, chunk 1–6 đều có.
+- **Sửa Windows y hệt mac:** engine tính `pivotWordIndex =
+  chunk.Count / 2`, `pivot = offset(từ giữa) +
+  PivotCharIndex(từ giữa)` (offset = tổng độ dài các từ trước + 1
+  khoảng trắng mỗi từ); `ShowSlide` + `AlignPivot` không đổi (đã làm
+  việc trên chuỗi nối + pivot bất kỳ). Test cũ
+  `Build_ChunkLargerThanOne_HasNoPivot` (assert -1) đổi thành
+  `Build_ChunkLargerThanOne_PivotOnMiddleWord` ("one two" → 5, ký tự
+  'w' của "two"; "three" → 2; chunk 3 → 5).
+
 ## Version vào Window Read + mô tả panel right giống mac (2026-11-19)
 
 - **Version (Manh 20:23, chọn "Cạnh Reading time (bên trái)"):** thêm

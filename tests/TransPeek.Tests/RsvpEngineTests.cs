@@ -54,10 +54,16 @@ public sealed class RsvpEngineTests
     }
 
     [Fact]
-    public void Build_ChunkLargerThanOne_HasNoPivot()
+    public void Build_ChunkLargerThanOne_PivotOnMiddleWord()
     {
+        // SwiftRead (like mac): the middle word of the chunk carries
+        // the pivot — "one two" pivots on the 'w' of "two" (index 5),
+        // the leftover "three" pivots on its own middle char (index 2).
         var doc = RsvpEngine.Build("one two three", 275, 2);
-        Assert.Equal(-1, doc.Slides[0].PivotCharIndex);
+        Assert.Equal(5, doc.Slides[0].PivotCharIndex);
+        Assert.Equal(2, doc.Slides[1].PivotCharIndex);
+        var three = RsvpEngine.Build("one two three", 275, 3);
+        Assert.Equal(5, three.Slides[0].PivotCharIndex);
         var single = RsvpEngine.Build("hello", 275, 1);
         Assert.Equal(2, single.Slides[0].PivotCharIndex);
     }

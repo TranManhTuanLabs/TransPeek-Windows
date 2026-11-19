@@ -97,10 +97,12 @@ Keyboard (only while the window has focus): `Space` play/pause,
   `chunk × WPM ≤ 100` (slow reading needs no extra pauses). Minus 30 ms
   execution overhead per slide, clamped to at least 10 ms.
 - **ORP pivot = middle character, `floor(n/2)`, orange `#F6861F`.**
-  Only for single-word slides (a multi-word slide has no single pivot);
-  the window aligns it by measuring the word and shifting it with a
-  `TranslateTransform` so the pivot char's center sits exactly at the
-  word area's center.
+  SwiftRead-style (like mac): the middle word of a chunk
+  (`floor(n/2)`) carries the pivot — its middle character, as an
+  offset into the joined text — so the orange highlight never
+  disappears at chunk 2+. The window aligns it by measuring the text
+  and shifting it with a `TranslateTransform` so the pivot char's
+  center sits exactly at the word area's center.
 - **Paragraphs** are runs of non-empty lines (blank lines separate).
 - **Context ±150 words** on pause (`RsvpDocument.Context`).
 
