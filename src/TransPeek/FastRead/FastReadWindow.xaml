@@ -122,7 +122,7 @@
                     <TextBlock x:Name="VersionText" FontSize="12" Foreground="Gray"
                                VerticalAlignment="Top" ToolTipService.ToolTip="TransPeek version" />
                 </StackPanel>
-                <TextBlock Text="Space play/pause • ←/→ step • ↑/↓ speed • Wheel ↑/↓ focus size • Scroll context • Drag ↑/↓ size" FontSize="12" Foreground="Gray"
+                <TextBlock Text="Space play/pause • ←/→ step • ↑/↓ speed • Wheel ↑/↓ focus size" FontSize="12" Foreground="Gray"
                            HorizontalAlignment="Right" VerticalAlignment="Top" />
             </Grid>
         </Grid>

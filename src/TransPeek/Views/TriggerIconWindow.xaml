@@ -17,8 +17,9 @@
            can be restored by using it in UpdateGlyph again. The old
            plain "A" lettermark (Manh 2026-11-14) is back as PlainAMark.
          - PlainAMark: the normal icon — a plain "A" (15pt, NOT bold,
-           turmeric #C7800D like the A in A+), shown when the next click
-           will Speak and Alt is not held.
+           blue #0078D4, Style 1 — Manh 2026-11-19: Click=Listen shows
+           a non-bold blue A, not the turmeric one), shown when the next
+           click will Speak and Alt is not held.
          - APlusMark: custom-drawn Fast Read mark — bold "A" (15pt)
            with a small bold "+" (8pt) as a superscript at the A's
            top-right corner, turmeric #C7800D (rgb 0.78/0.50/0.05) so
@@ -36,8 +37,9 @@
                 <FontIcon x:Name="BubbleMark" Glyph="&#xE8BD;" FontSize="16" Foreground="#0078D4"
                           HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed" />
                 <!-- Plain A (Manh 2026-11-19): the normal icon again —
-                     NOT bold. Same size and color as the A in A+. -->
-                <TextBlock x:Name="PlainAMark" Text="A" FontSize="15" Foreground="#C7800D"
+                     NOT bold, blue #0078D4 (Style 1) — the Click=Listen
+                     idle icon is the blue A, not turmeric. -->
+                <TextBlock x:Name="PlainAMark" Text="A" FontSize="15" FontWeight="Normal" Foreground="#0078D4"
                            HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed" />
                 <!-- A+ mark: two TextBlocks in a Grid (NOT one TextBlock
                      with two Runs — WinUI's Run has no BaselineAlignment;

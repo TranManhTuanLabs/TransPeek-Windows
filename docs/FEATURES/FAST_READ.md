@@ -1,6 +1,7 @@
 # Fast Read (RSVP) — speed reading in its own window
 
-> Status: v1 on branch `feature/fast-read-rsvp` (2026-11-17). Not merged.
+> Status: v1 on main since 0.1.4 (merged PR #1, 2026-11-19). The UX below
+> is the settled Windows style — see "Settled style".
 > Engine + window + entry points. Global shortcut is a fallback — not in v1.
 
 ## What it is
@@ -21,7 +22,7 @@ pause context — none of that fits the 420 px translate panel. Default
 (`RsvpWindowWidth` / `RsvpWindowHeight` in Settings). Single instance:
 re-opening focuses the existing window and loads the new text.
 
-Layout (top to bottom, Manh 2026-11-19 — temporary, mac RSVPView round 7):
+Layout (top to bottom — settled Windows style, Manh 2026-11-19; see "Settled style" below):
 
 - **Top bar:** "Rapid Serial Visual Presentation — RSVP" (15pt semibold)
   truly centered on the window (full-width TextBlock, buttons overlay
@@ -35,8 +36,9 @@ Layout (top to bottom, Manh 2026-11-19 — temporary, mac RSVPView round 7):
   inside the block text ("Reading time: 2mins", under a minute "0min"),
   with the **version** right after it ("0.1.4 (build 192)" — same
   format as the panel footer, Manh 2026-11-19); **hint** top-right
-  ("Space play/pause • ←/→ step • ↑/↓ speed • Wheel ↑/↓ focus size •
-  Scroll context • Drag ↑/↓ size").
+  ("Space play/pause • ←/→ step • ↑/↓ speed • Wheel ↑/↓ focus size" —
+  shortened 2026-11-19; the scroll/drag gestures live in this doc, not
+  the hint).
 - **Pause context:** ±150 words around the current slide, the current
   words bold + orange. When it shows follows the Settings popover
   (Always / Only show when paused / Never); its size is the focus size
@@ -82,6 +84,56 @@ Keyboard (only while the window has focus): `Space` play/pause,
 `Left`/`Right` step a slide, `Up`/`Down` WPM ±10, `R` restart,
 `Esc`/`Q` close. Handled via `KeyDown` on the root — not
 `KeyboardAccelerator` (see the panel's Esc-pill lesson).
+
+## Settled style — Windows Fast Read (Manh 2026-11-19)
+
+This is the locked UX/UI/behaviour for the Windows reader — one design
+style, not the only one. It can change later: converge to mac, or gain
+another style variant. Until Manh says otherwise, this section is the
+spec — code and docs follow it, and changing it is a decision, not a
+tweak.
+
+- **Window:** title "TransPeek — Fast Read RSVP". Default 70% × 55% of
+  the work area, min 880×550, size remembered after resize. Single
+  instance; re-opening focuses it and loads the new text. Not topmost.
+- **Top bar:** subtitle "Rapid Serial Visual Presentation — RSVP"
+  (15pt semibold, truly centered); Settings gear (E713) + "?" at the
+  right; left empty. (Mac dropped the "— RSVP" suffix on 2026-11-19;
+  Windows keeps it as part of this style.)
+- **Reading area:** focus slide centered on its ORP pivot, focal ticks
+  above/below. Reading time top-left ("Reading time: 2mins", "0min"
+  under a minute) with the version right after it ("0.1.4 (build N)",
+  same format as the panel footer); hint top-right ("Space play/pause
+  • ←/→ step • ↑/↓ speed • Wheel ↑/↓ focus size"). Pivot pinned at
+  the area's center (mac pins at 35% width).
+- **Context:** ±150 words, current words bold + orange, below the focus
+  slide (MaxHeight 120); shows per Settings (Always / Only when paused
+  / Never, default Paused); size = focus × Context size % (default 40%).
+- **Progress:** seek slider + status (`Slide 12 / 240 • 1:23 left •
+  240 words`).
+- **Bottom bar:** Words picker (1–6, default 1) + Speed slider
+  (100–2000, default 275) left; Restart / Rewind / Play-Pause /
+  Fast-forward / Maximize centered (Restart first); Context size picker
+  (25–100%, default 40%) + Focus size picker (40–450, default 110)
+  right.
+- **Scroll (wheel):** over the progress slider = step one word (down =
+  next); over the focus word = focus size ±5pt per tick (40–450, picker
+  shows the nearest option; the around text scales with it); over the
+  context = scroll it natively.
+- **Mouse:** press-hold left-click + drag UP/DOWN on the context =
+  context size ±5% per 24 px (25–100%, saved on release); only a
+  vertical-dominant drag resizes (≥12 px, more vertical than
+  horizontal) — a horizontal drag is text selection. Window border =
+  resize; caption = move.
+- **Keyboard (window focused):** Space play/pause, ←/→ step a slide,
+  ↑/↓ speed ±10, R restart, Esc/Q close.
+- **Pivot highlight (SwiftRead, like mac):** the middle word of a chunk
+  (`floor(n/2)`) carries the pivot — its middle character, orange
+  #F6861F — so the highlight never disappears at chunk 2+.
+- **Settings popover (gear):** Color Scheme + "Show context around
+  focus word" + Reset to default (speed 275, focus 110, context 40%,
+  display Paused; color scheme is NOT reset). "?" popover: the
+  shortcuts above.
 
 ## The engine
 
@@ -133,7 +185,7 @@ and the shortcut panel — still a TODO refactor, not this branch).
 float icon (plain click with Click = Fast Read, Alt+click, right-click menu)
 the icon shows A+ for **2.5s** as a confirmation, then hides; clicks are
 ignored during those 2.5s. The icon always previews the next click (Speak =
-bubble E8BD, Fast Read = A+); see `docs/UI/UX_DESIGN/FLOAT_ICON_UX_SPEC.md`.
+plain A, Fast Read = A+); see `docs/UI/UX_DESIGN/FLOAT_ICON_UX_SPEC.md`.
 
 **Text source** (in order): the panel's source text (button path) →
 fresh selection (< 10 s old, else the clipboard re-grab) → clipboard

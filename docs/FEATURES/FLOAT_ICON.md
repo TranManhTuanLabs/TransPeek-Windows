@@ -11,14 +11,17 @@
 
 | Glyph | Hành động |
 |---|---|
-| **A thường** (15pt, KHÔNG bold, blue highlight/border) | **Translate** (icon chính) |
+| **A thường** (15pt, KHÔNG bold, chữ A màu xanh dương — Windows `#0078D4`) | **Translate** (icon chính) |
 | **A+** (chữ A đậm + dấu + nhỏ, nghệ #C7800D) | **Fast Read** |
 | **Loa** (E767 Volume) | **TTS / Speak** |
 
 ### Hai style của icon translate (Manh 2026-11-19)
 
-- **Style 1 — mẫu chuẩn / mẫu chính:** chữ A thường, KHÔNG bold, blue
-  highlight/border. Đây mới là icon translate đúng chuẩn.
+- **Style 1 — mẫu chuẩn / mẫu chính:** chữ A thường, KHÔNG bold, chữ A
+  màu xanh dương. "Blue" là màu của CHÍNH CHỮ A — không phải viền vòng
+  tròn hay nền highlight. Ví dụ của Manh: như icon ô chat Style 2 — chữ
+  A màu xanh, và viền ô chat bọc chữ A cũng màu xanh. Đây mới là icon
+  translate đúng chuẩn.
 - **Style 2 — dùng tạm thay chính:** icon ô chat (speech bubble E8BD).
   Ô chat KHÔNG phải icon translate — chỉ dùng tạm thay cho Style 1, giữ
   làm mẫu style dự phòng trong code (`BubbleMark`, luôn ẩn) + docs.
@@ -26,15 +29,18 @@
   build 191 phát hiện, đã cho về lại A thường (2026-11-19).
 
 Chữ A thường (Style 1) là chữ "A" vẽ bằng text (như A+, không phải
-FontIcon), KHÔNG bold, blue highlight/border. Nó là icon chính: bản chất
+FontIcon), KHÔNG bold, chữ A màu xanh dương (Windows `#0078D4`, cùng màu
+xanh với ô chat E8BD). Nó là icon chính: bản chất
 của icon là "translate", còn A+ / loa cùng họ "A" thể hiện 2 hành động
 còn lại.
 
-Windows hiện tại (từ commit `1ffcbb7`): chữ A thường đang là nghệ
-#C7800D, vòng tròn trắng viền xám #C8C8C8 — chưa theo blue
-highlight/border của mẫu chuẩn. Đợt này chỉ ghi doc theo yêu cầu từ chat
-mac (mac commit `0cc7181`); đổi code Windows sang chuẩn blue khi Manh
-bảo, như cách mac ghi nợ code gap của họ.
+Windows hiện tại: chữ A thường (`PlainAMark`, preview khi click tiếp
+theo là Speak) đã là màu xanh dương `#0078D4`, KHÔNG bold — theo đúng
+mẫu chuẩn từ commit này (Manh 2026-11-19: "Click=Listen thì ... chuyển A
+không bold sang blue cho đúng thiết kế"). Trước đó (từ `1ffcbb7`) nó đang
+là nghệ #C7800D. Vòng tròn trắng viền xám #C8C8C8 giữ nguyên. (Phần làm
+rõ "blue" này sửa local từ 19:00 ngày 19/11 mà push bị hết hạn thẻ duyệt,
+tới nay mới đẩy được cùng đợt đổi màu A.)
 
 **Ô chat / speech bubble (E8BD) KHÔNG phải icon translate** — không được
 thay A thường bằng ô chat. Ô chat chỉ giữ lại làm mẫu style dự phòng trong

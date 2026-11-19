@@ -378,9 +378,10 @@ public sealed partial class TriggerIconWindow : Window
     }
 
     /// <summary>Style B (Manh 2026-11-18, mac §3): the icon always
-    /// previews the NEXT click. Speak = plain A (not bold, Manh
-    /// 2026-11-19 — the bubble E8BD is now a backup style only, kept
-    /// defined but never shown); Fast Read = custom A+ (turmeric).
+    /// previews the NEXT click. Speak = plain A (not bold, blue
+    /// #0078D4 — Style 1, Manh 2026-11-19; the bubble E8BD is now a
+    /// backup style only, kept defined but never shown); Fast Read =
+    /// custom A+ (turmeric).
     /// Alt held flips the preview to the OTHER action — and the flip
     /// to Speak shows the SPEAKER (E767), not the bubble (Manh
     /// 2026-11-19: Alt+icon must change to the speaker). While

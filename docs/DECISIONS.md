@@ -2401,6 +2401,31 @@ Manh test bản 0.1.4.191: Google 249 ngôn ngữ ngon. 4 việc còn lại làm
   code main: không còn handler wheel nào đổi cỡ chữ. Anh test lại
   trên bản 192 (nhớ thoát hẳn bản 191 ở tray trước).
 
+## Hint rút ngắn + icon A xanh + chốt style Window Read (2026-11-19)
+
+- **Hint rút ngắn (Manh 21:55):** bỏ "Scroll context" + "Drag ↑/↓
+  size" khỏi hint trong vùng đọc — hint còn "Space play/pause • ←/→
+  step • ↑/↓ speed • Wheel ↑/↓ focus size". Các thao tác cuộn/kéo vẫn
+  ghi đầy đủ trong `FAST_READ.md` (đoạn Wheel + drag), không mất.
+- **Icon A xanh (Manh 21:55):** Click=Listen (Speak) thì icon lúc
+  select text là chữ A nghệ — đổi `PlainAMark` sang xanh dương
+  `#0078D4` (cùng màu xanh với ô chat E8BD), KHÔNG bold
+  (`FontWeight="Normal"` ghi rõ trong XAML). Đây chính là A thường
+  Style 1 theo thiết kế ("blue" = màu của chính chữ A, Manh 18:06).
+  A+ (Fast Read) giữ nguyên đậm + nghệ. Đồng thời ghi luôn phần làm rõ
+  "blue" vào `FLOAT_ICON.md` — phần này sửa local từ 19:00 mà push
+  bị hết hạn thẻ duyệt, tới nay mới đẩy được.
+- **Chốt style Window Read (Manh 21:55):** thêm mục "Settled style"
+  vào `FAST_READ.md` — khoá UX/UI/hành vi: scroll (wheel), chuột
+  (kéo), phím tắt, vị trí các thành phần. Đây là 1 style thiết kế của
+  Windows, sau này có thể thay đổi — đổi giống mac hoặc thêm style
+  khác. Khác mac đáng chú ý: subtitle Windows giữ hậu tố "— RSVP"
+  (mac bỏ 2026-11-19); version nằm cạnh Reading time (mac: góc phải
+  trên, trái nút Settings); pivot ghim giữa vùng đọc (mac: 35% chiều
+  rộng). Sửa luôn dòng Status stale trong doc (v1 đã lên main từ
+  0.1.4, không còn "Not merged") + câu "(Speak = bubble E8BD...)"
+  trong mục A+ linger (bubble chỉ còn là backup).
+
 ## CI đỏ #198 — biến `i` trùng trong RsvpEngine (2026-11-19) — sửa ngay
 
 - **CI run #198 (commit `b52f61a8`) ĐỎ, bước Build:** `RsvpEngine.cs(126,26)` CS0136 — `A local or parameter named 'i' cannot be declared in this scope because that name is used in an enclosing local scope`. Lỗi từ code highlight ở `c8eb77bb`: vòng `for (var i = 0; i < pivotWordIndex; i++)` nằm trong `while` mà ngoài đã có `var i = 0` (chỉ số từ trong đoạn) — C# cấm khai báo trùng tên với biến ở scope ngoài. Lỗi IsLoaded đã hết (không còn xuất hiện ở #198).
