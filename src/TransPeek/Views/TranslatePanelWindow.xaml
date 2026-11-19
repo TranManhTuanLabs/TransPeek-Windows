@@ -442,15 +442,17 @@
             </StackPanel>
         </ScrollViewer>
 
-        <!-- Panel right — Fast Read placeholder (Manh 2026-11-17): the real
-             Fast Read window comes later, on branch
-             feature/fast-read-rsvp. ReadingMode glyph E736 (Segoe
-             Fluent Icons, verified on Microsoft Learn 2026-11-17). -->
+        <!-- Panel right — Fast Read placeholder, description mirrored
+             from mac (Manh 2026-11-19, PopupView.fastReadContent):
+             mac shows "Fast Read — coming soon" + "Fast reading (RSVP)
+             will live here once the Fast Read window is ready."
+             ReadingMode glyph E736 kept (closest Segoe glyph to mac's
+             book.pages icon; verified on Microsoft Learn 2026-11-17). -->
         <Grid x:Name="FastReadTabPanel" Grid.Row="1" Grid.RowSpan="7" Visibility="Collapsed">
-            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="4">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8" Margin="16,0">
                 <FontIcon Glyph="&#xE736;" FontSize="32" Foreground="Gray" HorizontalAlignment="Center" />
-                <TextBlock Text="Fast Read" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center" />
-                <TextBlock Text="Coming soon" FontSize="12" Foreground="Gray" HorizontalAlignment="Center" />
+                <TextBlock Text="Fast Read — coming soon" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" />
+                <TextBlock Text="Fast reading (RSVP) will live here once the Fast Read window is ready." FontSize="12" Foreground="Gray" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" />
             </StackPanel>
         </Grid>
 

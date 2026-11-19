@@ -2401,6 +2401,24 @@ Manh test bản 0.1.4.191: Google 249 ngôn ngữ ngon. 4 việc còn lại làm
   code main: không còn handler wheel nào đổi cỡ chữ. Anh test lại
   trên bản 192 (nhớ thoát hẳn bản 191 ở tray trước).
 
+## Version vào Window Read + mô tả panel right giống mac (2026-11-19)
+
+- **Version (Manh 20:23, chọn "Cạnh Reading time (bên trái)"):** thêm
+  `VersionText` vào hàng trên của vùng đọc, ngay sau "Reading time"
+  (StackPanel ngang, cách 8px), cùng cỡ 12pt xám. Định dạng giống
+  footer panel: `"{Version} (build {CiBuildNumber})"` (vd "0.1.4
+  (build 192)"), chỉ hiện version khi không có số build. Đặt trong
+  constructor `FastReadWindow` (giống `FooterBuildText` ở panel).
+- **Mô tả panel right (Manh 20:23, "mô tả panel right, để như bên
+  mac"):** đối chiếu thẳng mac `PopupView.fastReadContent` — Windows
+  đổi từ 2 dòng "Fast Read" + "Coming soon" thành y hệt mac: tiêu đề
+  "Fast Read — coming soon" (16pt Semibold) + dòng mô tả "Fast
+  reading (RSVP) will live here once the Fast Read window is ready."
+  (12pt xám, căn giữa, tự xuống dòng, lề ngang 16). Icon giữ E736
+  ReadingMode — Segoe không có glyph `book.pages` của mac, E736 là
+  glyph gần nhất (đã kiểm chứng Learn 17/11). Khoảng cách StackPanel
+  4 → 8 cho giống VStack spacing 8 của mac.
+
 ## Khôi phục wheel focus text = đổi focus size (2026-11-19) — sửa mục trên
 
 - Manh (20:08): "bản 191 anh thích chỗ wheel chuột ở focus text nó

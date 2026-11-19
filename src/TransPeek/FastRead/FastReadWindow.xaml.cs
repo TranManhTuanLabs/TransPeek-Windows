@@ -59,6 +59,12 @@ public sealed partial class FastReadWindow : Window
     {
         InitializeComponent();
         Title = "TransPeek — Fast Read RSVP";
+        // Version right after Reading time, same format as the panel
+        // footer (Manh 2026-11-19): "0.1.4 (build 192)", or just the
+        // version when there is no CI build number.
+        VersionText.Text = AppInfo.CiBuildNumber > 0
+            ? $"{AppInfo.Version} (build {AppInfo.CiBuildNumber})"
+            : AppInfo.Version;
         _timer.Tick += (_, _) => AdvanceSlide();
         if (Content is FrameworkElement contentRoot)
             contentRoot.KeyDown += OnKeyDown;

@@ -101,6 +101,8 @@
              (top-left) and the hint (top-right) sit INSIDE the block
              text (Manh 2026-11-19) — an overlay at the top of the
              reading area, so the word stays vertically centered.
+             The version (same format as the panel footer) sits right
+             after Reading time (Manh 2026-11-19).
              Wheel over the focus word changes the focus size
              (Manh 2026-11-19, restored from 191): scroll up grows,
              scroll down shrinks, 5pt per tick, clamped 40-450. To
@@ -114,8 +116,12 @@
                 <Rectangle Width="2" Height="16" Fill="#C8C8C8" HorizontalAlignment="Center" Margin="0,10,0,0" />
             </StackPanel>
             <Grid VerticalAlignment="Top">
-                <TextBlock x:Name="ReadingTimeText" Text="Reading time: 0min" FontSize="12" Foreground="Gray"
-                           HorizontalAlignment="Left" VerticalAlignment="Top" ToolTipService.ToolTip="Estimated reading time" />
+                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Left" VerticalAlignment="Top">
+                    <TextBlock x:Name="ReadingTimeText" Text="Reading time: 0min" FontSize="12" Foreground="Gray"
+                               VerticalAlignment="Top" ToolTipService.ToolTip="Estimated reading time" />
+                    <TextBlock x:Name="VersionText" FontSize="12" Foreground="Gray"
+                               VerticalAlignment="Top" ToolTipService.ToolTip="TransPeek version" />
+                </StackPanel>
                 <TextBlock Text="Space play/pause • ←/→ step • ↑/↓ speed • Wheel ↑/↓ focus size • Scroll context • Drag ↑/↓ size" FontSize="12" Foreground="Gray"
                            HorizontalAlignment="Right" VerticalAlignment="Top" />
             </Grid>

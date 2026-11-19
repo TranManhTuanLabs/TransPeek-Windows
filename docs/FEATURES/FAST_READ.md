@@ -32,9 +32,11 @@ Layout (top to bottom, Manh 2026-11-19 — temporary, mac RSVPView round 7):
   mac's left pickers live in the bottom bar on Windows.
 - **Word area:** the current slide, centered on its ORP pivot (see below),
   with two short focal ticks above/below it. **Reading time** top-left
-  inside the block text ("Reading time: 2mins", under a minute "0min");
-  **hint** top-right ("Space play/pause • ←/→ step • ↑/↓ speed •
-  Wheel ↑/↓ focus size • Scroll context • Drag ↑/↓ size").
+  inside the block text ("Reading time: 2mins", under a minute "0min"),
+  with the **version** right after it ("0.1.4 (build 192)" — same
+  format as the panel footer, Manh 2026-11-19); **hint** top-right
+  ("Space play/pause • ←/→ step • ↑/↓ speed • Wheel ↑/↓ focus size •
+  Scroll context • Drag ↑/↓ size").
 - **Pause context:** ±150 words around the current slide, the current
   words bold + orange. When it shows follows the Settings popover
   (Always / Only show when paused / Never); its size is the focus size
