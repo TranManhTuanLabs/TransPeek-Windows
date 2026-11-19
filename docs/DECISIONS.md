@@ -2401,6 +2401,11 @@ Manh test bản 0.1.4.191: Google 249 ngôn ngữ ngon. 4 việc còn lại làm
   code main: không còn handler wheel nào đổi cỡ chữ. Anh test lại
   trên bản 192 (nhớ thoát hẳn bản 191 ở tray trước).
 
+## CI đỏ #198 — biến `i` trùng trong RsvpEngine (2026-11-19) — sửa ngay
+
+- **CI run #198 (commit `b52f61a8`) ĐỎ, bước Build:** `RsvpEngine.cs(126,26)` CS0136 — `A local or parameter named 'i' cannot be declared in this scope because that name is used in an enclosing local scope`. Lỗi từ code highlight ở `c8eb77bb`: vòng `for (var i = 0; i < pivotWordIndex; i++)` nằm trong `while` mà ngoài đã có `var i = 0` (chỉ số từ trong đoạn) — C# cấm khai báo trùng tên với biến ở scope ngoài. Lỗi IsLoaded đã hết (không còn xuất hiện ở #198).
+- **Sửa:** đổi biến vòng lặp thành `j` (`for (var j = 0; j < pivotWordIndex; j++)`). Bài học: đặt tên biến vòng lặp phải kiểm tra biến cùng tên đang sống ở scope ngoài — nhất là khi chèn code vào giữa hàm có sẵn.
+
 ## CI đỏ #193–#196 — `IsLoaded` không có trên Window (2026-11-19) — sửa ngay
 
 - **CI đỏ thật (cron 20:30 báo #195, đã kiểm chứng qua API):** #193

@@ -123,8 +123,8 @@ public static class RsvpEngine
                 // Offset of the pivot word inside the joined text:
                 // every earlier word plus its joining space.
                 var pivotOffset = 0;
-                for (var i = 0; i < pivotWordIndex; i++)
-                    pivotOffset += chunk[i].Length + 1;
+                for (var j = 0; j < pivotWordIndex; j++)
+                    pivotOffset += chunk[j].Length + 1;
                 var pivot = pivotOffset + PivotCharIndex(chunk[pivotWordIndex]);
                 slides.Add(new RsvpSlide(slideText, chunk, index, pivot, delay, paragraphEnd));
                 total += delay;
