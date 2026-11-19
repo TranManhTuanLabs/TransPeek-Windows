@@ -24,6 +24,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Animation;
 using TransPeek.Assets;
 using TransPeek.Core.Dictionary;
 using TransPeek.Core.Settings;
@@ -1346,6 +1347,57 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
                 WindowHelpers.MoveAndResize(this, AppWindow.Position.X, AppWindow.Position.Y, w, h);
             }
         }
+
+        // Fade the incoming tab in (Manh 2026-11-19, like mac).
+        if (showTranslate)
+            FadeInTabContent(SourceTextBox, SourceOverlayPanel, HintTextBlock, LanguageBarGrid,
+                ProviderCardBorder, ActionsPanel, DictionaryBarControl, EmbeddedShortcutsCard);
+        else if (tab == PanelTab.Shortcuts)
+            FadeInTabContent(ShortcutsTabPanel);
+        else
+            FadeInTabContent(FastReadTabPanel);
+    }
+
+    /// <summary>Tab-switch fade (Manh 2026-11-19, like mac): the
+    /// incoming tab's content fades in over 0.15s, ease-out. Only a
+    /// fade-in — the outgoing tab just hides (its elements are
+    /// Collapsed by ShowTab). A running fade is stopped and every tab
+    /// element's opacity restored first, so a fast double-switch never
+    /// leaves an element half-transparent. Skipped while the window
+    /// is not loaded yet (first show) — the content then just
+    /// appears, and the opacities are never touched, so nothing can
+    /// get stuck invisible.</summary>
+    private Storyboard? _tabFadeStoryboard;
+
+    private void FadeInTabContent(params UIElement[] elements)
+    {
+        if (!IsLoaded)
+            return;
+        _tabFadeStoryboard?.Stop();
+        foreach (var element in new UIElement[]
+        {
+            SourceTextBox, SourceOverlayPanel, HintTextBlock, LanguageBarGrid,
+            ProviderCardBorder, ActionsPanel, DictionaryBarControl,
+            EmbeddedShortcutsCard, ShortcutsTabPanel, FastReadTabPanel,
+        })
+            element.Opacity = 1;
+        var storyboard = new Storyboard();
+        foreach (var element in elements)
+        {
+            element.Opacity = 0;
+            var animation = new DoubleAnimation
+            {
+                From = 0,
+                To = 1,
+                Duration = new Duration(TimeSpan.FromMilliseconds(150)),
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
+            };
+            Storyboard.SetTarget(animation, element);
+            Storyboard.SetTargetProperty(animation, "Opacity");
+            storyboard.Children.Add(animation);
+        }
+        _tabFadeStoryboard = storyboard;
+        storyboard.Begin();
     }
 
     private void OnTabDotClicked(object sender, RoutedEventArgs e)

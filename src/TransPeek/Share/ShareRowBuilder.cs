@@ -13,6 +13,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
+using TransPeek.Views;
 using Windows.System;
 
 namespace TransPeek.Share;
@@ -40,7 +41,10 @@ public static class ShareRowBuilder
             Background = BadgeBackground(platform),
             Child = BadgeContent(platform),
         };
-        var button = new Button
+        // Hand cursor on hover (Manh 2026-11-19, About): the button is
+        // a HandCursorButton, not a plain Button — WinUI 3 only lets a
+        // subclass set ProtectedCursor.
+        var button = new HandCursorButton
         {
             Content = badge,
             Padding = new Thickness(0),

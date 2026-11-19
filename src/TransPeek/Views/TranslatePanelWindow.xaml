@@ -340,12 +340,18 @@
              mỗi lần vào tab. Spans rows 1-7 (the whole tab content
              area); the shortcuts card takes the leftover height and
              scrolls if the 10 rows do not fit. -->
-        <Grid x:Name="ShortcutsTabPanel" Grid.Row="1" Grid.RowSpan="7" Visibility="Collapsed">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
+        <!-- Panel left content scrolls as ONE list now (Manh
+             2026-11-19, like mac): a single ScrollViewer holding the
+             How card + shortcuts table + share row, instead of a
+             3-row Grid with a fixed share row at the bottom. The
+             share row used to be a fixed Auto row taking ~50pt from
+             the shortcuts card — space the future focus/tomato/
+             rest-eyes timer will need. Now it flows at the end of
+             the scroll content (like mac's ScrollView): collapsing
+             the cards leaves the empty space below for the timer. -->
+        <ScrollViewer x:Name="ShortcutsTabPanel" Grid.Row="1" Grid.RowSpan="7" Visibility="Collapsed"
+                      VerticalScrollBarVisibility="Auto">
+            <StackPanel>
             <!-- Card "How the icon works" (mac parity, FlowIntroCard):
                  the flow in one place — Hover icon to translate, Click
                  icon to listen, Alt + Click for Fast Read, and where to
@@ -355,7 +361,7 @@
                  EA80 (Segoe Fluent Icons, verified on Microsoft Learn
                  2026-11-18 — mac uses cursorarrow.click, Windows has
                  no such glyph). -->
-            <Border Grid.Row="0" Margin="0,0,0,8" CornerRadius="6" BorderThickness="1"
+            <Border Margin="0,0,0,8" CornerRadius="6" BorderThickness="1"
                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
                 <Grid>
@@ -400,13 +406,13 @@
                  click it to close/open the card. Title icon:
                  KeyboardShortcut EDA7 (Segoe Fluent Icons, verified
                  on Microsoft Learn 2026-11-18). -->
-            <Border Grid.Row="1" CornerRadius="6" BorderThickness="1"
+            <Border CornerRadius="6" BorderThickness="1"
                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
                     <Button x:Name="ShortcutsCardHeaderButton" Grid.Row="0" Click="OnShortcutsCardHeaderClicked"
                             Background="Transparent" BorderThickness="0" Padding="8,6"
@@ -417,29 +423,24 @@
                             <TextBlock Text="Keyboard shortcuts" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
-                    <ScrollViewer x:Name="ShortcutsCardBody" Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <StackPanel x:Name="ShortcutsCardBody" Grid.Row="1">
                         <StackPanel x:Name="ShortcutsTabRowsPanel" Spacing="2" Margin="8,0,8,8" />
-                    </ScrollViewer>
+                    </StackPanel>
                 </Grid>
             </Border>
             <!-- Share (Manh 2026-11-19, mirrors mac d414700): the same
                  row of share buttons as the Fast Read completion window
                  and About — no card around it, no Spacer pushing it to
-                 the bottom (the space left when the 2 cards collapse is
-                 reserved for a future focus timer). It sits below the
-                 shortcuts card, so it shows without scrolling when the
-                 cards collapse; the shortcuts card keeps its own
-                 scroller for the 10 rows. Windows adaptation: mac puts
-                 it at the end of the left panel's single ScrollView;
-                 Windows has no such ScrollView (each card scrolls
-                 itself), so the row is a third Auto row in this Grid —
-                 it takes ~50pt from the shortcuts card, never from the
-                 panel height, so auto-fit needs no change. -->
-            <StackPanel Grid.Row="2" Margin="0,8,0,0" Spacing="4">
+                 the bottom. It is the LAST item in this scroll content
+                 (like mac's ScrollView): when the 2 cards collapse the
+                 space left below is reserved for a future focus timer,
+                 and the share just flows after the shortcuts table. -->
+            <StackPanel Margin="0,8,0,0" Spacing="4">
                 <TextBlock Text="Share TransPeek" FontSize="11" Foreground="Gray" HorizontalAlignment="Center" />
                 <StackPanel x:Name="LeftShareRowPanel" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center" />
             </StackPanel>
-        </Grid>
+            </StackPanel>
+        </ScrollViewer>
 
         <!-- Panel right — Fast Read placeholder (Manh 2026-11-17): the real
              Fast Read window comes later, on branch

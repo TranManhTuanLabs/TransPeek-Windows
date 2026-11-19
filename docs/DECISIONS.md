@@ -2366,6 +2366,41 @@ Manh test bản 0.1.4.191: Google 249 ngôn ngữ ngon. 4 việc còn lại làm
   not per family (same family as the CI #80 `Windows.UI.Colors` trap,
   but the opposite direction).
 
+## Đợt sửa 2026-11-19 (fade tab, chuột bàn tay About, share panel left) — chờ CI
+
+- **Fade đổi tab 0.15s ease-out (như mac):** `ShowTab` fade-in nội dung
+  tab mới bằng `Storyboard` + `DoubleAnimation` trên `Opacity`
+  (`Microsoft.UI.Xaml.Media.Animation`), chỉ fade vào, tab cũ ẩn luôn.
+  Fade đang chạy thì dừng + trả hết opacity về 1 trước khi fade mới,
+  nên lật tab nhanh không để lại element mờ dở; bỏ qua fade khi cửa sổ
+  chưa load (lần mở đầu tiên) để không kẹt opacity 0.
+- **About: nút bấm được hiện chuột bàn tay:** WinUI 3 không có thuộc
+  tính Cursor public — `UIElement.ProtectedCursor` là `protected`
+  (Microsoft Learn), chỉ set được từ trong subclass của control, nên
+  làm 2 subclass nhỏ (`HandCursorButton`, `HandCursorHyperlinkButton`
+  trong `src/TransPeek/Views/CursorButtons.cs`) tự set hand cursor khi
+  load (không set được trước khi visual tree load). Dùng cho 7 nút/link
+  ở About (Repo, ReleaseNotes, CheckUpdates, DownloadUpdate, ShowQR,
+  CopyAccount, Restart) + nút share trong `ShareRowBuilder` (About và
+  panel left cùng dùng — cả 2 đều bấm được nên tay cầm là đúng).
+- **Panel left: share vào cuối nội dung cuộn (giống mac):**
+  `ShortcutsTabPanel` từ Grid 3 hàng (How / shortcuts / share cố
+  định) thành 1 `ScrollViewer` chung chứa How card + shortcuts +
+  share; `ShortcutsCardBody` từ `ScrollViewer` thành `StackPanel`
+  (chỉ còn cuộn ngoài). Hàng share cố định cũ lấy ~50pt từ card
+  shortcuts, tốn chỗ của timer focus/tomato/rest-eyes sau này.
+  Không đổi code-behind: `ShortcutsCardBody.Visibility` (dòng duy
+  nhất dùng nó) vẫn chạy trên StackPanel; `BuildShortcutRows` vẫn
+  dựng vào `ShortcutsTabRowsPanel`.
+- **Window Read wheel (Manh 19:55 — KHÔNG sửa code):** anh mô tả ô
+  outside text ở "bản CI trước" là hover + scroll chuột giữa tăng
+  giảm font size — đó là hành vi của bản 191. Bản 192 (`1ffcbb7`)
+  đã làm đúng như anh yêu cầu: wheel trên ô outside text = cuộn
+  chữ (native ScrollViewer + forward từ WordArea), bấm giữ
+  left-click kéo lên/xuống = to/nhỏ outside text. Đã kiểm chứng
+  code main: không còn handler wheel nào đổi cỡ chữ. Anh test lại
+  trên bản 192 (nhớ thoát hẳn bản 191 ở tray trước).
+
 ## Liên kết
 
 - [Bối cảnh AI](AI_CONTEXT.md)
