@@ -92,7 +92,7 @@
             <TextBlock x:Uid="Settings.General.WatchSelectionHint" Text="When on, the trigger icon appears whenever you select text. When off, the app only responds to hotkeys and the tray menu."
                        FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
 
-            <ComboBox x:Name="HoverDelayCombo" x:Uid="Settings.General.HoverDelay" Header="How long to hover before the panel opens"
+            <ComboBox x:Name="HoverDelayCombo" x:Uid="Settings.General.HoverDelay" Header="How long to hover before the panel opens (default: 500 ms)"
                       SelectionChanged="OnHoverDelayChanged">
                 <ComboBoxItem Content="300 ms" Tag="300" />
                 <ComboBoxItem Content="500 ms" Tag="500" />
@@ -111,9 +111,20 @@
                 <ComboBoxItem Content="Fast Read" Tag="FastRead" />
             </ComboBox>
 
-            <NumberBox x:Name="AutoHideBox" x:Uid="Settings.General.AutoHide" Header="Trigger icon hides after (seconds)"
-                       Minimum="1" Maximum="30" SpinButtonPlacementMode="Compact"
-                       ValueChanged="OnAutoHideChanged" />
+            <!-- Auto-hide (Manh 2026-11-19): a ComboBox like Click icon
+                 above, not a NumberBox — the same fixed steps (default
+                 5 seconds). An older saved value outside the list falls
+                 back to the 5-second item on load (see code-behind). -->
+            <ComboBox x:Name="AutoHideCombo" x:Uid="Settings.General.AutoHide" Header="Trigger icon hides after (default: 5 seconds)"
+                      SelectionChanged="OnAutoHideChanged">
+                <ComboBoxItem Content="1 second" Tag="1" />
+                <ComboBoxItem Content="2 seconds" Tag="2" />
+                <ComboBoxItem Content="3 seconds" Tag="3" />
+                <ComboBoxItem Content="5 seconds" Tag="5" />
+                <ComboBoxItem Content="10 seconds" Tag="10" />
+                <ComboBoxItem Content="15 seconds" Tag="15" />
+                <ComboBoxItem Content="30 seconds" Tag="30" />
+            </ComboBox>
 
             <!-- Appearance (Manh 2026-11-15): a section INSIDE General,
                  NOT a separate tab. "Setting Text Size" sits directly

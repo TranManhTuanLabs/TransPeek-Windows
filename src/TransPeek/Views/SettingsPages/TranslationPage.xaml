@@ -5,6 +5,11 @@
 
     <ScrollViewer>
         <StackPanel Spacing="12" MaxWidth="560" HorizontalAlignment="Left">
+            <!-- AI note (Manh 2026-11-19): AI translation IS supported —
+                 OpenAI-compatible endpoints, bring your own key (see the
+                 "Custom OpenAI-compatible endpoint" section below). -->
+            <TextBlock x:Uid="Settings.Translation.AiNote" Text="AI translation is supported via OpenAI-compatible APIs — add your endpoint below with your own API key (OpenAI, DeepSeek, or any compatible service)."
+                       FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
             <ComboBox x:Name="PrimaryProviderCombo" x:Uid="Settings.Translation.PrimaryProvider" Header="Primary provider"
                       SelectionChanged="OnPrimaryChanged" />
             <ComboBox x:Name="FallbackProviderCombo" x:Uid="Settings.Translation.FallbackProvider" Header="Fallback provider"

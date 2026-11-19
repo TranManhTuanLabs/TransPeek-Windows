@@ -49,7 +49,16 @@ public sealed partial class GeneralPage : Page
             _ => 0, // 300 ms (or an older saved value) -> first item.
         };
         IconClickActionCombo.SelectedIndex = string.Equals(s.IconClickAction, "FastRead", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
-        AutoHideBox.Value = s.TriggerIconAutoHideSeconds;
+        AutoHideCombo.SelectedIndex = s.TriggerIconAutoHideSeconds switch
+        {
+            1 => 0,
+            2 => 1,
+            3 => 2,
+            10 => 4,
+            15 => 5,
+            30 => 6,
+            _ => 3, // 5 seconds (or an older saved value) -> default item.
+        };
         MainFontSizeSlider.Value = s.PopupFontSize;
         MainFontSizeSlider.Header = MainFontSizeLabel(s.PopupFontSize);
         FontSizeSlider.Value = s.PopupTopBarFontSize;
@@ -104,10 +113,14 @@ public sealed partial class GeneralPage : Page
         }
     }
 
-    private void OnAutoHideChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
+    private void OnAutoHideChanged(object sender, SelectionChangedEventArgs e)
     {
-        App.Settings.TriggerIconAutoHideSeconds = Math.Max(1, (int)args.NewValue);
-        Save();
+        if (AutoHideCombo.SelectedItem is ComboBoxItem item
+            && item.Tag is string tag && int.TryParse(tag, out var seconds))
+        {
+            App.Settings.TriggerIconAutoHideSeconds = Math.Max(1, seconds);
+            Save();
+        }
     }
 
     // Main content font size (Manh 2026-11-15): the panel's source +

@@ -14,6 +14,10 @@
             </ComboBox>
             <TextBlock x:Uid="Settings.Tts.ServiceNote" Text="System built-in, no configuration needed."
                        FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
+            <!-- API note (Manh 2026-11-19): natural-voice TTS via an
+                 API is not here yet — system voices only for now. -->
+            <TextBlock x:Uid="Settings.Tts.ApiNote" Text="TTS Speech API for natural voices is coming soon."
+                       FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
 
             <!-- Preferences (mac audio tab, "Preferences"). No "target
                  accent" row here (Manh 2026-11-16): the per-language

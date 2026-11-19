@@ -2401,6 +2401,30 @@ Manh test bản 0.1.4.191: Google 249 ngôn ngữ ngon. 4 việc còn lại làm
   code main: không còn handler wheel nào đổi cỡ chữ. Anh test lại
   trên bản 192 (nhớ thoát hẳn bản 191 ở tray trước).
 
+## Settings defaults + Auto-hide dropdown + AI/TTS notes (2026-11-19)
+
+- **Mặc định trong nhãn (Manh 22:26, sau test 200):** Hover delay
+  giờ ghi "(default: 500 ms)"; Auto-hide giờ ghi "(default:
+  5 seconds)". Giá trị mặc định vẫn như cũ (500ms / 5s).
+- **Auto-hide thành ComboBox (Manh 22:26):** `AutoHideBox`
+  (NumberBox 1–30s) → `AutoHideCombo` (dropdown giống Click icon),
+  các mức 1 / 2 / 3 / 5 / 10 / 15 / 30 giây. Tên giữ nguyên
+  "Trigger icon hides after". Load/save theo đúng mẫu của
+  HoverDelayCombo (switch + Tag); giá trị cũ ngoài danh sách (vd 7s)
+  về mặc định 5s khi mở trang. Chỉ còn tham chiếu trong GeneralPage.
+- **AI API dịch — ĐÃ HỖ TRỢ, không phải coming soon:** tab
+  Translations đã có sẵn: Primary/Fallback provider, bật/tắt từng
+  provider, thêm endpoint OpenAI-compatible (nút Add OpenAI / Add
+  DeepSeek + Name / Base URL / Model / API key) — endpoint thêm vào
+  xuất hiện ngay trong danh sách provider. Thêm ghi chú đầu tab:
+  "AI translation is supported via OpenAI-compatible APIs — add your
+  endpoint below with your own API key (OpenAI, DeepSeek, or any
+  compatible service)." (BYOK; key đang lưu plain text, nợ Credential
+  Locker như đã ghi trong tab.)
+- **TTS Speech:** thêm ghi chú dưới Service: "TTS Speech API for
+  natural voices is coming soon." ("comming" của anh sửa thành
+  "coming".) Hiện chỉ có giọng hệ thống.
+
 ## Hint rút ngắn + icon A xanh + chốt style Window Read (2026-11-19)
 
 - **Hint rút ngắn (Manh 21:55):** bỏ "Scroll context" + "Drag ↑/↓
