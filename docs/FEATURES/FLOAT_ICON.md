@@ -5,6 +5,36 @@
 
 ## 1. Tính năng
 
+### Glyph mapping đã chốt (Manh 2026-11-19 — đừng đổi nữa)
+
+1 glyph = 1 hành động, đã chốt cho cả mac + Windows:
+
+| Glyph | Hành động |
+|---|---|
+| **A thường** (15pt, KHÔNG bold, nghệ #C7800D) | **Translate** (icon chính) |
+| **A+** (chữ A đậm + dấu + nhỏ, nghệ #C7800D) | **Fast Read** |
+| **Loa** (E767 Volume) | **TTS / Speak** |
+
+**Ô chat / speech bubble (E8BD) KHÔNG phải icon translate** — không được
+thay A thường bằng ô chat. Ô chat chỉ giữ lại làm mẫu style dự phòng trong
+code (`BubbleMark`, luôn ẩn) + ghi trong doc này, sau này cần thì bật lại
+được. (Windows đã đổi nhầm A thường sang ô chat từ 1-2 bản trước, Manh
+test build 191 phát hiện, đã cho về lại A thường ở commit `1ffcbb7` —
+ghi rõ ở đây để không tái diễn.)
+
+Lưu ý: A thường KHÔNG bold (Manh sửa lại 2026-11-19). A+ vẫn đậm như cũ.
+Mac đã ghi tương tự vào `docs/UI/UX_DESIGN/FLOAT_ICON_UX_SPEC.md` §3
+(commit `7e5e4cd`).
+
+Khác với ý tưởng translate-first ở §3 (idle LUÔN là A, A+/loa chỉ là
+feedback sau khi bấm — CHƯA làm): Style B vẫn là preview click tiếp theo,
+chỉ là glyph của preview giờ theo mapping này.
+
+Code gap (mac, ghi để Windows biết): code mac hiện vẫn đang vẽ
+`character.bubble` cho preview translate/speak (`TriggerTrackingView.draw()`)
+— chưa theo mapping mới, sửa sau khi Manh duyệt. Windows đã theo mapping
+này từ commit `1ffcbb7`.
+
 - Icon tròn nhỏ hiện gần text user bôi chọn (theo dõi selection tự động).
 - **Hover → mở panel dịch.**
 - **Click → hành động đã chọn** trong Settings → General → "Click icon": **Speak**
@@ -12,13 +42,11 @@
 - Alt-click → hành động còn lại (Click = Speak thì Alt+Click mở Fast Read;
   Click = Fast Read thì Alt+Click nghe). Chuột phải → menu có "Fast Read".
 - **Style B (Manh 2026-11-18): icon luôn hiện việc click tiếp theo sẽ làm** —
-  Speak = chữ **A thường** (15pt, KHÔNG bold, nghệ #C7800D — về lại như
-  trước Style B, Manh 2026-11-19), Fast Read = A+ nghệ tự vẽ; giữ Alt thì
-  đổi sang việc còn lại, và lúc đổi sang Speak thì icon hiện **loa E767**
-  (không phải bong bóng). Bong bóng E8BD xanh giờ chỉ là **mẫu style dự
-  phòng** — vẫn định nghĩa trong code (`BubbleMark`, luôn ẩn) để sau cần
-  thì bật lại. Sau bất kỳ lần bấm Read nào icon hiện A+ trong **2.5s**
-  rồi mới ẩn.
+  glyph theo mapping đã chốt ở trên: **A thường** = Translate (icon chính),
+  **A+** = Fast Read, **loa E767** = Speak. Giữ Alt thì đổi sang việc còn
+  lại. Sau bất kỳ lần bấm Read nào icon hiện A+ trong **2.5s** rồi mới ẩn.
+  Bong bóng E8BD xanh giờ chỉ là **mẫu style dự phòng** — vẫn định nghĩa
+  trong code (`BubbleMark`, luôn ẩn) để sau cần thì bật lại.
 - Alt cho click đọc từ event con trỏ lúc bấm (`PointerPressed` + `KeyModifiers.Menu`),
   không đọc trạng thái global lúc tap (sửa 0.1.4 — Alt+click khi Click = Read trước
   đây mở Read thay vì nghe; xem spec §2). **Sửa tiếp sau test CI #191
