@@ -103,7 +103,7 @@
              reading area, so the word stays vertically centered.
              Wheel over the focus word changes the focus size
              (Manh 2026-11-19, restored from 191): scroll up grows,
-             scroll down shrinks, 2pt per tick, clamped 40-450. To
+             scroll down shrinks, 5pt per tick, clamped 40-450. To
              scroll the context, hover the context box itself. -->
         <Grid x:Name="WordArea" Grid.Row="1" Background="Transparent" PointerWheelChanged="OnFocusWheelChanged">
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">

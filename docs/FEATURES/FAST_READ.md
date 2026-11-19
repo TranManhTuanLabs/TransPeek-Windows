@@ -54,10 +54,14 @@ Paused — color scheme is NOT reset). "?" popover: Space play/pause,
 ←/→ step, ↑/↓ speed ±10, R restart, Esc close.
 
 Wheel (Manh 2026-11-19): over the progress slider = step one word
-(scroll down = next); over the focus word = focus size ±2pt per tick
+(scroll down = next); over the focus word = focus size ±5pt per tick
 (clamped 40–450, picker shows the nearest option — restored 2026-11-19
 from the 191 behaviour, which Manh liked; 192 had forwarded this wheel
-to scroll the context instead); over the context = scroll it natively.
+to scroll the context instead; step raised 2pt to 5pt per tick
+2026-11-19 because 2pt took too many scrolls); over the context =
+scroll it natively. The focus size drives the around text too
+(context = focus x the "Context size" percent), so one wheel tick
+grows/shrinks both, like 191.
 The context wheel used to resize it (±5% per tick) but that clashed
 with scrolling, so context sizing moved to a drag: press-hold
 left-click + drag UP/DOWN on the context = context size ±5% per 24 px

@@ -498,20 +498,23 @@ public sealed partial class FastReadWindow : Window
     }
 
     /// <summary>Wheel over the focus word (Manh 2026-11-19): scroll up
-    /// grows the focus size, scroll down shrinks it, 2pt per tick
-    /// (the old slider step), clamped 40-450. The picker shows the
-    /// nearest option — the value itself stays exact, like mac.
+    /// grows the focus size, scroll down shrinks it, 5pt per tick,
+    /// clamped 40-450. The picker shows the nearest option — the
+    /// value itself stays exact, like mac. The focus size drives the
+    /// around text too (context = focus x the "Context size" percent),
+    /// so one wheel tick grows/shrinks both, like 191.
     /// RESTORED 2026-11-19 from the 191 behaviour: 192 had forwarded
     /// this wheel to scroll the context instead, but Manh liked the
     /// 191 focus-size wheel and asked for it back. To scroll the
     /// context, hover the context box itself (its wheel scrolls
-    /// natively).</summary>
+    /// natively). Step raised 2pt to 5pt per tick 2026-11-19 (Manh:
+    /// 2pt took too many scrolls).</summary>
     private void OnFocusWheelChanged(object sender, PointerRoutedEventArgs e)
     {
         var delta = e.GetCurrentPoint((UIElement)sender).Properties.MouseWheelDelta;
         if (delta == 0)
             return;
-        var size = Math.Clamp(WordTextBlock.FontSize + (delta > 0 ? 2 : -2), 40, 450);
+        var size = Math.Clamp(WordTextBlock.FontSize + (delta > 0 ? 5 : -5), 40, 450);
         ApplyFocusSize(size);
         _loading = true;
         SelectComboByTag(FocusSizeCombo, NearestFocusSize(size).ToString());

@@ -2418,6 +2418,15 @@ Manh test bản 0.1.4.191: Google 249 ngôn ngữ ngon. 4 việc còn lại làm
   context size. Hint đổi thành "… • Wheel ↑/↓ focus size • Scroll
   context • Drag ↑/↓ size". Muốn cuộn context thì hover vào ô
   context (không cuộn được từ vùng focus text nữa — như 191).
+- **Bước wheel tăng 2pt → 5pt/tick (Manh 20:15, "lăn hơi nhiều"):**
+  2pt/tick đổi từ 110 lên 200 mất ~45 nấc; 5pt/tick còn ~18 nấc,
+  mỗi nấc vẫn thấy rõ (~4,5% ở cỡ 110) mà không nhảy vọt qua các
+  option picker (cách nhau ~8pt ở cỡ nhỏ). **Around text giữ y 191:**
+  đã kiểm chứng code — `ApplyFocusSize` → `ShowSlide` →
+  `UpdateContext()` tính lại `ContextTextBlock.FontSize =
+  WordTextBlock.FontSize × ratio`, nên wheel đổi focus size thì
+  around text to/nhỏ theo cùng tỉ lệ (ratio không đổi); không cần
+  sửa gì thêm cho ý này.
 
 ## Liên kết
 
