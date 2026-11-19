@@ -101,10 +101,11 @@
              (top-left) and the hint (top-right) sit INSIDE the block
              text (Manh 2026-11-19) — an overlay at the top of the
              reading area, so the word stays vertically centered.
-             Wheel over the focus word scrolls the context (forwarded
-             to the scroller in code-behind, Manh 2026-11-19) — it no
-             longer changes the focus size. -->
-        <Grid x:Name="WordArea" Grid.Row="1" Background="Transparent" PointerWheelChanged="OnWordAreaWheelChanged">
+             Wheel over the focus word changes the focus size
+             (Manh 2026-11-19, restored from 191): scroll up grows,
+             scroll down shrinks, 2pt per tick, clamped 40-450. To
+             scroll the context, hover the context box itself. -->
+        <Grid x:Name="WordArea" Grid.Row="1" Background="Transparent" PointerWheelChanged="OnFocusWheelChanged">
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                 <Rectangle Width="2" Height="16" Fill="#C8C8C8" HorizontalAlignment="Center" Margin="0,0,0,10" />
                 <TextBlock x:Name="WordTextBlock" FontSize="110" TextAlignment="Center">
@@ -115,7 +116,7 @@
             <Grid VerticalAlignment="Top">
                 <TextBlock x:Name="ReadingTimeText" Text="Reading time: 0min" FontSize="12" Foreground="Gray"
                            HorizontalAlignment="Left" VerticalAlignment="Top" ToolTipService.ToolTip="Estimated reading time" />
-                <TextBlock Text="Space play/pause • ←/→ step • ↑/↓ speed • Scroll context • Drag ↑/↓ size" FontSize="12" Foreground="Gray"
+                <TextBlock Text="Space play/pause • ←/→ step • ↑/↓ speed • Wheel ↑/↓ focus size • Scroll context • Drag ↑/↓ size" FontSize="12" Foreground="Gray"
                            HorizontalAlignment="Right" VerticalAlignment="Top" />
             </Grid>
         </Grid>

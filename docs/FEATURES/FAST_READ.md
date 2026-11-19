@@ -34,7 +34,7 @@ Layout (top to bottom, Manh 2026-11-19 — temporary, mac RSVPView round 7):
   with two short focal ticks above/below it. **Reading time** top-left
   inside the block text ("Reading time: 2mins", under a minute "0min");
   **hint** top-right ("Space play/pause • ←/→ step • ↑/↓ speed •
-  Scroll context • Drag ↑/↓ size").
+  Wheel ↑/↓ focus size • Scroll context • Drag ↑/↓ size").
 - **Pause context:** ±150 words around the current slide, the current
   words bold + orange. When it shows follows the Settings popover
   (Always / Only show when paused / Never); its size is the focus size
@@ -54,21 +54,23 @@ Paused — color scheme is NOT reset). "?" popover: Space play/pause,
 ←/→ step, ↑/↓ speed ±10, R restart, Esc close.
 
 Wheel (Manh 2026-11-19): over the progress slider = step one word
-(scroll down = next); over the focus word area = scroll the context
-(the word area is not inside the scroller, so the wheel is forwarded
-to it in code); over the context = scroll it natively. The wheel used
-to resize (focus ±2pt, context ±5%) but that clashed with scrolling,
-so sizing moved to a drag: press-hold left-click + drag UP/DOWN on
-the context = context size ±5% per 24 px (clamped 25–100%, saved on
-release). Only a vertical-dominant drag resizes (≥12 px, more vertical
-than horizontal) — a horizontal drag is text selection: the context
-text is selectable (`IsTextSelectionEnabled`), so words can be looked
-up. The drag latches into resize mode once clearly vertical, and
-turns selection off while resizing so the drag stops extending the
-selection. A Slider consumes the wheel itself, so the progress
-handler is attached in code with `AddHandler(..., handledEventsToo:
-true)`; the drag handlers use the same pattern so they still see
-presses the selectable text handles for its own selection.
+(scroll down = next); over the focus word = focus size ±2pt per tick
+(clamped 40–450, picker shows the nearest option — restored 2026-11-19
+from the 191 behaviour, which Manh liked; 192 had forwarded this wheel
+to scroll the context instead); over the context = scroll it natively.
+The context wheel used to resize it (±5% per tick) but that clashed
+with scrolling, so context sizing moved to a drag: press-hold
+left-click + drag UP/DOWN on the context = context size ±5% per 24 px
+(clamped 25–100%, saved on release). Only a vertical-dominant drag
+resizes (≥12 px, more vertical than horizontal) — a horizontal drag is
+text selection: the context text is selectable
+(`IsTextSelectionEnabled`), so words can be looked up. The drag latches
+into resize mode once clearly vertical, and turns selection off while
+resizing so the drag stops extending the selection. A Slider consumes
+the wheel itself, so the progress handler is attached in code with
+`AddHandler(..., handledEventsToo: true)`; the drag handlers use the
+same pattern so they still see presses the selectable text handles for
+its own selection.
 
 Keyboard (only while the window has focus): `Space` play/pause,
 `Left`/`Right` step a slide, `Up`/`Down` WPM ±10, `R` restart,

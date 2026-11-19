@@ -2401,6 +2401,24 @@ Manh test bản 0.1.4.191: Google 249 ngôn ngữ ngon. 4 việc còn lại làm
   code main: không còn handler wheel nào đổi cỡ chữ. Anh test lại
   trên bản 192 (nhớ thoát hẳn bản 191 ở tray trước).
 
+## Khôi phục wheel focus text = đổi focus size (2026-11-19) — sửa mục trên
+
+- Manh (20:08): "bản 191 anh thích chỗ wheel chuột ở focus text nó
+  đổi font size, bản 192 đã mất". **Sửa lại hiểu lầm ở mục trên:**
+  phản hồi 16:52 "wheel về cuộn context, chuyển đổi cỡ sang kéo"
+  chỉ nói về ô context (wheel context → cuộn, đổi cỡ context → kéo),
+  KHÔNG nói bỏ wheel đổi focus size ở vùng focus text — nhưng đợt
+  `1ffcbb7` đã đổi luôn wheel vùng focus text thành forward-scroll,
+  nên 192 mất hẳn wheel đổi cỡ chữ. Manh thích wheel 191 ở focus
+  text, xin khôi phục.
+- **Khôi phục y hệt 191** (`OnFocusWheelChanged`, commit `afc0d67`):
+  wheel lên +2pt, xuống −2pt, kẹp 40–450, `ApplyFocusSize` + đồng bộ
+  picker về option gần nhất, `e.Handled = true`. Giữ nguyên hành vi
+  192 ở ô context: wheel = cuộn chữ, kéo left-click lên/xuống = đổi
+  context size. Hint đổi thành "… • Wheel ↑/↓ focus size • Scroll
+  context • Drag ↑/↓ size". Muốn cuộn context thì hover vào ô
+  context (không cuộn được từ vùng focus text nữa — như 191).
+
 ## Liên kết
 
 - [Bối cảnh AI](AI_CONTEXT.md)

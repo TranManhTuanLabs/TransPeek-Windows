@@ -497,20 +497,25 @@ public sealed partial class FastReadWindow : Window
         e.Handled = true;
     }
 
-    /// <summary>Wheel over the focus word area (Manh 2026-11-19):
-    /// scrolls the context. The word area is NOT inside the scroller,
-    /// so the wheel would do nothing there — forward it (one notch is
-    /// ~40 px, close to the scroller's native wheel step). The wheel
-    /// no longer changes the focus size: it used to, but it clashed
-    /// with scrolling the context. Focus size changes via the bottom
-    /// picker (or Settings).</summary>
-    private void OnWordAreaWheelChanged(object sender, PointerRoutedEventArgs e)
+    /// <summary>Wheel over the focus word (Manh 2026-11-19): scroll up
+    /// grows the focus size, scroll down shrinks it, 2pt per tick
+    /// (the old slider step), clamped 40-450. The picker shows the
+    /// nearest option — the value itself stays exact, like mac.
+    /// RESTORED 2026-11-19 from the 191 behaviour: 192 had forwarded
+    /// this wheel to scroll the context instead, but Manh liked the
+    /// 191 focus-size wheel and asked for it back. To scroll the
+    /// context, hover the context box itself (its wheel scrolls
+    /// natively).</summary>
+    private void OnFocusWheelChanged(object sender, PointerRoutedEventArgs e)
     {
         var delta = e.GetCurrentPoint((UIElement)sender).Properties.MouseWheelDelta;
         if (delta == 0)
             return;
-        var target = Math.Clamp(ContextScroller.VerticalOffset - delta / 3.0, 0, ContextScroller.ScrollableHeight);
-        ContextScroller.ChangeView(null, target, null);
+        var size = Math.Clamp(WordTextBlock.FontSize + (delta > 0 ? 2 : -2), 40, 450);
+        ApplyFocusSize(size);
+        _loading = true;
+        SelectComboByTag(FocusSizeCombo, NearestFocusSize(size).ToString());
+        _loading = false;
         e.Handled = true;
     }
 
