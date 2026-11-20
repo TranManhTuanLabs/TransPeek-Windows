@@ -92,39 +92,66 @@
             <TextBlock x:Uid="Settings.General.WatchSelectionHint" Text="When on, the trigger icon appears whenever you select text. When off, the app only responds to hotkeys and the tray menu."
                        FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
 
-            <ComboBox x:Name="HoverDelayCombo" x:Uid="Settings.General.HoverDelay" Header="How long to hover before the panel opens (default: 500 ms)"
-                      SelectionChanged="OnHoverDelayChanged">
-                <ComboBoxItem Content="300 ms" Tag="300" />
-                <ComboBoxItem Content="500 ms" Tag="500" />
-                <ComboBoxItem Content="800 ms" Tag="800" />
-                <ComboBoxItem Content="1000 ms" Tag="1000" />
-            </ComboBox>
-
             <!-- Click icon (Fast Read, feature/fast-read-rsvp, Manh
-                 2026-11-17): what a click on the float icon does.
-                 "Listen" is the default (read the selection aloud);
-                 "Fast Read" opens the RSVP reader instead. Alt+click
-                 always opens Fast Read regardless of this setting. -->
-            <ComboBox x:Name="IconClickActionCombo" x:Uid="Settings.General.IconClickAction" Header="Click icon"
+                 2026-11-17; renamed "Click icon for:" and moved one
+                 slot up, Manh 2026-11-20): what a click on the float
+                 icon does. "Listen" is the default (read the selection
+                 aloud); "Fast Read" opens the RSVP reader instead.
+                 Alt+click always opens Fast Read regardless of this
+                 setting. -->
+            <ComboBox x:Name="IconClickActionCombo" x:Uid="Settings.General.IconClickAction" Header="Click icon for:"
                       SelectionChanged="OnIconClickActionChanged">
                 <ComboBoxItem Content="Listen" Tag="Speak" />
                 <ComboBoxItem Content="Fast Read" Tag="FastRead" />
             </ComboBox>
 
-            <!-- Auto-hide (Manh 2026-11-19): a ComboBox like Click icon
-                 above, not a NumberBox — the same fixed steps (default
-                 5 seconds). An older saved value outside the list falls
-                 back to the 5-second item on load (see code-behind). -->
-            <ComboBox x:Name="AutoHideCombo" x:Uid="Settings.General.AutoHide" Header="Trigger icon hides after (default: 5 seconds)"
-                      SelectionChanged="OnAutoHideChanged">
-                <ComboBoxItem Content="1 second" Tag="1" />
-                <ComboBoxItem Content="2 seconds" Tag="2" />
-                <ComboBoxItem Content="3 seconds" Tag="3" />
-                <ComboBoxItem Content="5 seconds" Tag="5" />
-                <ComboBoxItem Content="10 seconds" Tag="10" />
-                <ComboBoxItem Content="15 seconds" Tag="15" />
-                <ComboBoxItem Content="30 seconds" Tag="30" />
-            </ComboBox>
+            <!-- Hover delay (Manh 2026-11-20): label on the left,
+                 picker on the same row on the right; the description
+                 sits below the row. The label (with its default) lives
+                 in the .resw under Settings.General.HoverDelay.Text. -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Uid="Settings.General.HoverDelay" Text="Hover delay (default: 500 ms)"
+                           VerticalAlignment="Center" />
+                <ComboBox x:Name="HoverDelayCombo" Grid.Column="1" MinWidth="120"
+                          SelectionChanged="OnHoverDelayChanged">
+                    <ComboBoxItem Content="300 ms" Tag="300" />
+                    <ComboBoxItem Content="500 ms" Tag="500" />
+                    <ComboBoxItem Content="800 ms" Tag="800" />
+                    <ComboBoxItem Content="1000 ms" Tag="1000" />
+                </ComboBox>
+            </Grid>
+            <TextBlock x:Uid="Settings.General.HoverDelayHint" Text="How long to hover before the panel opens."
+                       FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
+
+            <!-- Auto-hide (Manh 2026-11-19 ComboBox, 2026-11-20 inline
+                 row): same layout as Hover delay above — label left,
+                 picker right, description below. An older saved value
+                 outside the list falls back to the 5-second item on
+                 load (see code-behind). -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Uid="Settings.General.AutoHide" Text="Auto-hide icon (default: 5 s)"
+                           VerticalAlignment="Center" />
+                <ComboBox x:Name="AutoHideCombo" Grid.Column="1" MinWidth="120"
+                          SelectionChanged="OnAutoHideChanged">
+                    <ComboBoxItem Content="1 second" Tag="1" />
+                    <ComboBoxItem Content="2 seconds" Tag="2" />
+                    <ComboBoxItem Content="3 seconds" Tag="3" />
+                    <ComboBoxItem Content="5 seconds" Tag="5" />
+                    <ComboBoxItem Content="10 seconds" Tag="10" />
+                    <ComboBoxItem Content="15 seconds" Tag="15" />
+                    <ComboBoxItem Content="30 seconds" Tag="30" />
+                </ComboBox>
+            </Grid>
+            <TextBlock x:Uid="Settings.General.AutoHideHint" Text="The trigger icon hides after this long."
+                       FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
 
             <!-- Appearance (Manh 2026-11-15): a section INSIDE General,
                  NOT a separate tab. "Setting Text Size" sits directly

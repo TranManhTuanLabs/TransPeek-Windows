@@ -242,7 +242,7 @@ public sealed partial class App : Application
     {
         // Settings is deliberately NOT in this list (Manh 2026-11-15):
         // it is a normal window, not topmost, so on launch it sits open
-        // (960x640, centered) BEHIND whatever app the user works in —
+        // (920x640, centered) BEHIND whatever app the user works in —
         // and this rect check cannot tell "behind" from "on top", so any
         // selection inside that big centered rect was swallowed and the
         // icon missed on first launch until Settings was closed or

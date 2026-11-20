@@ -1,6 +1,8 @@
 // OCR settings: engine (Tesseract default for Vietnamese), OCR
-// languages, post-capture mode, auto-copy, hotkey, and the Tesseract
+// languages, post-capture mode, auto-copy, and the Tesseract
 // language-data manager (download vie/eng from tessdata_best on demand).
+// (The capture hotkey used to be edited here too — removed 2026-11-20,
+// it lives in General and edits the same setting.)
 
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -35,7 +37,6 @@ public sealed partial class OcrPage : Page
         SelectComboByTag(PostModeCombo, s.OcrAfterCapture);
         AutoCopyToggle.IsOn = s.OcrAutoCopyTranslation;
         UpdateAutoCopyEnabled();
-        OcrHotkeyBox.Text = s.OcrHotkey;
         RefreshTesseractStatus();
         RefreshWindowsOcrStatus();
         PopulateLanguagesList();
@@ -125,24 +126,6 @@ public sealed partial class OcrPage : Page
     {
         App.Settings.OcrAutoCopyTranslation = AutoCopyToggle.IsOn;
         Save();
-    }
-
-    private void OnHotkeyLostFocus(object sender, RoutedEventArgs e)
-    {
-        var spec = OcrHotkeyBox.Text.Trim();
-        try
-        {
-            GlobalHotkeyService.Parse(spec);
-            HotkeyErrorText.Visibility = Visibility.Collapsed;
-            App.Settings.OcrHotkey = spec;
-            Save();
-        }
-        catch (FormatException ex)
-        {
-            HotkeyErrorText.Text = ex.Message;
-            HotkeyErrorText.Visibility = Visibility.Visible;
-            OcrHotkeyBox.Text = App.Settings.OcrHotkey;
-        }
     }
 
     /// <summary>The language list: one CheckBox per catalog language

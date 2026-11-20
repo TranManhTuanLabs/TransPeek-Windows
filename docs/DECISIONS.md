@@ -2631,6 +2631,13 @@ Manh test bản 0.1.4.191: Google 249 ngôn ngữ ngon. 4 việc còn lại làm
   nút Fast Read panel center + click icon A+ đều qua `RouteFastRead`
   duy nhất — không cần add code. Docs kỹ thuật ở panel spec §10.
 
+## Settings gọn lại — bỏ hotkey OCR trùng, Click icon đổi tên + dời lên, picker inline, cửa sổ Settings hẹp hơn (2026-11-20, nhánh feature/focus-timer-decor, gộp vào nhánh trước PR)
+
+- **OCR: bỏ ô "Hotkey to capture a region" (Manh 2026-11-20):** trùng với ô "OCR Screen Translate" ở General — cùng setting `OcrHotkey`. Xoá cả XAML (`OcrHotkeyBox` + `HotkeyErrorText`) lẫn code-behind (`OnHotkeyLostFocus` + dòng load) ở `OcrPage`; setting vẫn sửa được ở General.
+- **General — "Click icon" → "Click icon for:" + dời lên 1 vị trí (Manh 2026-11-20):** Manh chốt tên "for" (đề xuất "to" trước đó không dùng). Thứ tự mới: Click icon for → Hover delay → Auto-hide.
+- **General — Hover delay + Auto-hide: nhãn trái, picker phải cùng hàng, mô tả ở dưới (Manh 2026-11-20):** bỏ `Header` của ComboBox; nhãn là TextBlock riêng (`Hover delay (default: 500 ms)` / `Auto-hide icon (default: 5 s)`), picker `MinWidth 120` ở cột phải; mô tả xám 12pt ở dưới. Chuỗi nhãn/mô tả chuyển sang `.resw` (`.Text` + `*Hint.Text`) theo quy ước hiện có; 2 key `.Header` cũ bỏ. Lưu ý: giá trị `.resw` cũ khác XAML (resw thắng lúc chạy — Hover delay hiện "How long to hover before the panel opens", Auto-hide hiện "Trigger icon hides after (seconds)"), nên khi đổi nhãn phải sửa cả `.resw`, không chỉ XAML.
+- **Cửa sổ Settings hẹp hơn 40 px (Manh 2026-11-20):** `SettingsWindow.ShowSettings` width 960 → 920, cao giữ 640 (comment ở `App.xaml.cs` cũng sửa theo).
+
 ## Liên kết
 
 - [Bối cảnh AI](AI_CONTEXT.md)
