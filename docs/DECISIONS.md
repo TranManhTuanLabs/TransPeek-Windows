@@ -2644,6 +2644,10 @@ Manh test bản 0.1.4.191: Google 249 ngôn ngữ ngon. 4 việc còn lại làm
 - **"Run reminder in:" — picker xuống dòng riêng (Manh 2026-11-20 17:02):** bỏ Grid chung hàng [nhãn | picker phải]; thành StackPanel dọc: nhãn trên, picker dưới full-width. Lựa chọn giữ nguyên "New Fast Read Window" / "Right Panel" (đây là setting đích nhắc nghỉ, khác "Run FastRead in:").
 - **Nhãn delay đổi sang giây (Manh 2026-11-20 17:03):** cả 2 delay dùng cùng đơn vị giây cho dễ đọc — "Hover delay (default: 0.5s)", "Auto-hide icon (default: 5s)"; các lựa chọn Hover delay cũng đổi theo ("0.3s" / "0.5s" / "0.8s" / "1s"). **Chỉ đổi cách hiển thị — giá trị không đổi** (mặc định vẫn 500 ms = 0.5 s; code dùng `Tag` số ms nên không động). Nhãn sửa cả XAML lẫn `.resw`.
 
+## Center panel: viền nhẹ cho nút Capture OCR + Fast Read (2026-11-20, nhánh feature/focus-timer-decor, gộp vào nhánh trước PR)
+
+- **Viền highlight NHẸ cho 2 nút panel center (Manh 2026-11-20 17:05–17:06):** chỉ viền, nền giữ mặc định — màu không chiếm focus. Capture OCR viền **xanh blue `#0078D4` 40%** (`#660078D4`, cùng màu xanh với icon A thường); Fast Read viền **nghệ `#C7800D` 40%** (`#66C7800D`, cùng màu nghệ với A+). `BorderThickness="1"` cả 2.
+
 ## Liên kết
 
 - [Bối cảnh AI](AI_CONTEXT.md)

@@ -153,7 +153,13 @@
                 <Button x:Name="SwapButton" Content="⇄" Padding="4,2" Click="OnSwapLanguages" />
                 <AutoSuggestBox x:Name="TargetLangCombo" Width="112" />
             </StackPanel>
-            <Button x:Name="OcrButton" Grid.Column="1" x:Uid="Panel.CaptureOcr" Content="Capture OCR" VerticalAlignment="Center" />
+            <!-- Capture OCR border (Manh 2026-11-20 17:05–17:06):
+                 a LIGHT blue edge (#0078D4 at 40%) so the button reads
+                 as an action without the colour dominating the panel.
+                 Blue = the translate/blue family (same blue as the
+                 plain-A icon). Border only — the fill stays default. -->
+            <Button x:Name="OcrButton" Grid.Column="1" x:Uid="Panel.CaptureOcr" Content="Capture OCR" VerticalAlignment="Center"
+                    BorderBrush="#660078D4" BorderThickness="1" />
         </Grid>
 
         <!-- Embedded "?" shortcuts card (Manh 2026-11-18, mac parity):
@@ -291,8 +297,14 @@
                  Sits at the left end of the Actions row, like mac —
                  it leaves the panel (opens a separate window), so it
                  is not part of the "?" + Pin + Settings group. -->
+            <!-- Fast Read border (Manh 2026-11-20 17:05–17:06): a LIGHT
+                 ochre edge (#C7800D at 40%, the A+ colour) so the
+                 button reads as an action without the colour
+                 dominating the panel. Border only — fill stays
+                 default, like Capture OCR above (blue there). -->
             <Button x:Name="FastReadButton" Grid.Column="0" Padding="6,2"
-                    ToolTipService.ToolTip="Fast Read" Click="OnFastReadClicked">
+                    ToolTipService.ToolTip="Fast Read" Click="OnFastReadClicked"
+                    BorderBrush="#66C7800D" BorderThickness="1">
                 <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
                     <FontIcon Glyph="&#xE736;" FontSize="12" />
                     <TextBlock Text="Fast Read" FontSize="12" />
