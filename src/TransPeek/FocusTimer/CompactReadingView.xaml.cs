@@ -16,6 +16,7 @@ using Microsoft.UI.Xaml.Documents;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using TransPeek.FastRead;
+using TransPeek.Share;
 using Windows.Foundation;
 using Windows.System;
 
@@ -28,6 +29,10 @@ public sealed partial class CompactReadingView : UserControl
     private bool _loading;
     private bool _updatingProgress;
     private bool _fullSize;
+    // The share row is filled once per finished read (Populate rebuilds
+    // the buttons — re-filling on every chrome update would reset
+    // hover/focus for nothing). Cleared when the finish clears.
+    private bool _sharePopulated;
 
     /// <summary>The view model to render. Rebinding (a new read) does
     /// a full sync — the view model may already be playing by then.</summary>
@@ -170,9 +175,12 @@ public sealed partial class CompactReadingView : UserControl
 
     /// <summary>Which chrome shows: playing = only the focus line (+
     /// the book page when Always) and the hint; paused = top bar,
-    /// progress and transport; finished adds "Congratulations!"; full
-    /// size (width &gt;= 540) also shows the Reading time (left) and
-    /// the hint (right) in the controls row, like the window.</summary>
+    /// progress and transport; finished adds the congratulations line —
+    /// the full sentence + the share row at full size, just
+    /// "Congratulations!" at the small size (mac shows the sentence +
+    /// share full-size only); full size (width &gt;= 540) also shows
+    /// the Reading time (left) and the hint (right) in the controls
+    /// row, like the window.</summary>
     private void UpdateChrome()
     {
         if (_viewModel is null)
@@ -182,7 +190,31 @@ public sealed partial class CompactReadingView : UserControl
         HintTextBlock.Visibility = playing ? Visibility.Visible : Visibility.Collapsed;
         ProgressGrid.Visibility = playing ? Visibility.Collapsed : Visibility.Visible;
         ControlsGrid.Visibility = playing ? Visibility.Collapsed : Visibility.Visible;
-        CompletionText.Visibility = !playing && _viewModel.IsFinished ? Visibility.Visible : Visibility.Collapsed;
+        if (!playing && _viewModel.IsFinished)
+        {
+            CompletionText.Visibility = Visibility.Visible;
+            if (_fullSize && _viewModel.CompletionText is { } completion)
+            {
+                CompletionText.Text = completion;
+                if (!_sharePopulated)
+                {
+                    ShareRowBuilder.Populate(CompletionShareRowPanel, _viewModel.ShareText);
+                    _sharePopulated = true;
+                }
+                CompletionShareRowPanel.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                CompletionText.Text = "Congratulations!";
+                CompletionShareRowPanel.Visibility = Visibility.Collapsed;
+            }
+        }
+        else
+        {
+            CompletionText.Visibility = Visibility.Collapsed;
+            CompletionShareRowPanel.Visibility = Visibility.Collapsed;
+            _sharePopulated = false;
+        }
         ReadingTimeText.Visibility = !playing && _fullSize ? Visibility.Visible : Visibility.Collapsed;
         SideHintText.Visibility = !playing && _fullSize ? Visibility.Visible : Visibility.Collapsed;
         CloseButton.Visibility = OnCloseReading is not null ? Visibility.Visible : Visibility.Collapsed;

@@ -768,7 +768,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     }
 
     /// <summary>Read a text in panel right (public so App can route a
-    /// Fast Read request here when "Run FastRead in" is Right Panel):
+    /// Fast Read request here when "Run FastRead in" is FastRead Lite):
     /// show the panel if it is hidden, then hand the text to the
     /// store — the consume handler below switches to the Fast Read
     /// tab, starts the read and pins.</summary>
@@ -776,6 +776,12 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     {
         if (!_visible)
             ShowPanelNearCursor();
+        // A user-started panel read must receive keys (Space to
+        // play/pause, arrows to step): the panel shows without
+        // activation, so activate it now that the user asked to read.
+        // Reminder reads do NOT come through here (they request the
+        // panel right directly), so they still never steal focus.
+        WindowHelpers.ActivateWindow(this);
         _focusTimerStore.RequestPanelReading(text, null);
     }
 

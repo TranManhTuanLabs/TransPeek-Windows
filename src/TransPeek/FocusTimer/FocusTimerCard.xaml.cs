@@ -69,6 +69,7 @@ public sealed partial class FocusTimerCard : UserControl
         SelectComboByTag(WorkCombo, engine.WorkMinutes.ToString());
         SelectComboByTag(RestCombo, engine.RestMinutes.ToString());
         RepeatToggle.IsOn = engine.RepeatAutomatically;
+        AutoStartToggle.IsOn = App.Settings.FocusAutoStart;
         EyeRestStatusText.Text = engine.EyeRestRunning
             ? $"Next in {FocusTimerEngine.Mmss(engine.EyeRestRemainingSeconds)}"
             : "Off";
@@ -104,6 +105,13 @@ public sealed partial class FocusTimerCard : UserControl
         if (_loading)
             return;
         _store?.SetRepeatAutomatically(RepeatToggle.IsOn);
+    }
+
+    private void OnAutoStartToggled(object sender, RoutedEventArgs e)
+    {
+        if (_loading)
+            return;
+        _store?.SetAutoStartFocus(AutoStartToggle.IsOn);
     }
 
     private void OnWorkChanged(object sender, SelectionChangedEventArgs e)

@@ -69,6 +69,10 @@
 - **Bài học CI #193–#196 (2026-11-19):** `Window` trong WinUI 3 KHÔNG có
   `IsLoaded` — chỉ `FrameworkElement` mới có. **Bài học CI #198:** biến
   vòng lặp không được trùng tên với biến đang sống ở scope ngoài (CS0136).
+- **Bài học CI #202 (2026-11-20):** `DispatcherTimer` thuộc namespace
+  `Microsoft.UI.Xaml`, KHÔNG phải `Microsoft.UI.Dispatching` (đã xác
+  minh trên Microsoft Learn). File nào dùng DispatcherTimer mà chỉ có
+  `using Microsoft.UI.Dispatching;` thì build lỗi CS0246.
 
 ## 5. Quy tắc chung
 

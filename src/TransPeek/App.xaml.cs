@@ -111,6 +111,9 @@ public sealed partial class App : Application
             OnShowPanel = () => _panel?.ShowPanelNearCursor(),
             OnShowRestWindow = () => _panel?.HidePanel(),
         };
+        // Auto start focus (Manh 2026-11-20, 09:47): when the toggle is
+        // ON, the focus timer starts on its own at launch.
+        _focusTimerStore.AutoStartFocusIfEnabled();
         _panel = new TranslatePanelWindow(TranslateAsync, () => _ocrFlow!.RunOcrAsync(), ShowSettings, BuildShortcutEntries(), text => _ = OpenFastReadAsync(text), _focusTimerStore);
         _triggerIcon = new TriggerIconWindow();
         _triggerIcon.OpenRequested += OnTriggerIconOpenRequested;

@@ -33,7 +33,10 @@ collapse/expand; collapsed state in `FocusTimerCollapsed`).
   + "Long break 15 min after 4 cycles" + Start focus / Pause / Resume +
   Reset + **"Repeat automatically" toggle (default ON, Manh 2026-11-20
   07:25 — one Start runs Work → Rest → Work …; after 4 cycles a 15-min
-  long break, then Work again)**. Changing Work while idle re-arms the
+  long break, then Work again)** + **"Auto start focus (default: Off)"
+  toggle (Manh 2026-11-20, 09:47 — when ON, the focus timer starts on
+  its own at app launch, as if the user pressed Start; turning it on
+  later does not start a session)**. Changing Work while idle re-arms the
   countdown at once; mid-session it applies to the next session.
 - **Rest eyes (Walk E805):** "Next in mm:ss" / "Off" + "Every 20 min,
   rest your eyes for 20 s — look at something 20 feet away." + Start /
@@ -50,7 +53,9 @@ collapse/expand; collapsed state in `FocusTimerCollapsed`).
   content) shows the notification title + "Your reading stays as it
   is." + **"Take a break"** (show the waiting reminder now) +
   **"Snooze 5 min"** (fire again in 5 minutes — the reminder keeps
-  waiting meanwhile).
+  waiting meanwhile). Banner background: orange at **0.25 opacity**
+  (mac uses 0.12 — on Windows 0.12 was too see-through over the
+  reading text behind it, Manh 2026-11-20).
 - The user stops reading (closes the Fast Read window / ends the panel
   read / hides the panel) → the waiting reminder **shows itself** per
   the "Run reminder in" setting.
@@ -106,8 +111,9 @@ engine's `ReminderReady` / `PendingReminder` like the banner does.)
 
 - `FocusWorkMinutes` (25), `FocusRestMinutes` (5),
   `FocusLongBreakMinutes` (15), `FocusRepeatAutomatically` (true),
-  `FocusReminderDestination` ("NewWindow" / "RightPanel"),
-  `FocusTimerCollapsed` (false) — see `docs/FEATURES/SETTINGS.md`.
+  `FocusAutoStart` (false), `FocusReminderDestination`
+  ("NewWindow" / "RightPanel"), `FocusTimerCollapsed` (false) — see
+  `docs/FEATURES/SETTINGS.md`.
 - `FastReadRunLocation` ("NewWindow" / "RightPanel") — where Fast Read
   opens; see `FAST_READ.md`.
 

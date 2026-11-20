@@ -2579,6 +2579,58 @@ Manh test bản 0.1.4.191: Google 249 ngôn ngữ ngon. 4 việc còn lại làm
   resize được (mac: min 480×320, resize được) — cửa sổ nghỉ tạm thời
   không cần resize, và top bar lite reader cần đủ rộng.
 
+## CI #202 đỏ — `DispatcherTimer` thuộc `Microsoft.UI.Xaml` (2026-11-20)
+
+- **Nguyên nhân:** `FocusTimerStore.cs` + `RsvpReaderViewModel.cs`
+  chỉ có `using Microsoft.UI.Dispatching;` mà `DispatcherTimer` thuộc
+  `Microsoft.UI.Xaml` (đã xác minh trên Microsoft Learn — trang
+  "Microsoft.UI.Xaml Namespace" liệt kê DispatcherTimer). 2 lỗi
+  CS0246 DispatcherTimer + 28 lỗi Fact (file test thiếu
+  `using Xunit;`) + WMC9999 hệ quả. RestWindow không lỗi vì có sẵn
+  cả 2 using — đó là manh mối chẩn đoán.
+- **Sửa ở `3246918e`:** thêm `using Xunit;` (test) + đổi using sang
+  `Microsoft.UI.Xaml` (2 file). CI #203 xanh.
+
+## Đợt 2026-11-20 — nhãn + completion + Style 1/2 + Auto start + panel right (nhánh feature/focus-timer-decor, gộp vào nhánh trước PR — Manh duyệt 16:00)
+
+- **Nhãn "Run FastRead in:" theo mac mới:** "Right Panel" →
+  "FastRead Lite"; "New Fast Read Window (Recommended)" → "New
+  FastRead Window (recommended)". Chỉ đổi nhãn; setting + giá trị +
+  mặc định không đổi. "Run reminder in:" (nhắc nghỉ, panel left) là
+  setting RIÊNG, không đổi.
+- **Window Read — chúc mừng + share khi đọc xong (mac §14.5):**
+  view model đếm thời gian đọc THỰC (banked qua các đoạn playing) +
+  `CompletionText` / `ShareText`; đọc xong hiện câu chúc mừng + hàng
+  share TRÊN thanh progress. "Reading time" ở top-left vẫn là ước
+  lượng, không đổi.
+- **Style 1 / Style 2 cho context text (Window Read):** Style 1
+  (mặc định) = theme FastRead Lite — book page, wheel đổi focus size
+  KHÔNG cap; Style 2 = theme hiện tại của Window Read — đoạn văn
+  cuộn, wheel kẹp 40–450, kéo đổi context ratio. Chỉ hiển thị +
+  tương tác với focus text / around text theo style; nút khác giữ
+  nguyên. Chọn trong Settings popover của Window Read (setting
+  `RsvpContextStyle`). Reset KHÔNG reset style (như color scheme).
+- **"Auto start focus" (Manh 2026-11-20, 09:47, mac 615f102):**
+  toggle dưới "Repeat automatically", mặc định TẮT; bật thì mỗi lần
+  mở app timer Focus tự Start (chỉ từ idle, chỉ 1 lần lúc launch).
+- **Panel right đồng bộ mac:** tiêu đề "Fast Read Lite" (bỏ "coming
+  soon"); "Run FastRead in:" căn LEFT; Space = play/pause (nguyên
+  nhân thật: phím đã gán nhưng panel NOACTIVATE nên không nhận phím
+  — đọc do user bấm thì panel tự kích hoạt ở `ShowPanelForReading`,
+  đọc do nhắc nghỉ thì KHÔNG); đọc xong hiện chúc mừng + share ở
+  full-size; theme lite là thiết kế chốt.
+- **Banner nhắc nghỉ — tăng fill nền 0.12 → 0.25 (Manh 2026-11-20
+  16:02):** nền cũ quá xuyên, chữ banner khó đọc trên text đang đọc
+  phía sau; mac giữ 0.12.
+- **KHÔNG có phím tắt ←/→ chuyển tab (Manh 2026-11-20 11:30):**
+  "nút shortcut" anh nói là phím tắt bàn phím, KHÔNG phải nút
+  chevron. Windows chưa từng gán ←/→ chuyển tab (kiểm chứng grep —
+  Left/Right chỉ ở bước slide + nhận diện modifier ở Settings) nên
+  không có gì phải revert; 2 nút chevron ‹ › ở hàng dots GIỮ NGUYÊN.
+- **2 logic "Run FastRead in:" ĐÃ CÓ SẴN (kiểm tra 2026-11-20 12:57):**
+  nút Fast Read panel center + click icon A+ đều qua `RouteFastRead`
+  duy nhất — không cần add code. Docs kỹ thuật ở panel spec §10.
+
 ## Liên kết
 
 - [Bối cảnh AI](AI_CONTEXT.md)

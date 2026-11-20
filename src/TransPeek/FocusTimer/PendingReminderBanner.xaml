@@ -9,8 +9,11 @@
          the banner says so, and the two buttons either take the break
          now or snooze it 5 minutes. Bell: Ringer EA8F (Segoe Fluent
          Icons, verified on Microsoft Learn 2026-11-20 — mac uses
-         bell.fill). Background: orange at 0.12 opacity, like mac. -->
-    <Border x:Name="BannerBorder" CornerRadius="8" Background="#1FF6861F"
+         bell.fill). Background: orange at 0.25 opacity — mac uses
+         0.12, but on Windows that was too see-through over the
+         reading text behind the banner, so the fill is raised
+         (Manh 2026-11-20) to make the banner easy to read. -->
+    <Border x:Name="BannerBorder" CornerRadius="8" Background="#40F6861F"
             Padding="12,8" Margin="0,0,0,8" Visibility="Collapsed">
         <StackPanel Spacing="6">
             <StackPanel Orientation="Horizontal" Spacing="8">

@@ -9,17 +9,18 @@
          the CompactReadingView while reading. The demo shows the word
          "reading" with its "a" in yellow between two half-bars (the
          pivot preview, like mac's FocusDemoView), a "Read in panel"
-         button, and the "Run FastRead in:" radios (Right Panel / New
-         Fast Read Window, default Window — applies to every Fast Read
-         entry: panel button, float icon, tray, shortcut). The "Read in
-         panel" button ALWAYS reads in the panel, whatever the radios
-         say. While reading, a reminder countdown ("Rest — mm:ss" +
-         Done) shows below the reader when a reminder read finishes. -->
+         button, and the "Run FastRead in:" radios (FastRead Lite /
+         New FastRead Window, default Window — applies to every Fast
+         Read entry: panel button, float icon, tray, shortcut). The
+         "Read in panel" button ALWAYS reads in the panel, whatever
+         the radios say. While reading, a reminder countdown ("Rest —
+         mm:ss" + Done) shows below the reader when a reminder read
+         finishes. -->
     <Grid>
         <!-- Demo -->
         <StackPanel x:Name="DemoGrid" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8" Margin="16,0">
             <FontIcon Glyph="&#xE736;" FontSize="32" Foreground="Gray" HorizontalAlignment="Center" />
-            <TextBlock Text="Fast Read — coming soon" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" />
+            <TextBlock Text="Fast Read Lite" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" />
             <TextBlock Text="Try the focus preview below, or read the current text in this panel."
                        FontSize="12" Foreground="Gray" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" />
             <!-- Focus preview: "reading" with the "a" in yellow, a
@@ -36,14 +37,16 @@
             </StackPanel>
             <Button x:Name="ReadInPanelButton" Content="Read in panel" Click="OnReadInPanelClicked"
                     HorizontalAlignment="Center" Margin="0,12,0,0" />
-            <StackPanel Margin="0,12,0,0" Spacing="4">
-                <TextBlock Text="Run FastRead in:" FontSize="13" FontWeight="SemiBold" HorizontalAlignment="Center" />
-                <RadioButton x:Name="RunInPanelRadio" Content="Right Panel" GroupName="RunFastReadIn"
-                             HorizontalAlignment="Center" Checked="OnRunLocationChecked" />
-                <RadioButton x:Name="RunInWindowRadio" Content="New Fast Read Window (Recommended)" GroupName="RunFastReadIn"
-                             HorizontalAlignment="Center" Checked="OnRunLocationChecked" />
+            <!-- "Run FastRead in:" is LEFT-aligned (Manh 2026-11-20),
+                 like mac — the rest of the demo stays centered. -->
+            <StackPanel Margin="0,12,0,0" Spacing="4" HorizontalAlignment="Left">
+                <TextBlock Text="Run FastRead in:" FontSize="13" FontWeight="SemiBold" HorizontalAlignment="Left" />
+                <RadioButton x:Name="RunInPanelRadio" Content="FastRead Lite" GroupName="RunFastReadIn"
+                             HorizontalAlignment="Left" Checked="OnRunLocationChecked" />
+                <RadioButton x:Name="RunInWindowRadio" Content="New FastRead Window (recommended)" GroupName="RunFastReadIn"
+                             HorizontalAlignment="Left" Checked="OnRunLocationChecked" />
                 <TextBlock Text="Applies to the Fast Read button, the float icon, and the keyboard shortcut."
-                           FontSize="12" Foreground="Gray" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" />
+                           FontSize="12" Foreground="Gray" HorizontalAlignment="Left" TextWrapping="Wrap" TextAlignment="Left" />
             </StackPanel>
         </StackPanel>
 

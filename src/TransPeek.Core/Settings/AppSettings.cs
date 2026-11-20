@@ -181,6 +181,14 @@ public sealed class AppSettings
     /// default) or "Dark" (White on Black). Settings popover in the
     /// reader window (mac round 7).</summary>
     public string RsvpColorScheme { get; set; } = "Light";
+    /// <summary>Fast Read context text style: "Style1" (FastRead Lite
+    /// book page — before-text above, after-text below, focus line
+    /// pinned at the center; default) or "Style2" (the window's
+    /// scrollable context paragraph below the focus line). Only the
+    /// focus + around-text display and interaction follow the style —
+    /// the other controls stay the same. Settings popover in the
+    /// reader window.</summary>
+    public string RsvpContextStyle { get; set; } = "Style1";
     /// <summary>Fast Read window size in physical pixels, remembered
     /// after resize (0 = auto: 70% x 55% of the work area, min 880x550).</summary>
     public double RsvpWindowWidth { get; set; } = 0;
@@ -203,6 +211,10 @@ public sealed class AppSettings
     /// user turns it off or stops it. OFF = each session ends and waits
     /// for a manual start. Toggle in the Focus &amp; Rest card.</summary>
     public bool FocusRepeatAutomatically { get; set; } = true;
+    /// <summary>Auto start focus (Manh 2026-11-20, 09:47; default OFF):
+    /// when ON, the focus timer starts on its own at app launch — as
+    /// if the user pressed Start. Toggle in the Focus &amp; Rest card.</summary>
+    public bool FocusAutoStart { get; set; } = false;
     /// <summary>Where a focus / rest-eyes reminder shows: "NewWindow"
     /// (a separate Rest window, default) or "RightPanel" (the reminder
     /// text is read in panel right). Only applies to reminders — not

@@ -30,6 +30,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <!-- Top bar (paused only): 4 pickers tight (6 px, so they fit
@@ -217,8 +218,14 @@
                        Text="Space play/pause • ←/→ step • ↑/↓ speed" />
         </Grid>
 
-        <!-- Completion (paused + finished): the same line as mac. -->
+        <!-- Completion (paused + finished, mac §14.5): at full size the
+             full congratulations sentence, at the small size just
+             "Congratulations!" — mac shows the sentence + share
+             full-size only. The share row below it (next row) shares
+             the real stats of the finished read. -->
         <TextBlock x:Name="CompletionText" Grid.Row="5" Text="Congratulations!" FontSize="13" FontWeight="SemiBold"
                    HorizontalAlignment="Center" Margin="0,8,0,0" Visibility="Collapsed" />
+        <StackPanel x:Name="CompletionShareRowPanel" Grid.Row="6" Orientation="Horizontal" Spacing="10"
+                    HorizontalAlignment="Center" Margin="0,8,0,0" Visibility="Collapsed" />
     </Grid>
 </UserControl>

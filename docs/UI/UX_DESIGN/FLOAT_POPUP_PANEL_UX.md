@@ -267,7 +267,22 @@ card "How the icon works" bị đặt nhầm vào panel center thay vì panel le
   (§6.1 + §6.3 cho Windows/C#). **Đã triển khai trên nhánh `feature/fast-read-rsvp`
   (17/11): xem `docs/FEATURES/FAST_READ.md` — engine + window + 4 đường vào
   (Alt-click, menu chuột phải icon, nút "Fast Read" trong panel dịch, tray);
-  phím tắt global chỉ là fallback, chưa làm.**
+  phím tắt global chỉ là fallback, chưa làm.
+- **"Run FastRead in" — 2 logic đã có sẵn, setting GLOBAL (kiểm tra
+  2026-11-20, Manh dặn 12:57):** setting `FastReadRunLocation`
+  ("NewWindow" mặc định / "RightPanel"), lưu trong settings.json, áp
+  cho MỌI đường mở Fast Read. Mọi đường đều hội tụ qua 1 cửa duy nhất
+  `App.RouteFastRead(text)`: "RightPanel" → `_panel.ShowPanelForReading(text)`
+  (mở panel + chuyển tab phải + chạy chữ qua `FocusTimerStore.RequestPanelReading`
+  → `PanelRightRequest` → panel `ShowTab(FastRead)` + `StartPanelReading` +
+  tự pin); "NewWindow" → `ShowFastReadWindow(text)`. (1) Nút "Fast Read"
+  ở panel center: `OnFastReadClicked` → `_fastReadRequested` →
+  `OpenFastReadAsync` → `RouteFastRead` (handler KHÔNG được HidePanel vô
+  điều kiện, không thì đường panel phải tự ẩn panel nó vừa mở). (2) Click
+  icon A+: `TriggerIconWindow.FastReadRequested` → `OpenFastReadFromSelectionAsync`
+  (lấy selection/clipboard) → `RouteFastRead`. Tray + shortcut cũng qua
+  `OpenFastReadFromSelectionAsync`. Nhãn UI mới (2026-11-20): "FastRead
+  Lite" / "New FastRead Window (recommended)". Xem `docs/FEATURES/FAST_READ.md`.
 
 ## 11. Panel center + Panel left — thiết kế CHỐT (19/11/2026, theo v0.1.4 / build 248 mac)
 
@@ -296,13 +311,20 @@ card "How the icon works" bị đặt nhầm vào panel center thay vì panel le
   cả 3 panel, thay cho nút Pin cũ ở hàng Actions (chỉ hiện ở tab
   center).
 - Panel right là **lite reader** từ 2026-11-20
-  (feature/focus-timer-decor): demo ("Fast Read — coming soon" +
-  preview focus "reading" + nút "Read in panel" + radios "Run FastRead
-  in") khi chưa đọc, và `CompactReadingView` khi đang đọc — cùng view
-  model với Fast Read window. Xem `docs/FEATURES/FAST_READ.md` (mục
-  "Shared view model") + `docs/FEATURES/FOCUS_REST.md`.
+  (feature/focus-timer-decor): demo ("Fast Read Lite" + preview focus
+  "reading" + nút "Read in panel" + radios "Run FastRead in" — nhãn
+  "FastRead Lite" / "New FastRead Window (recommended)", section
+  radios căn LEFT) khi chưa đọc, và `CompactReadingView` khi đang đọc
+  — cùng view model với Fast Read window. Đọc xong ở lite: câu chúc
+  mừng đầy đủ + share chỉ ở full-size (≥ 540), size bé chỉ
+  "Congratulations!". Space = play/pause ở lite (đọc do user bấm thì
+  panel tự kích hoạt để nhận phím; đọc do nhắc nghỉ thì KHÔNG kích
+  hoạt). Thiết kế lite ĐÃ CHỐT, không đổi nữa. Xem
+  `docs/FEATURES/FAST_READ.md` (mục "Shared view model") +
+  `docs/FEATURES/FOCUS_REST.md`.
 - **Banner nhắc nghỉ** (feature/focus-timer-decor): overlay ở đầu vùng
-  tab, hiện trên CẢ 3 tab khi có nhắc đang chờ — xem
+  tab, hiện trên CẢ 3 tab khi có nhắc đang chờ — nền cam 0.25 (mac
+  0.12; Windows tăng fill 2026-11-20 cho dễ đọc) — xem
   `docs/FEATURES/FOCUS_REST.md`.
 
 ### 11.2 Panel center (dịch, tab mặc định)
@@ -360,7 +382,7 @@ card "How the icon works" bị đặt nhầm vào panel center thay vì panel le
 | Hạng mục | mac | Windows |
 |---|---|---|
 | Vị trí hàng chấm | Ngay dưới top bar (tạm thời, vòng 5) + nút chevron 2 bên | Ở bottom bar, dưới icon GitHub (tạm thời) — xem §10 |
-| Chuyển tab | Bấm chấm/chevron, vuốt trên hàng chấm, vuốt trackpad (50pt = 1 tab) | Bấm chấm/chevron (E76B/E76C), **lăn chuột** trên hàng chấm + topbar + bottom bar (throttle 0.4s) — **KHÔNG vuốt** (WinUI không có sẵn vuốt cho panel, phải tự chế, Manh chưa duyệt) |
+| Chuyển tab | Bấm chấm/chevron, vuốt trên hàng chấm, vuốt trackpad (50pt = 1 tab) | Bấm chấm/chevron (E76B/E76C), **lăn chuột** trên hàng chấm + topbar + bottom bar (throttle 0.4s) — **KHÔNG vuốt** (WinUI không có sẵn vuốt cho panel, phải tự chế, Manh chưa duyệt). **KHÔNG có phím tắt ←/→ chuyển tab** (Manh 2026-11-20 11:30 — phím ←/→ ở Read lite đã dùng để tua slide, trùng; 2 nút chevron ‹ › GIỮ NGUYÊN làm fallback khi không vuốt) |
 | Sau này | Chờ Manh quyết vị trí cuối | Có thể dời lên dưới hint như mac (Manh 19/11) — hiện tại để tạm |
 
 ### 11.5 Chưa chốt trong mục này (hoãn sang 0.1.5)

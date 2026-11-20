@@ -138,6 +138,29 @@ public sealed class FocusTimerStore : INotifyPropertyChanged
         SettingsStore.Save(App.Settings);
     }
 
+    /// <summary>Auto start focus (Manh 2026-11-20, 09:47; default OFF):
+    /// turning the toggle on only remembers the choice — it never
+    /// starts a session by itself (mac: autoStartFocusIfEnabled).</summary>
+    public void SetAutoStartFocus(bool autoStart)
+    {
+        App.Settings.FocusAutoStart = autoStart;
+        SettingsStore.Save(App.Settings);
+    }
+
+    /// <summary>Start the focus timer at app launch when "Auto start
+    /// focus" is ON — exactly as if the user pressed Start (same full
+    /// Work interval, same ticker). Only starts from idle, so it can
+    /// never restart or double-start a session. Called once from App
+    /// at launch.</summary>
+    public void AutoStartFocusIfEnabled()
+    {
+        if (!App.Settings.FocusAutoStart
+            || _engine.PomodoroPhase != FocusPomodoroPhase.Idle
+            || _engine.PomodoroRunning)
+            return;
+        TogglePomodoro();
+    }
+
     public void ToggleEyeRest()
     {
         _engine.ToggleEyeRest();

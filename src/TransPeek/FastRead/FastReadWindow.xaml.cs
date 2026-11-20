@@ -24,6 +24,7 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using TransPeek.Core.Settings;
 using TransPeek.Interop;
+using TransPeek.Share;
 using Windows.Foundation;
 using Windows.System;
 using WinRT.Interop;
@@ -158,6 +159,9 @@ public sealed partial class FastReadWindow : Window
             case nameof(RsvpReaderViewModel.IsPlaying):
                 PlayPauseIcon.Glyph = _viewModel.IsPlaying ? "\uE769" : "\uE768";
                 break;
+            case nameof(RsvpReaderViewModel.IsFinished):
+                UpdateCompletion();
+                break;
             case nameof(RsvpReaderViewModel.StatusText):
             case nameof(RsvpReaderViewModel.CurrentSlideIndex):
             case nameof(RsvpReaderViewModel.SlideCount):
@@ -177,6 +181,29 @@ public sealed partial class FastReadWindow : Window
             case nameof(RsvpReaderViewModel.ColorScheme):
                 SyncControls();
                 break;
+            case nameof(RsvpReaderViewModel.ContextStyle):
+                // The style changes how the context renders (book page
+                // vs scroll paragraph) and which control shows it.
+                RenderContext();
+                SyncControls();
+                break;
+        }
+    }
+
+    /// <summary>Completion (mac §14.5): when a full read finishes, show
+    /// the congratulations line + the share row above the progress bar.
+    /// The share buttons share the real stats of the finished read.</summary>
+    private void UpdateCompletion()
+    {
+        if (_viewModel.IsFinished && _viewModel.CompletionText is { } completion)
+        {
+            CompletionText.Text = completion;
+            ShareRowBuilder.Populate(CompletionShareRowPanel, _viewModel.ShareText);
+            CompletionPanel.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            CompletionPanel.Visibility = Visibility.Collapsed;
         }
     }
 
@@ -194,6 +221,7 @@ public sealed partial class FastReadWindow : Window
         SelectComboByTag(ContextSizeCombo, NearestContextPercent(_viewModel.ContextSizeRatio * 100).ToString());
         SelectComboByTag(ColorSchemeCombo, _viewModel.ColorScheme);
         SelectComboByTag(ContextDisplayCombo, _viewModel.ContextDisplay);
+        SelectComboByTag(ContextStyleCombo, _viewModel.ContextStyle);
         ApplyColorScheme();
         _loading = false;
     }
@@ -263,36 +291,61 @@ public sealed partial class FastReadWindow : Window
     }
 
     /// <summary>Render the pause context (+/-150 words around the
-    /// current slide, the current words bold + orange) when the view
-    /// model says it shows (Always / Paused / Never — see
-    /// RsvpReaderViewModel.ShowContext). Size = focus size x the
-    /// "Context size" percent, line height 1.5x.</summary>
+    /// current slide). Two styles: Style 1 (FastRead Lite book page,
+    /// default) puts the before-words above the focus line and the
+    /// after-words below it, the focus line pinned at the vertical
+    /// center; Style 2 (the window's own theme) shows one scrollable
+    /// paragraph below the focus line, the current words bold + orange
+    /// inline. Size = focus size x the "Context size" percent, line
+    /// height 1.5x — same in both styles.</summary>
     private void RenderContext()
     {
         var context = _viewModel.PauseContext;
         if (!_viewModel.ShowContext || context is null)
         {
             ContextScroller.Visibility = Visibility.Collapsed;
+            BeforeTextBlock.Visibility = Visibility.Collapsed;
+            AfterTextBlock.Visibility = Visibility.Collapsed;
             return;
         }
         var contextSize = _viewModel.ContextFontSize;
-        ContextTextBlock.FontSize = contextSize;
-        ContextTextBlock.LineHeight = contextSize * 1.5;
-        ContextTextBlock.Inlines.Clear();
-        var before = string.Join(" ", context.Words.Take(context.CurrentStart));
-        var current = string.Join(" ", context.Words.Skip(context.CurrentStart).Take(context.CurrentCount));
-        var after = string.Join(" ", context.Words.Skip(context.CurrentStart + context.CurrentCount));
-        if (before.Length > 0)
-            ContextTextBlock.Inlines.Add(new Run { Text = before + " " });
-        ContextTextBlock.Inlines.Add(new Run
+        if (string.Equals(_viewModel.ContextStyle, "Style2", StringComparison.OrdinalIgnoreCase))
         {
-            Text = current,
-            FontWeight = FontWeights.SemiBold,
-            Foreground = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(0xFF, 0xF6, 0x86, 0x1F)),
-        });
-        if (after.Length > 0)
-            ContextTextBlock.Inlines.Add(new Run { Text = " " + after });
-        ContextScroller.Visibility = Visibility.Visible;
+            // Style 2: the scroll paragraph. The book-page texts hide;
+            // the drag-to-resize handlers live on the scroller, so they
+            // only fire here.
+            BeforeTextBlock.Visibility = Visibility.Collapsed;
+            AfterTextBlock.Visibility = Visibility.Collapsed;
+            ContextTextBlock.FontSize = contextSize;
+            ContextTextBlock.LineHeight = contextSize * 1.5;
+            ContextTextBlock.Inlines.Clear();
+            var before = string.Join(" ", context.Words.Take(context.CurrentStart));
+            var current = string.Join(" ", context.Words.Skip(context.CurrentStart).Take(context.CurrentCount));
+            var after = string.Join(" ", context.Words.Skip(context.CurrentStart + context.CurrentCount));
+            if (before.Length > 0)
+                ContextTextBlock.Inlines.Add(new Run { Text = before + " " });
+            ContextTextBlock.Inlines.Add(new Run
+            {
+                Text = current,
+                FontWeight = FontWeights.SemiBold,
+                Foreground = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(0xFF, 0xF6, 0x86, 0x1F)),
+            });
+            if (after.Length > 0)
+                ContextTextBlock.Inlines.Add(new Run { Text = " " + after });
+            ContextScroller.Visibility = Visibility.Visible;
+            return;
+        }
+        // Style 1: the book page (mac: bookPage). The current words
+        // are the focus line itself, so they are not repeated inline.
+        ContextScroller.Visibility = Visibility.Collapsed;
+        BeforeTextBlock.FontSize = contextSize;
+        BeforeTextBlock.LineHeight = contextSize * 1.5;
+        AfterTextBlock.FontSize = contextSize;
+        AfterTextBlock.LineHeight = contextSize * 1.5;
+        BeforeTextBlock.Text = string.Join(" ", context.Words.Take(context.CurrentStart));
+        AfterTextBlock.Text = string.Join(" ", context.Words.Skip(context.CurrentStart + context.CurrentCount));
+        BeforeTextBlock.Visibility = Visibility.Visible;
+        AfterTextBlock.Visibility = Visibility.Visible;
     }
 
     private void SaveWindowSize()
@@ -381,11 +434,19 @@ public sealed partial class FastReadWindow : Window
             _viewModel.SetContextDisplay(tag);
     }
 
+    private void OnContextStyleChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_loading)
+            return;
+        if (ContextStyleCombo.SelectedItem is ComboBoxItem item && item.Tag is string tag)
+            _viewModel.SetContextStyle(tag);
+    }
+
     /// <summary>Reset to default (Manh 2026-11-19, mac round 7):
     /// speed 275, focus size 110, context size 40%, context display
-    /// "Only show when paused". The color scheme is a theme
-    /// preference, so it is NOT reset. The controls sync from the
-    /// view model's notifications.</summary>
+    /// "Only show when paused". The color scheme and the context style
+    /// are theme preferences, so they are NOT reset. The controls sync
+    /// from the view model's notifications.</summary>
     private void OnResetClicked(object sender, RoutedEventArgs e)
         => _viewModel.ResetToDefaults();
 
@@ -419,11 +480,13 @@ public sealed partial class FastReadWindow : Window
     }
 
     /// <summary>Wheel over the focus word (Manh 2026-11-19): scroll up
-    /// grows the focus size, scroll down shrinks it, 5pt per tick,
-    /// clamped 40-450. The picker shows the nearest option — the
-    /// value itself stays exact, like mac. The focus size drives the
-    /// around text too (context = focus x the "Context size" percent),
-    /// so one wheel tick grows/shrinks both, like 191.
+    /// grows the focus size, scroll down shrinks it, 5pt per tick.
+    /// Style 2 clamps 40-450 (the window's own theme); Style 1
+    /// (FastRead Lite) does NOT cap — swipe freely, the user trims it
+    /// to the frame, like the panel lite. The picker shows the nearest
+    /// option — the value itself stays exact, like mac. The focus size
+    /// drives the around text too (context = focus x the "Context
+    /// size" percent), so one wheel tick grows/shrinks both, like 191.
     /// RESTORED 2026-11-19 from the 191 behaviour: 192 had forwarded
     /// this wheel to scroll the context instead, but Manh liked the
     /// 191 focus-size wheel and asked for it back. To scroll the
@@ -435,7 +498,11 @@ public sealed partial class FastReadWindow : Window
         var delta = e.GetCurrentPoint((UIElement)sender).Properties.MouseWheelDelta;
         if (delta == 0)
             return;
-        var size = Math.Clamp(WordTextBlock.FontSize + (delta > 0 ? 5 : -5), 40, 450);
+        var size = WordTextBlock.FontSize + (delta > 0 ? 5 : -5);
+        if (string.Equals(_viewModel.ContextStyle, "Style2", StringComparison.OrdinalIgnoreCase))
+            size = Math.Clamp(size, 40, 450);
+        else
+            size = Math.Max(1, size);
         _viewModel.ApplyFocusSize(size);
         e.Handled = true;
     }

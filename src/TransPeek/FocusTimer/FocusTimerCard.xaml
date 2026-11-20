@@ -97,6 +97,8 @@
                     </StackPanel>
                     <ToggleSwitch x:Name="RepeatToggle" Header="Repeat automatically" Toggled="OnRepeatToggled"
                                   ToolTipService.ToolTip="When on, the next session starts on its own after each break; off waits for a manual start." />
+                    <ToggleSwitch x:Name="AutoStartToggle" Header="Auto start focus (default: Off)" Toggled="OnAutoStartToggled"
+                                  ToolTipService.ToolTip="When on, the focus timer starts automatically every time the app launches — no need to open the panel and press Start." />
                 </StackPanel>
                 <!-- Rest eyes (20-20-20) -->
                 <StackPanel Spacing="4">

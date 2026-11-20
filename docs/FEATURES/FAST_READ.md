@@ -192,18 +192,25 @@ status and reading-time text.
 **"Run FastRead in:"** (panel right demo, radios — also the setting
 `FastReadRunLocation`, "NewWindow" default / "RightPanel"): where Fast
 Read opens from EVERY entry point (panel button, float icon, tray,
-shortcut). The demo's **"Read in panel" button always reads in the
-panel**, whatever the radios say. Panel-right reading: the panel stays
-open, switches to the Fast Read tab, starts the read and pins itself;
-the demo shows the word "reading" with its "a" in yellow between two
-half-bars (the pivot preview).
+shortcut). Labels (Manh 2026-11-20, mac parity): **"FastRead Lite"**
+(panel right) / **"New FastRead Window (recommended)"** (window).
+The demo's **"Read in panel" button always reads in the panel**,
+whatever the radios say. Panel-right reading: the panel stays open,
+switches to the Fast Read tab, starts the read and pins itself; the
+demo shows the word "reading" with its "a" in yellow between two
+half-bars (the pivot preview). The demo title is **"Fast Read Lite"**
+(no more "coming soon"), and the "Run FastRead in:" section is
+LEFT-aligned (the rest of the demo stays centered). The lite design
+is FROZEN as it stands (Manh 2026-11-20) — no more changes to it
+beyond this batch.
 
 **Panel vs window differences (settled):**
 
 - Panel wheel on the focus line: focus size ±5pt per tick, **NO cap**
   (Manh 2026-11-20, 07:02 — swipe freely, the user trims it to the
-  frame). The window clamps 40–450 at its call sites. The view model
-  itself does not clamp the focus size.
+  frame). The window follows its context style: Style 1 no cap (like
+  the panel), Style 2 clamps 40–450. The view model itself does not
+  clamp the focus size.
 - Panel ↑/↓ keys: speed ±50 WPM (like mac). Window ↑/↓: the WPM
   slider ±10 (unchanged).
 - Panel has no sentence step (Shift+←/→ on mac): the window never had
@@ -216,6 +223,57 @@ half-bars (the pivot preview).
   size (max clamped to the visible work area — never covers the
   taskbar/Dock, mac 08:11 fix). The panel's horizontal wheel over the
   Fast Read tab switches tabs (mac: horizontal swipe passes through).
+- Space in panel right: the keys already existed in code
+  (`CompactReadingView.HandleKey` + the panel's KeyDown forwarding),
+  but they never arrived — the panel shows without activation
+  (NOACTIVATE). A user-started panel-right read (panel button / float
+  icon / tray) now activates the panel on start
+  (`ShowPanelForReading`), so Space/←/→/↑/↓/R work at once.
+  Reminder reads do NOT activate (they must never steal focus).
+- Completion: when a full read finishes, both layouts show
+  "Congratulations! You just read X words in Y minutes, Z seconds!"
+  + the share row (see "Completion" below). The lite shows the full
+  sentence + share only at full size (width ≥ 540); at the small size
+  just "Congratulations!".
+
+## Context styles — Style 1 / Style 2 (2026-11-20)
+
+The Window Read's Settings popover offers two **context styles** for
+the focus + around-text display and interaction only — the other
+controls stay the same. Setting `RsvpContextStyle` ("Style1" default /
+"Style2").
+
+- **Style 1 (default) — FastRead Lite:** the book page: the
+  before-words above the focus line, the after-words below it, the
+  focus line pinned at the vertical center. Wheel over the reading
+  area changes the focus size with NO cap; no context scroll, no
+  drag-to-resize the context (the picker still sets the size).
+- **Style 2 — the window's own theme:** one scrollable context
+  paragraph below the focus line, the current words bold + orange
+  inline. Wheel over the focus word changes the size clamped 40–450;
+  wheel over the context scrolls it; press-hold drag up/down on the
+  context resizes it (5% per 24 px).
+
+Identical in both styles: the pivot split + alignment, the orange
+pivot (#F6861F), the tick bars, the context font (focus × "Context
+size"), Light/Dark. The lite reader IS Style 1 (it has no style
+picker). The style is a theme preference — Reset does NOT reset it
+(same as the color scheme).
+
+## Completion — congratulations + share (2026-11-20, mac §14.5)
+
+The view model tracks the **elapsed reading time** (banked across the
+playing stretches of the current read; reset on a new text, on
+Restart, and on play-after-finish) and exposes `CompletionText`
+("Congratulations! You just read X words in Y minutes, Z seconds!")
+and `ShareText` ("I just read X words in … with TransPeek Fast Read
+— read 2–3x faster and improve your learning experience!"). When a
+full read finishes, the congratulations line + the share row
+(`ShareRowBuilder`, same row as About) show **above the progress
+bar** — in the window, and in the lite reader (full-size only, see
+above). The window's "Reading time: Xmins" at the top-left is the
+ESTIMATE (unchanged); the completion line reports the time actually
+spent.
 
 ## Entry points (Manh's order, 2026-11-17)
 
@@ -248,9 +306,9 @@ text. Nothing to read shows a toast.
   ("Click icon"). Alt+click does the OTHER action.
 - `RsvpWpm` (275), `RsvpChunkSize` (1), `RsvpFontSize` (110),
   `RsvpContextSizeRatio` (0.40), `RsvpContextDisplay` ("Paused"),
-  `RsvpColorScheme` ("Light") — changed live from the reader window's
-  controls (saved immediately, like the other sliders); changing
-  WPM/chunk rebuilds the document keeping the
+  `RsvpColorScheme` ("Light"), `RsvpContextStyle` ("Style1") — changed
+  live from the reader window's controls (saved immediately, like the
+  other sliders); changing WPM/chunk rebuilds the document keeping the
   current word.
 - `RsvpWindowWidth` / `RsvpWindowHeight` — remembered window size (0 = auto).
 - `FastReadRunLocation` ("NewWindow" default / "RightPanel"): where Fast
