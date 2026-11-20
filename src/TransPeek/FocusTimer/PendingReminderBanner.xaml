@@ -1,0 +1,30 @@
+<UserControl
+    x:Class="TransPeek.FocusTimer.PendingReminderBanner"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Break-reminder banner (feature/focus-timer-decor, mac parity:
+         PendingReminderBanner.swift): shows above the tab content on
+         ALL tabs while a reminder waits. The read is never stolen —
+         the banner says so, and the two buttons either take the break
+         now or snooze it 5 minutes. Bell: Ringer EA8F (Segoe Fluent
+         Icons, verified on Microsoft Learn 2026-11-20 — mac uses
+         bell.fill). Background: orange at 0.12 opacity, like mac. -->
+    <Border x:Name="BannerBorder" CornerRadius="8" Background="#1FF6861F"
+            Padding="12,8" Margin="0,0,0,8" Visibility="Collapsed">
+        <StackPanel Spacing="6">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <FontIcon Glyph="&#xEA8F;" FontSize="14" Foreground="#F6861F" VerticalAlignment="Top" Margin="0,2,0,0" />
+                <StackPanel Spacing="2">
+                    <TextBlock x:Name="TitleText" FontSize="13" FontWeight="SemiBold" TextWrapping="Wrap" />
+                    <TextBlock Text="Your reading stays as it is." FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
+                </StackPanel>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Content="Take a break" Click="OnTakeBreakClicked"
+                        Style="{StaticResource AccentButtonStyle}" />
+                <Button Content="Snooze 5 min" Click="OnSnoozeClicked" />
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</UserControl>

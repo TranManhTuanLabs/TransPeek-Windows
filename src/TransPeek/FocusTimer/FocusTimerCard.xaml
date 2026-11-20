@@ -1,0 +1,140 @@
+<UserControl
+    x:Class="TransPeek.FocusTimer.FocusTimerCard"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Focus &amp; Rest card (feature/focus-timer-decor, mac parity:
+         FocusTimerCard.swift): Pomodoro + 20-20-20 eye-rest + where a
+         reminder shows. Second card on panel left, between "How the
+         icon works" and "Keyboard shortcuts" (Manh 2026-11-20, 07:06).
+         Same card chrome as the How card: Border + a header Button
+         that IS the whole top bar (click it to collapse/expand).
+         Glyphs (Segoe Fluent Icons, verified on Microsoft Learn
+         2026-11-20): Clock E917 (mac "timer"), Heart EB51 (mac
+         "heart"), Walk E805 (mac "figure.walk"). -->
+    <Border Margin="0,0,0,8" CornerRadius="6" BorderThickness="1"
+            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Button x:Name="FocusTimerHeaderButton" Grid.Row="0" Click="OnHeaderClicked"
+                    Background="Transparent" BorderThickness="0" Padding="8,6"
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
+                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <FontIcon Glyph="&#xE917;" FontSize="13" Foreground="Gray" VerticalAlignment="Center" />
+                    <TextBlock x:Name="FocusTimerChevronText" Text="⌄" FontSize="12" Foreground="Gray" VerticalAlignment="Center" />
+                    <TextBlock Text="Focus &amp; Rest" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    <!-- Orange dot (mac: 8pt, on the header when a
+                         reminder is waiting): "A break reminder is
+                         waiting" — the banner + this dot are the
+                         reminder's visible surfaces (no system toast
+                         yet, Manh 2026-11-20). -->
+                    <Ellipse x:Name="PendingDot" Width="8" Height="8" Fill="#F6861F"
+                             VerticalAlignment="Center" Margin="4,0,0,0" Visibility="Collapsed"
+                             ToolTipService.ToolTip="A break reminder is waiting" />
+                </StackPanel>
+            </Button>
+            <StackPanel x:Name="FocusTimerBody" Grid.Row="1" Margin="8,0,8,8" Spacing="8">
+                <!-- Pomodoro -->
+                <StackPanel Spacing="4">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xEB51;" FontSize="13" Foreground="Gray" VerticalAlignment="Center" />
+                            <TextBlock Text="Focus" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <TextBlock x:Name="PhaseText" Grid.Column="2" Text="Ready" FontSize="12" Foreground="Gray" VerticalAlignment="Center" />
+                    </Grid>
+                    <TextBlock x:Name="CountdownText" Text="25:00" FontSize="28" FontWeight="Bold" FontFamily="Consolas"
+                               HorizontalAlignment="Center" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Work (default: 25 min):" FontSize="13" VerticalAlignment="Center" />
+                        <ComboBox x:Name="WorkCombo" Grid.Column="1" Width="88" SelectionChanged="OnWorkChanged" VerticalAlignment="Center">
+                            <ComboBoxItem Content="5 min" Tag="5" />
+                            <ComboBoxItem Content="10 min" Tag="10" />
+                            <ComboBoxItem Content="15 min" Tag="15" />
+                            <ComboBoxItem Content="20 min" Tag="20" />
+                            <ComboBoxItem Content="25 min" Tag="25" />
+                            <ComboBoxItem Content="30 min" Tag="30" />
+                            <ComboBoxItem Content="45 min" Tag="45" />
+                            <ComboBoxItem Content="60 min" Tag="60" />
+                        </ComboBox>
+                    </Grid>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Rest (default: 5 min):" FontSize="13" VerticalAlignment="Center" />
+                        <ComboBox x:Name="RestCombo" Grid.Column="1" Width="88" SelectionChanged="OnRestChanged" VerticalAlignment="Center">
+                            <ComboBoxItem Content="5 min" Tag="5" />
+                            <ComboBoxItem Content="10 min" Tag="10" />
+                            <ComboBoxItem Content="15 min" Tag="15" />
+                        </ComboBox>
+                    </Grid>
+                    <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center" Margin="0,4,0,0">
+                        <Ellipse x:Name="CycleDot0" Width="8" Height="8" Fill="#C8C8C8" />
+                        <Ellipse x:Name="CycleDot1" Width="8" Height="8" Fill="#C8C8C8" />
+                        <Ellipse x:Name="CycleDot2" Width="8" Height="8" Fill="#C8C8C8" />
+                        <Ellipse x:Name="CycleDot3" Width="8" Height="8" Fill="#C8C8C8" />
+                    </StackPanel>
+                    <TextBlock Text="Long break 15 min after 4 cycles" FontSize="12" Foreground="Gray"
+                               HorizontalAlignment="Center" />
+                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" Margin="0,4,0,0">
+                        <Button x:Name="StartPauseButton" Content="Start focus" Click="OnStartPauseClicked" />
+                        <Button x:Name="ResetButton" Content="Reset" Click="OnResetClicked" />
+                    </StackPanel>
+                    <ToggleSwitch x:Name="RepeatToggle" Header="Repeat automatically" Toggled="OnRepeatToggled"
+                                  ToolTipService.ToolTip="When on, the next session starts on its own after each break; off waits for a manual start." />
+                </StackPanel>
+                <!-- Rest eyes (20-20-20) -->
+                <StackPanel Spacing="4">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE805;" FontSize="13" Foreground="Gray" VerticalAlignment="Center" />
+                            <TextBlock Text="Rest eyes (20-20-20)" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <TextBlock x:Name="EyeRestStatusText" Grid.Column="2" Text="Off" FontSize="12" Foreground="Gray" VerticalAlignment="Center" />
+                    </Grid>
+                    <TextBlock Text="Every 20 min, rest your eyes for 20 s — look at something 20 feet away."
+                               FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
+                    <Button x:Name="EyeRestButton" Content="Start eye reminders" Click="OnEyeRestClicked"
+                            HorizontalAlignment="Left" />
+                </StackPanel>
+                <!-- Where a reminder shows -->
+                <StackPanel Spacing="4">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Run reminder in:" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        <ComboBox x:Name="ReminderDestinationCombo" Grid.Column="1" HorizontalAlignment="Right"
+                                  Width="180" SelectionChanged="OnReminderDestinationChanged" VerticalAlignment="Center">
+                            <ComboBoxItem Content="New Fast Read Window" Tag="NewWindow" />
+                            <ComboBoxItem Content="Right Panel" Tag="RightPanel" />
+                        </ComboBox>
+                    </Grid>
+                    <TextBlock Text="Applies only to focus / rest-eyes reminders — not to Fast Read itself."
+                               FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
+                </StackPanel>
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>

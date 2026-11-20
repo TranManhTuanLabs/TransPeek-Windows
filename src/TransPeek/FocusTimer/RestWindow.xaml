@@ -1,0 +1,32 @@
+<Window
+    x:Class="TransPeek.FocusTimer.RestWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:TransPeek.FocusTimer">
+
+    <!-- Rest window (feature/focus-timer-decor, mac parity:
+         RestWindowController.swift): a separate 560x400 window that
+         reads a break reminder with the lite reader, then counts the
+         break down and closes itself. It never touches the Fast Read
+         window — a read in progress keeps reading. The reader is the
+         same CompactReadingView as panel right (no X — the window
+         closes on Esc / Done; no Maximize — the window is a fixed
+         560x400). The countdown shows a coffee cup (Cafe EC32, Segoe
+         Fluent Icons, verified on Microsoft Learn 2026-11-20 — mac
+         uses cup.and.saucer.fill). -->
+    <Grid x:Name="RootGrid" Padding="24,16,24,16">
+        <local:CompactReadingView x:Name="CompactView" />
+        <!-- Countdown after the reminder read finishes (mac: the
+             window closes when the timer ends). -->
+        <StackPanel x:Name="CountdownGrid" HorizontalAlignment="Center" VerticalAlignment="Center"
+                    Spacing="8" Visibility="Collapsed">
+            <FontIcon Glyph="&#xEC32;" FontSize="32" Foreground="Gray" HorizontalAlignment="Center" />
+            <TextBlock x:Name="TitleText" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" />
+            <TextBlock x:Name="CountdownText" FontSize="56" FontWeight="Bold" FontFamily="Consolas"
+                       HorizontalAlignment="Center" />
+            <TextBlock Text="The window closes when the timer ends." FontSize="12" Foreground="Gray"
+                       HorizontalAlignment="Center" />
+            <Button Content="Done" Click="OnDoneClicked" HorizontalAlignment="Center" Margin="0,8,0,0" />
+        </StackPanel>
+    </Grid>
+</Window>

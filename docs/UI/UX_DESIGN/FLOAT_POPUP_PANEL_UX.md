@@ -291,9 +291,19 @@ card "How the icon works" bị đặt nhầm vào panel center thay vì panel le
 - **Hàng chấm ở bottom bar, dưới icon GitHub (TẠM THỜI)** — vị trí +
   kích thước + chevron + lăn chuột xem §10. Sau này có thể dời lên
   dưới hint cho đồng bộ mac (Manh 19/11) — hiện tại để tạm, không đổi.
-- Panel right là placeholder ("Fast Read — coming soon") cho tới khi
-  Fast Read window ship (icon ReadingMode E736 + "Fast Read" +
-  "Coming soon", căn giữa — xem §10).
+  **Pin nằm ở mép trái hàng chấm (Margin 10) từ 2026-11-20
+  (feature/focus-timer-decor, mac parity)** — một nút Pin dùng chung
+  cả 3 panel, thay cho nút Pin cũ ở hàng Actions (chỉ hiện ở tab
+  center).
+- Panel right là **lite reader** từ 2026-11-20
+  (feature/focus-timer-decor): demo ("Fast Read — coming soon" +
+  preview focus "reading" + nút "Read in panel" + radios "Run FastRead
+  in") khi chưa đọc, và `CompactReadingView` khi đang đọc — cùng view
+  model với Fast Read window. Xem `docs/FEATURES/FAST_READ.md` (mục
+  "Shared view model") + `docs/FEATURES/FOCUS_REST.md`.
+- **Banner nhắc nghỉ** (feature/focus-timer-decor): overlay ở đầu vùng
+  tab, hiện trên CẢ 3 tab khi có nhắc đang chờ — xem
+  `docs/FEATURES/FOCUS_REST.md`.
 
 ### 11.2 Panel center (dịch, tab mặc định)
 
@@ -307,8 +317,9 @@ card "How the icon works" bị đặt nhầm vào panel center thay vì panel le
   OCR) + card kết quả provider (text cap 260, loa/Copy cố định ở đáy
   card) + bảng shortcut của nút "?" nhúng ở ĐẦU ô output khi bấm +
   hàng Actions + DictionaryBar (xem §2).
-- **Hàng Actions:** nút "Fast Read" ở đầu trái + nút "?" + Pin +
-  Settings ở đầu phải.
+- **Hàng Actions:** nút "Fast Read" ở đầu trái + nút "?" + Settings ở
+  đầu phải. **Pin KHÔNG còn ở đây từ 2026-11-20** — nó ở mép trái
+  hàng chấm (xem §11.1).
 - **Bảng "?" :** nhúng ở đầu ô output (ngay trên các card provider),
   tiêu đề "Keyboard shortcuts" + nút đóng [×]. Liệt kê 10 shortcut +
   nút Run. **Khác mac: bấm Run thì ẨN PANEL TRƯỚC rồi mới chạy**
@@ -322,24 +333,26 @@ card "How the icon works" bị đặt nhầm vào panel center thay vì panel le
 ### 11.3 Panel left (shortcut, tab tạm thời)
 
 - Tab này là **TẠM THỜI** — sau này dành cho timer focus / tomato /
-  rest-eyes. Hiện tại nó chứa bảng shortcut. Triển khai chi tiết xem
-  §10 (2 card + dãy share); mục này chỉ chốt lại thiết kế:
+  rest-eyes. **Từ 2026-11-20 (feature/focus-timer-decor) nó đã có thẻ
+  Focus & Rest ở giữa** — xem `docs/FEATURES/FOCUS_REST.md`. Triển
+  khai chi tiết xem §10 (3 card + dãy share); mục này chỉ chốt lại
+  thiết kế:
   1. **Thẻ "How the icon works"** — ĐỘNG theo setting Click (Hover →
      dịch; Click → Fast Read / Nghe; Alt+Click → hành động còn lại).
      Thu gọn được (bấm toàn thanh top), trạng thái lưu trong Settings
      (`HowIconWorksCollapsed`). Windows chỉ có 2 lựa chọn Click (Speak
      / Fast Read) nên không có trường hợp Click = Translate như mac.
-  2. **Bảng "Keyboard Shortcuts"** — cùng bảng với nút "?" ở panel
+  2. **Thẻ "Focus & Rest"** — Pomodoro (Work/Rest, 4 chấm chu kỳ,
+     "Repeat automatically") + rest-eyes 20-20-20 + "Run reminder in".
+     Thu gọn được (bấm toàn thanh top), trạng thái lưu trong Settings
+     (`FocusTimerCollapsed`). Chấm cam ở header khi có nhắc đang chờ.
+  3. **Bảng "Keyboard Shortcuts"** — cùng bảng với nút "?" ở panel
      center (dựng bằng cùng hàm `BuildShortcutRows` nên 2 chỗ không
      bao giờ lệch nhau). Thu gọn được; card shortcuts mở lại mỗi lần
      vào tab.
-  3. **Dãy share** — ở cuối nội dung cuộn: nhãn "Share TransPeek"
+  4. **Dãy share** — ở cuối nội dung cuộn: nhãn "Share TransPeek"
      (11pt, xám, căn giữa) + dãy 6 icon share (căn giữa). KHÔNG tạo
-     card mới, KHÔNG dùng Spacer đẩy xuống đáy — khi 2 thẻ trên thu
-     gọn thì khoảng trống còn lại đến đáy để sau này thêm timer focus,
-     share chỉ chảy tự nhiên sau bảng shortcut. (Đổi 2026-11-19:
-     trước đó share là hàng Auto thứ 3 cố định trong Grid panel left,
-     lấy ~50pt từ card shortcuts.)
+     card mới, KHÔNG dùng Spacer đẩy xuống đáy.
 - Panel left KHÔNG ẩn bottom bar (icon GitHub + version vẫn hiện).
 
 ### 11.4 Hàng chấm — mac vs Windows

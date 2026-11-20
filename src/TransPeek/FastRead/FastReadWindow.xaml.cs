@@ -1,12 +1,20 @@
 // Fast Read (RSVP) reader window — feature/fast-read-rsvp.
-// A separate window (not a panel tab): RSVP needs a big word, one
-// fixed focal point, a progress bar and a pause context. The engine
-// (TransPeek.Core.FastRead) is pure logic; this window only renders slides
-// and drives the timer. Single instance owned by App: re-opening
-// focuses the existing window and loads the new text. READ ONLY —
-// no TTS in the reader (listening is the float icon's job).
+// A separate window, not a panel tab: RSVP needs a big word
+// (40-450 pt), one fixed focal point, a progress bar and a pause
+// context — none of that fits the 420 px translate panel.
+// UX copies SwiftRead's reader (rsvp-report.md §6.1) + the mac
+// reader window (RSVPView.swift, round 7): one word at a time at
+// a fixed ORP pivot (middle char, orange #F6861F), context
+// +/-150 words on pause, WPM 275 default, chunk 1-6.
+// READ ONLY — no TTS in the reader (listening is the float
+// icon's job).
+//
+// Playback lives in RsvpReaderViewModel (feature/focus-timer-decor),
+// shared with the panel-right lite reader — this window only renders
+// the slide and the pause context and syncs its controls from the
+// view model's PropertyChanged. Single instance owned by App:
+// re-opening focuses the existing window and loads the new text.
 
-using Microsoft.UI.Dispatching;
 using Microsoft.UI.Text;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
@@ -14,7 +22,6 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Documents;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
-using TransPeek.Core.FastRead;
 using TransPeek.Core.Settings;
 using TransPeek.Interop;
 using Windows.Foundation;
@@ -25,21 +32,16 @@ namespace TransPeek.FastRead;
 
 public sealed partial class FastReadWindow : Window
 {
-    private readonly DispatcherTimer _timer = new();
+    private readonly RsvpReaderViewModel _viewModel = new();
     /// <summary>Detached TextBlock for measuring word widths (same font
     /// as the displayed word): the ORP pivot is aligned by shifting
     /// the centered word so the pivot char's center lands exactly at
     /// the word area's center.</summary>
     private readonly TextBlock _measurer = new();
-    private RsvpDocument _document = new([], [], TimeSpan.Zero);
-    private string _sourceText = "";
-    private int _currentSlide;
-    private bool _playing;
-    private bool _finished;
     private bool _positioned;
     private bool _updatingProgress;
     /// <summary>Guards the control ValueChanged handlers while LoadText
-    /// syncs them from Settings (same _loading pattern as the Settings
+    /// syncs them from the view model (same _loading pattern as the Settings
     /// pages).</summary>
     private bool _loading = true;
     /// <summary>Drag-to-resize state for the context area (Manh
@@ -65,7 +67,7 @@ public sealed partial class FastReadWindow : Window
         VersionText.Text = AppInfo.CiBuildNumber > 0
             ? $"{AppInfo.Version} (build {AppInfo.CiBuildNumber})"
             : AppInfo.Version;
-        _timer.Tick += (_, _) => AdvanceSlide();
+        _viewModel.PropertyChanged += OnViewModelChanged;
         if (Content is FrameworkElement contentRoot)
             contentRoot.KeyDown += OnKeyDown;
         // Wheel over the progress slider steps one word — a Slider
@@ -87,30 +89,14 @@ public sealed partial class FastReadWindow : Window
     }
 
     /// <summary>Load new text and show the first slide (paused — the
-    /// caller starts playback via ShowReader once visible).</summary>
+    /// caller starts playback via ShowReader once visible). The view
+    /// model reads the reading options from Settings; the controls
+    /// sync from its PropertyChanged (SyncControls below).</summary>
     public void LoadText(string text)
     {
-        _sourceText = text;
-        _document = RsvpEngine.Build(text, App.Settings.RsvpWpm, App.Settings.RsvpChunkSize);
-        _currentSlide = 0;
-        _finished = false;
-        _timer.Stop();
-        _playing = false;
-        PlayPauseIcon.Glyph = "\uE768";
         _loading = true;
-        WpmSlider.Value = App.Settings.RsvpWpm;
-        WpmText.Text = $"{App.Settings.RsvpWpm} WPM";
-        ChunkCombo.SelectedIndex = Math.Clamp(App.Settings.RsvpChunkSize, 1, 6) - 1;
-        SelectComboByTag(FocusSizeCombo, NearestFocusSize(App.Settings.RsvpFontSize).ToString());
-        SelectComboByTag(ContextSizeCombo, NearestContextPercent(App.Settings.RsvpContextSizeRatio * 100).ToString());
-        SelectComboByTag(ColorSchemeCombo, App.Settings.RsvpColorScheme);
-        SelectComboByTag(ContextDisplayCombo, App.Settings.RsvpContextDisplay);
-        ApplyColorScheme();
-        WordTextBlock.FontSize = App.Settings.RsvpFontSize;
+        _viewModel.LoadText(text);
         _loading = false;
-        ShowSlide(0);
-        UpdateProgress();
-        UpdateReadingTime();
     }
 
     public void ShowReader()
@@ -151,13 +137,75 @@ public sealed partial class FastReadWindow : Window
             NativeMethods.ShowWindow(hwnd, NativeMethods.SW_RESTORE);
         NativeMethods.SetForegroundWindow(hwnd);
         Activate();
-        if (_document.Slides.Count > 0)
-            SetPlaying(true);
+        if (_viewModel.HasSlides)
+            _viewModel.SetPlaying(true);
     }
 
-    private void ShowSlide(int index)
+    /// <summary>View-model changes drive the rendering: the slide (and
+    /// the focus size, which the pivot shift depends on), the play
+    /// icon, the progress bar + status, the pause context, the reading
+    /// time, and the control sync. The view model setters early-return
+    /// on equal values, so a control sync feeding back into a setter
+    /// (slider Value -&gt; OnWpmChanged -&gt; SetWpm) is a no-op.</summary>
+    private void OnViewModelChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (_document.Slides.Count == 0)
+        switch (e.PropertyName)
+        {
+            case nameof(RsvpReaderViewModel.CurrentSlide):
+            case nameof(RsvpReaderViewModel.FontSize):
+                RenderSlide();
+                break;
+            case nameof(RsvpReaderViewModel.IsPlaying):
+                PlayPauseIcon.Glyph = _viewModel.IsPlaying ? "\uE769" : "\uE768";
+                break;
+            case nameof(RsvpReaderViewModel.StatusText):
+            case nameof(RsvpReaderViewModel.CurrentSlideIndex):
+            case nameof(RsvpReaderViewModel.SlideCount):
+                SyncProgress();
+                break;
+            case nameof(RsvpReaderViewModel.PauseContext):
+            case nameof(RsvpReaderViewModel.ShowContext):
+            case nameof(RsvpReaderViewModel.ContextSizeRatio):
+                RenderContext();
+                break;
+            case nameof(RsvpReaderViewModel.ReadingTimeText):
+                ReadingTimeText.Text = _viewModel.ReadingTimeText;
+                break;
+            case nameof(RsvpReaderViewModel.Wpm):
+            case nameof(RsvpReaderViewModel.ChunkSize):
+            case nameof(RsvpReaderViewModel.ContextDisplay):
+            case nameof(RsvpReaderViewModel.ColorScheme):
+                SyncControls();
+                break;
+        }
+    }
+
+    /// <summary>Sync the bottom-bar / popover controls from the view
+    /// model (the window's half of LoadText used to do this inline).
+    /// The _loading guard stops the control events from calling back
+    /// into the view model while syncing.</summary>
+    private void SyncControls()
+    {
+        _loading = true;
+        WpmSlider.Value = _viewModel.Wpm;
+        WpmText.Text = $"{_viewModel.Wpm} WPM";
+        ChunkCombo.SelectedIndex = Math.Clamp(_viewModel.ChunkSize, 1, 6) - 1;
+        SelectComboByTag(FocusSizeCombo, NearestFocusSize(_viewModel.FontSize).ToString());
+        SelectComboByTag(ContextSizeCombo, NearestContextPercent(_viewModel.ContextSizeRatio * 100).ToString());
+        SelectComboByTag(ColorSchemeCombo, _viewModel.ColorScheme);
+        SelectComboByTag(ContextDisplayCombo, _viewModel.ContextDisplay);
+        ApplyColorScheme();
+        _loading = false;
+    }
+
+    /// <summary>Render the current slide: the focus word split at its
+    /// ORP pivot (left / pivot / right runs) and shifted so the pivot
+    /// char sits exactly at the word area's center.</summary>
+    private void RenderSlide()
+    {
+        var slide = _viewModel.CurrentSlide;
+        WordTextBlock.FontSize = _viewModel.FontSize;
+        if (slide is null)
         {
             LeftRun.Text = "";
             PivotRun.Text = "";
@@ -165,8 +213,6 @@ public sealed partial class FastReadWindow : Window
             WordTextBlock.RenderTransform = null;
             return;
         }
-        _currentSlide = Math.Clamp(index, 0, _document.Slides.Count - 1);
-        var slide = _document.Slides[_currentSlide];
         if (slide.PivotCharIndex >= 0 && slide.PivotCharIndex < slide.Text.Length)
         {
             LeftRun.Text = slide.Text[..slide.PivotCharIndex];
@@ -183,8 +229,6 @@ public sealed partial class FastReadWindow : Window
             RightRun.Text = "";
             WordTextBlock.RenderTransform = null;
         }
-        UpdateProgress();
-        UpdateContext();
     }
 
     private void AlignPivot(string text, int pivotIndex)
@@ -207,121 +251,33 @@ public sealed partial class FastReadWindow : Window
         WordTextBlock.RenderTransform = new TranslateTransform { X = shift };
     }
 
-    private void AdvanceSlide()
+    private void SyncProgress()
     {
-        if (_currentSlide + 1 >= _document.Slides.Count)
-        {
-            _finished = true;
-            SetPlaying(false);
-            UpdateProgress();
-            return;
-        }
-        ShowSlide(_currentSlide + 1);
-        if (_playing)
-            _timer.Interval = _document.Slides[_currentSlide].Delay;
-    }
-
-    private void SeekTo(int index)
-    {
-        if (_document.Slides.Count == 0)
-            return;
-        _finished = false;
-        ShowSlide(index);
-        if (_playing)
-        {
-            _timer.Stop();
-            _timer.Interval = _document.Slides[_currentSlide].Delay;
-            _timer.Start();
-        }
-        UpdateProgress();
-    }
-
-    private void SetPlaying(bool playing)
-    {
-        if (_document.Slides.Count == 0)
-            playing = false;
-        _playing = playing;
-        PlayPauseIcon.Glyph = playing ? "\uE769" : "\uE768";
-        if (playing)
-        {
-            if (_finished)
-            {
-                _finished = false;
-                _currentSlide = 0;
-                ShowSlide(0);
-            }
-            _timer.Interval = _document.Slides[_currentSlide].Delay;
-            _timer.Start();
-        }
-        else
-        {
-            _timer.Stop();
-        }
-        UpdateContext();
-    }
-
-    /// <summary>Rebuild the document (WPM/chunk changed) keeping the
-    /// reading position: the slide containing the current word.</summary>
-    private void RebuildKeepingPosition()
-    {
-        if (_document.Slides.Count == 0 || string.IsNullOrEmpty(_sourceText))
-            return;
-        var wordIndex = _document.Slides[_currentSlide].StartWordIndex;
-        _document = RsvpEngine.Build(_sourceText, App.Settings.RsvpWpm, App.Settings.RsvpChunkSize);
-        _currentSlide = RsvpEngine.SlideIndexForWord(_document, wordIndex);
-        _finished = false;
-        ShowSlide(_currentSlide);
-        if (_playing)
-        {
-            _timer.Stop();
-            _timer.Interval = _document.Slides[_currentSlide].Delay;
-            _timer.Start();
-        }
-        UpdateReadingTime();
-    }
-
-    private void UpdateProgress()
-    {
-        var total = _document.TotalSlides;
-        if (total == 0)
-        {
-            StatusText.Text = "No text to read.";
-            return;
-        }
+        var total = _viewModel.SlideCount;
         _updatingProgress = true;
         ProgressSlider.Minimum = 0;
-        ProgressSlider.Maximum = total - 1;
-        ProgressSlider.Value = _currentSlide;
+        ProgressSlider.Maximum = Math.Max(0, total - 1);
+        ProgressSlider.Value = _viewModel.CurrentSlideIndex;
         _updatingProgress = false;
-        var remaining = _document.RemainingDuration(_currentSlide);
-        StatusText.Text = _finished
-            ? $"Finished — {_document.TotalWords} words in {FormatDuration(_document.TotalDuration)}"
-            : $"Slide {_currentSlide + 1} / {total} • {FormatDuration(remaining)} left • {_document.TotalWords} words";
+        StatusText.Text = _viewModel.StatusText;
     }
 
-    private static string FormatDuration(TimeSpan d) => $"{(int)d.TotalMinutes}:{d.Seconds:00}";
-
-    private void UpdateContext()
+    /// <summary>Render the pause context (+/-150 words around the
+    /// current slide, the current words bold + orange) when the view
+    /// model says it shows (Always / Paused / Never — see
+    /// RsvpReaderViewModel.ShowContext). Size = focus size x the
+    /// "Context size" percent, line height 1.5x.</summary>
+    private void RenderContext()
     {
-        // When the context shows depends on the Settings popover
-        // (mac round 7, SwiftRead's contextDisplayStyle): Always =
-        // even while playing; Paused = only while paused (default);
-        // Never = never. An unknown value behaves like Paused.
-        var display = App.Settings.RsvpContextDisplay;
-        var show = _document.Slides.Count > 0
-            && (string.Equals(display, "Always", StringComparison.OrdinalIgnoreCase)
-                || (!_playing && !string.Equals(display, "Never", StringComparison.OrdinalIgnoreCase)));
-        if (!show)
+        var context = _viewModel.PauseContext;
+        if (!_viewModel.ShowContext || context is null)
         {
             ContextScroller.Visibility = Visibility.Collapsed;
             return;
         }
-        // Context size = focus size x the "Context size" percent
-        // (mac round 7, default 40%); line height follows at 1.5x.
-        var contextSize = WordTextBlock.FontSize * App.Settings.RsvpContextSizeRatio;
+        var contextSize = _viewModel.ContextFontSize;
         ContextTextBlock.FontSize = contextSize;
         ContextTextBlock.LineHeight = contextSize * 1.5;
-        var context = _document.Context(_currentSlide);
         ContextTextBlock.Inlines.Clear();
         var before = string.Join(" ", context.Words.Take(context.CurrentStart));
         var current = string.Join(" ", context.Words.Skip(context.CurrentStart).Take(context.CurrentCount));
@@ -357,26 +313,22 @@ public sealed partial class FastReadWindow : Window
         }
     }
 
-    private void OnPlayPauseClicked(object sender, RoutedEventArgs e) => SetPlaying(!_playing);
+    private void OnPlayPauseClicked(object sender, RoutedEventArgs e) => _viewModel.SetPlaying(!_viewModel.IsPlaying);
 
-    private void OnRestartClicked(object sender, RoutedEventArgs e) => SeekTo(0);
+    private void OnRestartClicked(object sender, RoutedEventArgs e) => _viewModel.Restart();
 
     private void OnProgressChanged(object sender, Microsoft.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
     {
         if (_loading || _updatingProgress)
             return;
-        SeekTo((int)Math.Round(e.NewValue));
+        _viewModel.SeekTo((int)Math.Round(e.NewValue));
     }
 
     private void OnWpmChanged(object sender, Microsoft.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
     {
         if (_loading)
             return;
-        var wpm = (int)Math.Round(e.NewValue);
-        WpmText.Text = $"{wpm} WPM";
-        App.Settings.RsvpWpm = wpm;
-        SettingsStore.Save(App.Settings);
-        RebuildKeepingPosition();
+        _viewModel.SetWpm((int)Math.Round(e.NewValue));
     }
 
     private void OnChunkChanged(object sender, SelectionChangedEventArgs e)
@@ -385,32 +337,20 @@ public sealed partial class FastReadWindow : Window
             return;
         if (ChunkCombo.SelectedItem is ComboBoxItem item
             && item.Tag is string tag && int.TryParse(tag, out var chunk))
-        {
-            App.Settings.RsvpChunkSize = chunk;
-            SettingsStore.Save(App.Settings);
-            RebuildKeepingPosition();
-        }
+            _viewModel.SetChunkSize(chunk);
     }
 
     /// <summary>Focus size picker (Manh 2026-11-19, mac round 7
     /// options 40-450): apply the size, remember it, re-render the
     /// current slide (the pivot shift depends on the size) — the
-    /// context font follows the focus size in UpdateContext.</summary>
+    /// context font follows the focus size in RenderContext.</summary>
     private void OnFocusSizeChanged(object sender, SelectionChangedEventArgs e)
     {
         if (_loading)
             return;
         if (FocusSizeCombo.SelectedItem is ComboBoxItem item
             && item.Tag is string tag && double.TryParse(tag, out var size))
-            ApplyFocusSize(size);
-    }
-
-    private void ApplyFocusSize(double size)
-    {
-        WordTextBlock.FontSize = size;
-        App.Settings.RsvpFontSize = size;
-        SettingsStore.Save(App.Settings);
-        ShowSlide(_currentSlide);
+            _viewModel.ApplyFocusSize(size);
     }
 
     /// <summary>"Context size" picker (Manh 2026-11-19, mac round 7
@@ -422,11 +362,7 @@ public sealed partial class FastReadWindow : Window
             return;
         if (ContextSizeCombo.SelectedItem is ComboBoxItem item
             && item.Tag is string tag && int.TryParse(tag, out var percent))
-        {
-            App.Settings.RsvpContextSizeRatio = percent / 100.0;
-            SettingsStore.Save(App.Settings);
-            UpdateContext();
-        }
+            _viewModel.SetContextSizeRatio(percent / 100.0);
     }
 
     private void OnColorSchemeChanged(object sender, SelectionChangedEventArgs e)
@@ -434,11 +370,7 @@ public sealed partial class FastReadWindow : Window
         if (_loading)
             return;
         if (ColorSchemeCombo.SelectedItem is ComboBoxItem item && item.Tag is string tag)
-        {
-            App.Settings.RsvpColorScheme = tag;
-            SettingsStore.Save(App.Settings);
-            ApplyColorScheme();
-        }
+            _viewModel.SetColorScheme(tag);
     }
 
     private void OnContextDisplayChanged(object sender, SelectionChangedEventArgs e)
@@ -446,38 +378,20 @@ public sealed partial class FastReadWindow : Window
         if (_loading)
             return;
         if (ContextDisplayCombo.SelectedItem is ComboBoxItem item && item.Tag is string tag)
-        {
-            App.Settings.RsvpContextDisplay = tag;
-            SettingsStore.Save(App.Settings);
-            UpdateContext();
-        }
+            _viewModel.SetContextDisplay(tag);
     }
 
     /// <summary>Reset to default (Manh 2026-11-19, mac round 7):
     /// speed 275, focus size 110, context size 40%, context display
     /// "Only show when paused". The color scheme is a theme
-    /// preference, so it is NOT reset.</summary>
+    /// preference, so it is NOT reset. The controls sync from the
+    /// view model's notifications.</summary>
     private void OnResetClicked(object sender, RoutedEventArgs e)
-    {
-        _loading = true;
-        App.Settings.RsvpWpm = 275;
-        App.Settings.RsvpFontSize = 110;
-        App.Settings.RsvpContextSizeRatio = 0.40;
-        App.Settings.RsvpContextDisplay = "Paused";
-        SettingsStore.Save(App.Settings);
-        WpmSlider.Value = 275;
-        WpmText.Text = "275 WPM";
-        SelectComboByTag(FocusSizeCombo, "110");
-        SelectComboByTag(ContextSizeCombo, "40");
-        SelectComboByTag(ContextDisplayCombo, "Paused");
-        _loading = false;
-        RebuildKeepingPosition();
-        ShowSlide(_currentSlide);
-    }
+        => _viewModel.ResetToDefaults();
 
-    private void OnRewindClicked(object sender, RoutedEventArgs e) => SeekTo(_currentSlide - 1);
+    private void OnRewindClicked(object sender, RoutedEventArgs e) => _viewModel.StepBack();
 
-    private void OnFastForwardClicked(object sender, RoutedEventArgs e) => SeekTo(_currentSlide + 1);
+    private void OnFastForwardClicked(object sender, RoutedEventArgs e) => _viewModel.StepForward();
 
     /// <summary>Maximize / restore the reader window (Manh 2026-11-19,
     /// like mac's toggle-maximize button).</summary>
@@ -500,7 +414,7 @@ public sealed partial class FastReadWindow : Window
         var delta = e.GetCurrentPoint((UIElement)sender).Properties.MouseWheelDelta;
         if (delta == 0)
             return;
-        SeekTo(_currentSlide + (delta < 0 ? 1 : -1));
+        _viewModel.SeekTo(_viewModel.CurrentSlideIndex + (delta < 0 ? 1 : -1));
         e.Handled = true;
     }
 
@@ -522,10 +436,7 @@ public sealed partial class FastReadWindow : Window
         if (delta == 0)
             return;
         var size = Math.Clamp(WordTextBlock.FontSize + (delta > 0 ? 5 : -5), 40, 450);
-        ApplyFocusSize(size);
-        _loading = true;
-        SelectComboByTag(FocusSizeCombo, NearestFocusSize(size).ToString());
-        _loading = false;
+        _viewModel.ApplyFocusSize(size);
         e.Handled = true;
     }
 
@@ -554,7 +465,8 @@ public sealed partial class FastReadWindow : Window
     /// selection drag) passes through untouched. Once resizing, one 5%
     /// step per 24 px of vertical drag, accumulated across moves so a
     /// slow drag still steps smoothly. Up grows, down shrinks — the
-    /// same direction as the old wheel.</summary>
+    /// same direction as the old wheel. The size is saved only on
+    /// release (FinishContextResize), not on every move.</summary>
     private void OnContextPointerMoved(object sender, PointerRoutedEventArgs e)
     {
         if (!e.GetCurrentPoint(ContextScroller).Properties.IsLeftButtonPressed)
@@ -573,7 +485,7 @@ public sealed partial class FastReadWindow : Window
         }
         _dragAccumulated += point.Y - _dragLastY;
         _dragLastY = point.Y;
-        var ratio = App.Settings.RsvpContextSizeRatio;
+        var ratio = _viewModel.ContextSizeRatio;
         while (_dragAccumulated <= -24)
         {
             ratio += 0.05;
@@ -585,13 +497,9 @@ public sealed partial class FastReadWindow : Window
             _dragAccumulated -= 24;
         }
         ratio = Math.Clamp(ratio, 0.25, 1.00);
-        if (Math.Abs(ratio - App.Settings.RsvpContextSizeRatio) < 0.001)
+        if (Math.Abs(ratio - _viewModel.ContextSizeRatio) < 0.001)
             return;
-        App.Settings.RsvpContextSizeRatio = ratio;
-        _loading = true;
-        SelectComboByTag(ContextSizeCombo, NearestContextPercent(ratio * 100).ToString());
-        _loading = false;
-        UpdateContext();
+        _viewModel.SetContextSizeRatio(ratio, save: false);
         e.Handled = true;
     }
 
@@ -620,7 +528,7 @@ public sealed partial class FastReadWindow : Window
     /// popup, so it does not inherit the Grid's theme.</summary>
     private void ApplyColorScheme()
     {
-        var dark = string.Equals(App.Settings.RsvpColorScheme, "Dark", StringComparison.OrdinalIgnoreCase);
+        var dark = string.Equals(_viewModel.ColorScheme, "Dark", StringComparison.OrdinalIgnoreCase);
         var theme = dark ? ElementTheme.Dark : ElementTheme.Light;
         RootGrid.RequestedTheme = theme;
         if (dark)
@@ -631,15 +539,6 @@ public sealed partial class FastReadWindow : Window
             settingsContent.RequestedTheme = theme;
         if (HotkeysFlyout.Content is FrameworkElement hotkeysContent)
             hotkeysContent.RequestedTheme = theme;
-    }
-
-    /// <summary>Total estimated reading time (mac: "Reading time:
-    /// 2mins", under a minute -> "0min"). Top-left inside the block
-    /// text (Manh 2026-11-19).</summary>
-    private void UpdateReadingTime()
-    {
-        var mins = (int)Math.Round(_document.TotalDuration.TotalMinutes);
-        ReadingTimeText.Text = mins <= 0 ? "Reading time: 0min" : $"Reading time: {mins}mins";
     }
 
     private static void SelectComboByTag(ComboBox combo, string tag)
@@ -657,7 +556,7 @@ public sealed partial class FastReadWindow : Window
 
     /// <summary>Focus size picker options (mac round 7: 40-450, steps
     /// grow past 110 so the menu stays short). The picker shows the
-    /// option nearest to a value — the wheel moves the size by 2pt,
+    /// option nearest to a value — the wheel moves the size by 5pt,
     /// so the value is not always one of the options.</summary>
     private static readonly int[] FocusSizeOptions =
         [40, 48, 56, 64, 72, 80, 88, 96, 104, 110, 120, 140, 160, 200, 250, 300, 350, 400, 450];
@@ -683,19 +582,19 @@ public sealed partial class FastReadWindow : Window
                 // has focus.
                 if (focused is Button)
                     return;
-                SetPlaying(!_playing);
+                _viewModel.SetPlaying(!_viewModel.IsPlaying);
                 e.Handled = true;
                 break;
             case VirtualKey.Left:
                 if (focused is Slider)
                     return; // the progress slider seeks by itself.
-                SeekTo(_currentSlide - 1);
+                _viewModel.StepBack();
                 e.Handled = true;
                 break;
             case VirtualKey.Right:
                 if (focused is Slider)
                     return;
-                SeekTo(_currentSlide + 1);
+                _viewModel.StepForward();
                 e.Handled = true;
                 break;
             case VirtualKey.Up:
@@ -711,7 +610,7 @@ public sealed partial class FastReadWindow : Window
                 e.Handled = true;
                 break;
             case VirtualKey.R:
-                SeekTo(0);
+                _viewModel.Restart();
                 e.Handled = true;
                 break;
             case VirtualKey.Escape:

@@ -2,7 +2,8 @@
     x:Class="TransPeek.Views.TranslatePanelWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:TransPeek.Views">
+    xmlns:local="using:TransPeek.Views"
+    xmlns:focus="using:TransPeek.FocusTimer">
 
     <Grid x:Name="RootGrid" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Padding="12">
         <Grid.RowDefinitions>
@@ -301,22 +302,15 @@
             <!-- Shortcuts "?" (Manh 2026-11-18, mac parity): toggles
                  the shortcuts card embedded at the top of the output
                  area (EmbeddedShortcutsCard) — the old Flyout popover
-                 is gone. The "?" sits BEFORE Pin (Manh's choice
-                 17/11): Pin is a stateful toggle, so "?" stays
-                 outside the Pin+Settings pair. While the card is open
-                 the "?" shows in the accent colour. -->
+                 is gone. The "?" sits BEFORE Settings (Manh's choice
+                 17/11). While the card is open the "?" shows in the
+                 accent colour. The Pin button moved to the dots row
+                 (feature/focus-timer-decor, mac parity — one pin for
+                 all 3 panels, at the left end of the dots row). -->
             <Button x:Name="ShortcutsButton" Padding="6,2" Click="OnShortcutsButtonClicked"
                     ToolTipService.ToolTip="Keyboard shortcuts">
                 <TextBlock x:Name="ShortcutsButtonText" Text="?" FontSize="12" FontWeight="SemiBold" />
             </Button>
-            <!-- Pin (Manh 2026-11-14): keep the panel fixed and always
-                 visible — while pinned, click-outside and Esc do NOT
-                 hide it. Toggle again to unpin. Segoe MDL2 Pin E718. -->
-            <ToggleButton x:Name="PinButton" Padding="6,2"
-                          ToolTipService.ToolTip="Pin panel (keep it visible)"
-                          Click="OnPinToggled">
-                <FontIcon Glyph="&#xE718;" FontSize="12" />
-            </ToggleButton>
             <Button x:Name="SettingsButton" Padding="6,2"
                     ToolTipService.ToolTip="Settings" Click="OnOpenSettings">
                 <FontIcon Glyph="&#xE713;" FontSize="12" />
@@ -399,6 +393,13 @@
                     </StackPanel>
                 </Grid>
             </Border>
+            <!-- Focus & Rest card (feature/focus-timer-decor, mac
+                 parity: FocusTimerCard.swift sits between FlowIntroCard
+                 and ShortcutsTableView in PopupView): the Pomodoro /
+                 rest-eyes card, with its own header (Clock E917) and
+                 collapsible body. It is a UserControl — the whole card
+                 (chrome + body) lives in FocusTimerCard.xaml. -->
+            <focus:FocusTimerCard x:Name="FocusTimerCardControl" />
             <!-- Card shortcuts: the same 10 rows as the embedded "?"
                  card, built in code (BuildShortcutRows) from the same
                  _shortcuts list as the embedded card, so the two can
@@ -442,18 +443,24 @@
             </StackPanel>
         </ScrollViewer>
 
-        <!-- Panel right — Fast Read placeholder, description mirrored
-             from mac (Manh 2026-11-19, PopupView.fastReadContent):
-             mac shows "Fast Read — coming soon" + "Fast reading (RSVP)
-             will live here once the Fast Read window is ready."
-             ReadingMode glyph E736 kept (closest Segoe glyph to mac's
-             book.pages icon; verified on Microsoft Learn 2026-11-17). -->
-        <Grid x:Name="FastReadTabPanel" Grid.Row="1" Grid.RowSpan="7" Visibility="Collapsed">
-            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8" Margin="16,0">
-                <FontIcon Glyph="&#xE736;" FontSize="32" Foreground="Gray" HorizontalAlignment="Center" />
-                <TextBlock Text="Fast Read — coming soon" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" />
-                <TextBlock Text="Fast reading (RSVP) will live here once the Fast Read window is ready." FontSize="12" Foreground="Gray" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" />
-            </StackPanel>
+        <!-- Panel right — Fast Read lite (feature/focus-timer-decor,
+             mac parity: PanelFastReadView.swift): the demo when nothing
+             reads (with the focus preview and the "Run FastRead in"
+             radios) and the CompactReadingView while a read is
+             running. It is a UserControl — the whole tab lives in
+             PanelFastReadView.xaml. The old "coming soon" placeholder
+             is gone. -->
+        <focus:PanelFastReadView x:Name="FastReadTabPanel" Grid.Row="1" Grid.RowSpan="7" Visibility="Collapsed"
+                                 PointerWheelChanged="OnFastReadTabWheel" />
+
+        <!-- Pending reminder banner (feature/focus-timer-decor, mac
+             parity: PendingReminderBanner in PopupView, under the dots
+             row): overlays the top of the tab area on ALL three tabs —
+             a reminder never steals the reading in progress. The
+             banner collapses itself when there is no pending reminder,
+             so this overlay takes no space then. -->
+        <Grid Grid.Row="1" Grid.RowSpan="7" VerticalAlignment="Top">
+            <focus:PendingReminderBanner x:Name="ReminderBanner" />
         </Grid>
 
         <!-- Footer: GitHub repo link centered, dimmed build number right.
@@ -497,6 +504,17 @@
              at once. No swipe — WinUI has no native swipe for a panel
              like this; that would be custom work. -->
         <Grid x:Name="TabDotsRow" Grid.Row="9" Background="Transparent" Margin="0,4,0,8" PointerWheelChanged="OnTabSwitchWheel">
+            <!-- Pin (feature/focus-timer-decor, mac parity: the pin
+                 sits at the left end of the dots row, 10 pt from the
+                 edge, and pins ALL three panels — it moved here from
+                 the Actions row, which only showed it on the center
+                 tab). Pin E718. -->
+            <ToggleButton x:Name="PinButton" HorizontalAlignment="Left" VerticalAlignment="Center"
+                          Margin="10,0,0,0" Padding="6,2"
+                          ToolTipService.ToolTip="Pin panel (keep it visible)"
+                          Click="OnPinToggled">
+                <FontIcon Glyph="&#xE718;" FontSize="12" />
+            </ToggleButton>
             <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <Button x:Name="TabPrevButton" MinWidth="0" MinHeight="0" Padding="4,2" Background="Transparent" BorderThickness="0"
                         Click="OnTabPrevClicked" ToolTipService.ToolTip="Previous tab">

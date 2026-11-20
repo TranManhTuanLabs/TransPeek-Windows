@@ -60,6 +60,15 @@
   `SizeWestEast`), CI đỏ #82–#84. Cùng lỗi lặp lại 18/11: `BaselineAlignment`
   trên `Run` là thuộc tính chỉ có ở WPF, WinUI không có — dùng là vỡ build
   #178 (WMC0011); A+ vẽ bằng Grid chứa 2 TextBlock riêng thay vì 2 Run.
+- **Glyph mới đã kiểm chứng trên Microsoft Learn 2026-11-20
+  (feature/focus-timer-decor):** Clock **E917** (header thẻ Focus & Rest —
+  mac dùng "timer", WinUI không có glyph "Timer"), Heart **EB51** (mục
+  Focus — mac "heart"), Walk **E805** (mục Rest eyes — mac "figure.walk"),
+  Cafe **EC32** (màn countdown Rest window — mac "cup.and.saucer.fill"),
+  Ringer **EA8F** (chuông banner — mac "bell.fill").
+- **Bài học CI #193–#196 (2026-11-19):** `Window` trong WinUI 3 KHÔNG có
+  `IsLoaded` — chỉ `FrameworkElement` mới có. **Bài học CI #198:** biến
+  vòng lặp không được trùng tên với biến đang sống ở scope ngoài (CS0136).
 
 ## 5. Quy tắc chung
 

@@ -2542,6 +2542,43 @@ Manh test bản 0.1.4.191: Google 249 ngôn ngữ ngon. 4 việc còn lại làm
   around text to/nhỏ theo cùng tỉ lệ (ratio không đổi); không cần
   sửa gì thêm cho ý này.
 
+## Port Focus-Rest + panel decor từ mac (2026-11-20, nhánh feature/focus-timer-decor)
+
+- **Nguồn:** mac nhánh `feature/focus-timer-decor` @ `54717ca` (chưa merge
+  lúc port — gồm các sửa 07:54: 4 picker top bar cả khi size bé, pin
+  dịch phải 6px; và 08:11: Maximize kẹp vào work area). Khung trình
+  Manh 07:26, Manh duyệt 08:26 (3 mục) + "Duyệt làm" 08:31.
+- **Dùng chung view model (Manh duyệt theo đề xuất của em):** tách
+  `RsvpReaderViewModel` từ `FastReadWindow.xaml.cs` (refactor giữ
+  nguyên hành vi/UI cửa sổ — XAML không đổi); panel right có file XAML
+  riêng chỉ chứa vị trí nút (`PanelFastReadView` + `CompactReadingView`),
+  cùng xài chung view model. KHÔNG copy 2 bộ, KHÔNG tham chiếu trực
+  tiếp Window (Window độc lập, không nhét vào panel được). Đúng y mac
+  (RSVPViewModel chung, PanelFastReadView file riêng); khác duy nhất:
+  Windows phải tách view model ra trước vì trước giờ chưa có.
+- **Pin chuyển chỗ (Manh "ok tạm vậy đi"):** Pin từ Actions row (chỉ
+  center) sang hàng dots (mép trái, Margin 10) dùng chung cả 3 panel
+  như mac; nút Pin ở Actions row bỏ đi.
+- **Thông báo hệ thống — Manh prefer KHÔNG làm lúc này** (sợ mâu thuẫn
+  chữ ký/Store sau này; banner + chấm cam đủ, dừng đọc thì nhắc tự
+  hiện). **Nợ: làm toast khi có bản cài/Store** (app có định danh
+  thật). Xem `FOCUS_REST.md`.
+- **Mặc định (Manh chốt 07:25, áp cả 2 repo):** Focus "Repeat
+  automatically" BẬT; rest-eyes TẮT.
+- **Luật xung đột (Manh 08:04, y hệt mac, commit `bad6610`):** đang đọc
+  mà tới giờ nghỉ thì KHÔNG cướp màn hình — chỉ banner (cả 3 tab) +
+  chấm cam; dừng đọc (đóng window / kết thúc đọc ở panel / tắt panel)
+  thì nhắc tự hiện.
+- **Engine ở Core vì test chỉ reference Core:** `FocusTimerEngine`
+  thuần (không UI) ở `src/TransPeek.Core/FocusTimer/` + 14 test xUnit;
+  store/view model ở app project (cần DispatcherTimer + WinUI) nên
+  không test unit được — kiểm chứng bằng Manh test live bản branch.
+- **Khác mac có chủ đích:** wheel panel KHÔNG cap cỡ chữ (Manh 07:02,
+  vuốt tự do); ↑/↓ panel ±50 WPM (window ±10); panel không có sentence
+  step (window cũng không có); Rest window cố định 560×400 không
+  resize được (mac: min 480×320, resize được) — cửa sổ nghỉ tạm thời
+  không cần resize, và top bar lite reader cần đủ rộng.
+
 ## Liên kết
 
 - [Bối cảnh AI](AI_CONTEXT.md)

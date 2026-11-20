@@ -186,6 +186,39 @@ public sealed class AppSettings
     public double RsvpWindowWidth { get; set; } = 0;
     public double RsvpWindowHeight { get; set; } = 0;
 
+    // --- Focus & Rest (feature/focus-timer-decor, mac parity) ---
+    /// <summary>Pomodoro work length in minutes (5-60, default 25).
+    /// Picker in the Focus &amp; Rest card on panel left.</summary>
+    public int FocusWorkMinutes { get; set; } = 25;
+    /// <summary>Pomodoro rest length in minutes (5-15, default 5).
+    /// Picker in the Focus &amp; Rest card on panel left.</summary>
+    public int FocusRestMinutes { get; set; } = 5;
+    /// <summary>Long break length in minutes after 4 focus cycles
+    /// (default 15). Shown in the Focus &amp; Rest card; not a picker.</summary>
+    public int FocusLongBreakMinutes { get; set; } = 15;
+    /// <summary>Continuous Pomodoro (Manh 2026-11-20, 07:12; default
+    /// ON, Manh 2026-11-20, 07:25): when ON, the next session starts
+    /// on its own after each rest / long break (Work -&gt; Rest -&gt;
+    /// Work ..., long break after 4 focus cycles), looping until the
+    /// user turns it off or stops it. OFF = each session ends and waits
+    /// for a manual start. Toggle in the Focus &amp; Rest card.</summary>
+    public bool FocusRepeatAutomatically { get; set; } = true;
+    /// <summary>Where a focus / rest-eyes reminder shows: "NewWindow"
+    /// (a separate Rest window, default) or "RightPanel" (the reminder
+    /// text is read in panel right). Only applies to reminders — not
+    /// to Fast Read itself. Picker in the Focus &amp; Rest card.</summary>
+    public string FocusReminderDestination { get; set; } = "NewWindow";
+    /// <summary>Panel left: the Focus &amp; Rest card starts collapsed
+    /// (remembered, like the "How the icon works" card). Set when the
+    /// user collapses/expands the card by clicking its top bar.</summary>
+    public bool FocusTimerCollapsed { get; set; } = false;
+    /// <summary>Where Fast Read opens: "NewWindow" (a separate Fast
+    /// Read window, default — keeps the current behaviour) or
+    /// "RightPanel" (read inside panel right). Applies to every Fast
+    /// Read entry (panel button, float icon, tray, shortcut). Radio
+    /// buttons in panel right ("Run FastRead in:").</summary>
+    public string FastReadRunLocation { get; set; } = "NewWindow";
+
     // --- General ---
     public bool LaunchAtLogin { get; set; } = false;
     public bool HasCompletedOnboarding { get; set; } = false;
