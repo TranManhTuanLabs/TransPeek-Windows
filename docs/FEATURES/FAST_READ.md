@@ -1,4 +1,4 @@
-# Fast Read (RSVP) — speed reading in its own window
+# Fast Read (RSVP) — speed reading in its own window or in panel right
 
 > Status: v1 on main since 0.1.4 (merged PR #1, 2026-11-19). The UX below
 > is the settled Windows style — see "Settled style".
@@ -21,6 +21,10 @@ pause context — none of that fits the 420 px translate panel. Default
 70% × 55% of the work area, min 880×550, size remembered after resize
 (`RsvpWindowWidth` / `RsvpWindowHeight` in Settings). Single instance:
 re-opening focuses the existing window and loads the new text.
+
+A compact version of the same reader DOES fit panel right — the lite
+reader (`CompactReadingView`, `src/TransPeek/FocusTimer/`), sharing the
+view model below. See "Shared view model + reading in panel right".
 
 Layout (top to bottom — settled Windows style, Manh 2026-11-19; see "Settled style" below):
 
@@ -165,9 +169,111 @@ code — so a feature can never break the translate panel again. One
 folder per feature, UI + logic together in it; only the thin joints
 (button, menubar/tray, Alt+click, Settings toggle) touch shared code.
 Same structure on mac + Windows: `FastRead/` (RSVP engine + reader
-window + view here), `BreakTimer/` (Pomodoro/focus/20-20-20 timer +
-tab, later), `Shortcuts/` (one shortcut table shared by the "?" embed
-and the shortcut panel — still a TODO refactor, not this branch).
+window + view here), `FocusTimer/` (Pomodoro/focus/20-20-20 timer +
+panel-right lite reader + Rest window — `feature/focus-timer-decor`,
+2026-11-20; see `FOCUS_REST.md`), `Shortcuts/` (one shortcut table
+shared by the "?" embed and the shortcut panel — still a TODO refactor,
+not this branch).
+
+## Shared view model + reading in panel right (feature/focus-timer-decor, 2026-11-20)
+
+Playback lives in **`RsvpReaderViewModel`** (`src/TransPeek/FastRead/`,
+shared by the Fast Read window and the panel-right lite reader — one
+playback engine, two layouts). The window only renders the slide and
+the pause context and syncs its own controls from the view model's
+`PropertyChanged`; the lite reader (`CompactReadingView`,
+`src/TransPeek/FocusTimer/`) does the same in the compact layout. The
+view model owns the document, the current slide, the timer and the
+Settings-backed options (WPM / chunk / focus size / context size /
+context display / color scheme). Behaviour is the window's, moved
+unchanged: same delays, same clamps on WPM/chunk/context ratio, same
+status and reading-time text.
+
+**"Run FastRead in:"** (panel right demo, radios — also the setting
+`FastReadRunLocation`, "NewWindow" default / "RightPanel"): where Fast
+Read opens from EVERY entry point (panel button, float icon, tray,
+shortcut). Labels (Manh 2026-11-20, mac parity): **"FastRead Lite"**
+(panel right) / **"New FastRead Window (recommended)"** (window).
+The demo's **"Read in panel" button always reads in the panel**,
+whatever the radios say. Panel-right reading: the panel stays open,
+switches to the Fast Read tab, starts the read and pins itself; the
+demo shows the word "reading" with its "a" in yellow between two
+half-bars (the pivot preview). The demo title is **"Fast Read Lite"**
+(no more "coming soon"), and the "Run FastRead in:" section is
+LEFT-aligned (the rest of the demo stays centered). The lite design
+is FROZEN as it stands (Manh 2026-11-20) — no more changes to it
+beyond this batch.
+
+**Panel vs window differences (settled):**
+
+- Panel wheel on the focus line: focus size ±5pt per tick, **NO cap**
+  (Manh 2026-11-20, 07:02 — swipe freely, the user trims it to the
+  frame). The window follows its context style: Style 1 no cap (like
+  the panel), Style 2 clamps 40–450. The view model itself does not
+  clamp the focus size.
+- Panel ↑/↓ keys: speed ±50 WPM (like mac). Window ↑/↓: the WPM
+  slider ±10 (unchanged).
+- Panel has no sentence step (Shift+←/→ on mac): the window never had
+  one either, so the panel does not either.
+- Panel Esc is two-stage: first Esc stops the read, second hides the
+  panel (pinned: Esc never hides). The Rest window closes on Esc.
+- While a panel-right read runs, auto-fit is frozen (the panel size
+  stays put for the reader) and resumes when the read stops.
+- The lite reader's Maximize toggles the panel between default and max
+  size (max clamped to the visible work area — never covers the
+  taskbar/Dock, mac 08:11 fix). The panel's horizontal wheel over the
+  Fast Read tab switches tabs (mac: horizontal swipe passes through).
+- Space in panel right: the keys already existed in code
+  (`CompactReadingView.HandleKey` + the panel's KeyDown forwarding),
+  but they never arrived — the panel shows without activation
+  (NOACTIVATE). A user-started panel-right read (panel button / float
+  icon / tray) now activates the panel on start
+  (`ShowPanelForReading`), so Space/←/→/↑/↓/R work at once.
+  Reminder reads do NOT activate (they must never steal focus).
+- Completion: when a full read finishes, both layouts show
+  "Congratulations! You just read X words in Y minutes, Z seconds!"
+  + the share row (see "Completion" below). The lite shows the full
+  sentence + share only at full size (width ≥ 540); at the small size
+  just "Congratulations!".
+
+## Context styles — Style 1 / Style 2 (2026-11-20)
+
+The Window Read's Settings popover offers two **context styles** for
+the focus + around-text display and interaction only — the other
+controls stay the same. Setting `RsvpContextStyle` ("Style1" default /
+"Style2").
+
+- **Style 1 (default) — FastRead Lite:** the book page: the
+  before-words above the focus line, the after-words below it, the
+  focus line pinned at the vertical center. Wheel over the reading
+  area changes the focus size with NO cap; no context scroll, no
+  drag-to-resize the context (the picker still sets the size).
+- **Style 2 — the window's own theme:** one scrollable context
+  paragraph below the focus line, the current words bold + orange
+  inline. Wheel over the focus word changes the size clamped 40–450;
+  wheel over the context scrolls it; press-hold drag up/down on the
+  context resizes it (5% per 24 px).
+
+Identical in both styles: the pivot split + alignment, the orange
+pivot (#F6861F), the tick bars, the context font (focus × "Context
+size"), Light/Dark. The lite reader IS Style 1 (it has no style
+picker). The style is a theme preference — Reset does NOT reset it
+(same as the color scheme).
+
+## Completion — congratulations + share (2026-11-20, mac §14.5)
+
+The view model tracks the **elapsed reading time** (banked across the
+playing stretches of the current read; reset on a new text, on
+Restart, and on play-after-finish) and exposes `CompletionText`
+("Congratulations! You just read X words in Y minutes, Z seconds!")
+and `ShareText` ("I just read X words in … with TransPeek Fast Read
+— read 2–3x faster and improve your learning experience!"). When a
+full read finishes, the congratulations line + the share row
+(`ShareRowBuilder`, same row as About) show **above the progress
+bar** — in the window, and in the lite reader (full-size only, see
+above). The window's "Reading time: Xmins" at the top-left is the
+ESTIMATE (unchanged); the completion line reports the time actually
+spent.
 
 ## Entry points (Manh's order, 2026-11-17)
 
@@ -177,15 +283,20 @@ and the shortcut panel — still a TODO refactor, not this branch).
    Fast Read / Settings. (The auto-hide timer stops while the menu is open.)
 3. **"Fast Read" button in the translate panel** (Actions row, left end,
    glyph E736 ReadingMode + text "Fast Read", like mac): opens the reader
-   with the text being translated; the panel hides first (it is topmost).
+   with the text being translated — where it opens depends on "Run
+   FastRead in" (see above): the Fast Read window hides the panel first
+   (it is topmost); panel-right reading keeps the panel open.
 4. **Tray menu** → "Fast Read" (right under "Translate Selection").
 5. **Global shortcut** — fallback only, not in v1.
 
-**A+ linger (Style B, Manh 2026-11-18):** after any Read trigger from the
+**A+ linger (translate-first, Manh 2026-11-20 18:09):** after any Read trigger from the
 float icon (plain click with Click = Fast Read, Alt+click, right-click menu)
 the icon shows A+ for **2.5s** as a confirmation, then hides; clicks are
-ignored during those 2.5s. The icon always previews the next click (Speak =
-plain A, Fast Read = A+); see `docs/UI/UX_DESIGN/FLOAT_ICON_UX_SPEC.md`.
+ignored during those 2.5s. The icon is translate-first now: idle is ALWAYS
+the plain blue A (hover = translate), whatever Click is set to — A+ only
+appears on Alt held (Click = Speak) or as this 2.5s feedback, and the
+speaker on Alt held (Click = Fast Read) or while speaking; see
+`docs/FEATURES/FLOAT_ICON.md` §3.
 
 **Text source** (in order): the panel's source text (button path) →
 fresh selection (< 10 s old, else the clipboard re-grab) → clipboard
@@ -198,11 +309,15 @@ text. Nothing to read shows a toast.
   ("Click icon"). Alt+click does the OTHER action.
 - `RsvpWpm` (275), `RsvpChunkSize` (1), `RsvpFontSize` (110),
   `RsvpContextSizeRatio` (0.40), `RsvpContextDisplay` ("Paused"),
-  `RsvpColorScheme` ("Light") — changed live from the reader window's
-  controls (saved immediately, like the other sliders); changing
-  WPM/chunk rebuilds the document keeping the
+  `RsvpColorScheme` ("Light"), `RsvpContextStyle` ("Style1") — changed
+  live from the reader window's controls (saved immediately, like the
+  other sliders); changing WPM/chunk rebuilds the document keeping the
   current word.
 - `RsvpWindowWidth` / `RsvpWindowHeight` — remembered window size (0 = auto).
+- `FastReadRunLocation` ("NewWindow" default / "RightPanel"): where Fast
+  Read opens from every entry point — the Fast Read window, or the
+  panel-right lite reader. Set from the "Run FastRead in:" radios on
+  panel right; see "Shared view model" above.
 
 ## Known limits (v1)
 
@@ -222,5 +337,8 @@ text. Nothing to read shows a toast.
 ## Links
 
 - Research: mac repo `docs/RESEARCH/tts-speechify-naturalreader/rsvp-report.md`
-- Panel multi-tab hub (the Fast Read placeholder tab): `docs/UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md` §10
+- Panel multi-tab hub (the Fast Read tab, now the lite reader):
+  `docs/UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md` §10–§11
+- Focus & Rest (the lite reader's other host + the Rest window):
+  `FOCUS_REST.md`
 - Branch standard: `docs/TEST-BUILD-WORKFLOW-GITHUB/GIT-CI-BUILD-SETUP.md`

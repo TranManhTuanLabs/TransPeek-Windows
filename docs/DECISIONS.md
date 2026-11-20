@@ -2542,6 +2542,122 @@ Manh test bản 0.1.4.191: Google 249 ngôn ngữ ngon. 4 việc còn lại làm
   around text to/nhỏ theo cùng tỉ lệ (ratio không đổi); không cần
   sửa gì thêm cho ý này.
 
+## Port Focus-Rest + panel decor từ mac (2026-11-20, nhánh feature/focus-timer-decor)
+
+- **Nguồn:** mac nhánh `feature/focus-timer-decor` @ `54717ca` (chưa merge
+  lúc port — gồm các sửa 07:54: 4 picker top bar cả khi size bé, pin
+  dịch phải 6px; và 08:11: Maximize kẹp vào work area). Khung trình
+  Manh 07:26, Manh duyệt 08:26 (3 mục) + "Duyệt làm" 08:31.
+- **Dùng chung view model (Manh duyệt theo đề xuất của em):** tách
+  `RsvpReaderViewModel` từ `FastReadWindow.xaml.cs` (refactor giữ
+  nguyên hành vi/UI cửa sổ — XAML không đổi); panel right có file XAML
+  riêng chỉ chứa vị trí nút (`PanelFastReadView` + `CompactReadingView`),
+  cùng xài chung view model. KHÔNG copy 2 bộ, KHÔNG tham chiếu trực
+  tiếp Window (Window độc lập, không nhét vào panel được). Đúng y mac
+  (RSVPViewModel chung, PanelFastReadView file riêng); khác duy nhất:
+  Windows phải tách view model ra trước vì trước giờ chưa có.
+- **Pin chuyển chỗ (Manh "ok tạm vậy đi"):** Pin từ Actions row (chỉ
+  center) sang hàng dots (mép trái, Margin 10) dùng chung cả 3 panel
+  như mac; nút Pin ở Actions row bỏ đi.
+- **Thông báo hệ thống — Manh prefer KHÔNG làm lúc này** (sợ mâu thuẫn
+  chữ ký/Store sau này; banner + chấm cam đủ, dừng đọc thì nhắc tự
+  hiện). **Nợ: làm toast khi có bản cài/Store** (app có định danh
+  thật). Xem `FOCUS_REST.md`.
+- **Mặc định (Manh chốt 07:25, áp cả 2 repo):** Focus "Repeat
+  automatically" BẬT; rest-eyes TẮT.
+- **Luật xung đột (Manh 08:04, y hệt mac, commit `bad6610`):** đang đọc
+  mà tới giờ nghỉ thì KHÔNG cướp màn hình — chỉ banner (cả 3 tab) +
+  chấm cam; dừng đọc (đóng window / kết thúc đọc ở panel / tắt panel)
+  thì nhắc tự hiện.
+- **Engine ở Core vì test chỉ reference Core:** `FocusTimerEngine`
+  thuần (không UI) ở `src/TransPeek.Core/FocusTimer/` + 14 test xUnit;
+  store/view model ở app project (cần DispatcherTimer + WinUI) nên
+  không test unit được — kiểm chứng bằng Manh test live bản branch.
+- **Khác mac có chủ đích:** wheel panel KHÔNG cap cỡ chữ (Manh 07:02,
+  vuốt tự do); ↑/↓ panel ±50 WPM (window ±10); panel không có sentence
+  step (window cũng không có); Rest window cố định 560×400 không
+  resize được (mac: min 480×320, resize được) — cửa sổ nghỉ tạm thời
+  không cần resize, và top bar lite reader cần đủ rộng.
+
+## CI #202 đỏ — `DispatcherTimer` thuộc `Microsoft.UI.Xaml` (2026-11-20)
+
+- **Nguyên nhân:** `FocusTimerStore.cs` + `RsvpReaderViewModel.cs`
+  chỉ có `using Microsoft.UI.Dispatching;` mà `DispatcherTimer` thuộc
+  `Microsoft.UI.Xaml` (đã xác minh trên Microsoft Learn — trang
+  "Microsoft.UI.Xaml Namespace" liệt kê DispatcherTimer). 2 lỗi
+  CS0246 DispatcherTimer + 28 lỗi Fact (file test thiếu
+  `using Xunit;`) + WMC9999 hệ quả. RestWindow không lỗi vì có sẵn
+  cả 2 using — đó là manh mối chẩn đoán.
+- **Sửa ở `3246918e`:** thêm `using Xunit;` (test) + đổi using sang
+  `Microsoft.UI.Xaml` (2 file). CI #203 xanh.
+
+## Đợt 2026-11-20 — nhãn + completion + Style 1/2 + Auto start + panel right (nhánh feature/focus-timer-decor, gộp vào nhánh trước PR — Manh duyệt 16:00)
+
+- **Nhãn "Run FastRead in:" theo mac mới:** "Right Panel" →
+  "FastRead Lite"; "New Fast Read Window (Recommended)" → "New
+  FastRead Window (recommended)". Chỉ đổi nhãn; setting + giá trị +
+  mặc định không đổi. "Run reminder in:" (nhắc nghỉ, panel left) là
+  setting RIÊNG, không đổi.
+- **Window Read — chúc mừng + share khi đọc xong (mac §14.5):**
+  view model đếm thời gian đọc THỰC (banked qua các đoạn playing) +
+  `CompletionText` / `ShareText`; đọc xong hiện câu chúc mừng + hàng
+  share TRÊN thanh progress. "Reading time" ở top-left vẫn là ước
+  lượng, không đổi.
+- **Style 1 / Style 2 cho context text (Window Read):** Style 1
+  (mặc định) = theme FastRead Lite — book page, wheel đổi focus size
+  KHÔNG cap; Style 2 = theme hiện tại của Window Read — đoạn văn
+  cuộn, wheel kẹp 40–450, kéo đổi context ratio. Chỉ hiển thị +
+  tương tác với focus text / around text theo style; nút khác giữ
+  nguyên. Chọn trong Settings popover của Window Read (setting
+  `RsvpContextStyle`). Reset KHÔNG reset style (như color scheme).
+- **"Auto start focus" (Manh 2026-11-20, 09:47, mac 615f102):**
+  toggle dưới "Repeat automatically", mặc định TẮT; bật thì mỗi lần
+  mở app timer Focus tự Start (chỉ từ idle, chỉ 1 lần lúc launch).
+- **Panel right đồng bộ mac:** tiêu đề "Fast Read Lite" (bỏ "coming
+  soon"); "Run FastRead in:" căn LEFT; Space = play/pause (nguyên
+  nhân thật: phím đã gán nhưng panel NOACTIVATE nên không nhận phím
+  — đọc do user bấm thì panel tự kích hoạt ở `ShowPanelForReading`,
+  đọc do nhắc nghỉ thì KHÔNG); đọc xong hiện chúc mừng + share ở
+  full-size; theme lite là thiết kế chốt.
+- **Banner nhắc nghỉ — tăng fill nền 0.12 → 0.25 (Manh 2026-11-20
+  16:02):** nền cũ quá xuyên, chữ banner khó đọc trên text đang đọc
+  phía sau; mac giữ 0.12.
+- **KHÔNG có phím tắt ←/→ chuyển tab (Manh 2026-11-20 11:30):**
+  "nút shortcut" anh nói là phím tắt bàn phím, KHÔNG phải nút
+  chevron. Windows chưa từng gán ←/→ chuyển tab (kiểm chứng grep —
+  Left/Right chỉ ở bước slide + nhận diện modifier ở Settings) nên
+  không có gì phải revert; 2 nút chevron ‹ › ở hàng dots GIỮ NGUYÊN.
+- **2 logic "Run FastRead in:" ĐÃ CÓ SẴN (kiểm tra 2026-11-20 12:57):**
+  nút Fast Read panel center + click icon A+ đều qua `RouteFastRead`
+  duy nhất — không cần add code. Docs kỹ thuật ở panel spec §10.
+
+## Settings gọn lại — bỏ hotkey OCR trùng, Click icon đổi tên + dời lên, picker inline, cửa sổ Settings hẹp hơn (2026-11-20, nhánh feature/focus-timer-decor, gộp vào nhánh trước PR)
+
+- **OCR: bỏ ô "Hotkey to capture a region" (Manh 2026-11-20):** trùng với ô "OCR Screen Translate" ở General — cùng setting `OcrHotkey`. Xoá cả XAML (`OcrHotkeyBox` + `HotkeyErrorText`) lẫn code-behind (`OnHotkeyLostFocus` + dòng load) ở `OcrPage`; setting vẫn sửa được ở General.
+- **General — "Click icon" → "Click icon for:" + dời lên 1 vị trí (Manh 2026-11-20):** Manh chốt tên "for" (đề xuất "to" trước đó không dùng). Thứ tự mới: Click icon for → Hover delay → Auto-hide.
+- **General — Hover delay + Auto-hide: nhãn trái, picker phải cùng hàng, mô tả ở dưới (Manh 2026-11-20):** bỏ `Header` của ComboBox; nhãn là TextBlock riêng (`Hover delay (default: 500 ms)` / `Auto-hide icon (default: 5 s)`), picker `MinWidth 120` ở cột phải; mô tả xám 12pt ở dưới. Chuỗi nhãn/mô tả chuyển sang `.resw` (`.Text` + `*Hint.Text`) theo quy ước hiện có; 2 key `.Header` cũ bỏ. Lưu ý: giá trị `.resw` cũ khác XAML (resw thắng lúc chạy — Hover delay hiện "How long to hover before the panel opens", Auto-hide hiện "Trigger icon hides after (seconds)"), nên khi đổi nhãn phải sửa cả `.resw`, không chỉ XAML.
+- **Cửa sổ Settings hẹp hơn 40 px (Manh 2026-11-20):** `SettingsWindow.ShowSettings` width 960 → 920, cao giữ 640 (comment ở `App.xaml.cs` cũng sửa theo).
+
+## Panel left + nhãn delay đổi sang giây (2026-11-20, nhánh feature/focus-timer-decor, gộp vào nhánh trước PR)
+
+- **Nút "Start eye reminders" căn giữa (Manh 2026-11-20 17:02):** `EyeRestButton` từ `HorizontalAlignment="Left"` → `"Center"` (nút duy nhất của mục Rest eyes, giống hàng nút Focus).
+- **"Run reminder in:" — picker xuống dòng riêng (Manh 2026-11-20 17:02):** bỏ Grid chung hàng [nhãn | picker phải]; thành StackPanel dọc: nhãn trên, picker dưới full-width. Lựa chọn giữ nguyên "New Fast Read Window" / "Right Panel" (đây là setting đích nhắc nghỉ, khác "Run FastRead in:").
+- **Nhãn delay đổi sang giây (Manh 2026-11-20 17:03):** cả 2 delay dùng cùng đơn vị giây cho dễ đọc — "Hover delay (default: 0.5s)", "Auto-hide icon (default: 5s)"; các lựa chọn Hover delay cũng đổi theo ("0.3s" / "0.5s" / "0.8s" / "1s"). **Chỉ đổi cách hiển thị — giá trị không đổi** (mặc định vẫn 500 ms = 0.5 s; code dùng `Tag` số ms nên không động). Nhãn sửa cả XAML lẫn `.resw`.
+
+## Center panel: viền nhẹ cho nút Capture OCR + Fast Read (2026-11-20, nhánh feature/focus-timer-decor, gộp vào nhánh trước PR)
+
+- **Viền highlight NHẸ cho 2 nút panel center (Manh 2026-11-20 17:05–17:06):** chỉ viền, nền giữ mặc định — màu không chiếm focus. Capture OCR viền **xanh blue `#0078D4` 40%** (`#660078D4`, cùng màu xanh với icon A thường); Fast Read viền **nghệ `#C7800D` 40%** (`#66C7800D`, cùng màu nghệ với A+). `BorderThickness="1"` cả 2.
+
+## Nhãn "Run reminder in:" + icon float translate-first (2026-11-20 18:09, nhánh feature/focus-timer-decor, gộp vào nhánh trước PR)
+
+- **"Run reminder in:" đổi nhãn theo "FastRead Lite" (Manh 2026-11-20 18:09, giống mac):** "New Fast Read Window" → **"New FastRead Window"**, "Right Panel" → **"FastRead Lite"**. Chỉ đổi nhãn hiển thị — `Tag` (`NewWindow` / `RightPanel`) + giá trị + mặc định (NewWindow) không đổi; KHÔNG thêm "(recommended)" (đó là gợi ý riêng của "Run FastRead in:"). Docs `FOCUS_REST.md` đổi theo.
+- **Icon loa màu xanh blue (Manh 2026-11-20 18:09):** `SpeakerMark` E767 từ `#1A1A1A` (gần đen) sang **`#0078D4`** — loa là highlight, cùng màu xanh với A thường.
+- **Icon float chính về đúng thiết kế — translate-first (Manh 2026-11-20 18:09):** ý tưởng "translate-first" trong `FLOAT_ICON.md` §3 (ghi từ 19/11, lúc đó CHƯA làm) nay Manh duyệt làm. Icon bình thường LUÔN là **A thường xanh** (hover = translate là việc chính), bất kể Click là Speak hay Fast Read. `UpdateGlyph` đổi 1 dòng: `showRead = linger || (!speaking && altHeld && !clickReads)` — A+ chỉ hiện khi giữ Alt lúc Click=Speak (Alt+click đọc) hoặc 2.5s linger sau Read; giữ Alt lúc Click=FastRead thì hiện loa (Alt+click nghe). Đang nói thì loa; còn lại A thường. Hành vi click/Alt+click KHÔNG đổi (XOR `altHeld != clickReads` giữ nguyên) — chỉ đổi glyph hiển thị lúc bình thường.
+
+## Panel lite: màn đếm ngược cafe sau khi đọc nhắc nghỉ (2026-11-20 18:19, nhánh feature/focus-timer-decor, gộp vào nhánh trước PR)
+
+- **Nhắc nghỉ đọc xong ở panel lite thì hiện màn đếm ngược ở giữa (Manh 2026-11-20 18:19):** trước đây chỉ có dòng nhỏ "Rest — mm:ss" + Done ở dưới reader; nay giống cửa sổ Rest — reader ẩn, hiện màn giữa: icon cafe EC32 32pt + tiêu đề + số đếm ngược lớn 56pt Consolas Bold + "Back to Fast Read Lite when the timer ends." + nút Done; hết giờ về lại demo. Tiêu đề đi theo nhắc ("Take a break" / "Rest your eyes") — `FocusPanelRightRequest` thêm `Title`, `FocusTimerStore.PanelReminderTitle`, `StartPanelReading`/`RequestPanelReading` nhận thêm `title`. Chỉ áp cho đọc nhắc nghỉ — đọc thường xong vẫn hiện chúc mừng + share như cũ. Phím Space trong lúc đếm ngược không tới reader nữa (không khởi động lại bài đã đọc xong).
+
 ## Liên kết
 
 - [Bối cảnh AI](AI_CONTEXT.md)

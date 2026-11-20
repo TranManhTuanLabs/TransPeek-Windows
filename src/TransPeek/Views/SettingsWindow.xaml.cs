@@ -55,7 +55,11 @@ public sealed partial class SettingsWindow : Window
             _positioned = true;
             try
             {
-                const int width = 960;
+                // Settings window size (Manh 2026-11-20): 920 wide —
+                // 40 px narrower than before, so the nav pane + content
+                // fit without excess empty space on the right. Height
+                // stays 640.
+                const int width = 920;
                 const int height = 640;
                 var (cx, cy) = WindowHelpers.CursorPosition();
                 var work = WindowHelpers.DisplayWorkArea(cx, cy);

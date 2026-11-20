@@ -19,6 +19,7 @@ using TransPeek.Core.Ocr;
 using TransPeek.Core.Settings;
 using TransPeek.Core.Translation;
 using TransPeek.FastRead;
+using TransPeek.FocusTimer;
 using TransPeek.Interop;
 using TransPeek.Services;
 using TransPeek.Views;
@@ -40,6 +41,12 @@ public sealed partial class App : Application
     private TriggerIconWindow? _triggerIcon;
     private TranslatePanelWindow? _panel;
     private FastReadWindow? _fastReadWindow;
+    /// <summary>Focus & Rest store (feature/focus-timer-decor): one
+    /// store for the whole app — the Pomodoro / rest-eyes timers, the
+    /// pending reminder and the panel-right read. Created once at
+    /// startup, before the panel (the panel passes it to its card,
+    /// banner and lite reader).</summary>
+    private FocusTimerStore? _focusTimerStore;
     private RegionSelectWindow? _regionSelectWindow;
     private ToastWindow? _toast;
     private SettingsWindow? _settingsWindow;
@@ -92,7 +99,22 @@ public sealed partial class App : Application
         NativeMethods.ShowWindow(hwnd, NativeMethods.SW_HIDE);
 
         _toast = new ToastWindow();
-        _panel = new TranslatePanelWindow(TranslateAsync, () => _ocrFlow!.RunOcrAsync(), ShowSettings, BuildShortcutEntries(), text => _ = OpenFastReadAsync(text));
+        // Focus & Rest store (feature/focus-timer-decor): the engine
+        // asks it whether a Fast Read window is open (a reminder then
+        // waits instead of stealing the read), it brings the panel
+        // forward for panel-right reminders, and it hides the panel
+        // before a Rest window shows (the panel is topmost and would
+        // float above it).
+        _focusTimerStore = new FocusTimerStore
+        {
+            IsFastReadWindowOpen = () => _fastReadWindow is not null,
+            OnShowPanel = () => _panel?.ShowPanelNearCursor(),
+            OnShowRestWindow = () => _panel?.HidePanel(),
+        };
+        // Auto start focus (Manh 2026-11-20, 09:47): when the toggle is
+        // ON, the focus timer starts on its own at launch.
+        _focusTimerStore.AutoStartFocusIfEnabled();
+        _panel = new TranslatePanelWindow(TranslateAsync, () => _ocrFlow!.RunOcrAsync(), ShowSettings, BuildShortcutEntries(), text => _ = OpenFastReadAsync(text), _focusTimerStore);
         _triggerIcon = new TriggerIconWindow();
         _triggerIcon.OpenRequested += OnTriggerIconOpenRequested;
         _triggerIcon.FastReadRequested += () => _ = OpenFastReadFromSelectionAsync();
@@ -220,7 +242,7 @@ public sealed partial class App : Application
     {
         // Settings is deliberately NOT in this list (Manh 2026-11-15):
         // it is a normal window, not topmost, so on launch it sits open
-        // (960x640, centered) BEHIND whatever app the user works in —
+        // (920x640, centered) BEHIND whatever app the user works in —
         // and this rect check cannot tell "behind" from "on top", so any
         // selection inside that big centered rect was swallowed and the
         // icon missed on first launch until Settings was closed or
@@ -298,9 +320,11 @@ public sealed partial class App : Application
 
     // ----- Fast Read (RSVP, feature/fast-read-rsvp) -----
 
-    /// <summary>Open the Fast Read window with the given text (panel
-    /// button: the text being translated). Empty text falls back to the
-    /// current selection / clipboard, like the translate hotkey path.</summary>
+    /// <summary>Open Fast Read with the given text (panel button: the
+    /// text being translated). Empty text falls back to the current
+    /// selection / clipboard, like the translate hotkey path. The run
+    /// location ("Run FastRead in") decides the destination — see
+    /// RouteFastRead.</summary>
     private async Task OpenFastReadAsync(string? text)
     {
         if (string.IsNullOrWhiteSpace(text))
@@ -308,13 +332,15 @@ public sealed partial class App : Application
             await OpenFastReadFromSelectionAsync();
             return;
         }
-        ShowFastReadWindow(text);
+        RouteFastRead(text);
     }
 
-    /// <summary>Open the Fast Read window with the current selection
-    /// (tray menu, Alt-click on the float icon): fresh selection, else
-    /// the clipboard re-grab, else the clipboard text. Nothing to read
-    /// shows a toast, like the no-selection translate case.</summary>
+    /// <summary>Open Fast Read with the current selection (tray menu,
+    /// Alt-click on the float icon): fresh selection, else the
+    /// clipboard re-grab, else the clipboard text. Nothing to read
+    /// shows a toast, like the no-selection translate case. The run
+    /// location ("Run FastRead in") decides the destination — see
+    /// RouteFastRead.</summary>
     private async Task OpenFastReadFromSelectionAsync()
     {
         var text = _lastSelection;
@@ -331,7 +357,19 @@ public sealed partial class App : Application
             _toast?.Show(AppStrings.Get("App.Toast.NoTextToRead", "No text to read. Select some text first, or copy it."));
             return;
         }
-        ShowFastReadWindow(text);
+        RouteFastRead(text);
+    }
+
+    /// <summary>Route a Fast Read request (feature/focus-timer-decor,
+    /// mac parity: fastReadRunLocation): "RightPanel" reads in panel
+    /// right (the panel stays open), anything else opens the Fast Read
+    /// window (the panel hides first).</summary>
+    private void RouteFastRead(string text)
+    {
+        if (string.Equals(Settings.FastReadRunLocation, "RightPanel", StringComparison.OrdinalIgnoreCase))
+            _panel?.ShowPanelForReading(text);
+        else
+            ShowFastReadWindow(text);
     }
 
     private void ShowFastReadWindow(string text)
@@ -350,7 +388,14 @@ public sealed partial class App : Application
         if (_fastReadWindow is null)
         {
             _fastReadWindow = new FastReadWindow();
-            _fastReadWindow.Closed += (_, _) => _fastReadWindow = null;
+            _fastReadWindow.Closed += (_, _) =>
+            {
+                _fastReadWindow = null;
+                // A pending reminder shows itself now that the read
+                // stopped (feature/focus-timer-decor, mac parity:
+                // fastReadWindowClosed in FocusTimerStore).
+                _focusTimerStore?.FastReadWindowClosed();
+            };
         }
         _fastReadWindow.LoadText(text);
         _fastReadWindow.ShowReader();

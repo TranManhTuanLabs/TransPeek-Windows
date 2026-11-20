@@ -174,11 +174,17 @@
   <data name="Settings.General.HotkeyHint.Text" xml:space="preserve">
     <value>Click a hotkey box, then press the key combination — no typing needed. Esc cancels.</value>
   </data>
-  <data name="Settings.General.HoverDelay.Header" xml:space="preserve">
-    <value>How long to hover before the panel opens</value>
+  <data name="Settings.General.HoverDelay.Text" xml:space="preserve">
+    <value>Hover delay (default: 0.5s)</value>
   </data>
-  <data name="Settings.General.AutoHide.Header" xml:space="preserve">
-    <value>Trigger icon hides after (seconds)</value>
+  <data name="Settings.General.HoverDelayHint.Text" xml:space="preserve">
+    <value>How long to hover before the panel opens.</value>
+  </data>
+  <data name="Settings.General.AutoHide.Text" xml:space="preserve">
+    <value>Auto-hide icon (default: 5s)</value>
+  </data>
+  <data name="Settings.General.AutoHideHint.Text" xml:space="preserve">
+    <value>The trigger icon hides after this long.</value>
   </data>
   <data name="Settings.General.TranslateHotkey.Header" xml:space="preserve">
     <value>Open translate panel</value>
@@ -344,9 +350,6 @@
   </data>
   <data name="Settings.Ocr.AutoCopy.OffContent" xml:space="preserve">
     <value>Off</value>
-  </data>
-  <data name="Settings.Ocr.Hotkey.Header" xml:space="preserve">
-    <value>Hotkey to capture a region (e.g. Control+Shift+S)</value>
   </data>
   <data name="Settings.Ocr.LanguageData.Text" xml:space="preserve">
     <value>Tesseract language data</value>

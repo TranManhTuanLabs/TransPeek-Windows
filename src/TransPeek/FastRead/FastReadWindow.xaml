@@ -14,16 +14,21 @@
          READ ONLY — no TTS in the reader (listening is the float
          icon's job). Layout (Manh 2026-11-19, temporary): top bar
          (title centered, Settings + "?" at the right), reading area
-         (Reading time top-left, hint top-right inside it), progress,
+         (Reading time top-left, hint top-right above it), completion
+         (congratulations + share, above the progress bar), progress,
          bottom bar (Words + Speed left, transport centered, Context
-         size + Focus size right). Wheel: over the progress slider =
-         step word; over the focus word = focus size; over the context
-         = context size. Controls: Space play/pause, Left/Right step a
-         slide, Up/Down WPM +/-10, R restart, Esc/Q close. -->
+         size + Focus size right). The reading area has two context
+         styles (Style 1 = FastRead Lite book page, default; Style 2 =
+         the scrollable context paragraph below the focus line).
+         Wheel: over the progress slider = step word; over the focus
+         word = focus size; over the context = context size. Controls:
+         Space play/pause, Left/Right step a slide, Up/Down WPM +/-10,
+         R restart, Esc/Q close. -->
     <Grid x:Name="RootGrid" Padding="24,16,24,16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -55,6 +60,11 @@
                                     <ComboBoxItem Content="Always" Tag="Always" />
                                     <ComboBoxItem Content="Only show when paused" Tag="Paused" />
                                     <ComboBoxItem Content="Never" Tag="Never" />
+                                </ComboBox>
+                                <TextBlock Text="Context style" FontSize="14" FontWeight="SemiBold" />
+                                <ComboBox x:Name="ContextStyleCombo" SelectionChanged="OnContextStyleChanged" HorizontalAlignment="Stretch">
+                                    <ComboBoxItem Content="Style 1" Tag="Style1" />
+                                    <ComboBoxItem Content="Style 2" Tag="Style2" />
                                 </ComboBox>
                                 <Button Content="Reset to default" Click="OnResetClicked"
                                         ToolTipService.ToolTip="Reset speed, focus size, context size and context display to their defaults" />
@@ -108,14 +118,11 @@
              scroll down shrinks, 5pt per tick, clamped 40-450. To
              scroll the context, hover the context box itself. -->
         <Grid x:Name="WordArea" Grid.Row="1" Background="Transparent" PointerWheelChanged="OnFocusWheelChanged">
-            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                <Rectangle Width="2" Height="16" Fill="#C8C8C8" HorizontalAlignment="Center" Margin="0,0,0,10" />
-                <TextBlock x:Name="WordTextBlock" FontSize="110" TextAlignment="Center">
-                    <Run x:Name="LeftRun" /><Run x:Name="PivotRun" Foreground="#F6861F" /><Run x:Name="RightRun" />
-                </TextBlock>
-                <Rectangle Width="2" Height="16" Fill="#C8C8C8" HorizontalAlignment="Center" Margin="0,10,0,0" />
-            </StackPanel>
-            <Grid VerticalAlignment="Top">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Grid Grid.Row="0">
                 <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Left" VerticalAlignment="Top">
                     <TextBlock x:Name="ReadingTimeText" Text="Reading time: 0min" FontSize="12" Foreground="Gray"
                                VerticalAlignment="Top" ToolTipService.ToolTip="Estimated reading time" />
@@ -124,6 +131,28 @@
                 </StackPanel>
                 <TextBlock Text="Space play/pause • ←/→ step • ↑/↓ speed • Wheel ↑/↓ focus size" FontSize="12" Foreground="Gray"
                            HorizontalAlignment="Right" VerticalAlignment="Top" />
+            </Grid>
+            <!-- Reading grid: Style 2 shows only the focus line,
+                 centered; Style 1 (FastRead Lite book page, default)
+                 shows the before-text above and the after-text below
+                 it, the focus line pinned at the vertical center. -->
+            <Grid x:Name="ReadingGrid" Grid.Row="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <TextBlock x:Name="BeforeTextBlock" Grid.Row="0" TextWrapping="Wrap" IsTextSelectionEnabled="True"
+                           VerticalAlignment="Bottom" Visibility="Collapsed" />
+                <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <Rectangle Width="2" Height="16" Fill="#C8C8C8" HorizontalAlignment="Center" Margin="0,0,0,10" />
+                    <TextBlock x:Name="WordTextBlock" FontSize="110" TextAlignment="Center">
+                        <Run x:Name="LeftRun" /><Run x:Name="PivotRun" Foreground="#F6861F" /><Run x:Name="RightRun" />
+                    </TextBlock>
+                    <Rectangle Width="2" Height="16" Fill="#C8C8C8" HorizontalAlignment="Center" Margin="0,10,0,0" />
+                </StackPanel>
+                <TextBlock x:Name="AfterTextBlock" Grid.Row="2" TextWrapping="Wrap" IsTextSelectionEnabled="True"
+                           VerticalAlignment="Top" Visibility="Collapsed" />
             </Grid>
         </Grid>
 
@@ -142,9 +171,20 @@
             <TextBlock x:Name="ContextTextBlock" TextWrapping="Wrap" FontSize="16" LineHeight="24" IsTextSelectionEnabled="True" />
         </ScrollViewer>
 
+        <!-- Completion (paused + finished, mac §14.5): the
+             congratulations line + the share row, above the progress
+             bar. The share buttons are filled in code when the read
+             finishes (ShareRowBuilder, same row as About). -->
+        <StackPanel x:Name="CompletionPanel" Grid.Row="3" Margin="0,8,0,0" Spacing="4" Visibility="Collapsed">
+            <TextBlock x:Name="CompletionText" FontSize="13" FontWeight="SemiBold" Foreground="Gray"
+                       HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" />
+            <StackPanel x:Name="CompletionShareRowPanel" Orientation="Horizontal" Spacing="10"
+                        HorizontalAlignment="Center" />
+        </StackPanel>
+
         <!-- Progress: seek slider + status (slide x/y, time left).
              Wheel over the slider steps one word (Manh 2026-11-19). -->
-        <Grid Grid.Row="3" Margin="0,12,0,0">
+        <Grid Grid.Row="4" Margin="0,12,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
@@ -159,7 +199,7 @@
              + Speed at the left edge and Context size + Focus size at
              the right edge. At the 880 minimum width the three groups
              just fit, so the spacing is tight on purpose. -->
-        <Grid Grid.Row="4" Margin="0,12,0,0">
+        <Grid Grid.Row="5" Margin="0,12,0,0">
             <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Left" VerticalAlignment="Center">
                 <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                     <TextBlock Text="Words" FontSize="13" VerticalAlignment="Center" />

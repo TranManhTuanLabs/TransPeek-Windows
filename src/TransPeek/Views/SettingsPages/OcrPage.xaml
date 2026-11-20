@@ -24,10 +24,10 @@
                           OnContent="On" OffContent="Off"
                           Toggled="OnAutoCopyToggled" />
 
-            <TextBox x:Name="OcrHotkeyBox" x:Uid="Settings.Ocr.Hotkey" Header="Hotkey to capture a region (e.g. Control+Shift+S)"
-                     LostFocus="OnHotkeyLostFocus" />
-            <TextBlock x:Name="HotkeyErrorText" FontSize="12" Foreground="Red" Visibility="Collapsed" />
-
+            <!-- Hotkey box REMOVED (Manh 2026-11-20): the OCR capture
+                 hotkey lives in General ("OCR Screen Translate") and
+                 edits the same OcrHotkey setting — this second box
+                 here was a duplicate. -->
             <TextBlock x:Uid="Settings.Ocr.LanguageData" Text="Tesseract language data" FontWeight="SemiBold" Margin="0,8,0,0" />
             <TextBlock x:Name="TesseractStatusText" FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
             <TextBlock x:Name="InstalledCodesText" FontSize="12" Foreground="Gray" TextWrapping="Wrap" />

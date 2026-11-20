@@ -29,6 +29,7 @@ using TransPeek.Assets;
 using TransPeek.Core.Dictionary;
 using TransPeek.Core.Settings;
 using TransPeek.Core.Translation;
+using TransPeek.FocusTimer;
 using TransPeek.Interop;
 using TransPeek.Services;
 using TransPeek.Share;
@@ -188,8 +189,15 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     private readonly Action _openSettings;
     private readonly IReadOnlyList<PanelShortcutEntry> _shortcuts;
     /// <summary>Fast Read (feature/fast-read-rsvp): open the RSVP reader
-    /// with the text being translated (the panel hides first).</summary>
+    /// with the text being translated. Whether the panel hides first
+    /// depends on the run location (see OnFastReadClicked): the Fast
+    /// Read window hides it, panel-right reading keeps it open.</summary>
     private readonly Func<string, Task> _fastReadRequested;
+    /// <summary>Focus & Rest (feature/focus-timer-decor): the single
+    /// store for the Pomodoro / rest-eyes timers, the pending reminder
+    /// and the panel-right read. Created once by App and shared with
+    /// the FocusTimerCard, the reminder banner and PanelFastReadView.</summary>
+    private readonly FocusTimerStore _focusTimerStore;
     /// <summary>Whether the "?" shortcuts card embedded at the top of
     /// the output area is open (Manh 2026-11-18, mac parity). Persists
     /// across tab switches and panel hides — ShowTab restores it when
@@ -247,13 +255,15 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         Func<Task> ocrRequested,
         Action openSettings,
         IReadOnlyList<PanelShortcutEntry> shortcuts,
-        Func<string, Task> fastReadRequested)
+        Func<string, Task> fastReadRequested,
+        FocusTimerStore focusTimerStore)
     {
         _translateAsync = translateAsync;
         _ocrRequested = ocrRequested;
         _openSettings = openSettings;
         _shortcuts = shortcuts;
         _fastReadRequested = fastReadRequested;
+        _focusTimerStore = focusTimerStore;
         InitializeComponent();
         PopulateLangCombos();
         SyncLangCombos();
@@ -261,6 +271,17 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         // mirrors mac d414700): the same 6 buttons as About, built
         // once here — the row itself is in XAML (LeftShareRowPanel).
         ShareRowBuilder.Populate(LeftShareRowPanel, AppInfo.Tagline);
+        // Focus & Rest (feature/focus-timer-decor): the card, the
+        // reminder banner and the Fast Read lite view all read from
+        // the same store (created once by App). The panel pins itself
+        // when a read starts from the right tab, and toggles its size
+        // for the lite reader's Maximize button.
+        FocusTimerCardControl.Store = _focusTimerStore;
+        ReminderBanner.Store = _focusTimerStore;
+        FastReadTabPanel.Store = _focusTimerStore;
+        FastReadTabPanel.OnStartReading = () => SetPinned(true);
+        FastReadTabPanel.OnToggleMaximize = TogglePanelSize;
+        _focusTimerStore.PropertyChanged += OnFocusTimerStoreChanged;
         // Auto-play chain: when the auto-played source finishes and
         // Auto-play translation is also on, speak the translation.
         _speech.SpeechEnded += (_, _) =>
@@ -342,9 +363,20 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
             // the hook already cover Esc.
             contentRoot.KeyDown += (_, e) =>
             {
+                // Esc is two-stage while a panel-right read is running
+                // (feature/focus-timer-decor, mac parity: the first Esc
+                // stops the read, the second hides the panel). The read
+                // keys (Space / arrows / R) go to the lite reader while
+                // the Fast Read tab is open.
                 if (e.Key == VirtualKey.Escape)
                 {
-                    HidePanel();
+                    HandleEscape();
+                    e.Handled = true;
+                }
+                else if (_activeTab == PanelTab.FastRead
+                    && _focusTimerStore.PanelReadingViewModel is not null
+                    && FastReadTabPanel.HandleKey(e.Key, FocusManager.GetFocusedElement()))
+                {
                     e.Handled = true;
                 }
             };
@@ -381,8 +413,14 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
             getEpoch: () => _epoch,
             onEscape: epoch =>
             {
-                if (epoch == _epoch && !_pinned)
-                    HidePanel();
+                // Two-stage Esc (feature/focus-timer-decor): the hook
+                // path follows the same rule as the KeyDown path —
+                // first stop a panel-right read, then hide (unless
+                // pinned). The old code hid unconditionally here while
+                // the KeyDown path also hid — the pin check below is
+                // now inside HandleEscape, shared by both paths.
+                if (epoch == _epoch)
+                    HandleEscape();
             });
         RefreshDictionaryBar(App.Settings.DictionaryLinks, App.Settings.DictionaryDisplayMode);
         // Title + footer (AppInfo is the single source for name,
@@ -577,6 +615,9 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         _sourceText = text;
         _lookupText = null;
         SourceTextBox.Text = text;
+        // The right tab's demo reads this text ("Read in panel") —
+        // keep it in sync so the button enables/disables with it.
+        FastReadTabPanel.SourceText = text;
         SyncLangCombos();
         RefreshDictionaryBar(App.Settings.DictionaryLinks, App.Settings.DictionaryDisplayMode);
     }
@@ -711,6 +752,108 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         // Multi-tab: every show opens on the translate tab.
         ShowTab(PanelTab.Translate);
         RequestResizeToFit();
+    }
+
+    /// <summary>Show the panel near the cursor (public so the Focus
+    /// store can bring it forward when a reminder is routed to panel
+    /// right). Already open: leave it where it is — the consume
+    /// handler already switched it to the Fast Read tab, and moving
+    /// a panel the user is looking at would be jarring.</summary>
+    public void ShowPanelNearCursor()
+    {
+        if (_visible)
+            return;
+        var (x, y) = WindowHelpers.CursorPosition();
+        ShowPanelNear(x, y);
+    }
+
+    /// <summary>Read a text in panel right (public so App can route a
+    /// Fast Read request here when "Run FastRead in" is FastRead Lite):
+    /// show the panel if it is hidden, then hand the text to the
+    /// store — the consume handler below switches to the Fast Read
+    /// tab, starts the read and pins.</summary>
+    public void ShowPanelForReading(string text)
+    {
+        if (!_visible)
+            ShowPanelNearCursor();
+        // A user-started panel read must receive keys (Space to
+        // play/pause, arrows to step): the panel shows without
+        // activation, so activate it now that the user asked to read.
+        // Reminder reads do NOT come through here (they request the
+        // panel right directly), so they still never steal focus.
+        WindowHelpers.ActivateWindow(this);
+        _focusTimerStore.RequestPanelReading(text, null);
+    }
+
+    /// <summary>Toggle the panel between its default size and its
+    /// maximum (feature/focus-timer-decor, mac parity:
+    /// togglePanelSize in PopupView): the lite reader's Maximize
+    /// button calls this. The max is clamped to the visible work
+    /// area (so the panel never covers the Dock / taskbar — the mac
+    /// 08:11 fix), the top edge stays put, and the toggle counts as
+    /// a manual resize so auto-fit does not fight it.</summary>
+    public void TogglePanelSize()
+    {
+        var scale = WindowHelpers.DpiScale(this);
+        var size = AppWindow.Size;
+        var centerX = AppWindow.Position.X + size.Width / 2;
+        var centerY = AppWindow.Position.Y + size.Height / 2;
+        var work = WindowHelpers.DisplayWorkArea(centerX, centerY);
+        var effectiveMaxW = Math.Min((int)Math.Round(MaxPanelWidth * scale), work.Width);
+        var effectiveMaxH = Math.Min((int)Math.Round(MaxPanelSize * scale), work.Height);
+        var isMax = size.Width >= effectiveMaxW - 1 && size.Height >= effectiveMaxH - 1;
+        int targetW, targetH;
+        if (isMax)
+        {
+            targetW = (int)Math.Round(App.Settings.PanelWidth * scale);
+            targetH = (int)Math.Round(App.Settings.PanelHeight * scale);
+        }
+        else
+        {
+            targetW = effectiveMaxW;
+            targetH = effectiveMaxH;
+        }
+        var minW = (int)Math.Round(MinPanelWidth * scale);
+        var minH = (int)Math.Round(MinPanelHeight * scale);
+        targetW = Math.Clamp(targetW, Math.Min(minW, effectiveMaxW), effectiveMaxW);
+        targetH = Math.Clamp(targetH, Math.Min(minH, effectiveMaxH), effectiveMaxH);
+        var x = Math.Clamp(AppWindow.Position.X, work.X, Math.Max(work.X, work.X + work.Width - targetW));
+        var y = AppWindow.Position.Y;
+        if (y + targetH > work.Y + work.Height)
+            y = Math.Max(work.Y, work.Y + work.Height - targetH);
+        _lastProgrammaticSize = new Windows.Graphics.SizeInt32(targetW, targetH);
+        WindowHelpers.MoveAndResize(this, x, y, targetW, targetH);
+        _manualResizeGeneration = _epoch;
+    }
+
+    /// <summary>Focus store changes (feature/focus-timer-decor): consume
+    /// a panel-right request (switch to the Fast Read tab, start the
+    /// read, pin — mac's consumePanelRightRequest) and freeze auto-fit
+    /// while a panel-right read is running (mac sets
+    /// manualResizeGeneration while reading, so the panel size stays
+    /// put for the reader; auto-fit resumes when the read stops).</summary>
+    private void OnFocusTimerStoreChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(FocusTimerStore.PanelRightRequest))
+        {
+            var request = _focusTimerStore.PanelRightRequest;
+            if (request is not null)
+            {
+                ShowTab(PanelTab.FastRead);
+                _focusTimerStore.StartPanelReading(request.Text, request.CountdownSeconds, request.Title);
+                SetPinned(true);
+            }
+        }
+        else if (e.PropertyName == nameof(FocusTimerStore.PanelReadingViewModel))
+        {
+            if (_focusTimerStore.PanelReadingViewModel is not null)
+                _manualResizeGeneration = _epoch;
+            else
+            {
+                _manualResizeGeneration = null;
+                RequestResizeToFit();
+            }
+        }
     }
 
     /// <summary>Grow/shrink the window to fit its content, like mac's
@@ -1325,6 +1468,11 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         EmbeddedShortcutsCard.Visibility = showTranslate && _embeddedShortcutsVisible ? Visibility.Visible : Visibility.Collapsed;
         ShortcutsTabPanel.Visibility = tab == PanelTab.Shortcuts ? Visibility.Visible : Visibility.Collapsed;
         FastReadTabPanel.Visibility = tab == PanelTab.FastRead ? Visibility.Visible : Visibility.Collapsed;
+        if (tab == PanelTab.FastRead)
+            // The demo's "Read in panel" reads the text being
+            // translated — sync it now so the button state is right
+            // even if the source changed while another tab was open.
+            FastReadTabPanel.SourceText = _sourceText;
         if (tab == PanelTab.Shortcuts)
         {
             BuildShortcutRows(ShortcutsTabRowsPanel, static () => { });
@@ -1445,6 +1593,19 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         CycleTab(delta < 0 ? 1 : -1);
     }
 
+    /// <summary>Horizontal wheel over the Fast Read tab switches tabs
+    /// (feature/focus-timer-decor, mac parity: the panel's trackpad
+    /// monitor passes horizontal swipes through so they switch tabs).
+    /// Vertical wheel never reaches here: the lite reader marks it
+    /// handled (font size on the reading area, seek on the progress
+    /// slider), and the XAML handler only sees unhandled events.</summary>
+    private void OnFastReadTabWheel(object sender, PointerRoutedEventArgs e)
+    {
+        if (!e.GetCurrentPoint(FastReadTabPanel).Properties.IsHorizontalMouseWheel)
+            return;
+        OnTabSwitchWheel(sender, e);
+    }
+
     private void CycleTab(int direction)
     {
         const int count = 3;
@@ -1507,11 +1668,34 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     }
 
     private void OnPinToggled(object sender, RoutedEventArgs e)
+        => SetPinned(PinButton.IsChecked == true);
+
+    /// <summary>Pin state (feature/focus-timer-decor): the pin lives
+    /// in the dots row now and pins ALL three panels. The tooltip
+    /// follows the state.</summary>
+    public void SetPinned(bool pinned)
     {
-        _pinned = PinButton.IsChecked == true;
-        ToolTipService.SetToolTip(PinButton, _pinned
+        _pinned = pinned;
+        PinButton.IsChecked = pinned;
+        ToolTipService.SetToolTip(PinButton, pinned
             ? "Unpin panel"
             : "Pin panel (keep it visible)");
+    }
+
+    /// <summary>Two-stage Esc (feature/focus-timer-decor, mac parity):
+    /// while a panel-right read is running the first Esc stops the
+    /// read (and a pending reminder then shows itself), the second
+    /// hides the panel. Pinned: Esc never hides. Shared by the
+    /// KeyDown path and the low-level hook path.</summary>
+    private void HandleEscape()
+    {
+        if (_focusTimerStore.PanelReadingViewModel is not null)
+        {
+            _focusTimerStore.StopPanelReading();
+            return;
+        }
+        if (!_pinned)
+            HidePanel();
     }
 
     private void OnOpenSettings(object sender, RoutedEventArgs e)
@@ -1524,10 +1708,12 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
 
     private void OnFastReadClicked(object sender, RoutedEventArgs e)
     {
-        // The reader is a separate window: hide the panel first (same
-        // as the Settings path — the topmost panel would float above
-        // the reader), then open it with the text being translated.
-        HidePanel();
+        // The run location decides (feature/focus-timer-decor): the
+        // Fast Read window hides the panel first (the topmost panel
+        // would float above the reader), panel-right reading keeps it
+        // open. App routes via RouteFastRead — this handler must NOT
+        // hide unconditionally, or the panel-right path would hide
+        // the panel it is about to read in.
         _ = _fastReadRequested(_sourceText);
     }
 
@@ -1656,6 +1842,21 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// panel visible).</summary>
     public void HidePanel()
     {
+        // Closing the panel stops a panel-right read (feature/
+        // focus-timer-decor, mac parity: hiding the panel while
+        // reading counts as stopping the read — a pending reminder
+        // then shows itself). StopPanelReading with showPending=true
+        // (the default) re-routes the reminder: to the Rest window,
+        // or back to panel right — in which case a NEW read is now
+        // running and the reminder wins: leave the panel open with
+        // it instead of hiding (the consume handler already switched
+        // to the Fast Read tab and pinned).
+        if (_focusTimerStore.PanelReadingViewModel is not null)
+        {
+            _focusTimerStore.StopPanelReading();
+            if (_focusTimerStore.PanelReadingViewModel is not null)
+                return;
+        }
         // No early return on !_visible (0.1.3.54): the panel got stuck
         // visible — HidePanel had run (setting _visible = false) while
         // the window stayed up, and every later HidePanel was then a
