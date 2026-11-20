@@ -13,9 +13,9 @@
          New FastRead Window, default Window — applies to every Fast
          Read entry: panel button, float icon, tray, shortcut). The
          "Read in panel" button ALWAYS reads in the panel, whatever
-         the radios say. While reading, a reminder countdown ("Rest —
-         mm:ss" + Done) shows below the reader when a reminder read
-         finishes. -->
+         the radios say. When a reminder read finishes, the reader
+         hides and a coffee countdown screen (like the Rest window)
+         shows in the middle: Cafe icon + title + big mm:ss + Done. -->
     <Grid>
         <!-- Demo -->
         <StackPanel x:Name="DemoGrid" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8" Margin="16,0">
@@ -52,17 +52,21 @@
 
         <!-- Reading -->
         <Grid x:Name="ReadingGrid" Visibility="Collapsed">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
-            <local:CompactReadingView x:Name="CompactView" Grid.Row="0" />
-            <!-- Reminder countdown after a reminder read finishes
-                 (mac: "Rest — mm:ss" + Done below the reader). -->
-            <StackPanel x:Name="CountdownGrid" Grid.Row="1" Orientation="Horizontal" Spacing="12"
-                        HorizontalAlignment="Center" Margin="0,8,0,0" Visibility="Collapsed">
-                <TextBlock x:Name="CountdownText" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
-                <Button Content="Done" Click="OnCountdownDoneClicked" />
+            <local:CompactReadingView x:Name="CompactView" />
+            <!-- Countdown after a reminder read finishes (Manh
+                 2026-11-20 18:19): same screen as the Rest window —
+                 coffee cup (Cafe EC32) + title + big mm:ss + Done,
+                 centered; the reader hides while it counts down, and
+                 the panel returns to the demo at zero. -->
+            <StackPanel x:Name="CountdownGrid" HorizontalAlignment="Center" VerticalAlignment="Center"
+                        Spacing="8" Visibility="Collapsed">
+                <FontIcon Glyph="&#xEC32;" FontSize="32" Foreground="Gray" HorizontalAlignment="Center" />
+                <TextBlock x:Name="CountdownTitleText" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" />
+                <TextBlock x:Name="CountdownText" FontSize="56" FontWeight="Bold" FontFamily="Consolas"
+                           HorizontalAlignment="Center" />
+                <TextBlock Text="Back to Fast Read Lite when the timer ends." FontSize="12" Foreground="Gray"
+                           HorizontalAlignment="Center" />
+                <Button Content="Done" Click="OnCountdownDoneClicked" HorizontalAlignment="Center" Margin="0,8,0,0" />
             </StackPanel>
         </Grid>
     </Grid>

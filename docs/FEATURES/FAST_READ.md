@@ -289,11 +289,14 @@ spent.
 4. **Tray menu** → "Fast Read" (right under "Translate Selection").
 5. **Global shortcut** — fallback only, not in v1.
 
-**A+ linger (Style B, Manh 2026-11-18):** after any Read trigger from the
+**A+ linger (translate-first, Manh 2026-11-20 18:09):** after any Read trigger from the
 float icon (plain click with Click = Fast Read, Alt+click, right-click menu)
 the icon shows A+ for **2.5s** as a confirmation, then hides; clicks are
-ignored during those 2.5s. The icon always previews the next click (Speak =
-plain A, Fast Read = A+); see `docs/UI/UX_DESIGN/FLOAT_ICON_UX_SPEC.md`.
+ignored during those 2.5s. The icon is translate-first now: idle is ALWAYS
+the plain blue A (hover = translate), whatever Click is set to — A+ only
+appears on Alt held (Click = Speak) or as this 2.5s feedback, and the
+speaker on Alt held (Click = Fast Read) or while speaking; see
+`docs/FEATURES/FLOAT_ICON.md` §3.
 
 **Text source** (in order): the panel's source text (button path) →
 fresh selection (< 10 s old, else the clipboard re-grab) → clipboard

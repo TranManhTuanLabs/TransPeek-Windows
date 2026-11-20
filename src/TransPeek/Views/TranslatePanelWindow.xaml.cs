@@ -840,7 +840,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
             if (request is not null)
             {
                 ShowTab(PanelTab.FastRead);
-                _focusTimerStore.StartPanelReading(request.Text, request.CountdownSeconds);
+                _focusTimerStore.StartPanelReading(request.Text, request.CountdownSeconds, request.Title);
                 SetPinned(true);
             }
         }

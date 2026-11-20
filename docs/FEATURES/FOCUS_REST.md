@@ -46,6 +46,19 @@ collapse/expand; collapsed state in `FocusTimerCollapsed`).
   "FastRead Lite". Applies ONLY to focus / rest-eyes reminders, not to
   Fast Read itself.
 
+**Bố cục CHỐT của thẻ (Manh 2026-11-20, căn giữa cho đẹp — ghi lại để
+sau đối chiếu, không phá):** countdown 28pt Consolas Bold **center**;
+Work/Rest picker (nhãn trái, picker phải 88); 4 chấm chu kỳ **center**
+trên 1 hàng riêng; dòng "Long break 15 min after 4 cycles" **line riêng
+dưới 4 chấm, center**; nút Start focus / Pause / Resume + Reset
+**center** trên 1 hàng; "Repeat automatically" + "Auto start focus
+(default: Off)" là **ToggleSwitch** (nút gạt — nhãn trên, gạt dưới, sát
+lề trái trong thẻ); nút "Start eye reminders" **center**; "Run reminder
+in:" nhãn trên, picker **xuống dòng riêng, full-width**, lựa chọn "New
+FastRead Window" / "FastRead Lite" (đổi tên 2026-11-20 18:09, KHÔNG thêm
+"(recommended)"), dòng note xám ở dưới. Xem thêm panel spec
+`docs/UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md` §11.3 + §11.6.
+
 ## The reminder rule (Manh 2026-11-20, mac parity)
 
 - A reminder that fires while reading **waits**: `PendingReminder` +
@@ -76,8 +89,12 @@ collapse/expand; collapsed state in `FocusTimerCollapsed`).
   window).
 - **FastRead Lite:** the reminder text is read in panel right (the panel
   comes forward, switches to the Fast Read tab, starts the read, pins
-  itself). When the read finishes, the panel shows "Rest — mm:ss" +
-  Done below the reader and returns to the demo at zero.
+  itself). When the read finishes, the reader hides and a coffee
+  countdown screen shows in the middle (Cafe EC32 32pt + title "Take a
+  break" / "Rest your eyes" + big mm:ss 56pt bold Consolas + "Back to Fast
+  Read Lite when the timer ends." + Done — same screen as the Rest window,
+  Manh 2026-11-20 18:19) and returns to the demo at zero. No "Congratulations!"
+  for a reminder read (that is only for a manual read).
 
 ## System notifications — DEFERRED (Manh 2026-11-20)
 

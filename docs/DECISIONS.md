@@ -2654,6 +2654,10 @@ Manh test bản 0.1.4.191: Google 249 ngôn ngữ ngon. 4 việc còn lại làm
 - **Icon loa màu xanh blue (Manh 2026-11-20 18:09):** `SpeakerMark` E767 từ `#1A1A1A` (gần đen) sang **`#0078D4`** — loa là highlight, cùng màu xanh với A thường.
 - **Icon float chính về đúng thiết kế — translate-first (Manh 2026-11-20 18:09):** ý tưởng "translate-first" trong `FLOAT_ICON.md` §3 (ghi từ 19/11, lúc đó CHƯA làm) nay Manh duyệt làm. Icon bình thường LUÔN là **A thường xanh** (hover = translate là việc chính), bất kể Click là Speak hay Fast Read. `UpdateGlyph` đổi 1 dòng: `showRead = linger || (!speaking && altHeld && !clickReads)` — A+ chỉ hiện khi giữ Alt lúc Click=Speak (Alt+click đọc) hoặc 2.5s linger sau Read; giữ Alt lúc Click=FastRead thì hiện loa (Alt+click nghe). Đang nói thì loa; còn lại A thường. Hành vi click/Alt+click KHÔNG đổi (XOR `altHeld != clickReads` giữ nguyên) — chỉ đổi glyph hiển thị lúc bình thường.
 
+## Panel lite: màn đếm ngược cafe sau khi đọc nhắc nghỉ (2026-11-20 18:19, nhánh feature/focus-timer-decor, gộp vào nhánh trước PR)
+
+- **Nhắc nghỉ đọc xong ở panel lite thì hiện màn đếm ngược ở giữa (Manh 2026-11-20 18:19):** trước đây chỉ có dòng nhỏ "Rest — mm:ss" + Done ở dưới reader; nay giống cửa sổ Rest — reader ẩn, hiện màn giữa: icon cafe EC32 32pt + tiêu đề + số đếm ngược lớn 56pt Consolas Bold + "Back to Fast Read Lite when the timer ends." + nút Done; hết giờ về lại demo. Tiêu đề đi theo nhắc ("Take a break" / "Rest your eyes") — `FocusPanelRightRequest` thêm `Title`, `FocusTimerStore.PanelReminderTitle`, `StartPanelReading`/`RequestPanelReading` nhận thêm `title`. Chỉ áp cho đọc nhắc nghỉ — đọc thường xong vẫn hiện chúc mừng + share như cũ. Phím Space trong lúc đếm ngược không tới reader nữa (không khởi động lại bài đã đọc xong).
+
 ## Liên kết
 
 - [Bối cảnh AI](AI_CONTEXT.md)

@@ -1,10 +1,15 @@
 # Float / Popup Panel — UX Spec (CHỐT)
 
-> **Trạng thái: CHỐT — 17/11/2026, theo build #162 (commit `2053f9b`).**
+> **Trạng thái: CHỐT — 20/11/2026, theo nhánh `feature/focus-timer-decor`
+> (CI #207 xanh, head `d364f879`; đợt 18:09 `53daae66` đang chờ CI —
+> xem §11.6).**
 > Các con số trong doc này là **spec**. Đổi bất kỳ số đã chốt nào cũng cần Manh duyệt trước.
-> Spec đã bao gồm: cấu trúc card 4 hàng (#160) + hint 1 dòng (#161) + loa/Copy overlay
-> trong ô output (#162) + nút "?" + card shortcuts nhúng (18/11, "?" trước Pin) +
-> layout đa tab hub (§10, 17/11, chưa triển khai tab).
+> Spec đã bao gồm: hint 1 dòng (#161) + loa/Copy overlay trong ô output
+> (card 3 hàng + overlay, xem §6 — "card 4 hàng" cũ đã bỏ) + nút "?" +
+> card shortcuts nhúng (18/11, "?" trước Pin) + layout đa tab hub 3 tab
+> (§10–§11, 17/11) + thẻ Focus & Rest (§11.3, 20/11) + lite reader
+> panel right (§11.1) + banner nhắc nghỉ + icon translate-first
+> (`FLOAT_ICON.md` §3, 20/11) + viền nút Capture/Fast Read (§11.2).
 > Doc này chỉ cho **Windows**. Bên mac có yêu cầu tương tự nhưng **chưa viết panel UX vì chưa chốt size** — khi nào mac chốt thì viết riêng, đối chiếu với doc này.
 
 ## 1. Kích thước chốt (locked sizes)
@@ -28,22 +33,25 @@ nếu sau này thêm slider thì giải chính là khoảng này.
 
 Baseline tham chiếu: **#153** (mở mặc định 420×450, min 400×450, max rộng 600 / cao 800, cap output 260, auto-fit + snap-back ngang/dọc, thu provider gọn card). Nếu một bản sau phá layout thì quay về số của #153 rồi sửa lại từ đó.
 
-## 2. Khung layout (RootGrid — 8 hàng, Padding 12)
+## 2. Khung layout (RootGrid — 10 hàng, Padding 12)
 
-`RootGrid` có 8 hàng: 4 hàng `Auto`, 1 hàng `*` (output card), 3 hàng `Auto`.
-Hàng `*` là hàng duy nhất dãn theo chiều cao; các hàng `Auto` chỉ cao bằng nội dung.
+`RootGrid` có 10 hàng: Row 0–4 + Row 6–9 là `Auto`, Row 5 (`*`, output
+card) là hàng duy nhất dãn theo chiều cao; các hàng `Auto` chỉ cao bằng
+nội dung. (Trước 20/11 doc ghi 8 hàng — sai: panel đã có 10 hàng từ khi
+thêm hàng chấm Row 9 ở đợt đa tab; bảng dưới ghi đủ 10 hàng.)
 
 | Hàng | Kiểu | Nội dung | Số liệu chốt |
 |---|---|---|---|
 | Row 0 | Auto | **TitleBar** — tên app + slogan + hint, căn giữa | Margin `0,0,0,16` (đáy = hintSize, mặc định 13). Tên app Bold, màu `#0EA5E9`. Slogan xám. Hint: "Hover icon to translate, Click to listen". **Cả hàng là vùng kéo di chuyển** (native caption region) — panel không có title bar riêng |
 | Row 1 | Auto | **SourceTextBox** — ô nhập, sửa được | `MaxHeight 120`, Margin `0,0,0,4`. Enter = dịch lại, Shift+Enter = xuống dòng. Loa + Copy **nằm trong ô** ở góc dưới-phải (overlay, Margin `0,0,6,8`) |
 | Row 2 | Auto | **Hint** — 11pt, **PHẢI ở 1 dòng ở mọi chiều rộng** (xem §6) | "Select a word, then click Dictionary to look it up" (rút ngắn 17/11 #161 — câu cũ dài ~103 ký tự, xuống 2 dòng khi kéo hẹp, gây che loa) |
-| Row 3 | Auto | **Hàng ngôn ngữ** — Source ⇄ Target + Capture OCR | AutoSuggestBox Source/Target **rộng 112**, nút Swap ⇄ Padding `4,2`, Spacing `4`. Nút "Capture OCR" ở bên phải |
+| Row 3 | Auto | **Hàng ngôn ngữ** — Source ⇄ Target + Capture OCR | AutoSuggestBox Source/Target **rộng 112**, nút Swap ⇄ Padding `4,2`, Spacing `4`. Nút "Capture OCR" ở bên phải, **viền xanh blue `#0078D4` 40% (`#660078D4`), 1px, chỉ viền** (Manh 2026-11-20 17:05) |
 | Row 4 | Auto | **Card shortcuts nhúng ("?")** (`EmbeddedShortcutsCard`, Collapsed mặc định) | Card cùng style provider (CornerRadius 6, Border 1), header "Keyboard shortcuts" + ×, ScrollViewer MaxHeight 240 với 10 dòng (cùng `BuildShortcutRows` như panel left). Mở thì panel cao thêm ~280, đóng thì về cũ — xem §3 |
 | Row 5 | `*` | **Output card** (`ProviderCardBorder`) | Margin `0,0,0,8`, CornerRadius 6, BorderThickness 1, `MinHeight 218`. Bên trong **3 hàng**: header (tên provider 13pt SemiBold + trạng thái) / divider / TextBox (`*`, FontSize 14, MinHeight 60, MaxHeight 260) với **loa/Copy overlay trong ô TextBox** (góc dưới-phải, Margin `0,0,6,8` như ô nhập) — xem §6 |
-| Row 6 | Auto | **Actions** — Fast Read trái, "?" + Pin + Settings phải | Fast Read (icon E736 + text "Fast Read") ở đầu trái; "?" (chữ "?", SemiBold 12pt, tooltip "Keyboard shortcuts") + Pin (glyph E718) + Settings (E713) nhóm ở phải, Spacing 4, Margin `0,0,0,8`. "?" bật/tắt card shortcuts nhúng — xem §3 |
+| Row 6 | Auto | **Actions** — Fast Read trái, "?" + Settings phải | Fast Read (icon E736 + text "Fast Read", **viền nghệ `#C7800D` 40% (`#66C7800D`), 1px, chỉ viền** — Manh 2026-11-20 17:05) ở đầu trái; "?" (chữ "?", SemiBold 12pt, tooltip "Keyboard shortcuts") + Settings (E713) nhóm ở phải, Spacing 4, Margin `0,0,0,8`. **Pin KHÔNG còn ở đây từ 2026-11-20** — nó ở mép trái hàng chấm (Row 9). "?" bật/tắt card shortcuts nhúng — xem §3 |
 | Row 7 | Auto | **DictionaryBarControl** — link tra từ điển | |
 | Row 8 | Auto | **Footer** — link GitHub căn giữa + build text căn phải | |
+| Row 9 | Auto | **Hàng chấm** (`TabDotsRow`) — chuyển tab | Pin (E718, Margin `10,0,0,0`) ở mép trái, dùng chung cả 3 tab; 3 chấm căn giữa (#0EA5E9 đã chọn / #C8C8C8 chưa); chevron ‹ › (E76B/E76C) 2 bên; lăn chuột trên hàng chấm + topbar + bottom bar để chuyển tab (throttle 0.4s). **KHÔNG có phím tắt ←/→ chuyển tab** (Manh 2026-11-20 11:30) — xem §11.4 |
 
 **Loa/Copy ở trong ô output — GIỮ NGUYÊN (Manh chốt 17/11, cả 2 repo):** mỗi provider có nút loa/Copy riêng ngay dưới text của nó. Đưa ra ngoài thành hàng cố định thì phải thêm logic định tuyến nút về đúng provider (nút thuộc provider nào, provider đang load thì sao) — phức tạp hơn mà không đáng. Nhược điểm đã biết: text dài phải kéo xuống đáy ô mới thấy nút Copy — chấp nhận.
 
@@ -91,7 +99,16 @@ minH = max(450, fixedH + cardMin + cardMargin + 24)
 - Auto-fit (`ResizeToFitContent`): đo `DesiredSize` của root, kẹp giữa min height động
   và max 800, rộng kẹp 400–600.
 
-## 6. Bug che loa/Copy — nguyên nhân đã tìm ra, fix #161 chờ xác nhận
+## 6. Bug che loa/Copy — nguyên nhân đã tìm ra, fix #164 đã vào (chờ Manh xác nhận hết che)
+
+> **Trạng thái hiện tại (20/11/2026):** fix thật là **#164** (`SettleResizedSize`
+> thêm nhánh dài panel khi cần — commit `bf74379`, CI xanh), KHÔNG phải
+> #160/#161 như tiêu đề cũ ghi. Fix đã có trong mọi bản từ #167 trở đi.
+> Manh test các bản 199/200/201 và báo "đã ổn định tốt" / "giờ quá tốt"
+> mà KHÔNG nhắc lại che loa — nhưng anh chưa nói rõ câu "hết che loa",
+> nên phần điều tra dưới đây vẫn giữ nguyên làm lịch sử, và case study
+> trong `docs/AGENTS.md` §3 vẫn chờ viết lại theo nguyên nhân thật khi
+> anh xác nhận. Loa/Copy GIỮ NGUYÊN trong ô output (Manh chốt 17/11).
 
 **Bug che loa/Copy (từ #149):** nút loa/Copy ở góc dưới-phải ô output bị cắt ở mép
 dưới card khi tra 1–5 line; từ 6 line trở lên không bị. **Nguyên nhân thật đã tìm ra
@@ -284,7 +301,7 @@ card "How the icon works" bị đặt nhầm vào panel center thay vì panel le
   `OpenFastReadFromSelectionAsync`. Nhãn UI mới (2026-11-20): "FastRead
   Lite" / "New FastRead Window (recommended)". Xem `docs/FEATURES/FAST_READ.md`.
 
-## 11. Panel center + Panel left — thiết kế CHỐT (19/11/2026, theo v0.1.4 / build 248 mac)
+## 11. Panel center + Panel left — thiết kế CHỐT (20/11/2026, nhánh `feature/focus-timer-decor`, CI #207)
 
 > Mục này chốt thiết kế HIỆN TẠI của panel center (dịch) và panel left
 > (shortcut) như đã ship — theo doc mac §10 (commit `937f0b6`,
@@ -317,7 +334,12 @@ card "How the icon works" bị đặt nhầm vào panel center thay vì panel le
   radios căn LEFT) khi chưa đọc, và `CompactReadingView` khi đang đọc
   — cùng view model với Fast Read window. Đọc xong ở lite: câu chúc
   mừng đầy đủ + share chỉ ở full-size (≥ 540), size bé chỉ
-  "Congratulations!". Space = play/pause ở lite (đọc do user bấm thì
+  "Congratulations!" — ĐÓ LÀ đọc thường; **đọc nhắc nghỉ xong thì KHÔNG
+  hiện chúc mừng mà hiện màn đếm ngược ở giữa** (Manh 2026-11-20 18:19,
+  giống cửa sổ Rest): icon cafe EC32 32pt + tiêu đề ("Take a break" /
+  "Rest your eyes") + số đếm ngược lớn 56pt Consolas Bold + "Back to Fast
+  Read Lite when the timer ends." + nút Done; reader ẩn trong lúc đếm,
+  hết giờ thì về lại demo. Space = play/pause ở lite (đọc do user bấm thì
   panel tự kích hoạt để nhận phím; đọc do nhắc nghỉ thì KHÔNG kích
   hoạt). Thiết kế lite ĐÃ CHỐT, không đổi nữa. Xem
   `docs/FEATURES/FAST_READ.md` (mục "Shared view model") +
@@ -341,7 +363,11 @@ card "How the icon works" bị đặt nhầm vào panel center thay vì panel le
   hàng Actions + DictionaryBar (xem §2).
 - **Hàng Actions:** nút "Fast Read" ở đầu trái + nút "?" + Settings ở
   đầu phải. **Pin KHÔNG còn ở đây từ 2026-11-20** — nó ở mép trái
-  hàng chấm (xem §11.1).
+  hàng chấm (xem §11.1). **Viền nút (Manh 2026-11-20 17:05–17:06):**
+  nút "Capture OCR" ở hàng ngôn ngữ viền **xanh blue `#0078D4` 40%
+  (`#660078D4`)**, nút "Fast Read" viền **nghệ `#C7800D` 40%
+  (`#66C7800D`)** — cả 2 chỉ viền 1px, nền giữ mặc định, màu không
+  chiếm focus. Đổi độ đậm thì đổi alpha, không đổi màu/kiểu.
 - **Bảng "?" :** nhúng ở đầu ô output (ngay trên các card provider),
   tiêu đề "Keyboard shortcuts" + nút đóng [×]. Liệt kê 10 shortcut +
   nút Run. **Khác mac: bấm Run thì ẨN PANEL TRƯỚC rồi mới chạy**
@@ -368,6 +394,17 @@ card "How the icon works" bị đặt nhầm vào panel center thay vì panel le
      "Repeat automatically") + rest-eyes 20-20-20 + "Run reminder in".
      Thu gọn được (bấm toàn thanh top), trạng thái lưu trong Settings
      (`FocusTimerCollapsed`). Chấm cam ở header khi có nhắc đang chờ.
+     **Bố cục CHỐT (20/11/2026, căn giữa cho đẹp):** countdown 28pt
+     Consolas Bold **center**; Work/Rest picker (nhãn trái, picker phải
+     88); 4 chấm chu kỳ **center** trên 1 hàng riêng; dòng "Long break
+     15 min after 4 cycles" **line riêng dưới 4 chấm, center**; nút
+     Start focus / Pause / Resume + Reset **center** trên 1 hàng;
+     "Repeat automatically" + "Auto start focus (default: Off)" là
+     **ToggleSwitch** (nút gạt — nhãn trên, gạt dưới, sát lề trái);
+     nút "Start eye reminders" **center**; "Run reminder in:" nhãn trên,
+     picker **xuống dòng riêng, full-width**, lựa chọn "New FastRead
+     Window" / "FastRead Lite" (đổi tên 2026-11-20 18:09, KHÔNG thêm
+     "(recommended)"), dòng note xám ở dưới.
   3. **Bảng "Keyboard Shortcuts"** — cùng bảng với nút "?" ở panel
      center (dựng bằng cùng hàm `BuildShortcutRows` nên 2 chỗ không
      bao giờ lệch nhau). Thu gọn được; card shortcuts mở lại mỗi lần
@@ -397,6 +434,62 @@ card "How the icon works" bị đặt nhầm vào panel center thay vì panel le
   dọc) không áp cho Windows: Windows đã có top bar "Rapid Serial
   Visual Presentation — RSVP" + title "TransPeek — Fast Read RSVP",
   và đổi cỡ chữ bằng lăn chuột/kéo chứ không vuốt trackpad.
+
+### 11.6 Thiết kế CHỐT — danh sách khóa + fallback (Manh 2026-11-20 18:12)
+
+> Mục này là **chuẩn để đối chiếu**: sửa gì về panel thì đọc lại danh
+> sách này trước, sửa xong đối chiếu lại. **Không đổi mục nào dưới đây
+> khi chưa có lệnh Manh.** Nếu một bản sau phá layout: quay về số +
+> bố cục ở đây (baseline: nhánh `feature/focus-timer-decor`, CI #207
+> xanh, head `d364f879` — cộng đợt 18:09 `53daae66` khi CI xanh),
+> rồi sửa lại từ đó, không mò số.
+
+**Khung + kích thước (§1–§2):** mở 420×450, min 400×450, max 600×800,
+cap output 260, min output card 218, cap ô nguồn 120, min ô dịch 60;
+RootGrid 10 hàng (Row 5 `*` duy nhất dãn); snap-back ±8 cả 2 chiều;
+kéo resize viền native 8px; Settings KHÔNG có slider rộng/cao panel.
+
+**Panel center (§11.2):** top bar (tên app Bold accent #0EA5E9 +
+slogan không nghiêng + hint, caption region); hàng ngôn ngữ (picker 112
++ Swap + Capture OCR viền xanh 40%); card output 3 hàng, loa/Copy
+overlay TRONG ô (không dời ra ngoài — Manh chốt 17/11); Actions (Fast
+Read viền nghệ 40% trái + "?" + Settings phải, Pin đã dời sang hàng
+chấm); "?" nhúng card shortcuts ở đầu output; DictionaryBar; footer
+(GitHub giữa + version phải).
+
+**Panel left (§11.3):** thứ tự How → Focus & Rest → Shortcuts → share;
+How động theo Click; Focus & Rest bố cục center như §11.3 mục 2
+(countdown/chấm/nút center, Long break line riêng, ToggleSwitch gạt,
+"Run reminder in:" picker xuống dòng full-width, lựa chọn "New FastRead
+Window" / "FastRead Lite"); Shortcuts cùng `BuildShortcutRows` với "?";
+share cuối nội dung cuộn, không card, không Spacer.
+
+**Panel right — Fast Read Lite (§11.1 + `FAST_READ.md`):** demo ("Fast
+Read Lite" + preview "reading" + "Read in panel" + radios "Run FastRead
+in:" căn LEFT, "FastRead Lite" lên trên) / đang đọc (`CompactReadingView`
+dùng chung view model với Window Read); theme lite ĐÃ CHỐT, không đổi;
+đọc xong: câu đầy đủ + share chỉ ở full-size (≥ 540), size bé chỉ
+"Congratulations!" — đọc nhắc nghỉ xong thì màn đếm ngược cafe ở giữa
+(cafe EC32 + tiêu đề + mm:ss 56pt + Done), reader ẩn trong lúc đếm,
+hết giờ về demo; Space = play/pause (đọc do user bấm thì panel tự
+kích hoạt; đọc do nhắc nghỉ thì KHÔNG); **KHÔNG phím tắt ←/→ chuyển tab**,
+chevron ‹ › giữ nguyên.
+
+**Icon float (`FLOAT_ICON.md`):** translate-first — idle LUÔN là A thường
+xanh #0078D4 không bold; A+ nghệ chỉ khi giữ Alt lúc Click=Speak hoặc
+linger 2.5s sau Read; loa E767 xanh khi giữ Alt lúc Click=FastRead hoặc
+đang nói; bubble E8BD chỉ là mẫu dự phòng, luôn ẩn.
+
+**Nhắc nghỉ (`FOCUS_REST.md`):** đang đọc thì nhắc CHỜ (banner cam 0.25
+trên cả 3 tab + chấm cam thẻ Focus-Rest + tự hiện khi dừng đọc); KHÔNG
+toast hệ thống (chờ bản cài/Store); "Take a break" / "Snooze 5 min";
+"Run reminder in:" là setting RIÊNG, khác "Run FastRead in:".
+
+**Settings (`DECISIONS.md`):** cửa sổ 920×640; "Click icon for:" (trên
+Hover delay); Hover delay + Auto-hide hàng inline (nhãn trái, picker
+phải MinWidth 120, mô tả dưới) với nhãn giây "0.5s" / "5s" (chỉ đổi hiển
+thị, giá trị 500 ms giữ nguyên); KHÔNG ô hotkey ở tab OCR (trùng General);
+nhãn UI sửa cả XAML lẫn `.resw` (resw thắng lúc chạy).
 
 ## Liên kết
 

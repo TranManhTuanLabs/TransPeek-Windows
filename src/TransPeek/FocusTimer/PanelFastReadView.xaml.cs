@@ -2,10 +2,11 @@
 // mac parity: PanelFastReadView.swift). Two states: the demo (nothing
 // reads) and the CompactReadingView (a read is running). The store
 // owns the read: this view observes PanelReadingViewModel (binds the
-// compact view to it) and PanelReminderCountdown (the "Rest — mm:ss"
-// row after a reminder read). When the bound read finishes, the
-// countdown starts (a reminder read) or the completion shows (a
-// manual read — the compact view's "Congratulations!", closed with X).
+// compact view to it) and PanelReminderCountdown (the coffee countdown
+// screen in the middle after a reminder read — the reader hides while
+// it counts down). When the bound read finishes, the countdown starts
+// (a reminder read) or the completion shows (a manual read — the
+// compact view's "Congratulations!", closed with X).
 
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -98,12 +99,19 @@ public sealed partial class PanelFastReadView : UserControl
         RunInWindowRadio.IsChecked = !runInPanel;
         if (_store.PanelReminderCountdown is { } seconds)
         {
-            CountdownText.Text = $"Rest — {FocusTimerEngine.Mmss(seconds)}";
+            // Reminder read finished: hide the reader, show the coffee
+            // countdown screen in the middle (same screen as the Rest
+            // window — Manh 2026-11-20 18:19). The title comes from the
+            // store ("Take a break" / "Rest your eyes").
+            CountdownTitleText.Text = _store.PanelReminderTitle ?? "Take a break";
+            CountdownText.Text = FocusTimerEngine.Mmss(seconds);
             CountdownGrid.Visibility = Visibility.Visible;
+            CompactView.Visibility = Visibility.Collapsed;
         }
         else
         {
             CountdownGrid.Visibility = Visibility.Collapsed;
+            CompactView.Visibility = Visibility.Visible;
         }
         BindReading();
         _loading = false;
@@ -138,9 +146,15 @@ public sealed partial class PanelFastReadView : UserControl
     /// <summary>Forward a key to the lite reader (Space / arrows /
     /// R). Returns true when the reader handled it. Esc is NOT handled
     /// here — the panel host stops the read / hides the panel itself
-    /// (two-stage Esc).</summary>
+    /// (two-stage Esc). While the countdown screen shows, the reader
+    /// is hidden, so no key reaches it (a Space must not restart the
+    /// finished read while the break counts down).</summary>
     public bool HandleKey(Windows.System.VirtualKey key, object? focusedElement)
-        => CompactView.HandleKey(key, focusedElement);
+    {
+        if (_store?.PanelReminderCountdown is not null)
+            return false;
+        return CompactView.HandleKey(key, focusedElement);
+    }
 
     /// <summary>"Read in panel": always reads in the panel, whatever
     /// the "Run FastRead in" radios say (mac). The panel pins itself

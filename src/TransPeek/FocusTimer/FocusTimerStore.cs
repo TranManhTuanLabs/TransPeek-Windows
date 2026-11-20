@@ -26,8 +26,9 @@ namespace TransPeek.FocusTimer;
 
 /// <summary>A request to read a reminder in panel right: the text to
 /// read and, when set, the seconds the reminder read runs before the
-/// panel returns to the demo (a countdown read).</summary>
-public sealed record FocusPanelRightRequest(string Text, int? CountdownSeconds);
+/// panel returns to the demo (a countdown read). Title is the reminder
+/// title ("Take a break" / "Rest your eyes") for the countdown screen.</summary>
+public sealed record FocusPanelRightRequest(string Text, int? CountdownSeconds, string? Title);
 
 public sealed class FocusTimerStore : INotifyPropertyChanged
 {
@@ -38,6 +39,7 @@ public sealed class FocusTimerStore : INotifyPropertyChanged
     private FocusPanelRightRequest? _panelRightRequest;
     private int? _panelReminderCountdown;
     private int? _panelReadCountdownSeconds;
+    private string? _panelReminderTitle;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -78,12 +80,21 @@ public sealed class FocusTimerStore : INotifyPropertyChanged
     }
 
     /// <summary>Seconds left on the countdown shown after a reminder
-    /// read finishes ("Rest — mm:ss" + Done). Null when no countdown
-    /// is running.</summary>
+    /// read finishes (the coffee countdown screen in the middle of
+    /// panel right). Null when no countdown is running.</summary>
     public int? PanelReminderCountdown
     {
         get => _panelReminderCountdown;
         private set => SetField(ref _panelReminderCountdown, value);
+    }
+
+    /// <summary>Title of the reminder being counted down ("Take a
+    /// break" / "Rest your eyes") for the countdown screen. Null for
+    /// a manual read (no countdown).</summary>
+    public string? PanelReminderTitle
+    {
+        get => _panelReminderTitle;
+        private set => SetField(ref _panelReminderTitle, value);
     }
 
     /// <summary>A reminder that fired while reading and is still
@@ -213,7 +224,7 @@ public sealed class FocusTimerStore : INotifyPropertyChanged
             // Translate tab, so a request set before the show would be
             // switched away again.
             OnShowPanel?.Invoke();
-            RequestPanelReading(reminder.Message, reminder.CountdownSeconds);
+            RequestPanelReading(reminder.Message, reminder.CountdownSeconds, reminder.Title);
         }
         else
         {
@@ -238,19 +249,20 @@ public sealed class FocusTimerStore : INotifyPropertyChanged
     /// <summary>Ask panel right to read a text: sets the request the
     /// panel consumes (switch tab, start the read, pin). Used by
     /// reminders and by the Fast Read routing.</summary>
-    public void RequestPanelReading(string text, int? countdownSeconds)
+    public void RequestPanelReading(string text, int? countdownSeconds, string? title = null)
     {
-        PanelRightRequest = new FocusPanelRightRequest(text, countdownSeconds);
+        PanelRightRequest = new FocusPanelRightRequest(text, countdownSeconds, title);
     }
 
     /// <summary>Start reading in panel right (called by the panel when
     /// it consumes PanelRightRequest, or by the demo's "Read in panel"
     /// button). A new read replaces a running one; a waiting reminder
     /// keeps waiting (it shows when this read stops).</summary>
-    public void StartPanelReading(string text, int? countdownSeconds = null)
+    public void StartPanelReading(string text, int? countdownSeconds = null, string? title = null)
     {
         PanelRightRequest = null;
         PanelReminderCountdown = null;
+        PanelReminderTitle = title;
         _panelReadCountdownSeconds = countdownSeconds;
         // A new read replaces a running one: stop the old view model
         // first, or its timer keeps advancing slides nobody renders.
@@ -275,6 +287,7 @@ public sealed class FocusTimerStore : INotifyPropertyChanged
         }
         PanelRightRequest = null;
         PanelReminderCountdown = null;
+        PanelReminderTitle = null;
         _panelReadCountdownSeconds = null;
         if (showPending)
             _engine.ShowPendingReminder();
@@ -283,8 +296,9 @@ public sealed class FocusTimerStore : INotifyPropertyChanged
 
     /// <summary>Start the countdown after a reminder read finishes
     /// (the panel view calls this when the read is finished): the panel
-    /// shows "Rest — mm:ss" + Done, and returns to the demo at zero.
-    /// No-op for a manual read (no countdown).</summary>
+    /// shows the coffee countdown screen in the middle ("Take a break"
+    /// / "Rest your eyes" + mm:ss + Done), and returns to the demo at
+    /// zero. No-op for a manual read (no countdown).</summary>
     public void StartPanelReminderCountdown()
     {
         if (_panelReadCountdownSeconds is { } seconds)
