@@ -2658,6 +2658,12 @@ Manh test bản 0.1.4.191: Google 249 ngôn ngữ ngon. 4 việc còn lại làm
 
 - **Nhắc nghỉ đọc xong ở panel lite thì hiện màn đếm ngược ở giữa (Manh 2026-11-20 18:19):** trước đây chỉ có dòng nhỏ "Rest — mm:ss" + Done ở dưới reader; nay giống cửa sổ Rest — reader ẩn, hiện màn giữa: icon cafe EC32 32pt + tiêu đề + số đếm ngược lớn 56pt Consolas Bold + "Back to Fast Read Lite when the timer ends." + nút Done; hết giờ về lại demo. Tiêu đề đi theo nhắc ("Take a break" / "Rest your eyes") — `FocusPanelRightRequest` thêm `Title`, `FocusTimerStore.PanelReminderTitle`, `StartPanelReading`/`RequestPanelReading` nhận thêm `title`. Chỉ áp cho đọc nhắc nghỉ — đọc thường xong vẫn hiện chúc mừng + share như cũ. Phím Space trong lúc đếm ngược không tới reader nữa (không khởi động lại bài đã đọc xong).
 
+## Tray menu: mục "Focus & Rest" mở thẳng panel trái (2026-11-21, main)
+
+- **"Focus & Rest" (Manh 2026-11-21 00:34, làm TRÊN MAIN):** chuột phải icon tray → thêm mục "Focus & Rest", bấm vào mở panel ở tab trái (Shortcuts — thẻ Focus & Rest nằm ở đó), tại vị trí chuột như các mục khác. Tên em chọn "Focus & Rest" (trong 3 tên anh đưa: Focus & Rest / Focus-Rest / Focus Rest) — giống tên card ở panel trái và giống mục menubar mac (mac cũng chọn "Focus & Rest").
+- **Vị trí:** ngay sau "Fast Read" (cùng nhóm đọc/tập trung; mac đặt sau "Reading", trước "Barcodes / QR Codes"). Glyph E917 Clock (Segoe Fluent Icons — không có glyph "Timer").
+- **Code:** `TrayIconService` thêm tham số `Action focusRest` + mục menu `Tray.Menu.FocusRest` (nhãn trong `.resw`, fallback "Focus & Rest"); `App.xaml.cs` truyền `focusRest: () => _panel?.ShowLeftPanel()`; `TranslatePanelWindow.ShowLeftPanel()` public mới (hiện panel nếu đang ẩn → `ShowTab(PanelTab.Shortcuts)` → `ActivateWindow`, vì user bấm từ tray là chủ động gọi panel, giống `ShowPanelForReading`).
+
 ## Liên kết
 
 - [Bối cảnh AI](AI_CONTEXT.md)

@@ -57,6 +57,7 @@ public sealed class TrayIconService : IDisposable
         Action clipboardOcrTranslated,
         Action selectionTranslation,
         Action fastRead,
+        Action focusRest,
         Action clipboardTranslation,
         Action screenshotCopy,
         Action scanBarcodes,
@@ -93,6 +94,12 @@ public sealed class TrayIconService : IDisposable
         // ReadingMode (Segoe Fluent Icons, verified on Microsoft Learn
         // 2026-11-17).
         menu.Items.Add(Item("Tray.Menu.FastRead", "Fast Read", "\uE736", fastRead));
+        // Focus & Rest (Manh 2026-11-21): jump straight to the left
+        // panel tab, where the Focus & Rest card lives. Sits right
+        // under Fast Read (same "reading / focus" group; mac menubar
+        // parity — the mac item sits after "Reading"). Glyph E917
+        // Clock (Segoe Fluent Icons — there is no "Timer" glyph).
+        menu.Items.Add(Item("Tray.Menu.FocusRest", "Focus & Rest", "\uE917", focusRest));
         _clipboardTranslationItem = Item("Tray.Menu.ClipboardTranslation", "Translate Clipboard", "\uE77F", clipboardTranslation);
         menu.Items.Add(_clipboardTranslationItem);
         menu.Items.Add(Item("Tray.Menu.ScreenshotCopy", "Screenshot Copy", "\uE722", screenshotCopy));

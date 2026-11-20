@@ -145,6 +145,7 @@ public sealed partial class App : Application
             clipboardOcrTranslated: () => _ = _ocrFlow!.RunSilentOcrTranslatedAsync(),
             selectionTranslation: () => _ = TranslateCurrentSelectionAsync(),
             fastRead: () => _ = OpenFastReadFromSelectionAsync(),
+            focusRest: () => _panel?.ShowLeftPanel(),
             clipboardTranslation: () => _ = TranslateClipboardAsync(),
             screenshotCopy: () => _ = _screenshotCopy!.RunAsync(),
             scanBarcodes: () => _ = ScanBarcodesAsync(),
