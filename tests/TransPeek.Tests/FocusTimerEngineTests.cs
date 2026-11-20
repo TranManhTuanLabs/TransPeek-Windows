@@ -2,6 +2,7 @@
 // Pure logic — no UI thread needed.
 
 using TransPeek.Core.FocusTimer;
+using Xunit;
 
 namespace TransPeek.Tests;
 

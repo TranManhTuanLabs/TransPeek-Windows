@@ -17,7 +17,7 @@
 
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using Microsoft.UI.Dispatching;
+using Microsoft.UI.Xaml;
 using TransPeek.Core.FocusTimer;
 using TransPeek.Core.Settings;
 using TransPeek.FastRead;
