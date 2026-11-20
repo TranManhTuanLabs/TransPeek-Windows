@@ -92,6 +92,17 @@
             <TextBlock x:Uid="Settings.General.WatchSelectionHint" Text="When on, the trigger icon appears whenever you select text. When off, the app only responds to hotkeys and the tray menu."
                        FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
 
+            <!-- Hover-to-show (feature/block-text-detection, Manh
+                 2026-11-20 23:58): the icon appears when the mouse
+                 rests on a block of text — no selection needed. Sits
+                 right under Watch selection: both decide when the icon
+                 appears on its own. -->
+            <ToggleSwitch x:Name="HoverBlockTextToggle" x:Uid="Settings.General.HoverBlockText" Header="Show icon when hovering over text"
+                          OnContent="On" OffContent="Off"
+                          Toggled="OnHoverBlockTextToggled" />
+            <TextBlock x:Uid="Settings.General.HoverBlockTextHint" Text="When on, hovering over a block of text shows the trigger icon, without selecting anything first. Only text the app exposes to UI Automation is detected."
+                       FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
+
             <!-- Click icon (Fast Read, feature/fast-read-rsvp, Manh
                  2026-11-17; renamed "Click icon for:" and moved one
                  slot up, Manh 2026-11-20): what a click on the float

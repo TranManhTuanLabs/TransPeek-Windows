@@ -106,6 +106,23 @@ public sealed class AppSettings
     /// <summary>Watch the selection automatically (poll UIA). Off means the
     /// app only reacts to the hotkey / tray menu.</summary>
     public bool WatchSelection { get; set; } = true;
+    /// <summary>Show the trigger icon when the mouse rests on a block of
+    /// text (hover-to-show, feature/block-text-detection, Manh
+    /// 2026-11-20 23:58): no manual selection needed — the icon
+    /// appears for the block under the cursor, and every icon action
+    /// (hover = translate, click = Speak/Fast Read, Alt+click = the
+    /// other) works on that block's text. Only text the target app
+    /// exposes to UI Automation is detected. Off means the icon only
+    /// appears for a selection (when WatchSelection is on) or via
+    /// hotkey / tray menu. Default ON — Manh chose it (2026-11-21
+    /// 00:13, both repos: "Settings có tùy chọn, MẶC ĐỊNH BẬT"),
+    /// over the research's opt-in recommendation
+    /// (speechify-report.md §11.1: default off, because hover
+    /// detection quality varies by app) — so the feature is visible
+    /// at once when testing; the toggle is the off-switch, and
+    /// flipping the default back is one line if real-machine
+    /// testing finds the icon too eager.</summary>
+    public bool HoverBlockText { get; set; } = true;
 
     // --- Dictionary bar ---
     public List<DictionaryLink> DictionaryLinks { get; set; } = DictionaryLink.FreshDefaults();

@@ -171,6 +171,18 @@
   <data name="Settings.General.WatchSelectionHint.Text" xml:space="preserve">
     <value>When on, the trigger icon appears whenever you select text. When off, the app only responds to hotkeys and the tray menu.</value>
   </data>
+  <data name="Settings.General.HoverBlockText.Header" xml:space="preserve">
+    <value>Show icon when hovering over text</value>
+  </data>
+  <data name="Settings.General.HoverBlockText.OnContent" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="Settings.General.HoverBlockText.OffContent" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="Settings.General.HoverBlockTextHint.Text" xml:space="preserve">
+    <value>When on, hovering over a block of text shows the trigger icon, without selecting anything first. Only text the app exposes to UI Automation is detected.</value>
+  </data>
   <data name="Settings.General.HotkeyHint.Text" xml:space="preserve">
     <value>Click a hotkey box, then press the key combination — no typing needed. Esc cancels.</value>
   </data>
