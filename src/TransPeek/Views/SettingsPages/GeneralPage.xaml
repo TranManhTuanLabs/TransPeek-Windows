@@ -108,20 +108,23 @@
             <!-- Hover delay (Manh 2026-11-20): label on the left,
                  picker on the same row on the right; the description
                  sits below the row. The label (with its default) lives
-                 in the .resw under Settings.General.HoverDelay.Text. -->
+                 in the .resw under Settings.General.HoverDelay.Text.
+                 Seconds, not milliseconds (Manh 2026-11-20 17:03):
+                 both delays use the same unit (s) so they read alike
+                 — 500 ms is 0.5 s, the value itself is unchanged. -->
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <TextBlock x:Uid="Settings.General.HoverDelay" Text="Hover delay (default: 500 ms)"
+                <TextBlock x:Uid="Settings.General.HoverDelay" Text="Hover delay (default: 0.5s)"
                            VerticalAlignment="Center" />
                 <ComboBox x:Name="HoverDelayCombo" Grid.Column="1" MinWidth="120"
                           SelectionChanged="OnHoverDelayChanged">
-                    <ComboBoxItem Content="300 ms" Tag="300" />
-                    <ComboBoxItem Content="500 ms" Tag="500" />
-                    <ComboBoxItem Content="800 ms" Tag="800" />
-                    <ComboBoxItem Content="1000 ms" Tag="1000" />
+                    <ComboBoxItem Content="0.3s" Tag="300" />
+                    <ComboBoxItem Content="0.5s" Tag="500" />
+                    <ComboBoxItem Content="0.8s" Tag="800" />
+                    <ComboBoxItem Content="1s" Tag="1000" />
                 </ComboBox>
             </Grid>
             <TextBlock x:Uid="Settings.General.HoverDelayHint" Text="How long to hover before the panel opens."
@@ -137,7 +140,7 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <TextBlock x:Uid="Settings.General.AutoHide" Text="Auto-hide icon (default: 5 s)"
+                <TextBlock x:Uid="Settings.General.AutoHide" Text="Auto-hide icon (default: 5s)"
                            VerticalAlignment="Center" />
                 <ComboBox x:Name="AutoHideCombo" Grid.Column="1" MinWidth="120"
                           SelectionChanged="OnAutoHideChanged">

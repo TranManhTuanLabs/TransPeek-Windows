@@ -116,23 +116,26 @@
                     </Grid>
                     <TextBlock Text="Every 20 min, rest your eyes for 20 s — look at something 20 feet away."
                                FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
+                    <!-- Eye-rest button centered (Manh 2026-11-20):
+                         it is the only action in this section, so it
+                         sits in the middle like the Focus buttons. -->
                     <Button x:Name="EyeRestButton" Content="Start eye reminders" Click="OnEyeRestClicked"
-                            HorizontalAlignment="Left" />
+                            HorizontalAlignment="Center" />
                 </StackPanel>
-                <!-- Where a reminder shows -->
+                <!-- Where a reminder shows (Manh 2026-11-20): the picker
+                     sits on its OWN line below the label, not on the
+                     same row — the row was cramped at panel width, and
+                     the full-width picker is easier to hit. Options
+                     stay "New Fast Read Window" / "Right Panel" (this
+                     is the reminder destination, a different setting
+                     from "Run FastRead in:"). -->
                 <StackPanel Spacing="4">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="Run reminder in:" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
-                        <ComboBox x:Name="ReminderDestinationCombo" Grid.Column="1" HorizontalAlignment="Right"
-                                  Width="180" SelectionChanged="OnReminderDestinationChanged" VerticalAlignment="Center">
-                            <ComboBoxItem Content="New Fast Read Window" Tag="NewWindow" />
-                            <ComboBoxItem Content="Right Panel" Tag="RightPanel" />
-                        </ComboBox>
-                    </Grid>
+                    <TextBlock Text="Run reminder in:" FontSize="13" FontWeight="SemiBold" />
+                    <ComboBox x:Name="ReminderDestinationCombo" HorizontalAlignment="Stretch"
+                              SelectionChanged="OnReminderDestinationChanged">
+                        <ComboBoxItem Content="New Fast Read Window" Tag="NewWindow" />
+                        <ComboBoxItem Content="Right Panel" Tag="RightPanel" />
+                    </ComboBox>
                     <TextBlock Text="Applies only to focus / rest-eyes reminders — not to Fast Read itself."
                                FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
                 </StackPanel>

@@ -2638,6 +2638,12 @@ Manh test bản 0.1.4.191: Google 249 ngôn ngữ ngon. 4 việc còn lại làm
 - **General — Hover delay + Auto-hide: nhãn trái, picker phải cùng hàng, mô tả ở dưới (Manh 2026-11-20):** bỏ `Header` của ComboBox; nhãn là TextBlock riêng (`Hover delay (default: 500 ms)` / `Auto-hide icon (default: 5 s)`), picker `MinWidth 120` ở cột phải; mô tả xám 12pt ở dưới. Chuỗi nhãn/mô tả chuyển sang `.resw` (`.Text` + `*Hint.Text`) theo quy ước hiện có; 2 key `.Header` cũ bỏ. Lưu ý: giá trị `.resw` cũ khác XAML (resw thắng lúc chạy — Hover delay hiện "How long to hover before the panel opens", Auto-hide hiện "Trigger icon hides after (seconds)"), nên khi đổi nhãn phải sửa cả `.resw`, không chỉ XAML.
 - **Cửa sổ Settings hẹp hơn 40 px (Manh 2026-11-20):** `SettingsWindow.ShowSettings` width 960 → 920, cao giữ 640 (comment ở `App.xaml.cs` cũng sửa theo).
 
+## Panel left + nhãn delay đổi sang giây (2026-11-20, nhánh feature/focus-timer-decor, gộp vào nhánh trước PR)
+
+- **Nút "Start eye reminders" căn giữa (Manh 2026-11-20 17:02):** `EyeRestButton` từ `HorizontalAlignment="Left"` → `"Center"` (nút duy nhất của mục Rest eyes, giống hàng nút Focus).
+- **"Run reminder in:" — picker xuống dòng riêng (Manh 2026-11-20 17:02):** bỏ Grid chung hàng [nhãn | picker phải]; thành StackPanel dọc: nhãn trên, picker dưới full-width. Lựa chọn giữ nguyên "New Fast Read Window" / "Right Panel" (đây là setting đích nhắc nghỉ, khác "Run FastRead in:").
+- **Nhãn delay đổi sang giây (Manh 2026-11-20 17:03):** cả 2 delay dùng cùng đơn vị giây cho dễ đọc — "Hover delay (default: 0.5s)", "Auto-hide icon (default: 5s)"; các lựa chọn Hover delay cũng đổi theo ("0.3s" / "0.5s" / "0.8s" / "1s"). **Chỉ đổi cách hiển thị — giá trị không đổi** (mặc định vẫn 500 ms = 0.5 s; code dùng `Tag` số ms nên không động). Nhãn sửa cả XAML lẫn `.resw`.
+
 ## Liên kết
 
 - [Bối cảnh AI](AI_CONTEXT.md)
