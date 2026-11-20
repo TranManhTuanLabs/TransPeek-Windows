@@ -2648,6 +2648,12 @@ Manh test bản 0.1.4.191: Google 249 ngôn ngữ ngon. 4 việc còn lại làm
 
 - **Viền highlight NHẸ cho 2 nút panel center (Manh 2026-11-20 17:05–17:06):** chỉ viền, nền giữ mặc định — màu không chiếm focus. Capture OCR viền **xanh blue `#0078D4` 40%** (`#660078D4`, cùng màu xanh với icon A thường); Fast Read viền **nghệ `#C7800D` 40%** (`#66C7800D`, cùng màu nghệ với A+). `BorderThickness="1"` cả 2.
 
+## Nhãn "Run reminder in:" + icon float translate-first (2026-11-20 18:09, nhánh feature/focus-timer-decor, gộp vào nhánh trước PR)
+
+- **"Run reminder in:" đổi nhãn theo "FastRead Lite" (Manh 2026-11-20 18:09, giống mac):** "New Fast Read Window" → **"New FastRead Window"**, "Right Panel" → **"FastRead Lite"**. Chỉ đổi nhãn hiển thị — `Tag` (`NewWindow` / `RightPanel`) + giá trị + mặc định (NewWindow) không đổi; KHÔNG thêm "(recommended)" (đó là gợi ý riêng của "Run FastRead in:"). Docs `FOCUS_REST.md` đổi theo.
+- **Icon loa màu xanh blue (Manh 2026-11-20 18:09):** `SpeakerMark` E767 từ `#1A1A1A` (gần đen) sang **`#0078D4`** — loa là highlight, cùng màu xanh với A thường.
+- **Icon float chính về đúng thiết kế — translate-first (Manh 2026-11-20 18:09):** ý tưởng "translate-first" trong `FLOAT_ICON.md` §3 (ghi từ 19/11, lúc đó CHƯA làm) nay Manh duyệt làm. Icon bình thường LUÔN là **A thường xanh** (hover = translate là việc chính), bất kể Click là Speak hay Fast Read. `UpdateGlyph` đổi 1 dòng: `showRead = linger || (!speaking && altHeld && !clickReads)` — A+ chỉ hiện khi giữ Alt lúc Click=Speak (Alt+click đọc) hoặc 2.5s linger sau Read; giữ Alt lúc Click=FastRead thì hiện loa (Alt+click nghe). Đang nói thì loa; còn lại A thường. Hành vi click/Alt+click KHÔNG đổi (XOR `altHeld != clickReads` giữ nguyên) — chỉ đổi glyph hiển thị lúc bình thường.
+
 ## Liên kết
 
 - [Bối cảnh AI](AI_CONTEXT.md)

@@ -377,23 +377,25 @@ public sealed partial class TriggerIconWindow : Window
         _readLingerTimer.Start();
     }
 
-    /// <summary>Style B (Manh 2026-11-18, mac §3): the icon always
-    /// previews the NEXT click. Speak = plain A (not bold, blue
-    /// #0078D4 — Style 1, Manh 2026-11-19; the bubble E8BD is now a
-    /// backup style only, kept defined but never shown); Fast Read =
-    /// custom A+ (turmeric).
-    /// Alt held flips the preview to the OTHER action — and the flip
-    /// to Speak shows the SPEAKER (E767), not the bubble (Manh
-    /// 2026-11-19: Alt+icon must change to the speaker). While
+    /// <summary>Translate-first icon (Manh 2026-11-20 18:09 — the
+    /// "future idea" in docs/FEATURES/FLOAT_ICON.md §3, now approved;
+    /// it replaces Style B's preview-the-next-click, Manh 2026-11-18):
+    /// the icon's normal face is the plain A (not bold, blue #0078D4
+    /// — Style 1; the bubble E8BD is a backup style only, kept defined
+    /// but never shown). A+ (turmeric) and the speaker (E767, blue
+    /// #0078D4) only appear as the Alt preview or as feedback: Alt held
+    /// previews what Alt+click will do — A+ when Click=Speak (Alt+click
+    /// reads), speaker when Click=FastRead (Alt+click speaks). While
     /// speaking the speaker shows for every setting; during the 2.5s
     /// Read linger the A+ shows. Exactly one mark is visible.</summary>
     private void UpdateGlyph()
     {
         var clickReads = string.Equals(App.Settings.IconClickAction, "FastRead", StringComparison.OrdinalIgnoreCase);
-        // Alt held => the next click is the other action.
+        // No Alt => the plain A: hover means translate, whatever Click
+        // is set to. Alt held previews the Alt+click action.
         var showSpeaker = _isSpeaking && !_inReadLinger;
-        var showRead = _inReadLinger || (!showSpeaker && (_altHeld != clickReads));
-        // Next click speaks with Alt held => the speaker preview.
+        var showRead = _inReadLinger || (!showSpeaker && _altHeld && !clickReads);
+        // Alt held and Click=FastRead => Alt+click speaks => speaker.
         var showAltSpeak = !showSpeaker && !showRead && _altHeld;
         BubbleMark.Visibility = Visibility.Collapsed; // backup style — kept, not shown.
         PlainAMark.Visibility = !showSpeaker && !showRead && !showAltSpeak ? Visibility.Visible : Visibility.Collapsed;

@@ -34,13 +34,14 @@ xanh với ô chat E8BD). Nó là icon chính: bản chất
 của icon là "translate", còn A+ / loa cùng họ "A" thể hiện 2 hành động
 còn lại.
 
-Windows hiện tại: chữ A thường (`PlainAMark`, preview khi click tiếp
-theo là Speak) đã là màu xanh dương `#0078D4`, KHÔNG bold — theo đúng
-mẫu chuẩn từ commit này (Manh 2026-11-19: "Click=Listen thì ... chuyển A
-không bold sang blue cho đúng thiết kế"). Trước đó (từ `1ffcbb7`) nó đang
-là nghệ #C7800D. Vòng tròn trắng viền xám #C8C8C8 giữ nguyên. (Phần làm
-rõ "blue" này sửa local từ 19:00 ngày 19/11 mà push bị hết hạn thẻ duyệt,
-tới nay mới đẩy được cùng đợt đổi màu A.)
+Windows hiện tại: chữ A thường (`PlainAMark`) là icon chính — hiện lúc
+bình thường (idle) bất kể Click là Speak hay Fast Read — màu xanh dương
+`#0078D4`, KHÔNG bold — theo đúng mẫu chuẩn từ commit này (Manh
+2026-11-19: "Click=Listen thì ... chuyển A không bold sang blue cho đúng
+thiết kế"). Trước đó (từ `1ffcbb7`) nó đang là nghệ #C7800D. Vòng tròn
+trắng viền xám #C8C8C8 giữ nguyên. (Phần làm rõ "blue" này sửa local từ
+19:00 ngày 19/11 mà push bị hết hạn thẻ duyệt, tới nay mới đẩy được cùng
+đợt đổi màu A.)
 
 **Ô chat / speech bubble (E8BD) KHÔNG phải icon translate** — không được
 thay A thường bằng ô chat. Ô chat chỉ giữ lại làm mẫu style dự phòng trong
@@ -53,9 +54,11 @@ Lưu ý: A thường KHÔNG bold (Manh sửa lại 2026-11-19). A+ vẫn đậm 
 Mac đã ghi tương tự vào `docs/UI/UX_DESIGN/FLOAT_ICON_UX_SPEC.md` §3
 (commit `7e5e4cd`).
 
-Khác với ý tưởng translate-first ở §3 (idle LUÔN là A, A+/loa chỉ là
-feedback sau khi bấm — CHƯA làm): Style B vẫn là preview click tiếp theo,
-chỉ là glyph của preview giờ theo mapping này.
+Từ 2026-11-20 18:09 ý tưởng translate-first ở §3 ĐÃ LÀM (Manh duyệt):
+idle LUÔN là A thường; A+ / loa chỉ hiện khi giữ Alt (preview hành động
+Alt+click) hoặc làm feedback sau khi bấm (A+ 2.5s sau Read, loa khi đang
+nói). Style B preview click tiếp theo đã bỏ. Loa E767 giờ màu xanh dương
+`#0078D4` (Manh 2026-11-20 18:09 — loa là highlight, không phải glyph tối).
 
 Code gap (mac, ghi để Windows biết): code mac hiện vẫn đang vẽ
 `character.bubble` cho preview translate/speak (`TriggerTrackingView.draw()`)
@@ -68,12 +71,15 @@ này từ commit `1ffcbb7`.
   (mặc định — phát TTS của text đã chọn) hoặc **Fast Read** (mở Window Read).
 - Alt-click → hành động còn lại (Click = Speak thì Alt+Click mở Fast Read;
   Click = Fast Read thì Alt+Click nghe). Chuột phải → menu có "Fast Read".
-- **Style B (Manh 2026-11-18): icon luôn hiện việc click tiếp theo sẽ làm** —
-  glyph theo mapping đã chốt ở trên: **A thường** = Translate (icon chính),
-  **A+** = Fast Read, **loa E767** = Speak. Giữ Alt thì đổi sang việc còn
-  lại. Sau bất kỳ lần bấm Read nào icon hiện A+ trong **2.5s** rồi mới ẩn.
-  Bong bóng E8BD xanh giờ chỉ là **mẫu style dự phòng** — vẫn định nghĩa
-  trong code (`BubbleMark`, luôn ẩn) để sau cần thì bật lại.
+- **Translate-first (Manh 2026-11-20 18:09 — thay Style B preview click
+  tiếp theo, 2026-11-18):** icon bình thường LUÔN là **A thường** xanh
+  (hover = translate là việc chính của icon, bất kể Click là Speak hay
+  Fast Read). Giữ Alt thì đổi sang preview hành động Alt+click: **A+**
+  khi Click=Speak (Alt+click đọc), **loa E767 xanh** khi Click=Fast Read
+  (Alt+click nghe). Sau bất kỳ lần bấm Read nào icon hiện A+ trong
+  **2.5s** rồi mới ẩn; đang nói thì hiện loa. Bong bóng E8BD xanh giờ
+  chỉ là **mẫu style dự phòng** — vẫn định nghĩa trong code (`BubbleMark`,
+  luôn ẩn) để sau cần thì bật lại.
 - Alt cho click đọc từ event con trỏ lúc bấm (`PointerPressed` + `KeyModifiers.Menu`),
   không đọc trạng thái global lúc tap (sửa 0.1.4 — Alt+click khi Click = Read trước
   đây mở Read thay vì nghe; xem spec §2). **Sửa tiếp sau test CI #191
@@ -88,23 +94,23 @@ này từ commit `1ffcbb7`.
 - **How long to hover**: ComboBox 300/500/800/1000ms, mặc định 500ms.
 - **Trigger icon hides after**: NumberBox (gõ số giây), mặc định 5s.
 
-## 3. Future idea — translate-first icon (NOT implemented, Manh 2026-11-19)
+## 3. Translate-first icon — IMPLEMENTED (Manh 2026-11-20 18:09)
 
-The current A+ default (Style B above) has a real advantage: the user can tell at a
-glance that Click is set to Fast Read, without opening Settings. A possible future
-change — **not to be done now** — is to follow the translate-first concept instead.
-When the Click setting is Fast Read:
+Style B's preview-the-next-click (above) had a real advantage: the user could tell at a
+glance that Click is set to Fast Read, without opening Settings. Manh chose the
+translate-first concept instead. When the Click setting is Fast Read:
 
 - the icon shows the plain translate **A** as normal (hover = translate is the icon's
   primary job);
-- a plain click shows **A+** (Fast Read);
-- Alt+Click shows the **speaker** (Speak).
+- a plain click reads (Fast Read) and the icon shows **A+** as feedback for 2.5s after
+  the trigger;
+- Alt held previews the **speaker** (Alt+Click speaks).
 
-So the icon's idle state stays "translate", and A+ / speaker appear as the feedback
-for the action that was just triggered — instead of Style B's preview of the *next*
-click. Recorded here so the idea is not lost; implement only when Manh asks. Same
-note as mac (`docs/UI/UX_DESIGN/FLOAT_ICON_UX_SPEC.md` §3, commit `9818f6c` —
-Option on mac, Alt on Windows).
+So the icon's idle state stays "translate", and A+ / speaker appear as the Alt preview
+or as feedback for the action that was just triggered — instead of Style B's preview of
+the *next* click. Same note as mac (`docs/UI/UX_DESIGN/FLOAT_ICON_UX_SPEC.md` §3,
+commit `9818f6c` — Option on mac, Alt on Windows). Implementation: `UpdateGlyph` in
+`TriggerIconWindow.xaml.cs` — `showRead = linger || (!speaking && altHeld && !clickReads)`.
 
 ## 4. Nợ
 

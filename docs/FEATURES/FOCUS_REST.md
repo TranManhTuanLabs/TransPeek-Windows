@@ -42,8 +42,8 @@ collapse/expand; collapsed state in `FocusTimerCollapsed`).
   rest your eyes for 20 s — look at something 20 feet away." + Start /
   Stop eye reminders. **Default OFF** (Manh 2026-11-20 07:25 — no
   reminder until the user turns it on).
-- **"Run reminder in:"** picker — "New Fast Read Window" (default) /
-  "Right Panel". Applies ONLY to focus / rest-eyes reminders, not to
+- **"Run reminder in:"** picker — "New FastRead Window" (default) /
+  "FastRead Lite". Applies ONLY to focus / rest-eyes reminders, not to
   Fast Read itself.
 
 ## The reminder rule (Manh 2026-11-20, mac parity)
@@ -66,7 +66,7 @@ collapse/expand; collapsed state in `FocusTimerCollapsed`).
 
 ## Where a reminder shows
 
-- **New Fast Read Window (default):** a separate `RestWindow` (560×400,
+- **New FastRead Window (default):** a separate `RestWindow` (560×400,
   fixed size, title "TransPeek — Rest") that reads the reminder text
   with the lite reader, then counts the break down (coffee cup EC32 +
   title + mm:ss 56pt bold + "The window closes when the timer ends." +
@@ -74,7 +74,7 @@ collapse/expand; collapsed state in `FocusTimerCollapsed`).
   touches the Fast Read window — a read in progress keeps reading. The
   panel hides first (it is topmost and would float above the Rest
   window).
-- **Right Panel:** the reminder text is read in panel right (the panel
+- **FastRead Lite:** the reminder text is read in panel right (the panel
   comes forward, switches to the Fast Read tab, starts the read, pins
   itself). When the read finishes, the panel shows "Rest — mm:ss" +
   Done below the reader and returns to the demo at zero.
