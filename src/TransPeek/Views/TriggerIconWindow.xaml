@@ -4,7 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <!-- Sizes come from the user settings (Manh 2026-11-21, mac parity):
-         FloatIconSize (default 26 pt) for a selection, AutoShowFloatIconSize
+         FloatIconSize (default 24 pt) for a selection, AutoShowFloatIconSize
          (default 24 pt) for a hovered block — the window is the setting,
          the circle 2 pt smaller, the glyphs scale with the circle (see
          ShowAt in the code-behind). The XAML values below are only the

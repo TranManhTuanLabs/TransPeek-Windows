@@ -2709,6 +2709,11 @@ Manh test bản 0.1.4.191: Google 249 ngôn ngữ ngon. 4 việc còn lại làm
 - **Chữ tự co theo vòng tròn (mac `6bbf32d7`):** cửa sổ = cỡ setting, vòng = cỡ − 2, A = 1/2 vòng, loa ≈ 44% vòng, dấu + = 1/4 vòng, `CornerRadius` = vòng / 2, margin dấu + co theo. Ở cỡ cũ 32pt: A 15, loa 13, + 8 (loa mac 14 vì vòng mac = 32, vòng Windows = 30 — lệch 1pt). Cỡ cố định cũ (32/30, compact 24/22) đã bỏ; `ShowAt` đọc setting live mỗi lần hiện nên đổi picker là icon sau hiện cỡ mới ngay, không cần khởi động lại.
 - **Mặc định mới nhỏ hơn trước:** icon bôi chọn 32 → 26pt (theo mac); icon hover giữ 24pt mặc định.
 
+## Cỡ icon float: mặc định 26 → 24pt + thêm cỡ nhỏ + gợi ý (2026-11-22, mac parity, main)
+
+- **"Float icon size" mặc định 26 → 24pt (mac `b77c3102`):** picker thêm 18/20/22 → 18/20/22/24/26/28/30/32; nhãn thành "Float icon size (default: 24pt — recommend 20-24pt)". "Auto-show float icon size" giữ mặc định 24pt + picker 18/20/22/24, nhãn thành "Auto-show float icon size (default: 24pt — recommend 20, 22pt)". "recommend" viết đúng chính tả (Manh gõ "recomend" — tự sửa theo quy tắc tự correct chính tả). Gạch nối cho khoảng (20-24), dấu phẩy liệt kê 2 cỡ (20, 22).
+- **Chỉ đổi mặc định + nhãn + thêm mục picker:** logic cỡ (`ShowAt` đọc live, chữ co theo vòng) không đổi. User nào đã chọn cỡ rồi thì giữ nguyên cỡ đã chọn (setting đã lưu không bị ghi đè).
+
 ## Liên kết
 
 - [Bối cảnh AI](AI_CONTEXT.md)

@@ -52,11 +52,14 @@ public sealed partial class GeneralPage : Page
         };
         FloatIconSizeCombo.SelectedIndex = s.FloatIconSize switch
         {
-            24 => 0,
-            28 => 2,
-            30 => 3,
-            32 => 4,
-            _ => 1, // 26 pt (or an older saved value) -> default item.
+            18 => 0,
+            20 => 1,
+            22 => 2,
+            26 => 4,
+            28 => 5,
+            30 => 6,
+            32 => 7,
+            _ => 3, // 24 pt (or an older saved value) -> default item.
         };
         AutoShowFloatIconSizeCombo.SelectedIndex = s.AutoShowFloatIconSize switch
         {

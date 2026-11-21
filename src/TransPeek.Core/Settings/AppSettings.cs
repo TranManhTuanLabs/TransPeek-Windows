@@ -133,12 +133,12 @@ public sealed class AppSettings
     public int HoverBlockDelayMs { get; set; } = 400;
     /// <summary>Size of the float icon that appears when the user
     /// selects text, in points (mac parity: floatIconSize, default
-    /// 26). The window is this wide; the circle is 2 pt smaller and
+    /// 24). The window is this wide; the circle is 2 pt smaller and
     /// the glyphs scale with the circle (A = half, speaker ~44%,
     /// "+" = quarter — see TriggerIconWindow.ShowAt). Read live at
     /// each show, so a change applies to the next icon. Levels in
-    /// Settings -&gt; General: 24/26/28/30/32.</summary>
-    public int FloatIconSize { get; set; } = 26;
+    /// Settings -&gt; General: 18/20/22/24/26/28/30/32.</summary>
+    public int FloatIconSize { get; set; } = 24;
     /// <summary>Size of the icon that appears on its own when the
     /// mouse rests on a block of text (auto-show / hover icon), in
     /// points (mac parity: autoShowFloatIconSize, default 24).

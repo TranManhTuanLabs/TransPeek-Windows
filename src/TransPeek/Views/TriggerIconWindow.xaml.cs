@@ -27,7 +27,7 @@ namespace TransPeek.Views;
 public sealed partial class TriggerIconWindow : Window
 {
     // Icon sizes are user settings now (Manh 2026-11-21, mac parity):
-    // FloatIconSize (default 26 pt) for the selection icon,
+    // FloatIconSize (default 24 pt) for the selection icon,
     // AutoShowFloatIconSize (default 24 pt) for the block-text hover
     // icon. The old fixed sizes (32 px window / 30 px circle, compact
     // 24 / 22) are gone — ShowAt reads the settings live at each show,
@@ -284,7 +284,7 @@ public sealed partial class TriggerIconWindow : Window
     /// scaled by the display DPI, or the circle overflows (is clipped
     /// by) the window on a scaled display — the "abnormal size" Manh
     /// saw in 0.1.3.68. Sizes come from the user settings (Manh
-    /// 2026-11-21, mac parity): FloatIconSize (default 26 pt) for a
+    /// 2026-11-21, mac parity): FloatIconSize (default 24 pt) for a
     /// selection, AutoShowFloatIconSize (default 24 pt) for a hovered
     /// block — the hover icon is smaller by default, so it stays out
     /// of the mouse's way while resting on a block.</summary>
