@@ -20,9 +20,12 @@ public sealed class RsvpPhrasesTests
     [Fact]
     public void BuildPhrases_OneSentence_IsOnePhrase()
     {
-        var phrases = RsvpEngine.BuildPhrases("Hello world, this is a test.");
+        // No comma on purpose: a comma ends a phrase (see
+        // BuildPhrases_Comma_SplitsAtClause), so a one-phrase
+        // sentence must not contain one.
+        var phrases = RsvpEngine.BuildPhrases("Hello world this is a test.");
         Assert.Single(phrases);
-        Assert.Equal("Hello world, this is a test.", phrases[0].Text);
+        Assert.Equal("Hello world this is a test.", phrases[0].Text);
         Assert.Equal(0, phrases[0].StartWordIndex);
         Assert.Equal(6, phrases[0].WordCount);
     }
