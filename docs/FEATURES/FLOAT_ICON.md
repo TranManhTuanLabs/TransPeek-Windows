@@ -92,7 +92,9 @@ này từ commit `1ffcbb7`.
 
 - **Watch selection automatically** (General → behaviour): bật/tắt theo dõi selection.
 - **How long to hover**: ComboBox 300/500/800/1000ms, mặc định 500ms.
+- **Hover text delay**: ComboBox 200/300/400/500/700ms, mặc định 400ms — chuột phải dừng yên chừng đó trên khối chữ thì icon hover mới hiện (ngay dưới toggle block-text).
 - **Trigger icon hides after**: NumberBox (gõ số giây), mặc định 5s.
+- **Kích thước icon**: bôi chọn 32px (vòng 30px, chữ A 15pt); hover 24px (vòng 22px, chữ A 11pt) — nhỏ ~3/4 để khỏi vướng chuột (Manh 2026-11-21).
 
 ## 3. Translate-first icon — IMPLEMENTED (Manh 2026-11-20 18:09)
 

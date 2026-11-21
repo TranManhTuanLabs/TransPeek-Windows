@@ -123,6 +123,14 @@ public sealed class AppSettings
     /// flipping the default back is one line if real-machine
     /// testing finds the icon too eager.</summary>
     public bool HoverBlockText { get; set; } = true;
+    /// <summary>How long the mouse must rest on a block of text
+    /// before the hover icon appears, in milliseconds (mac parity:
+    /// hoverBlockDelayMs, default 400). NOT HoverDelayMs — that one
+    /// is how long to hover the ICON before the panel opens. The
+    /// hover service reads this at construction (App rebuilds it on
+    /// settings save), so a change applies at once. Levels in
+    /// Settings -&gt; General: 200/300/400/500/700.</summary>
+    public int HoverBlockDelayMs { get; set; } = 400;
 
     // --- Dictionary bar ---
     public List<DictionaryLink> DictionaryLinks { get; set; } = DictionaryLink.FreshDefaults();

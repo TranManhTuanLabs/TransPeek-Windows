@@ -189,6 +189,12 @@
   <data name="Settings.General.HoverBlockTextHint.Text" xml:space="preserve">
     <value>When on, hovering over a block of text shows the trigger icon, without selecting anything first. Only text the app exposes to UI Automation is detected.</value>
   </data>
+  <data name="Settings.General.HoverBlockDelay.Text" xml:space="preserve">
+    <value>Hover text delay (default: 0.4s)</value>
+  </data>
+  <data name="Settings.General.HoverBlockDelayHint.Text" xml:space="preserve">
+    <value>How long the mouse must rest on a block of text before the icon appears.</value>
+  </data>
   <data name="Settings.General.HotkeyHint.Text" xml:space="preserve">
     <value>Click a hotkey box, then press the key combination — no typing needed. Esc cancels.</value>
   </data>

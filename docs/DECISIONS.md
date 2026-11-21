@@ -2696,6 +2696,13 @@ Manh test bản 0.1.4.191: Google 249 ngôn ngữ ngon. 4 việc còn lại làm
 - **Pin nghiêng 30° trái (nợ từ 09:59):** làm cùng đợt này — `PinButton` FontIcon thêm `RotateTransform Angle="-30"` (`RenderTransformOrigin="0.5,0.5"`). Mac parity: mac pin -45° → -30° (commit `79869410`).
 - **Số ngôn ngữ lên README (Manh 16:48):** spec OCR đã có đủ trong `docs/FEATURES/OCR_AND_LANGUAGES.md` §2–§3 (Tesseract 123 ngôn ngữ, bundle eng+vie, 121 tải thêm, Windows OCR theo gói của máy; §4 đã soạn sẵn câu README-ready EN/VI từ trước nhưng ghi "draft — not yet in README"). Nay đưa số vào `README.md`: "Flexible translation in 249 languages" + "Tesseract — 123 languages … Extra languages (121 more) download on demand". §4 của spec doc đổi từ draft thành đã vào README. Bản dịch README vi/zh-CN KHÔNG cập nhật theo (quy tắc chung: chỉ khi Manh yêu cầu).
 
+## Block-text hover polish: icon nhỏ lại + dwell theo setting (2026-11-21, Manh, main)
+
+- **Icon hover nhỏ lại ~3/4 (mac parity 32 → 24pt):** icon khi rê qua khối chữ chỉ còn 24px (vòng 22px, chữ A 11pt, loa/bong bóng 12pt) so với icon bôi chọn 32px (vòng 30px, chữ A 15pt) — vẫn nhìn rõ, bấm được, đỡ vướng chuột. `TriggerIconWindow.ShowAt(x, y, compact: true)`; App truyền compact cho đường hover, đường selection giữ nguyên cỡ đầy đủ; kích thước áp lại mỗi lần hiện nên đổi qua lại giữa 2 cỡ không bị kẹt.
+- **Dwell theo setting, mặc định 400ms (mac parity `hoverBlockDelayMs`):** trước đây dwell cố định 150ms (const `BlockTextHoverState.DefaultDwellMilliseconds`); nay setting mới `HoverBlockDelayMs` (mặc định 400ms) truyền vào `BlockTextHoverService` lúc tạo, App rebuild service khi lưu Settings nên đổi có hiệu lực ngay. Const 150ms giữ nguyên làm fallback của state machine thuần + neo cho test (1 test khóa nó = 150). KHÔNG dùng lại `HoverDelayMs` (500ms, hover icon để mở panel) — cử chỉ khác nhau.
+- **Settings:** Picker mới "Hover text delay (default: 0.4s)" ngay dưới toggle block-text (Settings → General), các mức 0.2/0.3/0.4/0.5/0.7s (hiển thị bằng giây, giá trị lưu là ms), key resw `Settings.General.HoverBlockDelay(.Text)` + `HoverBlockDelayHint.Text`.
+- **Bản làm việc main thiếu file (bài học):** bản local main thiếu đúng 4 file của PR #3 (merge qua trình duyệt không qua snapshot push nên local không có) — phát hiện khi grep không thấy `BlockTextHoverService`; đã khôi phục từ raw ghim commit `a6d8c106` + đối chiếu hash toàn bộ cây file với main. Trước khi làm việc trên main, đối chiếu cây file local với main qua API.
+
 ## Liên kết
 
 - [Bối cảnh AI](AI_CONTEXT.md)

@@ -13,6 +13,12 @@
 - **Commit chỉ sửa docs (`docs/**`, `*.md`) KHÔNG trigger CI** (do `paths-ignore`).
   Muốn chạy lại build phải có thay đổi ở file code.
 - **Local phải đồng bộ mới nhất theo main trước khi đẩy** — tránh dùng code cũ.
+- **Bản làm việc local có thể thiếu file sau merge qua trình duyệt** (bài học
+  2026-11-21: bản main thiếu đúng 4 file của PR #3 — merge qua trình duyệt
+  không qua snapshot push nên local không có): trước khi làm việc, đối chiếu
+  cây file local với main qua API (`git trees ... recursive=1`), khôi phục
+  file thiếu từ raw ghim commit rồi mới sửa; kiểm tra hash file sẽ sửa so
+  với main để khỏi đẩy code cũ đè code mới.
 - Sau mỗi lần đẩy, **tự theo dõi run CI mới nhất tới khi kết luận**, rồi báo kết quả.
 
 ## 2. Theo dõi CI

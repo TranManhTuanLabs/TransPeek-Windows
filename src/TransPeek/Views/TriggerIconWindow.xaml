@@ -4,8 +4,11 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <!-- 32 px window with a 30 px circle — mac parity (TriggerIconPanel:
-         32 pt panel, 30 pt circle inset 1 pt). Translate-first icon
-         (Manh 2026-11-20 18:09 — the "future idea" in
+         32 pt panel, 30 pt circle inset 1 pt). Compact (hover) icon:
+         24 px window, 22 px circle — the sizes are set in the
+         code-behind at show time (ShowAt compact: true), so the XAML
+         values below are the full-size (selection) defaults.
+         Translate-first icon (Manh 2026-11-20 18:09 — the "future idea" in
          docs/FEATURES/FLOAT_ICON.md §3, now approved; it replaces
          Style B's preview-the-next-click, Manh 2026-11-18): the icon's
          normal face is the plain A, so it has three marks, one visible
@@ -53,9 +56,9 @@
                      build #178 with WMC0011). The "+" sits at the A's
                      top-right corner via alignment + margin. -->
                 <Grid x:Name="APlusMark" Visibility="Collapsed">
-                    <TextBlock Text="A" FontSize="15" FontWeight="Bold" Foreground="#C7800D"
+                    <TextBlock x:Name="APlusMarkA" Text="A" FontSize="15" FontWeight="Bold" Foreground="#C7800D"
                                HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    <TextBlock Text="+" FontSize="8" FontWeight="Bold" Foreground="#C7800D"
+                    <TextBlock x:Name="APlusMarkPlus" Text="+" FontSize="8" FontWeight="Bold" Foreground="#C7800D"
                                HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,4,5,0" />
                 </Grid>
                 <!-- Speaker mark (click = listen/TTS mode): E767 Volume —

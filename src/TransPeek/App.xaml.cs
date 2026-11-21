@@ -42,9 +42,9 @@ public sealed partial class App : Application
     /// (feature/block-text-detection): the mouse resting on a block
     /// shows the trigger icon without a manual selection. Same
     /// lifecycle as the selection monitor — rebuilt when settings are
-    /// saved (the on/off toggle applies). The dwell is the research
-    /// default (150 ms, BlockTextHoverState.DefaultDwellMilliseconds),
-    /// NOT Settings.HoverDelayMs — see that const's comment.</summary>
+    /// saved (the on/off toggle and the dwell apply). The dwell is
+    /// Settings.HoverBlockDelayMs (default 400 ms, Manh 2026-11-21),
+    /// NOT Settings.HoverDelayMs — see the state's comment.</summary>
     private BlockTextHoverService? _blockTextHoverService;
     private GlobalHotkeyService? _hotkeys;
     private TriggerIconWindow? _triggerIcon;
@@ -178,9 +178,10 @@ public sealed partial class App : Application
             _selectionMonitor.Start();
 
         // Hover-to-show (feature/block-text-detection): the dwell is
-        // the research default (150 ms) — no argument passed, the
-        // service uses BlockTextHoverState.DefaultDwellMilliseconds.
-        _blockTextHoverService = new BlockTextHoverService(OnBlockTextHovered);
+        // Settings.HoverBlockDelayMs (default 400 ms) — the mouse
+        // must rest that long before the icon appears.
+        _blockTextHoverService = new BlockTextHoverService(OnBlockTextHovered,
+            dwell: TimeSpan.FromMilliseconds(Settings.HoverBlockDelayMs));
         if (Settings.HoverBlockText)
             _blockTextHoverService.Start();
 
@@ -283,12 +284,15 @@ public sealed partial class App : Application
         _lastPoint = point;
         _lastTextIsHover = true;
         // Same UI-thread marshal + own-window guard as the selection
-        // path (the monitor runs on a background thread).
+        // path (the monitor runs on a background thread). Compact
+        // icon: a hovered block gets the small (~3/4) icon, so it
+        // stays out of the mouse's way — the full-size icon is only
+        // for a manual selection (Manh 2026-11-21, mac parity).
         _uiQueue.TryEnqueue(() =>
         {
             if (IsPointInsideOwnWindow(point))
                 return;
-            _triggerIcon?.ShowAt(point.X, point.Y);
+            _triggerIcon?.ShowAt(point.X, point.Y, compact: true);
         });
     }
 
@@ -718,11 +722,12 @@ public sealed partial class App : Application
         if (Settings.WatchSelection)
             _selectionMonitor.Start();
         // Restart the block-text hover service if the user toggled
-        // HoverBlockText. (The dwell is fixed at the research default,
-        // so a changed HoverDelayMs does not rebuild it — only the
-        // on/off toggle does.)
+        // HoverBlockText or changed the dwell (HoverBlockDelayMs).
+        // The rebuild picks up both at once — the service reads the
+        // dwell at construction.
         _blockTextHoverService?.Dispose();
-        _blockTextHoverService = new BlockTextHoverService(OnBlockTextHovered);
+        _blockTextHoverService = new BlockTextHoverService(OnBlockTextHovered,
+            dwell: TimeSpan.FromMilliseconds(Settings.HoverBlockDelayMs));
         if (Settings.HoverBlockText)
             _blockTextHoverService.Start();
         _panel?.RefreshDictionaryBar(Settings.DictionaryLinks, Settings.DictionaryDisplayMode);

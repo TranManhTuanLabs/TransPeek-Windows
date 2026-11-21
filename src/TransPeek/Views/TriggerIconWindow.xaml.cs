@@ -29,6 +29,13 @@ public sealed partial class TriggerIconWindow : Window
     // Mac parity (TriggerIconPanel): 32 px.
     private const int WidthPx = 32;
     private const int HeightPx = 32;
+    // Compact (hover) icon (Manh 2026-11-21, mac parity: hover icon
+    // 24 pt vs 32 pt selection icon): ~3/4 of the full size, so the
+    // icon stays out of the mouse's way while resting on a block.
+    // Circle 22 (was 30), A 11 pt (was 15), FontIcon 12 (was 16),
+    // "+" 6 pt (was 8).
+    private const int CompactWidthPx = 24;
+    private const int CompactCirclePx = 22;
 
     private readonly DispatcherTimer _hoverTimer = new();
     private readonly DispatcherTimer _autoHideTimer = new();
@@ -280,8 +287,11 @@ public sealed partial class TriggerIconWindow : Window
     /// content is laid out in effective pixels (DIPs): the 32 DIP
     /// window is scaled by the display DPI, or the 30 DIP circle
     /// overflows (is clipped by) the window on a scaled display — the
-    /// "abnormal size" Manh saw in 0.1.3.68.</summary>
-    public void ShowAt(int x, int y)
+    /// "abnormal size" Manh saw in 0.1.3.68. Compact (hover) shows
+    /// the ~3/4 icon (24 px window, 22 px circle, smaller glyphs):
+    /// a hovered block gets the small icon, a manual selection the
+    /// full-size one (Manh 2026-11-21, mac parity).</summary>
+    public void ShowAt(int x, int y, bool compact = false)
     {
         // A new selection cancels a pending Read linger (fresh icon
         // state for the new text).
@@ -293,9 +303,22 @@ public sealed partial class TriggerIconWindow : Window
         _altHeld = IsAltHeldGlobally();
         SetSpeaking(false); // fresh selection: back to the preview mark.
         UpdateGlyph(); // SetSpeaking returns early when already not speaking.
+        // Sizes, applied on every show: the compact (hover) icon is
+        // ~3/4 of the selection icon — so a full-size show after a
+        // compact one (or the reverse) resets the sizes.
+        var windowPx = compact ? CompactWidthPx : WidthPx;
+        var circlePx = compact ? CompactCirclePx : 30;
+        IconBorder.Width = circlePx;
+        IconBorder.Height = circlePx;
+        PlainAMark.FontSize = compact ? 11 : 15;
+        BubbleMark.FontSize = compact ? 12 : 16;
+        SpeakerMark.FontSize = compact ? 12 : 16;
+        APlusMarkA.FontSize = compact ? 11 : 15;
+        APlusMarkPlus.FontSize = compact ? 6 : 8;
+        APlusMarkPlus.Margin = compact ? new Thickness(0, 3, 4, 0) : new Thickness(0, 4, 5, 0);
         var scale = WindowHelpers.DpiScale(this);
-        var w = Math.Max(1, (int)Math.Round(WidthPx * scale));
-        var h = Math.Max(1, (int)Math.Round(HeightPx * scale));
+        var w = Math.Max(1, (int)Math.Round(windowPx * scale));
+        var h = Math.Max(1, (int)Math.Round(windowPx * scale));
         var work = WindowHelpers.DisplayWorkArea(x, y);
         var px = Math.Clamp(x + 8, work.X, work.X + work.Width - w);
         var py = Math.Clamp(y + 8, work.Y, work.Y + work.Height - h);

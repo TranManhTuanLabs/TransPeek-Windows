@@ -103,6 +103,32 @@
             <TextBlock x:Uid="Settings.General.HoverBlockTextHint" Text="When on, hovering over a block of text shows the trigger icon, without selecting anything first. Only text the app exposes to UI Automation is detected."
                        FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
 
+            <!-- Hover text delay (Manh 2026-11-21, mac parity:
+                 hoverBlockDelayMs, default 400 ms): how long the
+                 mouse must rest on a block before the icon appears.
+                 Sits directly under the block-text toggle. Same
+                 layout as Hover delay below — label left, picker
+                 right, description below. Seconds, not milliseconds
+                 (same as Hover delay): the value stored is ms. -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Uid="Settings.General.HoverBlockDelay" Text="Hover text delay (default: 0.4s)"
+                           VerticalAlignment="Center" />
+                <ComboBox x:Name="HoverBlockDelayCombo" Grid.Column="1" MinWidth="120"
+                          SelectionChanged="OnHoverBlockDelayChanged">
+                    <ComboBoxItem Content="0.2s" Tag="200" />
+                    <ComboBoxItem Content="0.3s" Tag="300" />
+                    <ComboBoxItem Content="0.4s" Tag="400" />
+                    <ComboBoxItem Content="0.5s" Tag="500" />
+                    <ComboBoxItem Content="0.7s" Tag="700" />
+                </ComboBox>
+            </Grid>
+            <TextBlock x:Uid="Settings.General.HoverBlockDelayHint" Text="How long the mouse must rest on a block of text before the icon appears."
+                       FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
+
             <!-- Click icon (Fast Read, feature/fast-read-rsvp, Manh
                  2026-11-17; renamed "Click icon for:" and moved one
                  slot up, Manh 2026-11-20): what a click on the float
