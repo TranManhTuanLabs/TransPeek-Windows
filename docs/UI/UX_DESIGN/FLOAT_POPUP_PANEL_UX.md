@@ -493,6 +493,70 @@ phải MinWidth 120, mô tả dưới) với nhãn giây "0.5s" / "5s" (chỉ đ
 thị, giá trị 500 ms giữ nguyên); KHÔNG ô hotkey ở tab OCR (trùng General);
 nhãn UI sửa cả XAML lẫn `.resw` (resw thắng lúc chạy).
 
+### 11.7 Panel focus/activation — hành vi quan sát (Manh test CI230, 2026-11-21)
+
+> Ghi lại để sau còn biết hướng sửa khi có lỗi liên quan (Manh
+> 2026-11-21 23:28, test bản nhánh CI230 `ff33cce5`). Phân biệt rõ: phần
+> nào đã xác minh bằng code, phần nào chỉ là quan sát chưa giải thích
+> được — đừng đoán nguyên nhân rồi sửa theo.
+
+**Quan sát (Manh, test máy thật):**
+- Select text → hover icon → panel hiện: panel KHÔNG có viền màu 1px ở
+  mép đỉnh topbar + đổ bóng nhạt (như cửa sổ đang mất focus).
+- Click lần 1 vào bất kỳ chỗ nào trong panel (đã thử topbar, bottom,
+  input, output, action) → vẫn vậy. Click lần 2 vào đúng/hoặc gần đúng
+  vị trí click 1 → mới thấy viền màu 1px ở đỉnh mép trên cùng + đổ bóng
+  đậm hơn (như panel đang được focus).
+- Hover chuột ra ngoài panel → đổ bóng nhạt đi, mất viền màu 1px;
+  auto-detect block text ngoài panel vẫn nhận bình thường, hover icon
+  bình thường, mở panel mới được.
+- Hệ quả nghi ngờ: Space play/pause không ăn vì panel chưa được focus —
+  phải click vào panel mới ấn được (đây là lý do đợt `ff33cce5` phải làm
+  `GlobalSpaceTracker` poll Space toàn cục thay cho phím tới panel).
+- Chưa rõ: có phải từ khi có auto-detect block text (PR #3) mới bị vậy,
+  hay trước đó đã bị — Manh chưa test lại bản cũ chưa có auto-detect nên
+  chưa kết luận được.
+
+**Đã xác minh bằng code (đúng thiết kế, không phải bug):**
+- Panel mở bằng `ShowWithoutActivation` (`TranslatePanelWindow.
+  ShowPanelNear`): set `WS_EX_NOACTIVATE` (dính vào style của cửa sổ,
+  không phải cờ 1 lần) + `SetWindowPos` hiện cửa sổ. Cửa sổ NOACTIVATE
+  KHÔNG bao giờ thành foreground/active khi hiện lên hay khi click —
+  nên "mở lên không có viền accent + bóng nhạt" là ĐÚNG THIẾT KẾ (panel
+  không được cướp focus khỏi text user đang đọc).
+- Kích hoạt là do app tự làm: `WindowHelpers.ActivateWindow` gỡ
+  `WS_EX_NOACTIVATE` + `SWP_FRAMECHANGED` + `window.Activate()`; gọi
+  khi user click vào panel (và các đường `ShowInputMode` /
+  `ShowPanelForReading` mở panel kiểu nhập liệu). Vì vậy phím (Space,
+  Ctrl+V) chỉ tới được panel SAU khi kích hoạt — đúng với quan sát
+  "phải click vào panel mới bấm Space được".
+- Kích hoạt chạy ở `PointerReleased`, KHÔNG phải `PointerPressed` — có
+  chủ ý (test 0.1.3.53: kích hoạt giữa lúc bấm — giữa mouse-down và
+  mouse-up — nuốt mất `Click` của Button, nút Settings không làm gì;
+  kích hoạt lúc nhả thì chạy sau `Click`). Handler gắn bằng
+  `AddHandler(..., handledEventsToo: true)` trên `contentRoot`; có guard
+  `_visible` (test 0.1.3.64: nút gear ẩn panel trước rồi handler mới
+  chạy, kích hoạt lại sẽ hiện panel lại ngay).
+
+**Chưa giải thích được — KHÔNG đoán, để điều tra sau:**
+- Theo thiết kế trên, 1 click (bấm + nhả) là đủ kích hoạt qua handler
+  `PointerReleased`. Quan sát lại là click 1 không kích hoạt, click 2
+  cùng/gần vị trí mới kích hoạt. Cơ chế chưa rõ. Hướng điều tra khi làm:
+  (a) cú `PointerReleased` đầu có bị nuốt không (fade-in đổi tab 150ms?
+  `ClickOutsideMonitor`? cú click bắt đầu từ cửa sổ icon?); (b)
+  `SetForegroundWindow` / `window.Activate()` lần đầu có bị chặn không
+  (foreground lockdown: TransPeek chưa phải tiến trình foreground lúc
+  panel mở); (c) viền accent/bóng có trễ 1 chu kỳ kích hoạt không (hiện
+  sau ở lần kích hoạt thứ 2).
+- Chuột ra ngoài panel thì bóng nhạt + mất viền accent cũng chưa giải
+  thích được: Windows chuẩn không deactivate cửa sổ khi chuột rời khỏi
+  nó. Cần xác minh lại lúc đó panel có thật sự đang active không (hay
+  viền/bóng lúc click 2 chỉ là trạng thái hover của khung cửa sổ).
+- Câu hỏi mở: test bản cũ KHÔNG có auto-detect (vd bản v0.1.4.211,
+  trước PR #3) — mở panel xem có viền accent/bóng đậm không, click 1
+  có kích hoạt không. Kết quả sẽ chốt được auto-detect có liên quan
+  hay không.
+
 ## Liên kết
 
 - [Icon float UX](FLOAT_ICON_UX_SPEC.md)

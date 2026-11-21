@@ -36,6 +36,7 @@
 - [ ] Slider cỡ panel trong Settings — Windows chưa có (chỉ có slider font);
   chờ Manh quyết có đồng bộ với mac không.
 - [ ] Nút RSVP cạnh loa trong output — chưa chốt lại sau khi loa chuyển vào trong ô.
+- [ ] Panel: click 1 không kích hoạt, click 2 mới kích hoạt + chuột ra ngoài mất viền accent (Windows — TransPeek-Windows, Manh test CI230 2026-11-21 23:28, việc điều tra phiên sau): panel mở lên không có viền màu 1px ở đỉnh + bóng nhạt (đúng thiết kế NOACTIVATE); nhưng click 1 vào panel (topbar/bottom/input/output/action đều thử) KHÔNG kích hoạt, click 2 đúng/gần vị trí click 1 mới kích hoạt; chuột ra ngoài panel thì bóng nhạt lại, mất viền. Nghi ngờ liên quan tới Space play/pause không ăn khi chưa click vào panel (đã có workaround `GlobalSpaceTracker` ở `ff33cce5`). Chưa rõ có từ auto-detect block text (PR #3) hay đã có từ trước. Khi điều tra: test bản cũ không có auto-detect (vd v0.1.4.211) để chốt; rồi kiểm tra cú `PointerReleased` đầu có bị nuốt không, `SetForegroundWindow` lần đầu có bị chặn không. Chi tiết: `UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md` §11.7.
 
 ## ĐÃ ĐÓNG
 
