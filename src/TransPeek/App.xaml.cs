@@ -13,6 +13,7 @@
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using System.Diagnostics;
+using TransPeek.AlternativeIcon;
 using TransPeek.BlockText;
 using TransPeek.Core.Barcode;
 using TransPeek.Core.Dictionary;
@@ -67,6 +68,16 @@ public sealed partial class App : Application
     /// service — the icon speaks the selection without opening the
     /// panel, so it needs its own synthesizer/player.</summary>
     private SystemSpeechService? _iconSpeech;
+    /// <summary>Alternative icon (mac FAST_READ_SELECT_ICON, Manh
+    /// 2026-11-22): the fake icon over a selection inside Fast Read.
+    /// Own monitor + window + TTS path — it never touches the main
+    /// float icon's logic, glyphs, or settings.</summary>
+    private AlternativeIconController? _altIconController;
+    /// <summary>HWNDs for the alternative icon's foreground gate,
+    /// captured on the UI thread at window creation (a WinUI Window
+    /// must not be touched from the monitor's background thread).</summary>
+    private IntPtr _panelHwnd;
+    private IntPtr _fastReadWindowHwnd;
     private string _lastSelection = "";
     private DateTimeOffset _lastSelectionAt = DateTimeOffset.MinValue;
     private (int X, int Y) _lastPoint;
@@ -130,6 +141,7 @@ public sealed partial class App : Application
         // ON, the focus timer starts on its own at launch.
         _focusTimerStore.AutoStartFocusIfEnabled();
         _panel = new TranslatePanelWindow(TranslateAsync, () => _ocrFlow!.RunOcrAsync(), ShowSettings, BuildShortcutEntries(), text => _ = OpenFastReadAsync(text), _focusTimerStore);
+        _panelHwnd = WinRT.Interop.WindowNative.GetWindowHandle(_panel);
         _triggerIcon = new TriggerIconWindow();
         _triggerIcon.OpenRequested += OnTriggerIconOpenRequested;
         _triggerIcon.FastReadRequested += () => _ = OpenFastReadFromSelectionAsync();
@@ -176,6 +188,20 @@ public sealed partial class App : Application
         _selectionMonitor = new SelectionMonitor(OnSelectionChanged);
         if (Settings.WatchSelection)
             _selectionMonitor.Start();
+
+        // Alternative icon (mac FAST_READ_SELECT_ICON, Manh 2026-11-22):
+        // a selection inside a Fast Read surface shows the fake icon
+        // (A in a chat bubble) — hover translates, click listens
+        // through its own TTS path. The gate is the foreground window:
+        // only the Fast Read window, or the panel on its Fast Read tab,
+        // counts — never the translate input or Settings. Inert unless
+        // a Read surface is foreground, so it needs no settings toggle
+        // and no rebuild on settings save (sizes/delays read live).
+        _altIconController = new AlternativeIconController(
+            IsReadSurfaceForeground,
+            OnAlternativeIconTranslateRequested,
+            _uiQueue);
+        _altIconController.Start();
 
         // Hover-to-show (feature/block-text-detection): the dwell is
         // Settings.HoverBlockDelayMs (default 400 ms) — the mouse
@@ -340,6 +366,40 @@ public sealed partial class App : Application
             _panel?.ShowTranslationFlow(_lastSelection, _lastPoint.X, _lastPoint.Y);
     }
 
+    // ----- alternative icon (Fast Read selection) -----
+
+    /// <summary>True when the user is working in a Fast Read surface:
+    /// the Fast Read window is foreground, or the panel is foreground
+    /// on its Fast Read tab. The monitor polls this from its background
+    /// thread, so it only uses the HWNDs captured on the UI thread at
+    /// creation + plain field reads — never a WinUI Window call.</summary>
+    private bool IsReadSurfaceForeground()
+    {
+        var fg = NativeMethods.GetForegroundWindow();
+        if (fg == IntPtr.Zero)
+            return false;
+        if (_fastReadWindow is not null && fg == _fastReadWindowHwnd)
+            return true;
+        return _panel is not null && fg == _panelHwnd && _panel.IsFastReadTabActive;
+    }
+
+    /// <summary>Alternative icon hover = translate (mac §5). Full
+    /// window: the panel is closed, so open it at the selection like
+    /// the main icon. Lite: the panel is already open, so translate in
+    /// place — never move it to the cursor.</summary>
+    private void OnAlternativeIconTranslateRequested(string text, (int X, int Y) point)
+    {
+        if (_fastReadWindow is not null
+            && NativeMethods.GetForegroundWindow() == _fastReadWindowHwnd)
+        {
+            _panel?.ShowTranslationFlow(text, point.X, point.Y);
+        }
+        else
+        {
+            _panel?.TranslateInPlace(text);
+        }
+    }
+
     /// <summary>Float icon click = listen (mac handleIconClick,
     /// .speak): read the selected text aloud without opening the
     /// panel. Re-grabs the selection via the clipboard when it is
@@ -456,9 +516,11 @@ public sealed partial class App : Application
         if (_fastReadWindow is null)
         {
             _fastReadWindow = new FastReadWindow();
+            _fastReadWindowHwnd = WinRT.Interop.WindowNative.GetWindowHandle(_fastReadWindow);
             _fastReadWindow.Closed += (_, _) =>
             {
                 _fastReadWindow = null;
+                _fastReadWindowHwnd = IntPtr.Zero;
                 // A pending reminder shows itself now that the read
                 // stopped (feature/focus-timer-decor, mac parity:
                 // fastReadWindowClosed in FocusTimerStore).

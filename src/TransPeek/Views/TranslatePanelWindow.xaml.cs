@@ -491,6 +491,30 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         _ = TranslateAndShowAsync(text);
     }
 
+    /// <summary>True when the panel is visible on the Fast Read tab —
+    /// the alternative icon's Lite surface (mac FAST_READ_SELECT_ICON
+    /// §7). App's gate reads this from the monitor's background
+    /// thread: a plain bool/enum field read, atomic and safe to poll.</summary>
+    public bool IsFastReadTabActive => _visible && _activeTab == PanelTab.FastRead;
+
+    /// <summary>Translate in place (alternative icon, Lite — mac
+    /// FAST_READ_SELECT_ICON §5): the panel is ALREADY open on the
+    /// Fast Read tab, so only switch it to the Translate tab and
+    /// translate the text. It must NOT call ShowPanelNear — that would
+    /// move the panel to the cursor. Unlike HidePanel, switching tabs
+    /// does not stop the panel-right read: the read keeps running
+    /// behind the translate tab.</summary>
+    public void TranslateInPlace(string text)
+    {
+        _ocrMode = false;
+        SetSource(text);
+        TranslationTextBox.Text = AppStrings.Get("Panel.Translating", "Translating…");
+        ProviderStatusText.Text = "";
+        SetProviderCardExpanded(true);
+        ShowTab(PanelTab.Translate);
+        _ = TranslateAndShowAsync(text);
+    }
+
     /// <summary>Manual translation (mac parity: prepareInputMode + panel
     /// at screen center). Empty source box, centered on the primary
     /// display, ACTIVATED with the keyboard focus in the source box —

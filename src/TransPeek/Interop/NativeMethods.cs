@@ -95,6 +95,17 @@ internal static class NativeMethods
     [DllImport("user32.dll")]
     public static extern bool SetForegroundWindow(IntPtr hWnd);
 
+    // ----- user32: foreground window (alternative icon gate) -----
+    // GetForegroundWindow returns the HWND of the window the user is
+    // currently working in. The alternative icon only watches a Read
+    // surface, so App's gate compares it against the Fast Read
+    // window's and the panel's HWNDs (captured on the UI thread at
+    // creation — a WinUI Window must not be touched from the
+    // monitor's background thread). Microsoft Learn:
+    // GetForegroundWindow, winuser.h, User32.dll.
+    [DllImport("user32.dll")]
+    public static extern IntPtr GetForegroundWindow();
+
     [DllImport("user32.dll", SetLastError = true)]
     public static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter,
         int x, int y, int cx, int cy, uint uFlags);

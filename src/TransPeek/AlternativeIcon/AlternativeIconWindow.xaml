@@ -1,0 +1,35 @@
+<Window
+    x:Class="TransPeek.AlternativeIcon.AlternativeIconWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Alternative icon (mac FAST_READ_SELECT_ICON.md): the fake icon
+         that appears when the user selects text inside Fast Read. A
+         blue "A" inside a chat bubble (Segoe Fluent Icons Message
+         E8BD, verified on Microsoft Learn 2026-11-18) — the earlier
+         icon design, reused here. Same glyph normally and on hover (it
+         does NOT swap on hover, unlike the main float icon); while
+         speaking it shows the speaker (E767 Volume), like the main
+         icon does. Size follows the auto-show icon setting (default
+         24 pt, user-adjustable) — the same size as the hover icon, so
+         the alternative icon reads as the same family. The XAML values
+         below are only the first-paint defaults; ShowAt re-applies the
+         real sizes on every show. The circle stays white and does NOT
+         follow system dark/light yet — same as the main icon. -->
+    <Grid Background="Transparent">
+        <Border x:Name="IconBorder" Width="22" Height="22" CornerRadius="11"
+                Background="White" BorderBrush="#C8C8C8" BorderThickness="1">
+            <Grid>
+                <FontIcon x:Name="BubbleMark" Glyph="&#xE8BD;" FontSize="18" Foreground="#0078D4"
+                          HorizontalAlignment="Center" VerticalAlignment="Center" />
+                <!-- The "A" sits inside the bubble: the bubble's tail
+                     is at the bottom, so the letter is nudged 1 px up
+                     to sit in the bubble's visual center. -->
+                <TextBlock x:Name="AMark" Text="A" FontSize="11" FontWeight="Normal" Foreground="#0078D4"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-1,0,0" />
+                <FontIcon x:Name="SpeakerMark" Glyph="&#xE767;" FontSize="13" Foreground="#0078D4"
+                          HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed" />
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

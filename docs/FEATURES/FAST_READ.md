@@ -171,7 +171,9 @@ folder per feature, UI + logic together in it; only the thin joints
 Same structure on mac + Windows: `FastRead/` (RSVP engine + reader
 window + view here), `FocusTimer/` (Pomodoro/focus/20-20-20 timer +
 panel-right lite reader + Rest window — `feature/focus-timer-decor`,
-2026-11-20; see `FOCUS_REST.md`), `Shortcuts/` (one shortcut table
+2026-11-20; see `FOCUS_REST.md`), `AlternativeIcon/` (the fake icon
+over a selection inside Fast Read — hover translates, click listens
+through its own TTS path; see `ALTERNATIVE_ICON.md`), `Shortcuts/` (one shortcut table
 shared by the "?" embed and the shortcut panel — still a TODO refactor,
 not this branch).
 
@@ -336,6 +338,8 @@ text. Nothing to read shows a toast.
 
 ## Links
 
+- Alternative icon (select in Read → look up / listen):
+  `ALTERNATIVE_ICON.md`
 - Research: mac repo `docs/RESEARCH/tts-speechify-naturalreader/rsvp-report.md`
 - Panel multi-tab hub (the Fast Read tab, now the lite reader):
   `docs/UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md` §10–§11

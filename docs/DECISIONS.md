@@ -2714,6 +2714,15 @@ Manh test bản 0.1.4.191: Google 249 ngôn ngữ ngon. 4 việc còn lại làm
 - **"Float icon size" mặc định 26 → 24pt (mac `b77c3102`):** picker thêm 18/20/22 → 18/20/22/24/26/28/30/32; nhãn thành "Float icon size (default: 24pt — recommend 20-24pt)". "Auto-show float icon size" giữ mặc định 24pt + picker 18/20/22/24, nhãn thành "Auto-show float icon size (default: 24pt — recommend 20, 22pt)". "recommend" viết đúng chính tả (Manh gõ "recomend" — tự sửa theo quy tắc tự correct chính tả). Gạch nối cho khoảng (20-24), dấu phẩy liệt kê 2 cỡ (20, 22).
 - **Chỉ đổi mặc định + nhãn + thêm mục picker:** logic cỡ (`ShowAt` đọc live, chữ co theo vòng) không đổi. User nào đã chọn cỡ rồi thì giữ nguyên cỡ đã chọn (setting đã lưu không bị ghi đè).
 
+## Icon alternative trong Fast Read (2026-11-22, mac parity, main)
+
+- **Bôi đen text trong lúc đọc Fast Read thì hiện icon giả ("alternative icon") để tra từ / nghe** (mac `b6388f20`, thiết kế `docs/UI/UX_DESIGN/FAST_READ_SELECT_ICON.md` bên mac). Module riêng `src/TransPeek/AlternativeIcon/` — đường riêng, không động vào logic icon float chính (`ARCHITECTURE.md` §5: cái đang ngon thì để nguyên, nối đường riêng qua callback).
+- **Hình dạng:** chữ A xanh trong ô chat (E8BD + "A"), giống nhau lúc thường lẫn lúc hover; đang nói thì hiện loa (E767). Cỡ theo setting auto-show (mặc định 24pt). **Hành vi:** rê chuột → dịch; bấm → nghe qua `SystemSpeechService` RIÊNG (không chung đường loa Read / RSVP sync). **KHÔNG có Read, KHÔNG menu chuột phải, bỏ qua setting "Click icon for:".**
+- **Hover khác nhau theo mặt:** Full (cửa sổ Read riêng) → mở panel tại chỗ chọn (`ShowTranslationFlow`, như icon chính). Lite (panel đang ở tab Fast Read) → dịch tại chỗ qua `TranslatePanelWindow.TranslateInPlace(text)` — KHÔNG gọi `ShowPanelNear` (sẽ di chuyển panel); chuyển tab không dừng bài đọc đang chạy (chỉ `HidePanel` mới dừng).
+- **Khi nào hiện:** chỉ khi đang ở mặt Fast Read — cửa sổ Window Read đang mở, HOẶC panel đang ở tab Fast Read. Không hiện ở ô dịch hay Settings. Monitor riêng `ReadSelectionMonitor` — cùng kiểu poll UIA `TextPattern.GetSelection` ~300ms như `SelectionMonitor` nhưng lọc NGƯỢC (chỉ process của mình) + gate bằng cửa sổ foreground (`GetForegroundWindow()` so với HWND của cửa sổ Read / panel đã capture trên UI thread lúc tạo; panel chỉ tính khi đang ở tab Fast Read qua `IsFastReadTabActive`). **Lệch so với mac (lựa chọn có ghi rõ):** mac dùng mouse-up monitor; Windows dùng lại kiểu poll sẵn có trong codebase — cùng kết quả với user, lại bắt được cả bôi đen bằng bàn phím (Shift+mũi tên) mà mouse-up bỏ sót.
+- **Tự ẩn:** sau 5s (chung setting `TriggerIconAutoHideSeconds`), hoặc khi hết bôi đen, hoặc khi mặt Read không còn foreground. Text bôi được là around/context text (`BeforeTextBlock` / `AfterTextBlock` / `ContextTextBlock` đã `IsTextSelectionEnabled` sẵn); từ focus RSVP không bôi được.
+- **Không có toggle setting riêng:** icon inert trừ khi mặt Read đang foreground, nên không có gì để tắt.
+
 ## Liên kết
 
 - [Bối cảnh AI](AI_CONTEXT.md)

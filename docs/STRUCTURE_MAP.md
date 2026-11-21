@@ -26,6 +26,7 @@
 | `docs/FEATURES/SPEECH_ENGINE.md` | Engine TTS | Bản nháp |
 | `docs/FEATURES/SPEECH_PLAYER.md` | Player TTS + RSVP | Bản nháp |
 | `docs/FEATURES/FAST_READ.md` | Fast Read (RSVP) — cửa sổ đọc riêng | Bản nháp |
+| `docs/FEATURES/ALTERNATIVE_ICON.md` | Icon alternative trong Fast Read (bôi đen → tra từ / nghe) | Bản nháp |
 | `docs/FEATURES/OCR_TEXT_CAPTURE.md` | OCR | Bản nháp |
 | `docs/FEATURES/SETTINGS.md` | Tính năng Settings | **CHƯA VIẾT** |
 | `docs/UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md` | **Panel UX — size đã CHỐT** | **CHỐT 17/11/2026 (#161)** |
@@ -66,6 +67,7 @@ docs/
 │   ├── SPEECH_ENGINE.md          # engine TTS
 │   ├── SPEECH_PLAYER.md          # player TTS + RSVP
 │   ├── FAST_READ.md              # Fast Read (RSVP) — cửa sổ đọc riêng
+│   ├── ALTERNATIVE_ICON.md       # icon alternative trong Fast Read
 │   ├── OCR_TEXT_CAPTURE.md       # OCR
 │   └── SETTINGS.md               # tính năng Settings (CHƯA VIẾT)
 └── UI/
