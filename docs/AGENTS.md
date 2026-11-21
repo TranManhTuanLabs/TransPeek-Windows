@@ -123,6 +123,16 @@
   focus), build đỏ. Tra mã nguồn/API thật trước thì đã chọn AutoSuggestBox
   ngay từ đầu.
 
+## Cái đang ngon, ổn định thì để nguyên, tìm đường khác nối (Manh 21/11/2026)
+
+- **Kinh nghiệm làm:** một phần của hệ thống đang chạy tốt, đã test kỹ thì
+  KHÔNG sửa trực tiếp vào nó để thêm tính năng mới — sửa vào rất dễ làm vỡ
+  logic đang ngon. Nối đường riêng: làm phần mới tách ra, rồi kích hoạt /
+  dùng lại hành vi cũ qua callback có sẵn. Ví dụ (mac): icon giả trong Read
+  mode — không sửa logic icon float hiện tại, làm icon giả y hệt, hover/click
+  thì kích hoạt trigger vào icon hiện tại.
+- Ghi đầy đủ hơn ở `ARCHITECTURE.md` §5 (nguyên tắc kiến trúc).
+
 ## Liên kết
 
 - [Bối cảnh AI](AI_CONTEXT.md)
