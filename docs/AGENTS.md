@@ -77,6 +77,15 @@
   `Microsoft.UI.Xaml`, KHÔNG phải `Microsoft.UI.Dispatching` (đã xác
   minh trên Microsoft Learn). File nào dùng DispatcherTimer mà chỉ có
   `using Microsoft.UI.Dispatching;` thì build lỗi CS0246.
+- **Bài học CI #215 (2026-11-21):** `TextBlock` trong WinUI KHÔNG có
+  `Background` (chỉ WPF mới có — bẫy WPF→WinUI như `BaselineAlignment`
+  ở CI #178); muốn tô nền dòng chữ thì bọc TextBlock trong `Border` và
+  tô `Border.Background`. **`DispatcherTimer` KHÔNG có thuộc tính
+  `DispatcherQueue`** — muốn marshal event về UI thread thì capture
+  `DispatcherQueue.GetForCurrentThread()` ở constructor (view model
+  luôn được tạo trên UI thread). 2 lỗi này làm kiểu
+  `Style2ReadingView` không biên dịch được nên XAML gọi nó cũng lỗi
+  theo (WMC0001 + WMC9999 chỉ là hệ quả).
 
 ## 5. Quy tắc chung
 

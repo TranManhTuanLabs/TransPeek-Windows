@@ -16,6 +16,7 @@
 
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using TransPeek.Core.FastRead;
 using TransPeek.Core.Settings;
@@ -26,6 +27,11 @@ namespace TransPeek.FastRead;
 public sealed class RsvpReaderViewModel : INotifyPropertyChanged
 {
     private readonly DispatcherTimer _timer = new();
+    // The UI-thread queue, captured at construction (the view model is
+    // always built on the UI thread). DispatcherTimer has NO
+    // DispatcherQueue property in WinUI, so SpeechEnded — which may
+    // arrive off the UI thread — is marshalled through this queue.
+    private readonly DispatcherQueue? _dispatcherQueue;
     private RsvpDocument _document = new([], [], TimeSpan.Zero);
     private string _sourceText = "";
     private int _currentSlide;
@@ -293,6 +299,7 @@ public sealed class RsvpReaderViewModel : INotifyPropertyChanged
 
     public RsvpReaderViewModel()
     {
+        _dispatcherQueue = DispatcherQueue.GetForCurrentThread();
         _timer.Tick += (_, _) => AdvancePosition();
     }
 
@@ -458,20 +465,28 @@ public sealed class RsvpReaderViewModel : INotifyPropertyChanged
     /// ignored via the generation, and via IsSpeaking — if a newer
     /// utterance is already playing, this end belongs to the old one.
     /// The event may arrive off the UI thread, so the advance runs on
-    /// the timer's dispatcher queue.</summary>
+    /// the queue captured at construction; with no queue (built off
+    /// the UI thread) it runs inline as a best effort.</summary>
     private void OnSpeechEnded(object? sender, EventArgs e)
     {
         var generation = _expectedSpeechGeneration;
-        _timer.DispatcherQueue.TryEnqueue(() =>
-        {
-            if (generation != _expectedSpeechGeneration || !IsPlaying || !_soundOn)
-                return;
-            if (_speaker?.IsSpeaking == true)
-                return;
-            AdvancePosition();
-            if (IsPlaying)
-                _ = SpeakCurrentUnitAsync();
-        });
+        if (_dispatcherQueue is null)
+            AdvanceAfterSpeechEnded(generation);
+        else
+            _dispatcherQueue.TryEnqueue(() => AdvanceAfterSpeechEnded(generation));
+    }
+
+    /// <summary>The UI-thread half of OnSpeechEnded: advance one unit
+    /// and speak the next, unless this end is stale.</summary>
+    private void AdvanceAfterSpeechEnded(int generation)
+    {
+        if (generation != _expectedSpeechGeneration || !IsPlaying || !_soundOn)
+            return;
+        if (_speaker?.IsSpeaking == true)
+            return;
+        AdvancePosition();
+        if (IsPlaying)
+            _ = SpeakCurrentUnitAsync();
     }
 
     /// <summary>Stop any speech (a no-op when nothing is speaking) and

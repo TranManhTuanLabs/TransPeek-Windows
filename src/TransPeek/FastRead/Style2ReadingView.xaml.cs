@@ -19,7 +19,10 @@ namespace TransPeek.FastRead;
 public sealed partial class Style2ReadingView : UserControl
 {
     private RsvpReaderViewModel? _viewModel;
-    private readonly List<TextBlock> _lineBlocks = [];
+    // One border per line (the border carries the highlight).
+    // TextBlock has NO Background in WinUI (unlike WPF), so the line
+    // text lives inside a Border and the highlight goes on the border.
+    private readonly List<Border> _lineBorders = [];
     // Soft accent highlight for the current line (mac: accent at 0.18
     // opacity) — the same blue the app uses for accents (#0078D4).
     private static readonly Brush HighlightBrush =
@@ -103,7 +106,7 @@ public sealed partial class Style2ReadingView : UserControl
     /// current line.</summary>
     private void RebuildLines()
     {
-        _lineBlocks.Clear();
+        _lineBorders.Clear();
         LinesPanel.Children.Clear();
         if (_viewModel is null || _viewModel.IsRsvpStyle)
             return;
@@ -120,8 +123,17 @@ public sealed partial class Style2ReadingView : UserControl
                 LineHeight = bodySize * 1.5,
                 TextWrapping = TextWrapping.Wrap,
             };
-            _lineBlocks.Add(block);
-            LinesPanel.Children.Add(block);
+            // The border is the highlight surface (TextBlock has no
+            // Background in WinUI) — a little padding so the highlight
+            // does not hug the text, soft corners like the mac page.
+            var border = new Border
+            {
+                Child = block,
+                Padding = new Thickness(6, 2, 6, 2),
+                CornerRadius = new CornerRadius(4),
+            };
+            _lineBorders.Add(border);
+            LinesPanel.Children.Add(border);
         }
         RefreshHighlight();
     }
@@ -135,8 +147,8 @@ public sealed partial class Style2ReadingView : UserControl
             return;
         var highlight = _viewModel.HighlightVisible;
         var current = _viewModel.Style2CurrentLineIndex;
-        for (var i = 0; i < _lineBlocks.Count; i++)
-            _lineBlocks[i].Background = highlight && i == current ? HighlightBrush : null;
+        for (var i = 0; i < _lineBorders.Count; i++)
+            _lineBorders[i].Background = highlight && i == current ? HighlightBrush : null;
     }
 
     /// <summary>Keep the focused line in view as Play advances it —
@@ -147,9 +159,9 @@ public sealed partial class Style2ReadingView : UserControl
         if (_viewModel is null)
             return;
         var index = _viewModel.Style2CurrentLineIndex;
-        if (index < 0 || index >= _lineBlocks.Count)
+        if (index < 0 || index >= _lineBorders.Count)
             return;
-        _lineBlocks[index].StartBringIntoView(new BringIntoViewOptions
+        _lineBorders[index].StartBringIntoView(new BringIntoViewOptions
         {
             VerticalAlignmentRatio = 0.5,
             AnimationDesired = true,
