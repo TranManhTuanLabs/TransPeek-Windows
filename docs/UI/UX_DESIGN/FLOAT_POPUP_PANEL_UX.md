@@ -99,7 +99,7 @@ minH = max(450, fixedH + cardMin + cardMargin + 24)
 - Auto-fit (`ResizeToFitContent`): đo `DesiredSize` của root, kẹp giữa min height động
   và max 800, rộng kẹp 400–600.
 
-## 6. Bug che loa/Copy — nguyên nhân đã tìm ra, fix #164 đã vào (chờ Manh xác nhận hết che)
+## 6. Bug che loa/Copy — fix #164 KHÔNG hết che, đang chẩn đoán khung cửa sổ (22/11)
 
 > **Trạng thái hiện tại (20/11/2026):** fix thật là **#164** (`SettleResizedSize`
 > thêm nhánh dài panel khi cần — commit `bf74379`, CI xanh), KHÔNG phải
@@ -209,6 +209,16 @@ dưới card khi tra 1–5 line; từ 6 line trở lên không bị. **Nguyên n
 Lịch sử mò số (để tránh lặp lại): min output card 150 → 160 (#151) → 170 (#152) →
 180 (#154) → 210 (#155, đo từ ảnh: card 3 line ~206px, card 1 word ~193px, chênh 13px)
 → 218 (#159). Không lần nào hết che.
+
+> **Cập nhật 22/11/2026 — fix #164 KHÔNG hết che:** Manh xác nhận trên bản v0.1.4.238
+> vẫn che. Repro: mở lần đầu đã che; kéo nhỏ hết cỡ dừng ĐÚNG điểm che; dịch từ mới
+> không kéo vẫn che; text rất dài không che, 3–6 dòng vẫn che. Nghi phạm mới: khung cửa
+> sổ thừa (`WS_DLGFRAME` sót lại sau `SetBorderAndTitleBar`, chỉ icon mới được strip
+> frame) ăn mất chiều cao vùng hiển thị — phần thiếu là hằng số, không đổi khi tăng
+> cardMin (giải thích #163 +20 vô ích). **Bản chẩn đoán:** log kích thước panel
+> (outer/client/min/baseline) vào `windows.log` mỗi lần fit + submenu tray Diagnose
+> (List windows / Open windows.log) để đo đúng số px thiếu, rồi sửa theo số đo.
+> Chi tiết: `docs/TASK_QUEUE.md` + `docs/DECISIONS.md`.
 
 ## 7. Quy tắc sửa (để không phá layout)
 

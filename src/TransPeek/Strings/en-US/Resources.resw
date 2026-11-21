@@ -51,8 +51,14 @@
   <data name="Tray.Menu.Restart" xml:space="preserve">
     <value>Restart TransPeek</value>
   </data>
+  <data name="Tray.Menu.Diagnose" xml:space="preserve">
+    <value>Diagnose</value>
+  </data>
   <data name="Tray.Menu.DiagnoseWindows" xml:space="preserve">
-    <value>Diagnose: list windows</value>
+    <value>List windows</value>
+  </data>
+  <data name="Tray.Menu.DiagnoseOpenLog" xml:space="preserve">
+    <value>Open windows.log</value>
   </data>
   <data name="Tray.Section.Capture" xml:space="preserve">
     <value>Text Capture from Screen</value>
@@ -71,6 +77,9 @@
   </data>
   <data name="App.Toast.WindowsListed" xml:space="preserve">
     <value>Window list saved to windows.log — send that file to diagnose the floating 'Esc' pill.</value>
+  </data>
+  <data name="App.Toast.NoWindowsLog" xml:space="preserve">
+    <value>windows.log does not exist yet — use Diagnose → List windows first.</value>
   </data>
   <data name="App.Toast.NoSelection" xml:space="preserve">
     <value>No text selected to translate.</value>

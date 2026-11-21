@@ -13,6 +13,7 @@
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using System.Diagnostics;
+using System.IO;
 using TransPeek.AlternativeIcon;
 using TransPeek.BlockText;
 using TransPeek.Core.Barcode;
@@ -182,6 +183,23 @@ public sealed partial class App : Application
             {
                 WindowDiagnostics.Write();
                 _toast?.Show(AppStrings.Get("App.Toast.WindowsListed", "Window list saved to windows.log — send that file to diagnose the floating 'Esc' pill."));
+            },
+            diagnoseOpenLog: () =>
+            {
+                // Open windows.log in its default viewer (Notepad) so
+                // Manh can read / send the panel-size diagnostic lines.
+                // The log lives in %LOCALAPPDATA%\TransPeek; it does not
+                // exist until something writes it (list windows, or a
+                // panel fit on the diagnostic build).
+                var path = Path.Combine(AppPaths.LocalDataDirectory, "windows.log");
+                try
+                {
+                    if (File.Exists(path))
+                        Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+                    else
+                        _toast?.Show(AppStrings.Get("App.Toast.NoWindowsLog", "windows.log does not exist yet — use Diagnose → List windows first."));
+                }
+                catch (Exception ex) { CrashLog.Write("TrayMenu", ex); }
             },
             quit: QuitApp);
 

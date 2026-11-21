@@ -1037,6 +1037,11 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         // expand dài". Dragging the window taller by hand still grows
         // the box — SettleResizedSize raises the cap for manual drags.)
         var height = (int)Math.Clamp(Math.Ceiling(baseline * scale), minHeight, maxHeight);
+        // Panel-size diagnostic (Manh 2026-11-22 — covered speaker, frame
+        // hypothesis): log the outer vs client size on every fit, so the
+        // leftover window frame is MEASURED instead of guessed. Temporary:
+        // remove once the speaker bug is fixed.
+        LogPanelSize(minHeight, baseline, height);
         // Horizontal snap-back on a NEW translation (Manh 2026-11-16):
         // auto-fit used to keep the current width, so after a long
         // text had widened the panel, a one-word translation left it
@@ -1069,6 +1074,41 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         {
             _lastProgrammaticSize = new Windows.Graphics.SizeInt32(width, height);
             WindowHelpers.MoveAndResize(this, pos.X, y, width, height);
+        }
+    }
+
+    /// <summary>Panel-size diagnostic (Manh 2026-11-22 — covered speaker):
+    /// log the outer window size vs the client size on every auto-fit, so
+    /// the leftover window frame (WS_DLGFRAME left by
+    /// SetBorderAndTitleBar — see TransparentWindow) is measured in
+    /// physical pixels instead of guessed. The frame eats a fixed amount
+    /// from the client area, so a shortfall that survives every cardMin
+    /// increase points at the frame, not at the card. Temporary: remove
+    /// once the speaker bug is fixed. Diagnostics must never break the
+    /// panel, so every call is guarded.</summary>
+    private void LogPanelSize(int minHeightPhysical, double baselineLogical, int heightPhysical)
+    {
+        try
+        {
+            var hwnd = WindowNative.GetWindowHandle(this);
+            var scale = WindowHelpers.DpiScale(this);
+            var outer = AppWindow.Size;
+            var clientW = 0;
+            var clientH = 0;
+            if (NativeMethods.GetClientRect(hwnd, out var client))
+            {
+                clientW = client.Right - client.Left;
+                clientH = client.Bottom - client.Top;
+            }
+            WindowDiagnostics.AppendLine(
+                $"[PanelSize] outer={outer.Width}x{outer.Height} client={clientW}x{clientH} " +
+                $"frame={outer.Width - clientW}x{outer.Height - clientH} scale={scale:0.##} " +
+                $"minH={minHeightPhysical} baseline={baselineLogical:0.#} height={heightPhysical} " +
+                $"minParts=({_diagMinParts}) expanded={_providerCardExpanded} tab={_activeTab}");
+        }
+        catch
+        {
+            // Diagnostics must never break the panel.
         }
     }
 
@@ -1235,6 +1275,12 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         return true;
     }
 
+    // Diagnostic parts for the panel-size log (Manh 2026-11-22): filled
+    // by ComputeMinPanelHeight on every call, read by LogPanelSize on
+    // every fit. Temporary: remove with the log once the speaker bug
+    // is fixed.
+    private string _diagMinParts = "";
+
     /// <summary>Minimum panel height in DIPs, from the CURRENT content:
     /// the fixed rows' measured heights (title + input + hint +
     /// language + actions + dictionary + footer) plus the minimum
@@ -1290,10 +1336,18 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         // fine because its height came from the full content measure,
         // which does include the margin. Read the margin from the
         // Border itself so it stays right if the XAML margin changes.
+        // NOTE 2026-11-22: the margin fix did NOT end the covering —
+        // Manh still sees it on build 238, so the "missing margin"
+        // conclusion above is stale. Current suspect: the leftover
+        // window frame (see LogPanelSize); the diagnostic log measures
+        // it instead of guessing.
         var cardMargin = _providerCardExpanded
             ? ProviderCardBorder.Margin.Top + ProviderCardBorder.Margin.Bottom
             : 0;
         var minH = Math.Max(MinPanelHeight, fixedH + cardMin + cardMargin + 24);
+        // Diagnostic parts for the panel-size log (see LogPanelSize):
+        // the fit logs these alongside the outer/client sizes.
+        _diagMinParts = $"fixedH={fixedH:0.#} cardMin={cardMin} cardMargin={cardMargin} minH={minH:0.#}";
         var work = WindowHelpers.DisplayWorkArea(AppWindow.Position.X, AppWindow.Position.Y);
         var maxH = Math.Min(MaxPanelSize, work.Height / WindowHelpers.DpiScale(this));
         return Math.Min(minH, Math.Max(MinPanelHeight, maxH));

@@ -2730,6 +2730,24 @@ Manh test bản 0.1.4.191: Google 249 ngôn ngữ ngon. 4 việc còn lại làm
 - **Lite:** panel tự kích hoạt khi bài đọc panel-right bắt đầu (`ActivateWindow` trong `OnFocusTimerStoreChanged`, nhánh `PanelRightRequest`) — Space ăn ngay không cần click trước, kể cả đường reminder (trước đây `ShowPanelNearCursor` mở không kích hoạt nên Space không ăn). Đảo ngược quyết định cũ "reminder reads do NOT activate" (FAST_READ.md) — quy tắc không cướp màn hình là về không lôi user ra khỏi bài đọc đang chạy (reminder chờ khi đang đọc), không phải về phím khi bài đọc của chính reminder đã bắt đầu.
 - **`GlobalSpaceTracker` (chỉ có trên nhánh `feature/fastread-speaker-style2`, chưa từng lên main) đã GỠ:** class + wiring 2 mặt + `VK_SPACE` + `GetForegroundWindow` trong `NativeMethods.cs` của nhánh. Nó poll Space toàn cục nên gõ dấu cách ở Notepad/Chrome/Word trong lúc đọc cũng pause/resume Read — đúng cái Manh không muốn. Đường phím duy nhất còn lại là `PreviewKeyDown` của mặt đang focus.
 
+## Bản chẩn đoán bug che loa — log kích thước panel + submenu tray Diagnose (2026-11-22)
+
+- **Vấn đề:** fix #164 đã vào main nhưng Manh xác nhận 22/11 vẫn che trên bản v0.1.4.238.
+  Repro: mở lần đầu đã che; kéo nhỏ hết cỡ dừng ĐÚNG điểm che; dịch từ mới không kéo vẫn
+  che; text rất dài không che, 3–6 dòng vẫn che.
+- **Nghi phạm:** khung cửa sổ thừa — `SetBorderAndTitleBar(false, false)` để sót
+  `WS_DLGFRAME` (+ `WS_THICKFRAME` vì panel resizable); chỉ icon mới được strip frame
+  (`TransparentWindow.RemoveWindowFrame`), panel thì không. Vùng hiển thị thực nhỏ hơn
+  kích thước cửa sổ một lượng cố định → mọi chiều cao tính ra đều thiếu đúng lượng đó.
+  Giải thích được #163 (+20 cardMin vô ích: tăng card và tăng panel cùng lúc, phần thiếu
+  không đổi).
+- **Bản chẩn đoán (tạm, gỡ sau khi sửa xong):** `TranslatePanelWindow` log mỗi lần fit vào
+  `windows.log` — outer/client/frame/scale/minH/baseline/height + các số hạng của min
+  (`WindowDiagnostics.AppendLine`, `[PanelSize]`); tray có submenu Diagnose
+  (List windows / Open windows.log) để mở file log.
+- **Rule mới (Manh 22/11, áp dụng mọi repo):** bug sửa 2–3 lần không ra thì dừng đoán —
+  làm bộ test + log + bắt lỗi + docs (xem `docs/AGENTS.md` §9).
+
 ## Liên kết
 
 - [Bối cảnh AI](AI_CONTEXT.md)

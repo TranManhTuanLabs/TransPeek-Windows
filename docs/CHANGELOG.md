@@ -6,6 +6,9 @@
 
 ## 2026-11-22
 
+- **main — bản chẩn đoán bug che loa (chưa có số CI):** log kích thước panel
+  (outer/client/min/baseline) vào `windows.log` mỗi lần fit + submenu tray Diagnose
+  (List windows / Open windows.log); nghi phạm khung cửa sổ thừa (`WS_DLGFRAME`).
 - **v0.1.4.238 — main `4aa959b5` (CI #238 XANH):** hướng an toàn cho phím tắt lúc đọc —
   panel tự kích hoạt khi bài đọc panel-right bắt đầu (kể cả đường reminder), Space ăn
   ngay không cần click trước; đảo ngược quyết định cũ "reminder reads do NOT activate".

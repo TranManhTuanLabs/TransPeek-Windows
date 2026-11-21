@@ -6,11 +6,16 @@
 ## ĐANG LÀM
 
 - [ ] **Bug che loa/Copy panel** (Windows — TransPeek-Windows, #149→#159, fix #164 đã vào):
-  Nguyên nhân thật ĐÃ TÌM RA (18/11): kéo NGANG cũng bị tính là kéo tay (khoá auto-fit)
-  + `SettleResizedSize` chỉ biết co không biết dài → card tràn khỏi hàng `*`, hàng Actions
-  đè che đáy card. Fix #164 (`bf74379`, CI xanh) đã vào main. **Chờ Manh xác nhận hết che
-  trên bản mới** — xác nhận thì viết lại case study ở `docs/AGENTS.md` §3 theo nguyên nhân
-  thật (hiện §3 vẫn theo kết luận cũ). Chi tiết: `docs/UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md` (§6).
+  Fix #164 (`bf74379`, CI xanh) đã vào main nhưng **Manh xác nhận 22/11 VẪN CHE trên bản
+  v0.1.4.238** — nguyên nhân 18/11 (kéo ngang khoá auto-fit + settle chỉ biết co) KHÔNG phải
+  nguyên nhân cuối. Repro 22/11: mở lần đầu đã che; kéo nhỏ hết cỡ dừng ĐÚNG điểm che;
+  dịch từ mới không kéo vẫn che; text rất dài không che, 3–6 dòng vẫn che. Nghi phạm mới:
+  khung cửa sổ thừa (`WS_DLGFRAME` sót lại sau `SetBorderAndTitleBar`) ăn mất chiều cao
+  vùng hiển thị — giải thích được cả #163 (+20 cardMin vô ích). **Đang làm bản chẩn đoán
+  ghi log** (outer/client/min/baseline vào `windows.log`, mở từ tray Diagnose) để đo đúng
+  số px thiếu, rồi sửa theo số đo. Xác nhận hết che thật thì viết lại case study ở
+  `docs/AGENTS.md` §3 theo nguyên nhân thật (hiện §3 vẫn theo kết luận cũ). Chi tiết:
+  `docs/UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md` (§6).
 - [ ] **Doc UI/UX** (Windows — TransPeek-Windows): panel đã chốt + viết xong;
   các doc còn lại là bản nháp, cập nhật dần khi hoàn thiện hoặc Manh yêu cầu.
   `SETTINGS.md` và `SETTING_UX.md` CHƯA VIẾT.
