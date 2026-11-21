@@ -511,8 +511,10 @@ nhãn UI sửa cả XAML lẫn `.resw` (resw thắng lúc chạy).
   auto-detect block text ngoài panel vẫn nhận bình thường, hover icon
   bình thường, mở panel mới được.
 - Hệ quả nghi ngờ: Space play/pause không ăn vì panel chưa được focus —
-  phải click vào panel mới ấn được (đây là lý do đợt `ff33cce5` phải làm
-  `GlobalSpaceTracker` poll Space toàn cục thay cho phím tới panel).
+  phải click vào panel mới ấn được (đợt `ff33cce5` từng làm
+  `GlobalSpaceTracker` poll Space toàn cục thay cho phím tới panel —
+  **đã GỠ 2026-11-22, hướng an toàn: panel tự kích hoạt khi bài đọc
+  panel-right bắt đầu, Space ăn ngay không cần click trước**).
 - Chưa rõ: có phải từ khi có auto-detect block text (PR #3) mới bị vậy,
   hay trước đó đã bị — Manh chưa test lại bản cũ chưa có auto-detect nên
   chưa kết luận được.

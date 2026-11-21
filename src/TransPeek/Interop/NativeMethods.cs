@@ -40,11 +40,6 @@ internal static class NativeMethods
     // while the icon is visible; see TriggerIconWindow.
     public const ushort VK_MENU = 0x12;
 
-    // Spacebar (Microsoft Learn, Virtual-Key Codes in Winuser.h:
-    // VK_SPACE 0x20). Used by GlobalSpaceTracker, which polls the
-    // global Space state like the trigger icon polls Alt.
-    public const ushort VK_SPACE = 0x20;
-
     [DllImport("user32.dll")]
     public static extern short GetAsyncKeyState(ushort vKey);
 
@@ -99,13 +94,6 @@ internal static class NativeMethods
 
     [DllImport("user32.dll")]
     public static extern bool SetForegroundWindow(IntPtr hWnd);
-
-    // The foreground window handle (Microsoft Learn:
-    // GetForegroundWindow, Winuser.h). Used by GlobalSpaceTracker to
-    // tell whether its own window is focused — while it is, its
-    // PreviewKeyDown handles Space, so the poll must stay out.
-    [DllImport("user32.dll")]
-    public static extern IntPtr GetForegroundWindow();
 
     [DllImport("user32.dll", SetLastError = true)]
     public static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter,

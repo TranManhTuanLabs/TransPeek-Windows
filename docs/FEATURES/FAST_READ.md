@@ -229,7 +229,15 @@ beyond this batch.
   (NOACTIVATE). A user-started panel-right read (panel button / float
   icon / tray) now activates the panel on start
   (`ShowPanelForReading`), so Space/←/→/↑/↓/R work at once.
-  Reminder reads do NOT activate (they must never steal focus).
+  **Reminder reads activate too since 2026-11-22 (Manh, mac parity —
+  safe direction):** the panel activates itself when ANY panel-right
+  read starts (`ActivateWindow` in the `PanelRightRequest` consume
+  handler), so Space works at once with no click first. The old
+  "reminder reads do NOT activate" line is reversed by this decision
+  — the no-steal rule is about not yanking the user out of a read in
+  progress (the reminder waits while reading), not about keys once the
+  reminder's own read has started. No global key capture anywhere:
+  clicking to another app hands all keys to that app.
 - Completion: when a full read finishes, both layouts show
   "Congratulations! You just read X words in Y minutes, Z seconds!"
   + the share row (see "Completion" below). The lite shows the full
@@ -375,16 +383,19 @@ finishes, Space is left alone — the share / Done buttons work
 normally. **Space when the window lost focus (Manh 2026-11-21, test
 CI230):** the lite panel opens without activation and the Full window
 loses focus as soon as the mouse leaves it — Space then went to the
-other app, so the user had to click into the panel/window first. A
-shared `GlobalSpaceTracker` (`src/TransPeek/FastRead/`, used by both
-surfaces) now polls the GLOBAL Space state (`GetAsyncKeyState`,
-`VK_SPACE` 0x20 — same mechanism as the trigger icon's Alt poll):
-a Space press anywhere toggles Play/Pause while a reader is active,
-even unfocused. It only observes — the key still reaches the
-foreground app — and it skips while its own window is foreground
-(its `PreviewKeyDown` handles Space then, or one press would toggle
-twice). Short taps are caught via the low bit (pressed since last
-call); a held key never re-fires. The "Context style" picker was
+other app, so the user had to click into the panel/window first. The
+first fix (`ff33cce5`) polled the GLOBAL Space state with a shared
+`GlobalSpaceTracker` — **removed 2026-11-22 (Manh, mac parity):**
+global capture is the wrong direction, because a Space typed in
+Notepad/Chrome/Word while reading would also pause/resume the read.
+Safe direction (the standard: the focused window gets the keys):
+read keys (Space, ←/→, ↑/↓) only work while the read surface is
+focused. Full already did that (`ShowReader` foregrounds + activates
+on open). Lite now activates itself when a panel-right read starts
+(`ActivateWindow` in the panel's `PanelRightRequest` consume handler)
+— Space works at once, no click first, including the reminder path;
+clicking to another app hands all keys to that app. `PreviewKeyDown`
+is the only key path now. The "Context style" picker was
 removed from the reader window's Settings popover the same round
 (Manh 2026-11-21 — it duplicated "Reading Style"); the
 `RsvpContextStyle` setting stays at its default ("Style1"), only the
