@@ -41,6 +41,7 @@ public sealed partial class GeneralPage : Page
         _loading = true;
         var s = App.Settings;
         WatchSelectionToggle.IsOn = s.WatchSelection;
+        HoverBlockTextToggle.IsOn = s.HoverBlockText;
         HoverDelayCombo.SelectedIndex = s.HoverDelayMs switch
         {
             500 => 1,
@@ -90,6 +91,17 @@ public sealed partial class GeneralPage : Page
     private void OnWatchSelectionToggled(object sender, RoutedEventArgs e)
     {
         App.Settings.WatchSelection = WatchSelectionToggle.IsOn;
+        Save();
+    }
+
+    // Hover-to-show (feature/block-text-detection): the icon appears
+    // when the mouse rests on a block of text. The service itself is
+    // rebuilt in App.OnSettingsSaved (Save calls _onSaved), so the
+    // toggle takes effect at once (the dwell is fixed at the research
+    // default, so changing HoverDelayMs does not rebuild it).
+    private void OnHoverBlockTextToggled(object sender, RoutedEventArgs e)
+    {
+        App.Settings.HoverBlockText = HoverBlockTextToggle.IsOn;
         Save();
     }
 
