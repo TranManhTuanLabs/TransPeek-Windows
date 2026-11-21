@@ -96,6 +96,16 @@
   class` — lồng trong class thì file khác không dùng được tên trần
   (CS0246: `RsvpPhrase` lồng trong `RsvpEngine`, view model không thấy);
   WMC0001 + WMC9999 lại chỉ là hệ quả (mẫu CI #215).
+- **Glyph đã kiểm chứng trên Microsoft Learn 2026-11-21
+  (feature/fastread-speaker-style2):** ArrowExpand **E9E3** (gạch
+  chéo 2 đầu mũi tên — nút Maximize, thay ô vuông E922 trông như
+  stop; đã xem ảnh glyph thật trên trang Segoe Fluent Icons).
+- **Bài học drag chuột (2026-11-21):** `IsLeftButtonPressed` ĐÚNG
+  cả với touch (touch chạm mặt cũng là "primary action") — muốn
+  chỉ chuột thì gate bằng `PointerDeviceType.Mouse`
+  (`Microsoft.UI.Input.PointerDeviceType`, đã xác minh trên
+  Microsoft Learn). Kéo đổi số thì áp live với `save: false`,
+  lưu 1 lần lúc thả (mẫu `SetContextSizeRatio`).
 
 ## 5. Quy tắc chung
 

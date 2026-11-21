@@ -285,15 +285,21 @@ values, so the two can never be mixed up.
   counts lines ("Line 3 / 42"). The pause context does NOT show in
   this style — the page IS the context. The chunk picker has no
   effect here (lines are the unit); WPM still paces the lines.
-  **Wheel over the page changes the font size** (Manh 2026-11-21,
-  both surfaces — the control is shared): 5pt per tick, clamped
-  40–450 on the focus size (16–180pt body); the wheel is the zoom
-  here, so the page scrolls by dragging the scrollbar, and the
-  current line stays centered while zooming. Switching style mid-read
-  keeps the position as a fraction of the text.
+  **Click-drag on the page changes the font size** (Manh 2026-11-21,
+  both surfaces — the control is shared; replaced the wheel zoom of
+  commit `50bd04d0`): press on the text, drag up to grow, drag down
+  to shrink — 1pt per 2px, whole points, clamped 40–450 on the
+  focus size (16–180pt body). Mouse only, so touch drag still
+  scrolls the page; the wheel scrolls again too. The size applies
+  live and is saved once on release (same pattern as the window's
+  context resize drag); the current line stays centered while
+  dragging. Switching style mid-read keeps the position as a
+  fraction of the text.
 
 **Speaker button (both surfaces, transport order: Restart, Speaker,
-Play, Rewind, Forward, Maximize — lite adds Close first):** the
+Play, Rewind, Forward, Maximize — lite adds Close first; the
+Maximize glyph is ArrowExpand E9E3, a diagonal double arrow — the
+square E922 read as a stop button, Manh 2026-11-21):** the
 speaker is a mute/unmute toggle for the read, NOT a separate "speak
 the whole text" action. Sound is OFF by default and NOT persisted —
 a new read starts silent, like today. Sound on: Play/Space speaks

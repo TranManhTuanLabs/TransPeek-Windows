@@ -252,7 +252,7 @@
                     <FontIcon Glyph="&#xEB9D;" FontSize="16" />
                 </Button>
                 <Button x:Name="MaximizeButton" Padding="8,4" Click="OnMaximizeClicked" ToolTipService.ToolTip="Maximize window">
-                    <FontIcon Glyph="&#xE922;" FontSize="16" />
+                    <FontIcon Glyph="&#xE9E3;" FontSize="16" />
                 </Button>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right" VerticalAlignment="Center">

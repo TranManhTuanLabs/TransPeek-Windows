@@ -28,6 +28,13 @@ public sealed partial class Style2ReadingView : UserControl
     // opacity) — the same blue the app uses for accents (#0078D4).
     private static readonly Brush HighlightBrush =
         new SolidColorBrush(ColorHelper.FromArgb(0x2E, 0x00, 0x78, 0xD4));
+    // Font-size drag: press point + size at press time; the live size
+    // follows the drag and is saved once on release (same pattern as
+    // the window's context resize drag).
+    private bool _draggingFontSize;
+    private double _dragStartY;
+    private double _dragStartFontSize;
+    private bool _dragFontSizeChanged;
 
     /// <summary>The view model to render (same class the RSVP views
     /// use — one playback engine, two layouts).</summary>
@@ -67,33 +74,77 @@ public sealed partial class Style2ReadingView : UserControl
     {
         InitializeComponent();
         LinesPanel.Padding = new Thickness(_horizontalPadding, 16, _horizontalPadding, 16);
-        // Wheel over the page changes the font size (Manh 2026-11-21,
-        // both the window and the lite reader — this control is
-        // shared): scroll up grows, scroll down shrinks, 5pt per tick
-        // — the same step as the Style 1 focus-size wheel. Attached
-        // with handledEventsToo, so it still fires when the
-        // ScrollViewer itself handles the wheel for scrolling. The
-        // wheel is the zoom here, so the page scrolls by dragging the
-        // scrollbar instead.
-        PageScroller.AddHandler(UIElement.PointerWheelChangedEvent, new PointerEventHandler(OnPageWheelChanged), true);
+        // Click-drag on the page changes the font size (Manh
+        // 2026-11-21, both the window and the lite reader — this
+        // control is shared): press on the text, drag up to grow,
+        // drag down to shrink. Replaces the wheel zoom (commit
+        // 50bd04d0) — the wheel scrolls the page again, so the page
+        // scrolls with the wheel AND the scrollbar.
+        PageScroller.PointerPressed += OnPagePointerPressed;
+        PageScroller.PointerMoved += OnPagePointerMoved;
+        PageScroller.PointerReleased += OnPagePointerReleased;
+        PageScroller.PointerCaptureLost += OnPagePointerCaptureLost;
     }
 
-    /// <summary>Wheel over the Basic Reading page: font size, not
-    /// scroll (Manh 2026-11-21). 5pt per tick, clamped 40–450 on the
-    /// focus size (16–180pt body) — the window's Style 2 range. The
-    /// current line stays centered after the rebuild, so the line
-    /// being read does not jump away while zooming.</summary>
-    private void OnPageWheelChanged(object sender, PointerRoutedEventArgs e)
+    /// <summary>Start a font-size drag (Manh 2026-11-21): click on the
+    /// text and drag up/down to change the size. Mouse only — touch
+    /// keeps scrolling the page (a touch drag is a scroll, not a
+    /// zoom). IsLeftButtonPressed alone is NOT enough to tell mouse
+    /// from touch: touch contact sets it too (Microsoft Learn,
+    /// PointerPointProperties) — the device type is the real gate.</summary>
+    private void OnPagePointerPressed(object sender, PointerRoutedEventArgs e)
     {
         if (_viewModel is null)
             return;
-        var delta = e.GetCurrentPoint(PageScroller).Properties.MouseWheelDelta;
-        if (delta == 0)
+        if (e.Pointer.PointerDeviceType != Microsoft.UI.Input.PointerDeviceType.Mouse)
             return;
-        var size = Math.Clamp(_viewModel.FontSize + (delta > 0 ? 5 : -5), 40, 450);
-        _viewModel.ApplyFocusSize(size);
+        if (!e.GetCurrentPoint(PageScroller).Properties.IsLeftButtonPressed)
+            return;
+        _draggingFontSize = true;
+        _dragFontSizeChanged = false;
+        _dragStartY = e.GetCurrentPoint(PageScroller).Position.Y;
+        _dragStartFontSize = _viewModel.FontSize;
+        PageScroller.CapturePointer(e.Pointer);
+        e.Handled = true;
+    }
+
+    /// <summary>Font-size drag move: the size follows the pointer —
+    /// up grows, down shrinks, 1pt per 2px, whole points, clamped
+    /// 40–450 (the window's Style 2 range). Applied live with
+    /// save: false, so the settings file is not rewritten on every
+    /// move; the current line stays centered, like the old wheel
+    /// zoom.</summary>
+    private void OnPagePointerMoved(object sender, PointerRoutedEventArgs e)
+    {
+        if (!_draggingFontSize || _viewModel is null)
+            return;
+        var y = e.GetCurrentPoint(PageScroller).Position.Y;
+        var size = Math.Clamp(Math.Round(_dragStartFontSize + (_dragStartY - y) / 2.0), 40, 450);
+        if (Math.Abs(size - _viewModel.FontSize) < 0.5)
+            return;
+        _dragFontSizeChanged = true;
+        _viewModel.ApplyFocusSize(size, save: false);
         ScrollToCurrentLine(animate: false);
         e.Handled = true;
+    }
+
+    private void OnPagePointerReleased(object sender, PointerRoutedEventArgs e)
+        => FinishFontSizeDrag();
+
+    private void OnPagePointerCaptureLost(object sender, PointerRoutedEventArgs e)
+        => FinishFontSizeDrag();
+
+    /// <summary>End a font-size drag (release, cancel, or lost
+    /// capture): write the final size once. Idempotent — release and
+    /// capture-lost can both fire for one drag — and a plain click
+    /// (no move) writes nothing.</summary>
+    private void FinishFontSizeDrag()
+    {
+        if (!_draggingFontSize)
+            return;
+        _draggingFontSize = false;
+        if (_dragFontSizeChanged)
+            _viewModel?.SaveFocusSize();
     }
 
     private void OnViewModelChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -181,8 +232,9 @@ public sealed partial class Style2ReadingView : UserControl
 
     /// <summary>Keep the focused line in view as Play advances it —
     /// scrolled to the middle of the page (mac: scrollTo anchor
-    /// .center). The wheel-zoom path passes animate: false — an
-    /// animated scroll on every zoom tick would lag behind the wheel.</summary>
+    /// .center). The font-size drag passes animate: false — an
+    /// animated scroll on every drag move would lag behind the
+    /// pointer.</summary>
     private void ScrollToCurrentLine(bool animate = true)
     {
         if (_viewModel is null)

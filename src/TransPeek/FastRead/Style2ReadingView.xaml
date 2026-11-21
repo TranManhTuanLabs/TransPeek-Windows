@@ -15,6 +15,9 @@
          the current line gets a soft accent highlight when the
          highlight is on (toggle, or automatically while TTS reads). -->
     <ScrollViewer x:Name="PageScroller" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-        <StackPanel x:Name="LinesPanel" Spacing="10" Padding="32,16,32,16" />
+        <!-- Transparent background: the page stays hit-testable even
+             between lines, so a font-size drag can start anywhere on
+             the page (not only on the glyphs). Visually unchanged. -->
+        <StackPanel x:Name="LinesPanel" Background="Transparent" Spacing="10" Padding="32,16,32,16" />
     </ScrollViewer>
 </UserControl>

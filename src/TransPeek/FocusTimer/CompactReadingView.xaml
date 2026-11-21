@@ -22,7 +22,8 @@
          laid out like mac's bookPage. Glyphs (Segoe Fluent Icons,
          verified on Microsoft Learn): Settings E713, X E711, Restart
          E72C, Rewind EB9E, Play E768, Pause E769, Forward EB9D,
-         Maximize E922. -->
+         Maximize E9E3 (ArrowExpand — diagonal double arrow, not the
+        square E922, which read as a stop button). -->
     <Grid x:Name="RootGrid">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -229,7 +230,7 @@
                     <FontIcon Glyph="&#xEB9D;" FontSize="16" />
                 </Button>
                 <Button x:Name="MaximizeButton" Padding="8,4" Click="OnMaximizeClicked" ToolTipService.ToolTip="Maximize panel">
-                    <FontIcon Glyph="&#xE922;" FontSize="16" />
+                    <FontIcon Glyph="&#xE9E3;" FontSize="16" />
                 </Button>
             </StackPanel>
             <TextBlock x:Name="SideHintText" Grid.Column="2" FontSize="12" Foreground="Gray"

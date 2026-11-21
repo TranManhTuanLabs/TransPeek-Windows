@@ -714,16 +714,26 @@ public sealed class RsvpReaderViewModel : INotifyPropertyChanged
 
     /// <summary>Apply a focus size (no clamp here — the window clamps
     /// 40-450 at its call sites, the panel does not cap it) and
-    /// re-render the current slide (the pivot shift depends on it).</summary>
-    public void ApplyFocusSize(double size)
+    /// re-render the current slide (the pivot shift depends on it).
+    /// The drag paths pass save: false — the size is saved once on
+    /// release (FinishFontSizeDrag / FinishContextResize), not on
+    /// every pointer move — same pattern as SetContextSizeRatio.</summary>
+    public void ApplyFocusSize(double size, bool save = true)
     {
         if (Math.Abs(size - _fontSize) < 0.001)
             return;
         FontSize = size;
         App.Settings.RsvpFontSize = size;
-        SettingsStore.Save(App.Settings);
+        if (save)
+            SettingsStore.Save(App.Settings);
         ShowSlide(_currentSlide);
     }
+
+    /// <summary>Save the current focus size (drag release — the drag
+    /// applied sizes with save: false, so the final size is written
+    /// once here instead of on every move).</summary>
+    public void SaveFocusSize()
+        => SettingsStore.Save(App.Settings);
 
     /// <summary>Set the context size ratio (0.25-1.00). The window's
     /// drag-to-resize passes save: false — the size is saved once on
