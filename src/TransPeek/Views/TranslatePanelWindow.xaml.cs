@@ -785,6 +785,20 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         _focusTimerStore.RequestPanelReading(text, null);
     }
 
+    /// <summary>Show the panel on the left tab (Shortcuts — the Focus
+    /// & Rest card lives there), public so the tray menu can jump
+    /// straight to it (Manh 2026-11-21, "Focus & Rest" tray item):
+    /// show the panel if it is hidden, switch to the Shortcuts tab,
+    /// and activate it — the user asked for it from the tray, so it
+    /// may take focus (same as a user-started panel read).</summary>
+    public void ShowLeftPanel()
+    {
+        if (!_visible)
+            ShowPanelNearCursor();
+        ShowTab(PanelTab.Shortcuts);
+        WindowHelpers.ActivateWindow(this);
+    }
+
     /// <summary>Toggle the panel between its default size and its
     /// maximum (feature/focus-timer-decor, mac parity:
     /// togglePanelSize in PopupView): the lite reader's Maximize
