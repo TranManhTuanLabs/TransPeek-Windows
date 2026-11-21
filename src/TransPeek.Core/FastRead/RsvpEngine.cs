@@ -63,6 +63,20 @@ public sealed record RsvpContext(
     int CurrentStart,
     int CurrentCount);
 
+/// <summary>One continuous-reading phrase: a sentence or clause
+/// spoken as a single utterance (continuous reading, phương án 1 —
+/// Manh 2026-11-21). Windows.Media.SpeechSynthesis has no per-word
+/// callback (unlike mac's willSpeakRangeOfSpeechString), so the
+/// focus follows the voice phrase by phrase, not word by word — a
+/// phrase ends at a natural pause (sentence end / clause
+/// punctuation), so the gaps between utterances land where a
+/// speaker would pause anyway. StartWordIndex is the phrase's first
+/// word in the whole text (for mapping the phrase back to its
+/// slide / line). Top-level on purpose, next to the other records —
+/// nested inside RsvpEngine the view model could not use the bare
+/// name (CS0246, CI #224).</summary>
+public sealed record RsvpPhrase(string Text, int StartWordIndex, int WordCount);
+
 public static class RsvpEngine
 {
     public const int DefaultWpm = 275;
@@ -153,18 +167,6 @@ public static class RsvpEngine
         }
         return lines;
     }
-
-    /// <summary>One continuous-reading phrase: a sentence or clause
-    /// spoken as a single utterance (continuous reading, phương án 1 —
-    /// Manh 2026-11-21). Windows.Media.SpeechSynthesis has no per-word
-    /// callback (unlike mac's willSpeakRangeOfSpeechString), so the
-    /// focus follows the voice phrase by phrase, not word by word — a
-    /// phrase ends at a natural pause (sentence end / clause
-    /// punctuation), so the gaps between utterances land where a
-    /// speaker would pause anyway. StartWordIndex is the phrase's first
-    /// word in the whole text (for mapping the phrase back to its
-    /// slide / line).</summary>
-    public sealed record RsvpPhrase(string Text, int StartWordIndex, int WordCount);
 
     /// <summary>Split text into speakable phrases for continuous
     /// reading: each paragraph is walked word by word; a phrase ends

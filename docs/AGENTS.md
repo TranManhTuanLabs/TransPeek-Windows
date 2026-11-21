@@ -91,6 +91,11 @@
   luôn được tạo trên UI thread). 2 lỗi này làm kiểu
   `Style2ReadingView` không biên dịch được nên XAML gọi nó cũng lỗi
   theo (WMC0001 + WMC9999 chỉ là hệ quả).
+- **Bài học CI #224 (2026-11-21):** record/model dùng chung giữa Core
+  và app PHẢI khai ở top-level namespace, không lồng trong `static
+  class` — lồng trong class thì file khác không dùng được tên trần
+  (CS0246: `RsvpPhrase` lồng trong `RsvpEngine`, view model không thấy);
+  WMC0001 + WMC9999 lại chỉ là hệ quả (mẫu CI #215).
 
 ## 5. Quy tắc chung
 

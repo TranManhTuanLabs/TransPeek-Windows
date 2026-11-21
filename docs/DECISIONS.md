@@ -2719,6 +2719,7 @@ Manh test bản 0.1.4.191: Google 249 ngôn ngữ ngon. 4 việc còn lại làm
   - Nút **Done** ở màn đếm ngược cafe (cả lite `PanelFastReadView` lẫn `RestWindow`): thêm border xanh `#0078D4` 1px cho dễ nhìn/dễ bấm.
   - **Basic Reading: wheel chuột đổi font size** (cả Full + Lite — Manh sửa từ "kéo chuột" thành "wheel" 19:55): `Style2ReadingView` tự gắn wheel (AddHandler handledEventsToo trên `PageScroller`) — 5pt/tick, clamp 40–450 (16–180pt body), dòng hiện tại giữ ở giữa khi zoom; wheel là zoom nên trang cuộn bằng cách kéo scrollbar. (Wheel ở Style 1 vẫn đổi focus size như cũ.)
   - **Read Full: bỏ picker "Context style"** trong flyout nút Settings (thừa, trùng "Reading Style") — gỡ XAML + handler + dòng sync; setting `RsvpContextStyle` vẫn ở mặc định "Style1", chỉ gỡ UI.
+- **CI #224 ĐỎ (20:27, commit `50bd04d0`):** bước Build lỗi CS0246 — `RsvpReaderViewModel.cs(95)` không tìm thấy kiểu `RsvpPhrase`. Nguyên nhân: em khai `RsvpPhrase` LỒNG TRONG `static class RsvpEngine` — trong class thì `BuildPhrases` dùng được, nhưng view model ở file khác chỉ thấy qua `RsvpEngine.RsvpPhrase`. Sửa: dời record ra top-level namespace (cạnh `RsvpSlide`/`RsvpDocument`/`RsvpContext`) — view model dùng tên trần được ngay, test không bị ảnh hưởng (không dùng tên kiểu trực tiếp). WMC0001 (`FastReadWindow.xaml` không rõ `Style2ReadingView`) + WMC9999 chỉ là hệ quả theo mẫu CI #215: kiểu không biên dịch được thì XAML gọi nó cũng lỗi theo. Bài học: record/model dùng chung giữa Core và app PHẢI ở top-level, không lồng trong class static.
 
 ## Liên kết
 
