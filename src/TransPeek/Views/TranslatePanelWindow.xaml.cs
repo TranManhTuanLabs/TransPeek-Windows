@@ -29,6 +29,7 @@ using TransPeek.Assets;
 using TransPeek.Core.Dictionary;
 using TransPeek.Core.Settings;
 using TransPeek.Core.Translation;
+using TransPeek.FastRead;
 using TransPeek.FocusTimer;
 using TransPeek.Interop;
 using TransPeek.Services;
@@ -158,6 +159,14 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     private readonly Func<Task> _ocrRequested;
     private readonly ClickOutsideMonitor _clickOutside;
     private readonly EscapeKeyMonitor _escapeKey;
+    /// <summary>Global Space tracking (Manh 2026-11-21): the lite
+    /// panel does NOT take focus when it opens (ShowWithoutActivation),
+    /// so Space only reached it after the user clicked into the panel
+    /// first — same reason Esc already uses a low-level hook (see the
+    /// comment above _escapeKey). The poll watches the global Space
+    /// state like the trigger icon watches Alt: a Space press anywhere
+    /// toggles Play/Pause while the lite reader is active.</summary>
+    private readonly GlobalSpaceTracker _spaceTracker;
     /// <summary>True while the panel is pinned (PinButton): click-outside
     /// and Esc do NOT hide it. Only the pin toggle turns it off.</summary>
     private bool _pinned;
@@ -429,6 +438,16 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
                 if (epoch == _epoch)
                     HandleEscape();
             });
+        // Global Space tracking (Manh 2026-11-21): same no-activate
+        // problem as Esc above — Space must toggle Play/Pause even
+        // when the panel is not the focused window. The tracker's own
+        // guards (Fast Read tab + reader active + panel not
+        // foreground) decide when a press acts.
+        _spaceTracker = new GlobalSpaceTracker(this,
+            shouldTrack: () => _visible
+                && _activeTab == PanelTab.FastRead
+                && _focusTimerStore.PanelReadingViewModel is not null,
+            onSpacePressed: () => FastReadTabPanel.HandleKey(VirtualKey.Space, null));
         RefreshDictionaryBar(App.Settings.DictionaryLinks, App.Settings.DictionaryDisplayMode);
         // Title + footer (AppInfo is the single source for name,
         // slogan, hint, repo URL and build number).
@@ -755,6 +774,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         _visible = true;
         _clickOutside.Start();
         _escapeKey.Start();
+        _spaceTracker.Start();
         UpdateCopyButtons();
         // Multi-tab: every show opens on the translate tab.
         ShowTab(PanelTab.Translate);
@@ -1886,6 +1906,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         _visible = false;
         _clickOutside.Stop();
         _escapeKey.Stop();
+        _spaceTracker.Stop();
         // AppWindow.Hide() (the WinUI-native hide) instead of
         // ShowWindow(SW_HIDE): the HWND hide left this window up.
         AppWindow.Hide();

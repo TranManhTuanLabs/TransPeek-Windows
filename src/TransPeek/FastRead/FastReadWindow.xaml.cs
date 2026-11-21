@@ -75,6 +75,13 @@ public sealed partial class FastReadWindow : Window
     private double _dragLastY;
     private double _dragAccumulated;
 
+    /// <summary>Global Space tracking (Manh 2026-11-21): Space must
+    /// toggle Play/Pause even when this window lost focus (the mouse
+    /// left it) — the poll watches the global Space state like the
+    /// trigger icon watches Alt, and skips while this window is
+    /// foreground (its PreviewKeyDown handles Space then).</summary>
+    private readonly GlobalSpaceTracker _spaceTracker;
+
     public FastReadWindow()
     {
         InitializeComponent();
@@ -118,8 +125,20 @@ public sealed partial class FastReadWindow : Window
         ContextScroller.AddHandler(UIElement.PointerMovedEvent, new PointerEventHandler(OnContextPointerMoved), true);
         ContextScroller.AddHandler(UIElement.PointerReleasedEvent, new PointerEventHandler(OnContextPointerReleased), true);
         ContextScroller.AddHandler(UIElement.PointerCaptureLostEvent, new PointerEventHandler(OnContextPointerCaptureLost), true);
+        _spaceTracker = new GlobalSpaceTracker(this,
+            shouldTrack: () => _viewModel is not null && !_viewModel.IsFinished,
+            onSpacePressed: () =>
+            {
+                // Same guard as the focused Space key (OnKeyDown):
+                // after the read finishes, Space is left alone for
+                // the share buttons.
+                if (_viewModel.IsFinished)
+                    return;
+                _viewModel.SetPlaying(!_viewModel.IsPlaying);
+            });
         Closed += (_, _) =>
         {
+            _spaceTracker.Stop();
             SaveWindowSize();
             _speech.Dispose();
         };
@@ -174,6 +193,10 @@ public sealed partial class FastReadWindow : Window
             NativeMethods.ShowWindow(hwnd, NativeMethods.SW_RESTORE);
         NativeMethods.SetForegroundWindow(hwnd);
         Activate();
+        // Global Space tracking starts with the visible window (the
+        // tracker only acts while the reader is active, and skips
+        // while this window is foreground).
+        _spaceTracker.Start();
         if (_viewModel.HasSlides)
             _viewModel.SetPlaying(true);
     }
@@ -248,6 +271,12 @@ public sealed partial class FastReadWindow : Window
     {
         var style2 = !_viewModel.IsRsvpStyle;
         ReadingGrid.Visibility = style2 ? Visibility.Collapsed : Visibility.Visible;
+        // Hint follows the style: Style 1 zooms the focus size with
+        // the wheel, Style 2 scrolls the page with it (font size is
+        // click-drag there).
+        TopHintTextBlock.Text = style2
+            ? "Space play/pause • ←/→ step • ↑/↓ speed • Wheel scroll • Click-drag font size"
+            : "Space play/pause • ←/→ step • ↑/↓ speed • Wheel ↑/↓ focus size";
         if (style2)
         {
             ContextScroller.Visibility = Visibility.Collapsed;
@@ -710,6 +739,14 @@ public sealed partial class FastReadWindow : Window
     /// 2pt took too many scrolls).</summary>
     private void OnFocusWheelChanged(object sender, PointerRoutedEventArgs e)
     {
+        // Style 2 ("Basic Reading") is a scrollable page: the wheel
+        // scrolls the text vertically (Manh 2026-11-21) — font size
+        // is click-drag there now, so do NOT zoom or mark handled
+        // here; the event keeps bubbling to the page's ScrollViewer.
+        // (Lite never had this problem: its Style 2 view is a sibling
+        // of the zoom grid, not inside it.)
+        if (_viewModel is not null && !_viewModel.IsRsvpStyle)
+            return;
         var delta = e.GetCurrentPoint((UIElement)sender).Properties.MouseWheelDelta;
         if (delta == 0)
             return;

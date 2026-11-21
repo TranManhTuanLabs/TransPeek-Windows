@@ -294,7 +294,16 @@ values, so the two can never be mixed up.
   live and is saved once on release (same pattern as the window's
   context resize drag); the current line stays centered while
   dragging. Switching style mid-read keeps the position as a
-  fraction of the text.
+  fraction of the text. **Wheel in Full (Manh 2026-11-21, test
+  CI230):** the window's `WordArea` grid used to zoom the focus size
+  on wheel (`OnFocusWheelChanged`, Style 1 behaviour) — and the
+  Style 2 page sits INSIDE that grid, so its wheel zoomed instead of
+  scrolling. The handler now returns early for Style 2 (no zoom, no
+  `Handled`), so the wheel reaches the page's `ScrollViewer` and
+  scrolls the text vertically; the top hint follows the style
+  ("Wheel scroll • Click-drag font size" vs "Wheel ↑/↓ focus size").
+  Lite never had this: its Style 2 view is a sibling of the zoom
+  grid, not inside it.
 
 **Speaker button (both surfaces, transport order: Restart, Speaker,
 Play, Rewind, Forward, Maximize — lite adds Close first; the
@@ -363,10 +372,23 @@ while a read is active — the hosts intercept it at `PreviewKeyDown`
 (tunnel), so it never falls through to a focused button (the repo
 link at the panel bottom got activated that way). After the read
 finishes, Space is left alone — the share / Done buttons work
-normally. The "Context style" picker was removed from the reader
-window's Settings popover the same round (Manh 2026-11-21 — it
-duplicated "Reading Style"); the `RsvpContextStyle` setting stays at
-its default ("Style1"), only the UI is gone.
+normally. **Space when the window lost focus (Manh 2026-11-21, test
+CI230):** the lite panel opens without activation and the Full window
+loses focus as soon as the mouse leaves it — Space then went to the
+other app, so the user had to click into the panel/window first. A
+shared `GlobalSpaceTracker` (`src/TransPeek/FastRead/`, used by both
+surfaces) now polls the GLOBAL Space state (`GetAsyncKeyState`,
+`VK_SPACE` 0x20 — same mechanism as the trigger icon's Alt poll):
+a Space press anywhere toggles Play/Pause while a reader is active,
+even unfocused. It only observes — the key still reaches the
+foreground app — and it skips while its own window is foreground
+(its `PreviewKeyDown` handles Space then, or one press would toggle
+twice). Short taps are caught via the low bit (pressed since last
+call); a held key never re-fires. The "Context style" picker was
+removed from the reader window's Settings popover the same round
+(Manh 2026-11-21 — it duplicated "Reading Style"); the
+`RsvpContextStyle` setting stays at its default ("Style1"), only the
+UI is gone.
 
 **Deferred (like mac):** true word-by-word sync (highlight each word
 as it is spoken — needs a per-word callback Windows TTS does not

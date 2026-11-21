@@ -13,6 +13,13 @@
 - **Commit chỉ sửa docs (`docs/**`, `*.md`) KHÔNG trigger CI** (do `paths-ignore`).
   Muốn chạy lại build phải có thay đổi ở file code.
 - **Local phải đồng bộ mới nhất theo main trước khi đẩy** — tránh dùng code cũ.
+- **Bản làm việc local có thể thiếu file sau merge qua trình duyệt** (bài học
+  2026-11-21: bản main thiếu đúng 4 file của PR #3, bản nhánh này thiếu 2
+  file + 6 file stale — merge qua trình duyệt không qua snapshot push nên
+  local không có): trước khi làm việc, đối chiếu cây file local với nhánh
+  qua API (`git trees ... recursive=1`), khôi phục file thiếu/stale từ raw
+  ghim commit rồi mới sửa; kiểm tra hash file sẽ sửa so với nhánh để khỏi
+  đẩy code cũ đè code mới.
 - Sau mỗi lần đẩy, **tự theo dõi run CI mới nhất tới khi kết luận**, rồi báo kết quả.
 
 ## 2. Theo dõi CI
@@ -106,6 +113,17 @@
   (`Microsoft.UI.Input.PointerDeviceType`, đã xác minh trên
   Microsoft Learn). Kéo đổi số thì áp live với `save: false`,
   lưu 1 lần lúc thả (mẫu `SetContextSizeRatio`).
+- **Bài học Space toàn cục (2026-11-21):** `GetAsyncKeyState` trả
+  bit thấp (0x0001) = phím đã bấm từ lần gọi trước — bắt được cú
+  bấm nhanh lọt giữa 2 lần poll; bit cao (0x8000) = phím đang giữ.
+  Dùng cả 2 (cạnh xuống HOẶC bấm-nhả giữa 2 tick) thì 1 lần bấm
+  chỉ kích hoạt 1 lần, giữ phím không lặp lại. Nhớ xả (flush) bit
+  thấp khi bắt đầu poll, không thì phím bấm trước lúc start cũng
+  kích hoạt 1 lần. `VK_SPACE` = 0x20 (Microsoft Learn, Virtual-Key
+  Codes); `GetForegroundWindow()` cho biết cửa sổ nào đang focus —
+  poll phải bỏ qua khi chính cửa sổ mình đang focus (đường
+  `PreviewKeyDown` đã xử lý Space rồi, làm nữa là bấm 1 lần mà
+  toggle 2 lần).
 
 ## 5. Quy tắc chung
 

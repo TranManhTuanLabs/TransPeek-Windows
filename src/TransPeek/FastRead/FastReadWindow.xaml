@@ -127,7 +127,11 @@
              Wheel over the focus word changes the focus size
              (Manh 2026-11-19, restored from 191): scroll up grows,
              scroll down shrinks, 5pt per tick, clamped 40-450. To
-             scroll the context, hover the context box itself. -->
+             scroll the context, hover the context box itself.
+             Style 2 (Basic Reading, Manh 2026-11-21): the wheel
+             scrolls the page instead — OnFocusWheelChanged returns
+             early for Style 2, so the event reaches the page's
+             ScrollViewer; font size there is click-drag. -->
         <Grid x:Name="WordArea" Grid.Row="1" Background="Transparent" PointerWheelChanged="OnFocusWheelChanged">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -140,7 +144,7 @@
                     <TextBlock x:Name="VersionText" FontSize="12" Foreground="Gray"
                                VerticalAlignment="Top" ToolTipService.ToolTip="TransPeek version" />
                 </StackPanel>
-                <TextBlock Text="Space play/pause • ←/→ step • ↑/↓ speed • Wheel ↑/↓ focus size" FontSize="12" Foreground="Gray"
+                <TextBlock x:Name="TopHintTextBlock" Text="Space play/pause • ←/→ step • ↑/↓ speed • Wheel ↑/↓ focus size" FontSize="12" Foreground="Gray"
                            HorizontalAlignment="Right" VerticalAlignment="Top" />
             </Grid>
             <!-- Reading grid: Style 2 shows only the focus line,
