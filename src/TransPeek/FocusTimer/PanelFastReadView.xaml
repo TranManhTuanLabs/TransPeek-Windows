@@ -8,12 +8,14 @@
          parity: PanelFastReadView.swift): the demo when nothing reads,
          the CompactReadingView while reading. The demo shows the word
          "reading" with its "a" in yellow between two half-bars (the
-         pivot preview, like mac's FocusDemoView), a "Read in panel"
-         button, and the "Run FastRead in:" radios (FastRead Lite /
-         New FastRead Window, default Window — applies to every Fast
-         Read entry: panel button, float icon, tray, shortcut). The
-         "Read in panel" button ALWAYS reads in the panel, whatever
-         the radios say. When a reminder read finishes, the reader
+         pivot preview, like mac's FocusDemoView), a "Read in:" row
+         (FastRead Lite / FastRead Full Window buttons — read this
+         text right now, bypassing the setting below), and the "Run
+         FastRead in:" radios (FastRead Lite / FastRead Full Window,
+         default Window — the default for later entries: float icon,
+         tray, shortcut, reminder). The "Read in:" buttons ALWAYS read
+         where they say, whatever the radios say. When a reminder read
+         finishes, the reader
          hides and a coffee countdown screen (like the Rest window)
          shows in the middle: Cafe icon + title + big mm:ss + Done. -->
     <Grid>
@@ -35,15 +37,25 @@
                 </TextBlock>
                 <Rectangle Width="24" Height="2" Fill="#C8C8C8" HorizontalAlignment="Center" Margin="0,10,0,0" />
             </StackPanel>
-            <Button x:Name="ReadInPanelButton" Content="Read in panel" Click="OnReadInPanelClicked"
-                    HorizontalAlignment="Center" Margin="0,12,0,0" />
+            <!-- "Read in:" is LEFT-aligned (like "Run FastRead in:"
+                 below, Manh 2026-11-22, mac parity): read THIS text
+                 right now — the two buttons name only the destination
+                 ("Read in" is already in the title). Both bypass the
+                 "Run FastRead in:" setting below. -->
+            <StackPanel Margin="0,12,0,0" Spacing="4" HorizontalAlignment="Left">
+                <TextBlock Text="Read in:" FontSize="13" FontWeight="SemiBold" HorizontalAlignment="Left" />
+                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Left">
+                    <Button x:Name="ReadInPanelButton" Content="FastRead Lite" Click="OnReadInPanelClicked" />
+                    <Button x:Name="ReadInWindowButton" Content="FastRead Full Window" Click="OnReadInWindowClicked" />
+                </StackPanel>
+            </StackPanel>
             <!-- "Run FastRead in:" is LEFT-aligned (Manh 2026-11-20),
                  like mac — the rest of the demo stays centered. -->
             <StackPanel Margin="0,12,0,0" Spacing="4" HorizontalAlignment="Left">
                 <TextBlock Text="Run FastRead in:" FontSize="13" FontWeight="SemiBold" HorizontalAlignment="Left" />
                 <RadioButton x:Name="RunInPanelRadio" Content="FastRead Lite" GroupName="RunFastReadIn"
                              HorizontalAlignment="Left" Checked="OnRunLocationChecked" />
-                <RadioButton x:Name="RunInWindowRadio" Content="New FastRead Window (recommended)" GroupName="RunFastReadIn"
+                <RadioButton x:Name="RunInWindowRadio" Content="FastRead Full Window (recommended)" GroupName="RunFastReadIn"
                              HorizontalAlignment="Left" Checked="OnRunLocationChecked" />
                 <TextBlock Text="Applies to the Fast Read button, the float icon, and the keyboard shortcut."
                            FontSize="12" Foreground="Gray" HorizontalAlignment="Left" TextWrapping="Wrap" TextAlignment="Left" />

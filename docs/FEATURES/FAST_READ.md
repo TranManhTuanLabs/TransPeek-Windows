@@ -191,13 +191,16 @@ context display / color scheme). Behaviour is the window's, moved
 unchanged: same delays, same clamps on WPM/chunk/context ratio, same
 status and reading-time text.
 
+**"Read in:"** (panel right demo, Manh 2026-11-22, mac parity): read
+THIS text right now — two buttons naming only the destination:
+**"FastRead Lite"** (reads in the panel) / **"FastRead Full Window"**
+(opens the Window Read, hides the panel, stops a panel read first if
+one is running). Both bypass the "Run FastRead in:" setting below.
 **"Run FastRead in:"** (panel right demo, radios — also the setting
-`FastReadRunLocation`, "NewWindow" default / "RightPanel"): where Fast
-Read opens from EVERY entry point (panel button, float icon, tray,
-shortcut). Labels (Manh 2026-11-20, mac parity): **"FastRead Lite"**
-(panel right) / **"New FastRead Window (recommended)"** (window).
-The demo's **"Read in panel" button always reads in the panel**,
-whatever the radios say. Panel-right reading: the panel stays open,
+`FastReadRunLocation`, "NewWindow" default / "RightPanel"): the DEFAULT
+for later entries (float icon, tray, shortcut, reminder). Labels:
+**"FastRead Lite"** (panel right) / **"FastRead Full Window
+(recommended)"** (window). Panel-right reading: the panel stays open,
 switches to the Fast Read tab, starts the read and pins itself; the
 demo shows the word "reading" with its "a" in yellow between two
 half-bars (the pivot preview). The demo title is **"Fast Read Lite"**

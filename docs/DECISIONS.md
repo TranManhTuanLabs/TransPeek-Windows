@@ -2748,6 +2748,24 @@ Manh test bản 0.1.4.191: Google 249 ngôn ngữ ngon. 4 việc còn lại làm
 - **Rule mới (Manh 22/11, áp dụng mọi repo):** bug sửa 2–3 lần không ra thì dừng đoán —
   làm bộ test + log + bắt lỗi + docs (xem `docs/AGENTS.md` §9).
 
+## "Read in:" + "Run reminder in:" — Lite lên trên, tên FastRead Full Window (2026-11-22, mac parity b0e314f0 + 46c8e357 + 2cb39c10)
+
+- **Panel right demo:** thêm tiêu đề "Read in:" (kiểu chữ như "Run FastRead in:") trên 2 nút
+  đọc ngay: **"FastRead Lite"** (đọc trong panel) / **"FastRead Full Window"** (mở Window
+  Read, ẩn panel, dừng đọc panel nếu đang đọc). Cả 2 bỏ qua setting "Run FastRead in:"
+  (nút panel luôn đọc trong panel, nút window luôn mở Window Read). "Read in:" = đọc ngay
+  văn bản này; "Run FastRead in:" = mặc định cho lần mở sau (icon nổi / tray / phím tắt /
+  nhắc nhở) — GIỮ NGUYÊN tên, không đổi thành "Open ... on".
+- **Tên chốt chung:** "FastRead Full Window" (đổi từ "New FastRead Window") — radio "Run
+  FastRead in:" thành "FastRead Full Window (recommended)"; "FastRead Lite" giữ nguyên;
+  không dùng tên "ReadMode".
+- **"Run reminder in:" (Focus panel):** đổi thứ tự cho "FastRead Lite" lên trên, "FastRead
+  Full Window" xuống dưới — khớp thứ tự "Run FastRead in:". Giá trị lưu không đổi
+  ("RightPanel" / "NewWindow" — chỉ đổi thứ tự + nhãn, combo chọn theo Tag nên an toàn).
+- **Kỹ thuật:** nút window đi đường riêng `fastReadWindowRequested` (Action<string>,
+  App → `ShowFastReadWindow`, ẩn panel) thay vì `fastReadRequested` (đi qua setting);
+  view dừng đọc panel trước nếu đang đọc (`StopPanelReading` khi có VM).
+
 ## Liên kết
 
 - [Bối cảnh AI](AI_CONTEXT.md)

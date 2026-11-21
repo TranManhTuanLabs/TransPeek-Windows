@@ -193,6 +193,11 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// depends on the run location (see OnFastReadClicked): the Fast
     /// Read window hides it, panel-right reading keeps it open.</summary>
     private readonly Func<string, Task> _fastReadRequested;
+    // Window-read request from the demo's "FastRead Full Window"
+    // button (Manh 2026-11-22, mac parity): opens the Fast Read window
+    // directly, bypassing the "Run FastRead in" setting — the sibling
+    // _fastReadRequested routes via the setting instead.
+    private readonly Action<string> _fastReadWindowRequested;
     /// <summary>Focus & Rest (feature/focus-timer-decor): the single
     /// store for the Pomodoro / rest-eyes timers, the pending reminder
     /// and the panel-right read. Created once by App and shared with
@@ -256,6 +261,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         Action openSettings,
         IReadOnlyList<PanelShortcutEntry> shortcuts,
         Func<string, Task> fastReadRequested,
+        Action<string> fastReadWindowRequested,
         FocusTimerStore focusTimerStore)
     {
         _translateAsync = translateAsync;
@@ -263,6 +269,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         _openSettings = openSettings;
         _shortcuts = shortcuts;
         _fastReadRequested = fastReadRequested;
+        _fastReadWindowRequested = fastReadWindowRequested;
         _focusTimerStore = focusTimerStore;
         InitializeComponent();
         PopulateLangCombos();
@@ -280,6 +287,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         ReminderBanner.Store = _focusTimerStore;
         FastReadTabPanel.Store = _focusTimerStore;
         FastReadTabPanel.OnStartReading = () => SetPinned(true);
+        FastReadTabPanel.OnOpenInWindow = () => _fastReadWindowRequested(FastReadTabPanel.SourceText);
         FastReadTabPanel.OnToggleMaximize = TogglePanelSize;
         _focusTimerStore.PropertyChanged += OnFocusTimerStoreChanged;
         // Auto-play chain: when the auto-played source finishes and

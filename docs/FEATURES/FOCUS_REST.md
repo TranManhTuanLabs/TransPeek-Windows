@@ -41,9 +41,10 @@ collapse/expand; collapsed state in `FocusTimerCollapsed`).
   rest your eyes for 20 s — look at something 20 feet away." + Start /
   Stop eye reminders. **Default OFF** (Manh 2026-11-20 07:25 — no
   reminder until the user turns it on).
-- **"Run reminder in:"** picker — "New FastRead Window" (default) /
-  "FastRead Lite". Applies ONLY to focus / rest-eyes reminders, not to
-  Fast Read itself.
+- **"Run reminder in:"** picker — "FastRead Lite" / "FastRead Full
+  Window" (default). Lite first, Manh 2026-11-22 (same order as "Run
+  FastRead in:" on panel right). Applies ONLY to focus / rest-eyes
+  reminders, not to Fast Read itself.
 
 **Bố cục CHỐT của thẻ (Manh 2026-11-20, căn giữa cho đẹp — ghi lại để
 sau đối chiếu, không phá):** countdown 28pt Consolas Bold **center**;
@@ -53,8 +54,8 @@ dưới 4 chấm, center**; nút Start focus / Pause / Resume + Reset
 **center** trên 1 hàng; "Repeat automatically" + "Auto start focus
 (default: Off)" là **ToggleSwitch** (nút gạt — nhãn trên, gạt dưới, sát
 lề trái trong thẻ); nút "Start eye reminders" **center**; "Run reminder
-in:" nhãn trên, picker **xuống dòng riêng, full-width**, lựa chọn "New
-FastRead Window" / "FastRead Lite" (đổi tên 2026-11-20 18:09, KHÔNG thêm
+in:" nhãn trên, picker **xuống dòng riêng, full-width**, lựa chọn "FastRead Lite" /
+"FastRead Full Window" (Lite lên trên, đổi tên 2026-11-22, KHÔNG thêm
 "(recommended)"), dòng note xám ở dưới. Xem thêm panel spec
 `docs/UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md` §11.3 + §11.6.
 
@@ -83,14 +84,6 @@ FastRead Window" / "FastRead Lite" (đổi tên 2026-11-20 18:09, KHÔNG thêm
 
 ## Where a reminder shows
 
-- **New FastRead Window (default):** a separate `RestWindow` (560×400,
-  fixed size, title "TransPeek — Rest") that reads the reminder text
-  with the lite reader, then counts the break down (coffee cup EC32 +
-  title + mm:ss 56pt bold + "The window closes when the timer ends." +
-  Done) and closes itself at zero. Esc closes the window. It never
-  touches the Fast Read window — a read in progress keeps reading. The
-  panel hides first (it is topmost and would float above the Rest
-  window).
 - **FastRead Lite:** the reminder text is read in panel right (the panel
   comes forward, switches to the Fast Read tab, starts the read, pins
   itself). When the read finishes, the reader hides and a coffee
@@ -99,6 +92,14 @@ FastRead Window" / "FastRead Lite" (đổi tên 2026-11-20 18:09, KHÔNG thêm
   Read Lite when the timer ends." + Done — same screen as the Rest window,
   Manh 2026-11-20 18:19) and returns to the demo at zero. No "Congratulations!"
   for a reminder read (that is only for a manual read).
+- **FastRead Full Window (default):** a separate `RestWindow` (560×400,
+  fixed size, title "TransPeek — Rest") that reads the reminder text
+  with the lite reader, then counts the break down (coffee cup EC32 +
+  title + mm:ss 56pt bold + "The window closes when the timer ends." +
+  Done) and closes itself at zero. Esc closes the window. It never
+  touches the Fast Read window — a read in progress keeps reading. The
+  panel hides first (it is topmost and would float above the Rest
+  window).
 
 ## System notifications — DEFERRED (Manh 2026-11-20)
 

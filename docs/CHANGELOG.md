@@ -6,6 +6,10 @@
 
 ## 2026-11-22
 
+- **main — "Read in:" + thứ tự reminder (theo mac b0e314f0 + 46c8e357 + 2cb39c10, chưa có
+  số CI):** panel right demo thêm tiêu đề "Read in:" + 2 nút "FastRead Lite" / "FastRead
+  Full Window" (đọc ngay, bỏ qua setting); radio thành "FastRead Full Window
+  (recommended)"; "Run reminder in:" đổi thứ tự Lite lên trên.
 - **main — bản chẩn đoán bug che loa (chưa có số CI):** log kích thước panel
   (outer/client/min/baseline) vào `windows.log` mỗi lần fit + submenu tray Diagnose
   (List windows / Open windows.log); nghi phạm khung cửa sổ thừa (`WS_DLGFRAME`).

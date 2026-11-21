@@ -26,9 +26,9 @@ public sealed partial class PanelFastReadView : UserControl
 
     private string _sourceText = "";
 
-    /// <summary>The text the demo's "Read in panel" button reads (the
-    /// text being translated). Set by the panel; the button is disabled
-    /// while it is empty.</summary>
+    /// <summary>The text the demo's "Read in:" buttons read (the
+    /// text being translated). Set by the panel; both buttons are
+    /// disabled while it is empty.</summary>
     public string SourceText
     {
         get => _sourceText;
@@ -37,6 +37,8 @@ public sealed partial class PanelFastReadView : UserControl
             _sourceText = value;
             if (ReadInPanelButton is not null)
                 ReadInPanelButton.IsEnabled = !string.IsNullOrWhiteSpace(value);
+            if (ReadInWindowButton is not null)
+                ReadInWindowButton.IsEnabled = !string.IsNullOrWhiteSpace(value);
         }
     }
 
@@ -58,8 +60,14 @@ public sealed partial class PanelFastReadView : UserControl
     }
 
     /// <summary>Called when a read starts from this view (the demo's
-    /// "Read in panel" button): the panel pins itself.</summary>
+    /// "FastRead Lite" button): the panel pins itself.</summary>
     public Action? OnStartReading { get; set; }
+
+    /// <summary>Called when the demo's "FastRead Full Window" button
+    /// is clicked: the panel opens the Fast Read window for this text
+    /// (which hides the panel). The view stops a panel read first if
+    /// one is running, before invoking this.</summary>
+    public Action? OnOpenInWindow { get; set; }
 
     /// <summary>Called when the compact view wants to toggle the
     /// panel size (its Maximize button): the panel toggles between
@@ -94,6 +102,7 @@ public sealed partial class PanelFastReadView : UserControl
         DemoGrid.Visibility = reading ? Visibility.Collapsed : Visibility.Visible;
         ReadingGrid.Visibility = reading ? Visibility.Visible : Visibility.Collapsed;
         ReadInPanelButton.IsEnabled = !string.IsNullOrWhiteSpace(SourceText);
+        ReadInWindowButton.IsEnabled = !string.IsNullOrWhiteSpace(SourceText);
         var runInPanel = string.Equals(App.Settings.FastReadRunLocation, "RightPanel", StringComparison.OrdinalIgnoreCase);
         RunInPanelRadio.IsChecked = runInPanel;
         RunInWindowRadio.IsChecked = !runInPanel;
@@ -156,7 +165,7 @@ public sealed partial class PanelFastReadView : UserControl
         return CompactView.HandleKey(key, focusedElement);
     }
 
-    /// <summary>"Read in panel": always reads in the panel, whatever
+    /// <summary>"FastRead Lite": always reads in the panel, whatever
     /// the "Run FastRead in" radios say (mac). The panel pins itself
     /// via OnStartReading.</summary>
     private void OnReadInPanelClicked(object sender, RoutedEventArgs e)
@@ -165,6 +174,19 @@ public sealed partial class PanelFastReadView : UserControl
             return;
         _store.StartPanelReading(SourceText);
         OnStartReading?.Invoke();
+    }
+
+    /// <summary>"FastRead Full Window": always opens the Window Read
+    /// for this text, whatever the "Run FastRead in" radios say (mac).
+    /// Stops a panel read first if one is running, then the panel
+    /// opens the window via OnOpenInWindow (which hides the panel).</summary>
+    private void OnReadInWindowClicked(object sender, RoutedEventArgs e)
+    {
+        if (_store is null || string.IsNullOrWhiteSpace(SourceText))
+            return;
+        if (_store.PanelReadingViewModel is not null)
+            _store.StopPanelReading();
+        OnOpenInWindow?.Invoke();
     }
 
     private void OnRunLocationChecked(object sender, RoutedEventArgs e)
