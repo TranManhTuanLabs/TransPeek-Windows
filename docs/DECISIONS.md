@@ -2658,6 +2658,12 @@ Manh test bản 0.1.4.191: Google 249 ngôn ngữ ngon. 4 việc còn lại làm
 
 - **Nhắc nghỉ đọc xong ở panel lite thì hiện màn đếm ngược ở giữa (Manh 2026-11-20 18:19):** trước đây chỉ có dòng nhỏ "Rest — mm:ss" + Done ở dưới reader; nay giống cửa sổ Rest — reader ẩn, hiện màn giữa: icon cafe EC32 32pt + tiêu đề + số đếm ngược lớn 56pt Consolas Bold + "Back to Fast Read Lite when the timer ends." + nút Done; hết giờ về lại demo. Tiêu đề đi theo nhắc ("Take a break" / "Rest your eyes") — `FocusPanelRightRequest` thêm `Title`, `FocusTimerStore.PanelReminderTitle`, `StartPanelReading`/`RequestPanelReading` nhận thêm `title`. Chỉ áp cho đọc nhắc nghỉ — đọc thường xong vẫn hiện chúc mừng + share như cũ. Phím Space trong lúc đếm ngược không tới reader nữa (không khởi động lại bài đã đọc xong).
 
+## Release/pre-release: mục "What's new" liệt kê tính năng mới nổi bật (2026-11-21, Manh 08:32)
+
+- **Quy tắc:** từ nay, mô tả của mọi release và pre-release phải có thêm mục tính năng mới nổi bật **ngay dưới phần chữ hiện tại** (mục Download / dòng mô tả cố định) — liệt kê tính năng mới nổi bật cho user biết, vd OCR, block-text detect. Viết bằng tiếng Anh (repo công khai, UI/docs tiếng Anh).
+- **Cơ chế Windows:** workflow `build.yml` tạo pre-release tự động với mô tả cố định 1 dòng ("Preview build from CI run N. Not a stable release.") — workflow KHÔNG biết tính năng nào mới nên không tự sinh được mục này. **Muse tự thêm tay sau mỗi lần CI main xanh** (cùng lúc kiểm tra CI + gửi link tải): sửa mô tả release qua trình duyệt, thêm mục `## What's new` ngay dưới dòng cố định, liệt kê tính năng nổi bật của run đó.
+- **Đã áp luôn cho pre-release v0.1.4.213** (run #213, commit tray Focus & Rest): mô tả giờ là dòng cố định + `## What's new` với 1 mục (tray menu "Focus & Rest").
+
 ## Tray menu: mục "Focus & Rest" mở thẳng panel trái (2026-11-21, main)
 
 - **"Focus & Rest" (Manh 2026-11-21 00:34, làm TRÊN MAIN):** chuột phải icon tray → thêm mục "Focus & Rest", bấm vào mở panel ở tab trái (Shortcuts — thẻ Focus & Rest nằm ở đó), tại vị trí chuột như các mục khác. Tên em chọn "Focus & Rest" (trong 3 tên anh đưa: Focus & Rest / Focus-Rest / Focus Rest) — giống tên card ở panel trái và giống mục menubar mac (mac cũng chọn "Focus & Rest").
