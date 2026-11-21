@@ -126,7 +126,7 @@
                      sits on its OWN line below the label, not on the
                      same row — the row was cramped at panel width, and
                      the full-width picker is easier to hit. Options
-                     are "New FastRead Window" / "FastRead Lite" (renamed
+                     are "FastRead Full Window" / "FastRead Lite" (renamed
                      Manh 2026-11-20 18:09, same as mac — NO "(recommended)"
                      here, that hint belongs to "Run FastRead in:" only;
                      this is the reminder destination, a different setting
@@ -135,7 +135,7 @@
                     <TextBlock Text="Run reminder in:" FontSize="13" FontWeight="SemiBold" />
                     <ComboBox x:Name="ReminderDestinationCombo" HorizontalAlignment="Stretch"
                               SelectionChanged="OnReminderDestinationChanged">
-                        <ComboBoxItem Content="New FastRead Window" Tag="NewWindow" />
+                        <ComboBoxItem Content="FastRead Full Window" Tag="NewWindow" />
                         <ComboBoxItem Content="FastRead Lite" Tag="RightPanel" />
                     </ComboBox>
                     <TextBlock Text="Applies only to focus / rest-eyes reminders — not to Fast Read itself."

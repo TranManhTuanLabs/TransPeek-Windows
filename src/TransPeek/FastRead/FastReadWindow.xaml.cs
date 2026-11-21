@@ -24,6 +24,7 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using TransPeek.Core.Settings;
 using TransPeek.Interop;
+using TransPeek.Services;
 using TransPeek.Share;
 using Windows.Foundation;
 using Windows.System;
@@ -34,6 +35,22 @@ namespace TransPeek.FastRead;
 public sealed partial class FastReadWindow : Window
 {
     private readonly RsvpReaderViewModel _viewModel = new();
+    // TTS for the speaker button (feature/fastread-speaker-style2):
+    // this window owns its own service — the float icon has its own
+    // (_iconSpeech in App), so a read speaking never fights the icon
+    // over one MediaPlayer. Wired into the view model; disposed when
+    // the window closes.
+    private readonly SystemSpeechService _speech = new();
+    // Voice panel hover state (mac parity: the picker stays open while
+    // the mouse is on the speaker button or on the panel itself, and
+    // hides 300 ms after leaving both).
+    private readonly DispatcherTimer _voicePanelHideTimer = new();
+    private bool _hoveringSpeaker;
+    private bool _hoveringVoicePanel;
+    // A voice picker dropdown is open (the dropdown is a Popup — the
+    // pointer leaves the panel for it, so hover alone would hide the
+    // panel mid-pick). While a dropdown is open the panel stays put.
+    private bool _voiceDropdownOpen;
     /// <summary>Detached TextBlock for measuring word widths (same font
     /// as the displayed word): the ORP pivot is aligned by shifting
     /// the centered word so the pivot char's center lands exactly at
@@ -69,8 +86,23 @@ public sealed partial class FastReadWindow : Window
             ? $"{AppInfo.Version} (build {AppInfo.CiBuildNumber})"
             : AppInfo.Version;
         _viewModel.PropertyChanged += OnViewModelChanged;
+        _viewModel.Speaker = _speech;
+        Style2View.ViewModel = _viewModel;
+        PopulateVoices(EnglishVoiceCombo, "en");
+        PopulateVoices(VietnameseVoiceCombo, "vi");
+        _voicePanelHideTimer.Interval = TimeSpan.FromMilliseconds(300);
+        _voicePanelHideTimer.Tick += (_, _) =>
+        {
+            _voicePanelHideTimer.Stop();
+            if (!_hoveringSpeaker && !_hoveringVoicePanel && !_voiceDropdownOpen)
+                VoicePanel.Visibility = Visibility.Collapsed;
+        };
+        // PreviewKeyDown (tunnel), NOT KeyDown (bubble): Space must be
+        // caught before a focused button sees it — KeyDown reaches the
+        // parent only after the button already handled Space (the repo
+        // link got activated this way in the panel lite reader).
         if (Content is FrameworkElement contentRoot)
-            contentRoot.KeyDown += OnKeyDown;
+            contentRoot.PreviewKeyDown += OnKeyDown;
         // Wheel over the progress slider steps one word — a Slider
         // consumes the wheel itself (seek) and marks it handled, so a
         // plain XAML handler would never fire. Attach with
@@ -86,7 +118,11 @@ public sealed partial class FastReadWindow : Window
         ContextScroller.AddHandler(UIElement.PointerMovedEvent, new PointerEventHandler(OnContextPointerMoved), true);
         ContextScroller.AddHandler(UIElement.PointerReleasedEvent, new PointerEventHandler(OnContextPointerReleased), true);
         ContextScroller.AddHandler(UIElement.PointerCaptureLostEvent, new PointerEventHandler(OnContextPointerCaptureLost), true);
-        Closed += (_, _) => SaveWindowSize();
+        Closed += (_, _) =>
+        {
+            SaveWindowSize();
+            _speech.Dispose();
+        };
     }
 
     /// <summary>Load new text and show the first slide (paused — the
@@ -165,6 +201,8 @@ public sealed partial class FastReadWindow : Window
             case nameof(RsvpReaderViewModel.StatusText):
             case nameof(RsvpReaderViewModel.CurrentSlideIndex):
             case nameof(RsvpReaderViewModel.SlideCount):
+            case nameof(RsvpReaderViewModel.Style2CurrentLineIndex):
+            case nameof(RsvpReaderViewModel.Style2LineCount):
                 SyncProgress();
                 break;
             case nameof(RsvpReaderViewModel.PauseContext):
@@ -179,6 +217,7 @@ public sealed partial class FastReadWindow : Window
             case nameof(RsvpReaderViewModel.ChunkSize):
             case nameof(RsvpReaderViewModel.ContextDisplay):
             case nameof(RsvpReaderViewModel.ColorScheme):
+            case nameof(RsvpReaderViewModel.HighlightCurrentLine):
                 SyncControls();
                 break;
             case nameof(RsvpReaderViewModel.ContextStyle):
@@ -187,6 +226,66 @@ public sealed partial class FastReadWindow : Window
                 RenderContext();
                 SyncControls();
                 break;
+            case nameof(RsvpReaderViewModel.ReadingStyle):
+                // The reading style swaps the reading surface (RSVP
+                // grid vs Style 2 page) and the progress units.
+                SwitchReadingSurface();
+                SyncControls();
+                SyncProgress();
+                break;
+            case nameof(RsvpReaderViewModel.IsSoundOn):
+                SyncSpeakerIcon();
+                break;
+        }
+    }
+
+    /// <summary>Swap the reading surface by style: Style 2 hides the
+    /// RSVP grid (the Style2 view shows itself) and the pause context
+    /// (Style 2 has no pause context — the page IS the context);
+    /// Style 1 hides the Style 2 page (it hides itself) and shows the
+    /// grid again.</summary>
+    private void SwitchReadingSurface()
+    {
+        var style2 = !_viewModel.IsRsvpStyle;
+        ReadingGrid.Visibility = style2 ? Visibility.Collapsed : Visibility.Visible;
+        if (style2)
+        {
+            ContextScroller.Visibility = Visibility.Collapsed;
+            BeforeTextBlock.Visibility = Visibility.Collapsed;
+            AfterTextBlock.Visibility = Visibility.Collapsed;
+        }
+        else
+        {
+            RenderContext();
+        }
+    }
+
+    /// <summary>Speaker icon by sound state (mac: speaker.wave.2.fill
+    /// vs speaker.slash.fill): Volume E767 = sound on, Mute E74F =
+    /// sound off (both verified on Microsoft Learn, Segoe Fluent
+    /// Icons).</summary>
+    private void SyncSpeakerIcon()
+    {
+        SpeakerIcon.Glyph = _viewModel.IsSoundOn ? "\uE767" : "\uE74F";
+        ToolTipService.SetToolTip(SpeakerButton, _viewModel.IsSoundOn
+            ? "Sound on — click to mute the reading"
+            : "Sound off — click to hear the reading");
+    }
+
+    /// <summary>Voice picker lists (same source as Settings → TTS, so
+    /// the two lists can never drift): "System default" first, then
+    /// the installed voices for the language. The Tag is the voice Id,
+    /// saved to the same settings keys Settings → TTS uses.</summary>
+    private void PopulateVoices(ComboBox combo, string languagePrefix)
+    {
+        combo.Items.Clear();
+        combo.Items.Add(new ComboBoxItem { Content = "System default", Tag = "" });
+        foreach (var voice in SystemSpeechService.InstalledVoices)
+        {
+            if (!voice.Language.StartsWith(languagePrefix + "-", StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(voice.Language, languagePrefix, StringComparison.OrdinalIgnoreCase))
+                continue;
+            combo.Items.Add(new ComboBoxItem { Content = voice.DisplayName, Tag = voice.Id });
         }
     }
 
@@ -221,7 +320,13 @@ public sealed partial class FastReadWindow : Window
         SelectComboByTag(ContextSizeCombo, NearestContextPercent(_viewModel.ContextSizeRatio * 100).ToString());
         SelectComboByTag(ColorSchemeCombo, _viewModel.ColorScheme);
         SelectComboByTag(ContextDisplayCombo, _viewModel.ContextDisplay);
-        SelectComboByTag(ContextStyleCombo, _viewModel.ContextStyle);
+        SelectComboByTag(ReadingStyleCombo, _viewModel.ReadingStyle);
+        HighlightToggle.IsOn = _viewModel.HighlightCurrentLine;
+        SelectComboByTag(EnglishVoiceCombo, App.Settings.EnglishVoiceId ?? "");
+        SelectComboByTag(VietnameseVoiceCombo, App.Settings.VietnameseVoiceId ?? "");
+        SpeedSlider.Value = Math.Clamp(App.Settings.SpeechRate, SpeedSlider.Minimum, SpeedSlider.Maximum);
+        SpeedValueText.Text = $"{SpeedSlider.Value:0.0}x";
+        SyncSpeakerIcon();
         ApplyColorScheme();
         _loading = false;
     }
@@ -281,11 +386,13 @@ public sealed partial class FastReadWindow : Window
 
     private void SyncProgress()
     {
-        var total = _viewModel.SlideCount;
+        // Style 2 counts lines, not slides (the slider seeks lines).
+        var total = _viewModel.PositionCount;
+        var index = _viewModel.CurrentPositionIndex;
         _updatingProgress = true;
         ProgressSlider.Minimum = 0;
         ProgressSlider.Maximum = Math.Max(0, total - 1);
-        ProgressSlider.Value = _viewModel.CurrentSlideIndex;
+        ProgressSlider.Value = index;
         _updatingProgress = false;
         StatusText.Text = _viewModel.StatusText;
     }
@@ -368,6 +475,122 @@ public sealed partial class FastReadWindow : Window
 
     private void OnPlayPauseClicked(object sender, RoutedEventArgs e) => _viewModel.SetPlaying(!_viewModel.IsPlaying);
 
+    /// <summary>Speaker click: toggle the sound for this read. The
+    /// voice panel stays open (it is an in-tree overlay, not a popup)
+    /// — clicking the speaker never dismisses it first (mac CI314
+    /// bug 2: the popover swallowed the first click).</summary>
+    private void OnSpeakerClicked(object sender, RoutedEventArgs e)
+        => _viewModel.SetSoundOn(!_viewModel.IsSoundOn);
+
+    /// <summary>Keep the voice panel open while the mouse is on the
+    /// speaker button or on the panel itself; close it 300 ms after
+    /// leaving both, so moving from the button into the panel does
+    /// not flicker it shut mid-move (mac parity).</summary>
+    private void OnSpeakerPointerEntered(object sender, PointerRoutedEventArgs e)
+    {
+        _hoveringSpeaker = true;
+        UpdateVoicePanelVisibility();
+    }
+
+    private void OnSpeakerPointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        _hoveringSpeaker = false;
+        UpdateVoicePanelVisibility();
+    }
+
+    private void OnVoicePanelPointerEntered(object sender, PointerRoutedEventArgs e)
+    {
+        _hoveringVoicePanel = true;
+        UpdateVoicePanelVisibility();
+    }
+
+    private void OnVoicePanelPointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        _hoveringVoicePanel = false;
+        UpdateVoicePanelVisibility();
+    }
+
+    private void UpdateVoicePanelVisibility()
+    {
+        _voicePanelHideTimer.Stop();
+        if (_hoveringSpeaker || _hoveringVoicePanel || _voiceDropdownOpen)
+        {
+            VoicePanel.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            _voicePanelHideTimer.Start();
+        }
+    }
+
+    /// <summary>A voice picker dropdown opened / closed: the dropdown
+    /// is a Popup, so picking a voice would otherwise read as "the
+    /// mouse left the panel" and hide it mid-pick (Manh 2026-11-21).
+    /// While a dropdown is open the panel stays put; the 300 ms hide
+    /// only starts after it closes and the mouse has left.</summary>
+    private void OnVoiceDropDownOpened(object sender, object e)
+    {
+        _voiceDropdownOpen = true;
+        UpdateVoicePanelVisibility();
+    }
+
+    private void OnVoiceDropDownClosed(object sender, object e)
+    {
+        _voiceDropdownOpen = false;
+        UpdateVoicePanelVisibility();
+    }
+
+    private void OnEnglishVoiceChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_loading)
+            return;
+        if (EnglishVoiceCombo.SelectedItem is ComboBoxItem item && item.Tag is string id)
+        {
+            App.Settings.EnglishVoiceId = string.IsNullOrEmpty(id) ? null : id;
+            SettingsStore.Save(App.Settings);
+        }
+    }
+
+    private void OnVietnameseVoiceChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_loading)
+            return;
+        if (VietnameseVoiceCombo.SelectedItem is ComboBoxItem item && item.Tag is string id)
+        {
+            App.Settings.VietnameseVoiceId = string.IsNullOrEmpty(id) ? null : id;
+            SettingsStore.Save(App.Settings);
+        }
+    }
+
+    /// <summary>Voice speed (mac: 0.6x–4x in the voice panel): the
+    /// real voice-speed multiplier, shared with Settings → TTS
+    /// (SpeechRate). It takes effect from the next phrase — no
+    /// restart needed, because SpeakAsync reads the setting fresh
+    /// every time. WPM is untouched: it only paces silent reading.</summary>
+    private void OnSpeedChanged(object sender, Microsoft.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
+    {
+        SpeedValueText.Text = $"{e.NewValue:0.0}x";
+        if (_loading)
+            return;
+        App.Settings.SpeechRate = e.NewValue;
+        SettingsStore.Save(App.Settings);
+    }
+
+    private void OnReadingStyleChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_loading)
+            return;
+        if (ReadingStyleCombo.SelectedItem is ComboBoxItem item && item.Tag is string tag)
+            _viewModel.SetReadingStyle(tag);
+    }
+
+    private void OnHighlightToggled(object sender, RoutedEventArgs e)
+    {
+        if (_loading)
+            return;
+        _viewModel.SetHighlightCurrentLine(HighlightToggle.IsOn);
+    }
+
     private void OnRestartClicked(object sender, RoutedEventArgs e) => _viewModel.Restart();
 
     private void OnProgressChanged(object sender, Microsoft.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
@@ -434,14 +657,6 @@ public sealed partial class FastReadWindow : Window
             _viewModel.SetContextDisplay(tag);
     }
 
-    private void OnContextStyleChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (_loading)
-            return;
-        if (ContextStyleCombo.SelectedItem is ComboBoxItem item && item.Tag is string tag)
-            _viewModel.SetContextStyle(tag);
-    }
-
     /// <summary>Reset to default (Manh 2026-11-19, mac round 7):
     /// speed 275, focus size 110, context size 40%, context display
     /// "Only show when paused". The color scheme and the context style
@@ -468,14 +683,14 @@ public sealed partial class FastReadWindow : Window
     }
 
     /// <summary>Wheel over the progress slider (Manh 2026-11-19):
-    /// scroll down = next word, scroll up = previous word — one slide
-    /// per tick, like a fast seek.</summary>
+    /// scroll down = next unit, scroll up = previous unit — one slide
+    /// (Style 1) or one line (Style 2) per tick, like a fast seek.</summary>
     private void OnProgressWheelChanged(object sender, PointerRoutedEventArgs e)
     {
         var delta = e.GetCurrentPoint((UIElement)sender).Properties.MouseWheelDelta;
         if (delta == 0)
             return;
-        _viewModel.SeekTo(_viewModel.CurrentSlideIndex + (delta < 0 ? 1 : -1));
+        _viewModel.SeekTo(_viewModel.CurrentPositionIndex + (delta < 0 ? 1 : -1));
         e.Handled = true;
     }
 
@@ -644,11 +859,14 @@ public sealed partial class FastReadWindow : Window
         switch (e.Key)
         {
             case VirtualKey.Space:
-                // A focused button handles Space itself (Play toggles,
-                // Restart restarts) — only toggle here when no button
-                // has focus.
-                if (focused is Button)
-                    return;
+                // During an active read, Space is always Play/Pause —
+                // it must never fall through to a focused button (a
+                // focused transport button would run its own action
+                // instead). PreviewKeyDown catches it before the
+                // button sees it. After the read finishes, Space is
+                // left alone — the share buttons work normally.
+                if (_viewModel.IsFinished)
+                    break;
                 _viewModel.SetPlaying(!_viewModel.IsPlaying);
                 e.Handled = true;
                 break;

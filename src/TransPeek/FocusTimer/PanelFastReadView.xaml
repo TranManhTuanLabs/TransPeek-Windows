@@ -10,7 +10,7 @@
          "reading" with its "a" in yellow between two half-bars (the
          pivot preview, like mac's FocusDemoView), a "Read in panel"
          button, and the "Run FastRead in:" radios (FastRead Lite /
-         New FastRead Window, default Window — applies to every Fast
+         FastRead Full Window, default Window — applies to every Fast
          Read entry: panel button, float icon, tray, shortcut). The
          "Read in panel" button ALWAYS reads in the panel, whatever
          the radios say. When a reminder read finishes, the reader
@@ -43,7 +43,7 @@
                 <TextBlock Text="Run FastRead in:" FontSize="13" FontWeight="SemiBold" HorizontalAlignment="Left" />
                 <RadioButton x:Name="RunInPanelRadio" Content="FastRead Lite" GroupName="RunFastReadIn"
                              HorizontalAlignment="Left" Checked="OnRunLocationChecked" />
-                <RadioButton x:Name="RunInWindowRadio" Content="New FastRead Window (recommended)" GroupName="RunFastReadIn"
+                <RadioButton x:Name="RunInWindowRadio" Content="FastRead Full Window (recommended)" GroupName="RunFastReadIn"
                              HorizontalAlignment="Left" Checked="OnRunLocationChecked" />
                 <TextBlock Text="Applies to the Fast Read button, the float icon, and the keyboard shortcut."
                            FontSize="12" Foreground="Gray" HorizontalAlignment="Left" TextWrapping="Wrap" TextAlignment="Left" />
@@ -66,7 +66,8 @@
                            HorizontalAlignment="Center" />
                 <TextBlock Text="Back to Fast Read Lite when the timer ends." FontSize="12" Foreground="Gray"
                            HorizontalAlignment="Center" />
-                <Button Content="Done" Click="OnCountdownDoneClicked" HorizontalAlignment="Center" Margin="0,8,0,0" />
+                <Button Content="Done" Click="OnCountdownDoneClicked" HorizontalAlignment="Center" Margin="0,8,0,0"
+                        BorderBrush="#0078D4" BorderThickness="1" />
             </StackPanel>
         </Grid>
     </Grid>

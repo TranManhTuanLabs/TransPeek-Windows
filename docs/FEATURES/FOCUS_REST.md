@@ -42,7 +42,7 @@ collapse/expand; collapsed state in `FocusTimerCollapsed`).
   rest your eyes for 20 s — look at something 20 feet away." + Start /
   Stop eye reminders. **Default OFF** (Manh 2026-11-20 07:25 — no
   reminder until the user turns it on).
-- **"Run reminder in:"** picker — "New FastRead Window" (default) /
+- **"Run reminder in:"** picker — "FastRead Full Window" (default) /
   "FastRead Lite". Applies ONLY to focus / rest-eyes reminders, not to
   Fast Read itself.
 
@@ -63,12 +63,13 @@ FastRead Window" / "FastRead Lite" (đổi tên 2026-11-20 18:09, KHÔNG thêm
 
 - A reminder that fires while reading **waits**: `PendingReminder` +
   orange dot + banner. The banner (on all 3 tabs, above the tab
-  content) shows the notification title + "Your reading stays as it
-  is." + **"Take a break"** (show the waiting reminder now) +
+  content — its top edge sits right under the hint, Manh 2026-11-21)
+  shows the notification title + "Your reading stays as it is." +
+  **"Take a break"** (show the waiting reminder now) +
   **"Snooze 5 min"** (fire again in 5 minutes — the reminder keeps
-  waiting meanwhile). Banner background: orange at **0.25 opacity**
-  (mac uses 0.12 — on Windows 0.12 was too see-through over the
-  reading text behind it, Manh 2026-11-20).
+  waiting meanwhile). Banner background: solid orange, **no opacity**
+  (Manh 2026-11-21 — the 0.25 wash let the reading text show through);
+  text and bell are white on it.
 - The user stops reading (closes the Fast Read window / ends the panel
   read / hides the panel) → the waiting reminder **shows itself** per
   the "Run reminder in" setting.
@@ -79,7 +80,7 @@ FastRead Window" / "FastRead Lite" (đổi tên 2026-11-20 18:09, KHÔNG thêm
 
 ## Where a reminder shows
 
-- **New FastRead Window (default):** a separate `RestWindow` (560×400,
+- **FastRead Full Window (default):** a separate `RestWindow` (560×400,
   fixed size, title "TransPeek — Rest") that reads the reminder text
   with the lite reader, then counts the break down (coffee cup EC32 +
   title + mm:ss 56pt bold + "The window closes when the timer ends." +

@@ -49,7 +49,12 @@ public sealed partial class RestWindow : Window
             CountdownText.Text = FocusTimerEngine.Mmss(_countdownSeconds);
         };
         if (Content is FrameworkElement contentRoot)
-            contentRoot.KeyDown += OnKeyDown;
+            // PreviewKeyDown (tunnel), NOT KeyDown (bubble): Space must
+            // be caught before a focused button sees it — KeyDown
+            // reaches the parent only after the button already handled
+            // Space (the repo link got activated this way in the panel
+            // lite reader).
+            contentRoot.PreviewKeyDown += OnKeyDown;
         Closed += (_, _) =>
         {
             _countdownTimer.Stop();

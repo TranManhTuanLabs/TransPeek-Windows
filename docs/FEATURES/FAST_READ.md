@@ -193,7 +193,7 @@ status and reading-time text.
 `FastReadRunLocation`, "NewWindow" default / "RightPanel"): where Fast
 Read opens from EVERY entry point (panel button, float icon, tray,
 shortcut). Labels (Manh 2026-11-20, mac parity): **"FastRead Lite"**
-(panel right) / **"New FastRead Window (recommended)"** (window).
+(panel right) / **"FastRead Full Window (recommended)"** (window).
 The demo's **"Read in panel" button always reads in the panel**,
 whatever the radios say. Panel-right reading: the panel stays open,
 switches to the Fast Read tab, starts the read and pins itself; the
@@ -238,10 +238,12 @@ beyond this batch.
 
 ## Context styles — Style 1 / Style 2 (2026-11-20)
 
-The Window Read's Settings popover offers two **context styles** for
+The Window Read's Settings popover offered two **context styles** for
 the focus + around-text display and interaction only — the other
 controls stay the same. Setting `RsvpContextStyle` ("Style1" default /
-"Style2").
+"Style2"). **The picker was removed from the popover 2026-11-21
+(Manh — it duplicated "Reading Style"); the setting stays at its
+default ("Style1") and the code still reads it, only the UI is gone.**
 
 - **Style 1 (default) — FastRead Lite:** the book page: the
   before-words above the focus line, the after-words below it, the
@@ -259,6 +261,117 @@ pivot (#F6861F), the tick bars, the context font (focus × "Context
 size"), Light/Dark. The lite reader IS Style 1 (it has no style
 picker). The style is a theme preference — Reset does NOT reset it
 (same as the color scheme).
+
+## Reading styles — RSVP Focus / Basic Reading + speaker (2026-11-21, feature/fastread-speaker-style2)
+
+**Two reading styles, not one** (mac parity: `ReadingStyle`, display
+names — never "Style 1" / "Style 2"). Picked in the Settings popover
+of BOTH the reader window and the lite reader; any style works with
+any color scheme. Setting `RsvpReadingStyle` ("RsvpFocus" default /
+"BasicReading"). A mode preference like the color scheme — Reset does
+NOT reset it. **Not the same as `RsvpContextStyle`** ("Style1" /
+"Style2" for the around-text display) — different keys, different
+values, so the two can never be mixed up.
+
+- **RSVP Focus (default):** the layout above — one chunk centred at
+  the ORP pivot, context around it, progress in slides.
+- **Basic Reading:** a scrollable page (`Style2ReadingView`, shared by
+  the window and the lite reader — window padding 32, lite 12) with
+  the whole text at once; Play advances a focus line one line at a
+  time. Lines are paragraphs split into ≤12 words each
+  (`RsvpEngine.BuildLines` — a logical split, not the visual wrap;
+  matching visual lines is a later refinement). Body size = focus
+  size × 0.4; the page scrolls the focus line to the middle. Progress
+  counts lines ("Line 3 / 42"). The pause context does NOT show in
+  this style — the page IS the context. The chunk picker has no
+  effect here (lines are the unit); WPM still paces the lines.
+  **Click-drag on the page changes the font size** (Manh 2026-11-21,
+  both surfaces — the control is shared; replaced the wheel zoom of
+  commit `50bd04d0`): press on the text, drag up to grow, drag down
+  to shrink — 1pt per 2px, whole points, clamped 40–450 on the
+  focus size (16–180pt body). Mouse only, so touch drag still
+  scrolls the page; the wheel scrolls again too. The size applies
+  live and is saved once on release (same pattern as the window's
+  context resize drag); the current line stays centered while
+  dragging. Switching style mid-read keeps the position as a
+  fraction of the text.
+
+**Speaker button (both surfaces, transport order: Restart, Speaker,
+Play, Rewind, Forward, Maximize — lite adds Close first; the
+Maximize glyph is ArrowExpand E9E3, a diagonal double arrow — the
+square E922 read as a stop button, Manh 2026-11-21):** the
+speaker is a mute/unmute toggle for the read, NOT a separate "speak
+the whole text" action. Sound is OFF by default and NOT persisted —
+a new read starts silent, like today. Sound on: Play/Space speaks
+one phrase at a time and the speech itself paces the read —
+continuous reading (phương án 1, Manh 2026-11-21): the text is split
+into sentence/clause phrases (`RsvpEngine.BuildPhrases`, cap 20
+words) and each phrase is one utterance, so the voice never stutters
+between words; the focus follows the voice phrase by phrase (the
+slide/line containing the phrase's first word). Sound off: the WPM
+timer paces, exactly like today. The timer path is untouched by the
+sound path. Pausing, restarting, or switching style stops the
+speech; a failed speak (no voice installed) falls back to the timer
+for that unit, so the read never stalls. Language is the vi/en
+heuristic (same as the float icon's speak). The Rest window has NO
+speaker button (it never wires a TTS service — mac parity: no
+coordinator, no button).
+
+**Voice panel (hover the speaker):** an in-tree overlay above the
+transport — NOT a Flyout/Popup, so clicking the speaker toggles the
+sound at once instead of dismissing a popup first (that was mac
+CI314 bug 2; the other mac bug was the speaker reading the whole
+text on its own thread — both avoided here by design). It stays open
+while the mouse is on the button or on the panel, or while a voice
+picker dropdown is open (the dropdown is a Popup — hover alone
+would hide the panel mid-pick, Manh 2026-11-21); it hides 300 ms
+after leaving all three. In the reader window it lives on the root
+grid (rows 1–5), NOT inside the bottom-bar grid — inside the
+Auto-sized bar it inflated the bar's height and shoved the buttons
+around (Manh 2026-11-21). In lite it also hides when playback starts
+(the transport hides then). Contents: English voice + Vietnamese voice
+pickers (same keys as Settings → TTS: `EnglishVoiceId` /
+`VietnameseVoiceId`) and a **Speed slider 0.6x–4x** (mac parity) —
+the REAL voice-speed multiplier, shared with Settings → TTS
+(`SpeechRate`, whose clamp widened 0.5–2.0 → 0.5–4.0 and whose
+combo gained 2.5x/3x/4x so a panel speed shows correctly there).
+Speed takes effect from the next phrase; WPM is untouched (it
+only paces silent reading). Glyphs (Microsoft Learn, Segoe Fluent
+Icons): sound on **E767 Volume**, sound off **E74F Mute**.
+
+**"Highlight current line"** (toggle in the same Settings popover,
+setting `RsvpHighlightCurrentLine`, default OFF): a soft accent
+background on the current line in Basic Reading. While TTS is
+reading, the highlight turns itself on (computed, not stored), so
+the spoken line stays visible. Not reset by Reset (mode preference).
+
+**Continuous reading + Pro gate (2026-11-21, phương án 1):** Windows
+has no per-word callback (unlike mac's `willSpeakRangeOfSpeechString`),
+so the focus follows the voice phrase by phrase, not word by word —
+`ProGate.WordSyncEnabled` (in `RsvpReaderViewModel.cs`, default `true`,
+free for now) gates it at the pacing routing: gate off means the
+silent WPM timer even with the speaker on. A phrase ends at a natural
+pause — sentence end (. ? !), clause punctuation (, ; :), paragraph
+end, or a 20-word cap. Pause resumes from the phrase containing the
+current word; seek / style / WPM changes re-sync the phrase from the
+new position. Future demo idea (NOT built yet, comment only): when
+gated, the speaker plays a short demo — a different voice reading
+different text, with a "Pro feature" note.
+
+**Space during a read (2026-11-21):** Space is always Play/Pause
+while a read is active — the hosts intercept it at `PreviewKeyDown`
+(tunnel), so it never falls through to a focused button (the repo
+link at the panel bottom got activated that way). After the read
+finishes, Space is left alone — the share / Done buttons work
+normally. The "Context style" picker was removed from the reader
+window's Settings popover the same round (Manh 2026-11-21 — it
+duplicated "Reading Style"); the `RsvpContextStyle` setting stays at
+its default ("Style1"), only the UI is gone.
+
+**Deferred (like mac):** true word-by-word sync (highlight each word
+as it is spoken — needs a per-word callback Windows TTS does not
+expose), Style 2 lines matching the visual wrap, selecting text in
+the Style 2 page to look it up.
 
 ## Completion — congratulations + share (2026-11-20, mac §14.5)
 
@@ -313,6 +426,11 @@ text. Nothing to read shows a toast.
   live from the reader window's controls (saved immediately, like the
   other sliders); changing WPM/chunk rebuilds the document keeping the
   current word.
+- `RsvpReadingStyle` ("RsvpFocus" default / "BasicReading") +
+  `RsvpHighlightCurrentLine` (false) — the reading style picker and
+  the line-highlight toggle in the Settings popover of both the reader
+  window and the lite reader; see "Reading styles" above. Not reset
+  by Reset to default (mode preferences, like the color scheme).
 - `RsvpWindowWidth` / `RsvpWindowHeight` — remembered window size (0 = auto).
 - `FastReadRunLocation` ("NewWindow" default / "RightPanel"): where Fast
   Read opens from every entry point — the Fast Read window, or the
@@ -333,6 +451,9 @@ text. Nothing to read shows a toast.
 - The reader window is not topmost and has no OS minimum-size
   enforcement (the initial size is clamped; a manual drag can shrink it
   below 880×550).
+- Basic Reading: no TTS word-sync yet, lines are a logical ≤12-word
+  split (not the visual wrap), and the page text is not selectable
+  for lookup yet (see "Reading styles" above).
 
 ## Links
 
