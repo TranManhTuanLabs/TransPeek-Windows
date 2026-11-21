@@ -3,9 +3,11 @@
 > Purpose: the source of truth for the language numbers and OCR behaviour,
 > so the README (and later a store listing) can quote them without
 > re-checking code. Marketing-ready lines are in §4.
-> Last verified: 2026-11-19 (v0.1.4). Code: `LanguageCode.cs`,
+> Last verified: 2026-11-21 (v0.1.4). Code: `LanguageCode.cs`,
 > `TesseractLanguageCatalog.cs`, `TesseractLanguageDataManager.cs`,
-> `GoogleTranslateProvider.cs`.
+> `GoogleTranslateProvider.cs`, `OcrFlowService.cs`,
+> `OcrProviderRegistry.cs`, `WindowsOcrProvider.cs`,
+> `TesseractOcrProvider.cs`, `OcrPage.xaml(.cs)`.
 
 ## 1. Translation languages — Google Translate: 249 (+ `pt` alias)
 
@@ -68,6 +70,59 @@
   30s timeout → copy the translation; on error/timeout it opens the
   panel instead), Translate Clipboard. Captured images are saved to
   `%LOCALAPPDATA%\TransPeek\ocr-capture.png`.
+
+### How OCR runs — provider selection + fallback chain
+
+(Verified 2026-11-21 from the code — `OcrFlowService.cs`,
+`OcrProviderRegistry.cs`, `WindowsOcrProvider.cs`,
+`TesseractOcrProvider.cs`.)
+
+- **Default provider is Tesseract** (`AppSettings.OcrProviderId`
+  defaults to `Tesseract`; default languages `vi-VN`, `en-US`).
+  The user can switch provider in Settings → OCR
+  ("Tesseract (best for Vietnamese)" vs Windows OCR).
+- **Missing language data → auto-download first.** When Tesseract is
+  selected and data for a configured OCR language is missing, the app
+  downloads it automatically before recognizing
+  (`OcrFlowService.EnsureTesseractDataAsync`, toast "Downloading OCR
+  data for the first time (…)…"). A failed download is NOT fatal: the
+  flow falls back to Windows OCR and toasts why.
+- **Provider resolution** (`OcrProviderRegistry.Resolve`): Tesseract
+  runs only when explicitly selected AND at least one language data
+  file is installed (`TesseractOcrProvider.IsEngineAvailable` =
+  `AvailableCodes().Count > 0`); anything else (unknown id, no data)
+  → Windows OCR.
+- **Failure fallback:** Tesseract throws (engine or language data) →
+  one automatic fallback to Windows OCR on the same image; if Windows
+  OCR also fails, the error stands (no further fallback).
+- **Windows OCR mechanism** (`WindowsOcrProvider`,
+  `Windows.Media.Ocr.OcrEngine`): built into Windows 10/11 — no
+  download, no key, offline. It tries each configured language in
+  order (`IsLanguageSupported` → `TryCreateFromLanguage`); if none
+  works, it falls back to the user's Windows profile languages.
+  Language support = the `Language.OCR~~~<lang>~0.0.1.0` optional
+  features installed on the machine; English is present by default,
+  Vietnamese needs the "Vietnamese OCR" optional feature (Settings →
+  Time & language → Language → Vietnamese → Options). That is exactly
+  why Tesseract is the default for Vietnamese: it brings its own
+  language data and does not depend on optional features.
+
+### PowerToys Text Extractor — same engine, no separate install
+
+- PowerToys Text Extractor (Win+Shift+T) uses the **same**
+  `Windows.Media.Ocr` API TransPeek calls directly (Microsoft Learn,
+  Text Extractor doc: it "can only recognize languages that have the
+  OCR language pack installed"; the underlying Text Grab code uses
+  `Windows.Media.Ocr`). Snipping Tool "Text actions" uses the same
+  engine too.
+- Installing PowerToys adds NO new OCR engine and NO OCR languages —
+  the packs are still Windows' `Language.OCR` optional features.
+  **Decision (Manh 2026-11-21, after review): NO PowerToys Store
+  button in Settings** — it would mislead users into thinking
+  PowerToys is required for OCR. What users actually need for
+  Windows OCR languages is the existing button in Settings → OCR
+  ("Windows OCR languages" section, opens
+  `ms-settings:regionlanguage`) plus the guidance note there.
 
 ## 3. Numbers at a glance
 
