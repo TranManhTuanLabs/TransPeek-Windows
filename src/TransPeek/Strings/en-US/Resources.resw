@@ -60,6 +60,9 @@
   <data name="Tray.Section.Barcodes" xml:space="preserve">
     <value>Barcodes / QR Codes</value>
   </data>
+  <data name="Tray.Section.Reading" xml:space="preserve">
+    <value>Reading</value>
+  </data>
   <data name="Tray.ToolTip" xml:space="preserve">
     <value>TransPeek — Translate anywhere, peek instantly. Left-click: Settings. Right-click: menu.</value>
   </data>
@@ -369,6 +372,9 @@
   <data name="Settings.Ocr.LanguageData.Text" xml:space="preserve">
     <value>Tesseract language data</value>
   </data>
+  <data name="Settings.Ocr.LanguageGuide.Text" xml:space="preserve">
+    <value>Which languages do you usually use OCR for? Tick them below and download — OCR can only recognize a language after its data is downloaded.</value>
+  </data>
   <data name="Settings.Ocr.FindLanguage.Header" xml:space="preserve">
     <value>Find a language</value>
   </data>
@@ -403,7 +409,7 @@
     <value>{0} failed: {1}</value>
   </data>
   <data name="Settings.Ocr.SuggestLanguages" xml:space="preserve">
-    <value>To OCR with them, add to OCR languages above: {0}.</value>
+    <value>Added to OCR languages: {0}.</value>
   </data>
   <data name="Settings.Ocr.DataNote.Text" xml:space="preserve">
     <value>Data downloads from tessdata_best (GitHub) into %LOCALAPPDATA%\TransPeek\tessdata.</value>

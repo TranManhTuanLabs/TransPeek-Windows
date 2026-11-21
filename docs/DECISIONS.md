@@ -2684,6 +2684,18 @@ Manh test bản 0.1.4.191: Google 249 ngôn ngữ ngon. 4 việc còn lại làm
 - **Settings:** toggle mới "Show icon when hovering over text" (key `HoverBlockText`, mặc định BẬT) trong Settings → General, ngay dưới "Watch selection"; nhãn sửa cả XAML lẫn `.resw` (resw thắng lúc chạy). Service rebuild trong `App.OnSettingsSaved` như selection monitor (chỉ để toggle có hiệu lực; dwell cố định nên đổi HoverDelayMs không rebuild nữa).
 - **Giới hạn khác:** app chạy quyền admin (UIPI) thì TransPeek chạy quyền thường không đọc được UIA — hover không hiện icon; spike đo CPU + độ trễ UIA + độ chính xác nhận diện block KHÔNG làm được trên VM Linux, đã ghi thành mục test trong `docs/FEATURES/BLOCK_TEXT_HOVER.md` để Manh đo trên máy thật.
 
+## Tray menu: mục "Reading" riêng cho Fast Read + Focus & Rest (2026-11-21, Manh 16:39, main)
+
+- **Vấn đề:** Fast Read + Focus & Rest nằm giữa list shortcut/capture (dưới header "Text Capture from Screen"), không có nhóm riêng — user khó thấy đây là nhóm đọc/tập trung.
+- **Sửa:** mục "Reading" riêng (cùng mẫu `SectionItem` như "Text Capture from Screen" / "Barcodes / QR Codes"), đặt ngay sau header app, trước "Text Capture from Screen"; chứa đúng 2 mục: Fast Read (E736) + Focus & Rest (E917). Hai mục dời khỏi vị trí cũ (sau "Translate Selection"); thứ tự còn lại của menu không đổi. Nhãn section trong `.resw` (`Tray.Section.Reading`).
+
+## OCR: ngôn ngữ tải xong tự thêm vào OCR languages + số ngôn ngữ lên README (2026-11-21, Manh 16:45 + 16:48, main)
+
+- **Tải xong tự thêm (Manh 16:45 "Làm đi"):** trước đây tick ngôn ngữ trong list "All Tesseract languages" chỉ để TẢI dữ liệu; ngôn ngữ nhận diện vẫn phải gõ tay mã BCP 47 vào ô "OCR languages" (dễ gõ sai, vd "vie" thay vì "vi-VN") — tải xong app chỉ gợi ý bằng chữ. Nay tải xong app tự thêm mã BCP 47 còn thiếu vào setting `OcrLanguages` + cập nhật luôn ô textbox + `Save()`; dòng trạng thái đổi từ gợi ý thành "Added to OCR languages: …" (dùng lại key `Settings.Ocr.SuggestLanguages` với câu mới). Chỉ áp cho ngôn ngữ vừa tải xong trong lần đó.
+- **Dòng hướng dẫn OCR (nợ từ 08:35, câu Manh chốt 08:40):** làm cùng đợt này — thêm dòng "Which languages do you usually use OCR for? Tick them below and download — OCR can only recognize a language after its data is downloaded." ngay dưới header "Tesseract language data" (`OcrPage.xaml`, key `Settings.Ocr.LanguageGuide.Text`).
+- **Pin nghiêng 30° trái (nợ từ 09:59):** làm cùng đợt này — `PinButton` FontIcon thêm `RotateTransform Angle="-30"` (`RenderTransformOrigin="0.5,0.5"`). Mac parity: mac pin -45° → -30° (commit `79869410`).
+- **Số ngôn ngữ lên README (Manh 16:48):** spec OCR đã có đủ trong `docs/FEATURES/OCR_AND_LANGUAGES.md` §2–§3 (Tesseract 123 ngôn ngữ, bundle eng+vie, 121 tải thêm, Windows OCR theo gói của máy; §4 đã soạn sẵn câu README-ready EN/VI từ trước nhưng ghi "draft — not yet in README"). Nay đưa số vào `README.md`: "Flexible translation in 249 languages" + "Tesseract — 123 languages … Extra languages (121 more) download on demand". §4 của spec doc đổi từ draft thành đã vào README. Bản dịch README vi/zh-CN KHÔNG cập nhật theo (quy tắc chung: chỉ khi Manh yêu cầu).
+
 ## Liên kết
 
 - [Bối cảnh AI](AI_CONTEXT.md)

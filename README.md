@@ -22,7 +22,7 @@ edition, rewritten from scratch. The macOS edition (Swift) lives at
   nearby. Hover (~300 ms) or click it to open the float panel.
   Manual fallback: `Ctrl+Alt+T` copies the selection via the clipboard
   (Ctrl+C) and translates it — your clipboard is restored afterwards.
-- **Flexible translation**: `ITranslationProvider` + Google Translate
+- **Flexible translation in 249 languages**: `ITranslationProvider` + Google Translate
   (free, no key) as the default, plus any custom OpenAI-compatible
   endpoint (OpenAI, DeepSeek, local Ollama/LM Studio…) with your own
   key. Settings pick a primary + fallback provider and enable/disable
@@ -38,12 +38,12 @@ edition, rewritten from scratch. The macOS edition (Swift) lives at
   OCR → translate → panel, with separate **[Copy gốc]** / **[Copy
   dịch]** buttons and auto-copy of the translation (default on), or
   **copy-only mode** (OCR → copy source text, toast "Đã copy").
-  Engines: **Tesseract (default for Vietnamese)** — language data
+  Engines: **Tesseract (default for Vietnamese)** — **123 languages** — language data
   (`vie`/`eng`) ships with the app (CI seeds it from tessdata_best
   into a `tessdata` folder next to the exe; the app copies it to
   `%LOCALAPPDATA%\TransPeek\tessdata` on first use, no download) —
   and built-in **Windows OCR** as the fallback. Extra languages
-  download on demand into `%LOCALAPPDATA%\TransPeek\tessdata`.
+  (121 more) download on demand into `%LOCALAPPDATA%\TransPeek\tessdata`.
   Capture uses Windows.Graphics.Capture with a GDI BitBlt fallback.
 - **Settings + tray icon**: Settings window (General / Translation /
   Dictionary / OCR / About), tray icon with menu (Settings, Translate

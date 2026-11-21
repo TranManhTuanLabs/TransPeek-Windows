@@ -29,6 +29,7 @@
                  edits the same OcrHotkey setting — this second box
                  here was a duplicate. -->
             <TextBlock x:Uid="Settings.Ocr.LanguageData" Text="Tesseract language data" FontWeight="SemiBold" Margin="0,8,0,0" />
+            <TextBlock x:Uid="Settings.Ocr.LanguageGuide" Text="Which languages do you usually use OCR for? Tick them below and download — OCR can only recognize a language after its data is downloaded." FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
             <TextBlock x:Name="TesseractStatusText" FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
             <TextBlock x:Name="InstalledCodesText" FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
             <!-- Download more languages (Manh 2026-11-15): tick the

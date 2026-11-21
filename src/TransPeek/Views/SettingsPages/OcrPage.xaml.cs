@@ -250,16 +250,23 @@ public sealed partial class OcrPage : Page
                 parts.Add(AppStrings.Get("Settings.Ocr.DownloadFailedOne", "{0} failed: {1}", code, error));
             if (result.Downloaded.Count > 0)
             {
-                // Suggest the new languages for the OCR Languages
-                // setting (BCP 47) so the user can actually OCR with
-                // them — a suggestion only, the setting is not changed.
+                // Auto-add the new languages to the OCR Languages
+                // setting (BCP 47, Manh 2026-11-21) so the user can
+                // OCR with them right away — no hand-typing codes
+                // (easy to mistype, e.g. "vie" instead of "vi-VN").
+                // The setting and the textbox above update together.
                 var missing = result.Downloaded
                     .Select(TesseractLanguageDataManager.Bcp47ForTessCode)
                     .Where(b => !App.Settings.OcrLanguages.Contains(b, StringComparer.OrdinalIgnoreCase))
                     .ToList();
                 if (missing.Count > 0)
+                {
+                    App.Settings.OcrLanguages = App.Settings.OcrLanguages.Concat(missing).ToList();
+                    OcrLanguagesBox.Text = string.Join(", ", App.Settings.OcrLanguages);
+                    Save();
                     parts.Add(AppStrings.Get("Settings.Ocr.SuggestLanguages",
-                        "To OCR with them, add to OCR languages above: {0}.", string.Join(", ", missing)));
+                        "Added to OCR languages: {0}.", string.Join(", ", missing)));
+                }
             }
             DownloadStatusText.Text = string.Join(" ", parts);
             _checkedCodes.Clear();

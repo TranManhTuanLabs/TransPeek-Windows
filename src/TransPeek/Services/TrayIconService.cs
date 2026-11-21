@@ -76,6 +76,16 @@ public sealed class TrayIconService : IDisposable
         // menubar; disabled so it reads as a title, not an action.
         menu.Items.Add(HeaderItem(TrayHeaderText()));
         menu.Items.Add(new MenuFlyoutSeparator());
+        // Reading (Manh 2026-11-21): Fast Read + Focus & Rest in their
+        // own section now — they were buried in the capture/shortcut
+        // list. Same SectionItem pattern as "Text Capture from Screen"
+        // below. Glyphs: E736 ReadingMode (Fast Read, verified on
+        // Microsoft Learn 2026-11-17), E917 Clock (Focus & Rest —
+        // there is no "Timer" glyph in Segoe Fluent Icons).
+        menu.Items.Add(SectionItem(AppStrings.Get("Tray.Section.Reading", "Reading")));
+        menu.Items.Add(Item("Tray.Menu.FastRead", "Fast Read", "\uE736", fastRead));
+        menu.Items.Add(Item("Tray.Menu.FocusRest", "Focus & Rest", "\uE917", focusRest));
+        menu.Items.Add(new MenuFlyoutSeparator());
         menu.Items.Add(SectionItem(AppStrings.Get("Tray.Section.Capture", "Text Capture from Screen")));
         menu.Items.Add(Item("Tray.Menu.ManualTranslation", "Manual Translation", "\uE765", manualTranslation));
         _screenshotOcrItem = Item("Tray.Menu.ScreenshotOcr", "OCR Screen Translate", "\uE8FE", screenshotOcr);
@@ -88,18 +98,6 @@ public sealed class TrayIconService : IDisposable
         _clipboardOcrTranslatedItem = Item("Tray.Menu.ClipboardOcrTranslated", "OCR to Clipboard - Translated", "\uE774", clipboardOcrTranslated);
         menu.Items.Add(_clipboardOcrTranslatedItem);
         menu.Items.Add(Item("Tray.Menu.SelectionTranslation", "Translate Selection", "\uE70F", selectionTranslation));
-        // Fast Read (RSVP, feature/fast-read-rsvp): speed-read the
-        // current selection in its own window. Sits right under
-        // Translate Selection (same "selection" group). Glyph E736
-        // ReadingMode (Segoe Fluent Icons, verified on Microsoft Learn
-        // 2026-11-17).
-        menu.Items.Add(Item("Tray.Menu.FastRead", "Fast Read", "\uE736", fastRead));
-        // Focus & Rest (Manh 2026-11-21): jump straight to the left
-        // panel tab, where the Focus & Rest card lives. Sits right
-        // under Fast Read (same "reading / focus" group; mac menubar
-        // parity — the mac item sits after "Reading"). Glyph E917
-        // Clock (Segoe Fluent Icons — there is no "Timer" glyph).
-        menu.Items.Add(Item("Tray.Menu.FocusRest", "Focus & Rest", "\uE917", focusRest));
         _clipboardTranslationItem = Item("Tray.Menu.ClipboardTranslation", "Translate Clipboard", "\uE77F", clipboardTranslation);
         menu.Items.Add(_clipboardTranslationItem);
         menu.Items.Add(Item("Tray.Menu.ScreenshotCopy", "Screenshot Copy", "\uE722", screenshotCopy));
