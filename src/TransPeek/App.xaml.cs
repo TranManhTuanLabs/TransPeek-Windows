@@ -13,6 +13,7 @@
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using System.Diagnostics;
+using TransPeek.BlockText;
 using TransPeek.Core.Barcode;
 using TransPeek.Core.Dictionary;
 using TransPeek.Core.Ocr;
@@ -37,6 +38,14 @@ public sealed partial class App : Application
     private DispatcherQueue _uiQueue = null!;
     private TrayIconService? _tray;
     private SelectionMonitor? _selectionMonitor;
+    /// <summary>Hover-to-show for blocks of text
+    /// (feature/block-text-detection): the mouse resting on a block
+    /// shows the trigger icon without a manual selection. Same
+    /// lifecycle as the selection monitor — rebuilt when settings are
+    /// saved (the on/off toggle applies). The dwell is the research
+    /// default (150 ms, BlockTextHoverState.DefaultDwellMilliseconds),
+    /// NOT Settings.HoverDelayMs — see that const's comment.</summary>
+    private BlockTextHoverService? _blockTextHoverService;
     private GlobalHotkeyService? _hotkeys;
     private TriggerIconWindow? _triggerIcon;
     private TranslatePanelWindow? _panel;
@@ -61,6 +70,12 @@ public sealed partial class App : Application
     private string _lastSelection = "";
     private DateTimeOffset _lastSelectionAt = DateTimeOffset.MinValue;
     private (int X, int Y) _lastPoint;
+    /// <summary>True when _lastSelection came from a hovered block
+    /// rather than a manual selection. Hovered text never goes stale
+    /// the way a selection does (the block is still under the cursor),
+    /// so the clipboard re-grab in the Speak / Fast Read / translate
+    /// paths is skipped for it (see IsLastTextStale).</summary>
+    private bool _lastTextIsHover;
 
     public App()
     {
@@ -162,6 +177,13 @@ public sealed partial class App : Application
         if (Settings.WatchSelection)
             _selectionMonitor.Start();
 
+        // Hover-to-show (feature/block-text-detection): the dwell is
+        // the research default (150 ms) — no argument passed, the
+        // service uses BlockTextHoverState.DefaultDwellMilliseconds.
+        _blockTextHoverService = new BlockTextHoverService(OnBlockTextHovered);
+        if (Settings.HoverBlockText)
+            _blockTextHoverService.Start();
+
         StartHotkeys();
 
         // v0.1.1 — the app is tray-only, and v0.1 showed nothing at all
@@ -220,6 +242,11 @@ public sealed partial class App : Application
         _lastSelection = text;
         _lastSelectionAt = DateTimeOffset.UtcNow;
         _lastPoint = point;
+        // A manual selection is the freshest source: it wins over any
+        // hovered block (the hover service already refuses to probe
+        // while a selection is active; this flag keeps the priority
+        // straight for the staleness re-grab below).
+        _lastTextIsHover = false;
         // The monitor runs on a background thread: marshal to the UI queue
         // (DispatcherQueue.GetForCurrentThread() here would return the
         // WRONG queue — it must be the one captured in OnLaunched).
@@ -238,6 +265,41 @@ public sealed partial class App : Application
             _triggerIcon?.ShowAt(point.X, point.Y);
         });
     }
+
+    /// <summary>Hovered block → trigger icon
+    /// (feature/block-text-detection): the mouse rested on a block of
+    /// text, so the block's text becomes the icon's text — exactly like
+    /// a selection (same _lastSelection / _lastPoint, same ShowAt), so
+    /// hover = translate, click = Speak/Fast Read and Alt+click = the
+    /// other action all work on the block. The hover service only fires
+    /// when no selection is active, so this never overwrites a manual
+    /// selection; the flag marks the text as hovered so the Speak /
+    /// Fast Read / translate paths skip their clipboard re-grab for it
+    /// (see IsLastTextStale).</summary>
+    private void OnBlockTextHovered(string text, (int X, int Y) point)
+    {
+        _lastSelection = text;
+        _lastSelectionAt = DateTimeOffset.UtcNow;
+        _lastPoint = point;
+        _lastTextIsHover = true;
+        // Same UI-thread marshal + own-window guard as the selection
+        // path (the monitor runs on a background thread).
+        _uiQueue.TryEnqueue(() =>
+        {
+            if (IsPointInsideOwnWindow(point))
+                return;
+            _triggerIcon?.ShowAt(point.X, point.Y);
+        });
+    }
+
+    /// <summary>True when the current _lastSelection may be stale: older
+    /// than 10 s AND from a manual selection (a selection can change
+    /// under the app — the user may have selected something else, or
+    /// cleared it — so the Speak / Fast Read / translate paths re-grab
+    /// it via the clipboard). Hovered text never goes stale this way:
+    /// the block is still under the cursor while the icon shows it.</summary>
+    private bool IsLastTextStale()
+        => !_lastTextIsHover && DateTimeOffset.UtcNow - _lastSelectionAt > TimeSpan.FromSeconds(10);
 
     private bool IsPointInsideOwnWindow((int X, int Y) point)
     {
@@ -286,7 +348,7 @@ public sealed partial class App : Application
     {
         var text = _lastSelection;
         if (string.IsNullOrWhiteSpace(text)
-            || DateTimeOffset.UtcNow - _lastSelectionAt > TimeSpan.FromSeconds(10))
+            || IsLastTextStale())
         {
             text = await ClipboardHelper.TryGetSelectionViaClipboardAsync()
                 ?? _lastSelection;
@@ -303,9 +365,10 @@ public sealed partial class App : Application
     {
         var text = _lastSelection;
         // The selection may be stale; if it is older than 10 s, re-grab it
-        // via the clipboard fallback (Ctrl+C) instead.
+        // via the clipboard fallback (Ctrl+C) instead. Hovered text
+        // never re-grabs (IsLastTextStale): the block is still there.
         if (string.IsNullOrWhiteSpace(text)
-            || DateTimeOffset.UtcNow - _lastSelectionAt > TimeSpan.FromSeconds(10))
+            || IsLastTextStale())
         {
             text = await ClipboardHelper.TryGetSelectionViaClipboardAsync()
                 ?? _lastSelection;
@@ -346,7 +409,7 @@ public sealed partial class App : Application
     {
         var text = _lastSelection;
         if (string.IsNullOrWhiteSpace(text)
-            || DateTimeOffset.UtcNow - _lastSelectionAt > TimeSpan.FromSeconds(10))
+            || IsLastTextStale())
         {
             text = await ClipboardHelper.TryGetSelectionViaClipboardAsync()
                 ?? _lastSelection;
@@ -654,6 +717,14 @@ public sealed partial class App : Application
         _selectionMonitor = new SelectionMonitor(OnSelectionChanged);
         if (Settings.WatchSelection)
             _selectionMonitor.Start();
+        // Restart the block-text hover service if the user toggled
+        // HoverBlockText. (The dwell is fixed at the research default,
+        // so a changed HoverDelayMs does not rebuild it — only the
+        // on/off toggle does.)
+        _blockTextHoverService?.Dispose();
+        _blockTextHoverService = new BlockTextHoverService(OnBlockTextHovered);
+        if (Settings.HoverBlockText)
+            _blockTextHoverService.Start();
         _panel?.RefreshDictionaryBar(Settings.DictionaryLinks, Settings.DictionaryDisplayMode);
         _panel?.RefreshTopBarFontSize();
         _panel?.RefreshPopupFontSize();

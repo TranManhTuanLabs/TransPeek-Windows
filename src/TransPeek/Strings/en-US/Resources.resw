@@ -60,6 +60,9 @@
   <data name="Tray.Section.Barcodes" xml:space="preserve">
     <value>Barcodes / QR Codes</value>
   </data>
+  <data name="Tray.Section.Reading" xml:space="preserve">
+    <value>Reading</value>
+  </data>
   <data name="Tray.ToolTip" xml:space="preserve">
     <value>TransPeek — Translate anywhere, peek instantly. Left-click: Settings. Right-click: menu.</value>
   </data>
@@ -173,6 +176,18 @@
   </data>
   <data name="Settings.General.WatchSelectionHint.Text" xml:space="preserve">
     <value>When on, the trigger icon appears whenever you select text. When off, the app only responds to hotkeys and the tray menu.</value>
+  </data>
+  <data name="Settings.General.HoverBlockText.Header" xml:space="preserve">
+    <value>Show icon when hovering over text</value>
+  </data>
+  <data name="Settings.General.HoverBlockText.OnContent" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="Settings.General.HoverBlockText.OffContent" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="Settings.General.HoverBlockTextHint.Text" xml:space="preserve">
+    <value>When on, hovering over a block of text shows the trigger icon, without selecting anything first. Only text the app exposes to UI Automation is detected.</value>
   </data>
   <data name="Settings.General.HotkeyHint.Text" xml:space="preserve">
     <value>Click a hotkey box, then press the key combination — no typing needed. Esc cancels.</value>
@@ -357,6 +372,9 @@
   <data name="Settings.Ocr.LanguageData.Text" xml:space="preserve">
     <value>Tesseract language data</value>
   </data>
+  <data name="Settings.Ocr.LanguageGuide.Text" xml:space="preserve">
+    <value>Which languages do you usually use OCR for? Tick them below and download — OCR can only recognize a language after its data is downloaded.</value>
+  </data>
   <data name="Settings.Ocr.FindLanguage.Header" xml:space="preserve">
     <value>Find a language</value>
   </data>
@@ -391,7 +409,7 @@
     <value>{0} failed: {1}</value>
   </data>
   <data name="Settings.Ocr.SuggestLanguages" xml:space="preserve">
-    <value>To OCR with them, add to OCR languages above: {0}.</value>
+    <value>Added to OCR languages: {0}.</value>
   </data>
   <data name="Settings.Ocr.DataNote.Text" xml:space="preserve">
     <value>Data downloads from tessdata_best (GitHub) into %LOCALAPPDATA%\TransPeek\tessdata.</value>

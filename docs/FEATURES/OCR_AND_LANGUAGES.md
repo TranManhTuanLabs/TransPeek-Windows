@@ -58,6 +58,7 @@
   app (tick-list + search + size warning) into
   `%LOCALAPPDATA%\TransPeek\tessdata`. There is deliberately NO
   "Download all" button.
+- **Downloaded languages join OCR languages automatically (Manh 2026-11-21):** after a download succeeds, the app adds the new languages (BCP 47) to Settings → OCR → "OCR languages" by itself and updates the textbox, so the user can OCR with them right away without hand-typing codes (easy to mistype, e.g. "vie" instead of "vi-VN"). The status line confirms with "Added to OCR languages: …". Only the languages downloaded in that run are added.
 - **Windows OCR:** its language packs are an OS feature — the app can
   neither bundle nor silently download them. The app opens Windows
   Settings (`ms-settings:regionlanguage`) for the user to install packs
@@ -134,7 +135,7 @@
 | OCR languages bundled in the app | **2** (eng + vie) | Works offline out of the box |
 | OCR languages downloadable in-app | **121** | One by one, no "Download all" |
 
-## 4. README-ready lines (draft — not yet in README)
+## 4. README lines (in README.md since 2026-11-21 — was draft before)
 
 EN:
 - "Translate in 249 languages — Google Translate, free, no key needed.
