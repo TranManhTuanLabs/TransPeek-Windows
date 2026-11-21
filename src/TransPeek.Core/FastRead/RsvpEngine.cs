@@ -154,6 +154,57 @@ public static class RsvpEngine
         return lines;
     }
 
+    /// <summary>One continuous-reading phrase: a sentence or clause
+    /// spoken as a single utterance (continuous reading, phương án 1 —
+    /// Manh 2026-11-21). Windows.Media.SpeechSynthesis has no per-word
+    /// callback (unlike mac's willSpeakRangeOfSpeechString), so the
+    /// focus follows the voice phrase by phrase, not word by word — a
+    /// phrase ends at a natural pause (sentence end / clause
+    /// punctuation), so the gaps between utterances land where a
+    /// speaker would pause anyway. StartWordIndex is the phrase's first
+    /// word in the whole text (for mapping the phrase back to its
+    /// slide / line).</summary>
+    public sealed record RsvpPhrase(string Text, int StartWordIndex, int WordCount);
+
+    /// <summary>Split text into speakable phrases for continuous
+    /// reading: each paragraph is walked word by word; a phrase ends
+    /// after a word ending a sentence (. ? !), a clause (, ; :), or the
+    /// paragraph — and, as a safety cap, at MaxWordsPerPhrase words (a
+    /// comma-less monster sentence still splits, so the focus keeps
+    /// moving). The phrase text keeps the original words (punctuation
+    /// attached), so the voice pauses naturally at sentence ends inside
+    /// the utterance too. Pure logic — unit-tested.</summary>
+    public static IReadOnlyList<RsvpPhrase> BuildPhrases(string? text, int maxWordsPerPhrase = 20)
+    {
+        maxWordsPerPhrase = Math.Max(1, maxWordsPerPhrase);
+        var phrases = new List<RsvpPhrase>();
+        var index = 0;
+        foreach (var paragraph in SplitParagraphs(text))
+        {
+            var phrase = new List<string>();
+            var phraseStart = index;
+            foreach (var word in paragraph)
+            {
+                phrase.Add(word);
+                index++;
+                // A phrase ends at a natural pause — or at the cap, so
+                // a long sentence without punctuation still splits.
+                if (EndsSentence(word) || EndsPunctuation(word) || phrase.Count >= maxWordsPerPhrase)
+                {
+                    phrases.Add(new RsvpPhrase(string.Join(" ", phrase), phraseStart, phrase.Count));
+                    phrase = [];
+                    phraseStart = index;
+                }
+            }
+            // The paragraph's tail (no trailing punctuation) is a
+            // phrase too — a paragraph end is a pause, like a
+            // sentence end.
+            if (phrase.Count > 0)
+                phrases.Add(new RsvpPhrase(string.Join(" ", phrase), phraseStart, phrase.Count));
+        }
+        return phrases;
+    }
+
     /// <summary>ORP pivot: the middle character, floor(n/2). "hello" (5)
     /// -&gt; 2, "hi" (2) -&gt; 1, "a" (1) -&gt; 0. Empty word -&gt; -1.</summary>
     public static int PivotCharIndex(string word)

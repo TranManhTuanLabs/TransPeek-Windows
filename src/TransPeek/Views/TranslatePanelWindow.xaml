@@ -467,11 +467,12 @@
 
         <!-- Pending reminder banner (feature/focus-timer-decor, mac
              parity: PendingReminderBanner in PopupView, under the dots
-             row): overlays the top of the tab area on ALL three tabs —
-             a reminder never steals the reading in progress. The
-             banner collapses itself when there is no pending reminder,
-             so this overlay takes no space then. -->
-        <Grid Grid.Row="1" Grid.RowSpan="7" VerticalAlignment="Top">
+             row): overlays the tab area on ALL three tabs — a reminder
+             never steals the reading in progress. Its top edge sits
+             right under the hint (Row 2), not over the source box
+             (Manh 2026-11-21). The banner collapses itself when there
+             is no pending reminder, so this overlay takes no space then. -->
+        <Grid Grid.Row="3" Grid.RowSpan="5" VerticalAlignment="Top">
             <focus:PendingReminderBanner x:Name="ReminderBanner" />
         </Grid>
 

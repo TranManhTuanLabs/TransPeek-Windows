@@ -298,8 +298,9 @@ card "How the icon works" bị đặt nhầm vào panel center thay vì panel le
   điều kiện, không thì đường panel phải tự ẩn panel nó vừa mở). (2) Click
   icon A+: `TriggerIconWindow.FastReadRequested` → `OpenFastReadFromSelectionAsync`
   (lấy selection/clipboard) → `RouteFastRead`. Tray + shortcut cũng qua
-  `OpenFastReadFromSelectionAsync`. Nhãn UI mới (2026-11-20): "FastRead
-  Lite" / "New FastRead Window (recommended)". Xem `docs/FEATURES/FAST_READ.md`.
+  `OpenFastReadFromSelectionAsync`. Nhãn UI mới (2026-11-20, đổi tên
+  2026-11-21): "FastRead Lite" / "FastRead Full Window (recommended)".
+  Xem `docs/FEATURES/FAST_READ.md`.
 
 ## 11. Panel center + Panel left — thiết kế CHỐT (20/11/2026, nhánh `feature/focus-timer-decor`, CI #207)
 
@@ -330,7 +331,7 @@ card "How the icon works" bị đặt nhầm vào panel center thay vì panel le
 - Panel right là **lite reader** từ 2026-11-20
   (feature/focus-timer-decor): demo ("Fast Read Lite" + preview focus
   "reading" + nút "Read in panel" + radios "Run FastRead in" — nhãn
-  "FastRead Lite" / "New FastRead Window (recommended)", section
+  "FastRead Lite" / "FastRead Full Window (recommended)", section
   radios căn LEFT) khi chưa đọc, và `CompactReadingView` khi đang đọc
   — cùng view model với Fast Read window. Đọc xong ở lite: câu chúc
   mừng đầy đủ + share chỉ ở full-size (≥ 540), size bé chỉ
@@ -345,8 +346,9 @@ card "How the icon works" bị đặt nhầm vào panel center thay vì panel le
   `docs/FEATURES/FAST_READ.md` (mục "Shared view model") +
   `docs/FEATURES/FOCUS_REST.md`.
 - **Banner nhắc nghỉ** (feature/focus-timer-decor): overlay ở đầu vùng
-  tab, hiện trên CẢ 3 tab khi có nhắc đang chờ — nền cam 0.25 (mac
-  0.12; Windows tăng fill 2026-11-20 cho dễ đọc) — xem
+  tab (mép trên sát hint dưới slogan, Manh 2026-11-21), hiện trên CẢ 3
+  tab khi có nhắc đang chờ — nền cam ĐẶC, không opacity (Manh
+  2026-11-21 — fill 0.25 trước đó để chữ đọc phía sau xuyên qua) — xem
   `docs/FEATURES/FOCUS_REST.md`.
 
 ### 11.2 Panel center (dịch, tab mặc định)
@@ -480,7 +482,7 @@ xanh #0078D4 không bold; A+ nghệ chỉ khi giữ Alt lúc Click=Speak hoặc
 linger 2.5s sau Read; loa E767 xanh khi giữ Alt lúc Click=FastRead hoặc
 đang nói; bubble E8BD chỉ là mẫu dự phòng, luôn ẩn.
 
-**Nhắc nghỉ (`FOCUS_REST.md`):** đang đọc thì nhắc CHỜ (banner cam 0.25
+**Nhắc nghỉ (`FOCUS_REST.md`):** đang đọc thì nhắc CHỜ (banner cam đặc
 trên cả 3 tab + chấm cam thẻ Focus-Rest + tự hiện khi dừng đọc); KHÔNG
 toast hệ thống (chờ bản cài/Store); "Take a break" / "Snooze 5 min";
 "Run reminder in:" là setting RIÊNG, khác "Run FastRead in:".

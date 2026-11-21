@@ -45,6 +45,10 @@ public sealed partial class CompactReadingView : UserControl
     private readonly DispatcherTimer _voicePanelHideTimer = new();
     private bool _hoveringSpeaker;
     private bool _hoveringVoicePanel;
+    // A voice picker dropdown is open (the dropdown is a Popup — the
+    // pointer leaves the panel for it, so hover alone would hide the
+    // panel mid-pick). While a dropdown is open the panel stays put.
+    private bool _voiceDropdownOpen;
 
     /// <summary>The view model to render. Rebinding (a new read) does
     /// a full sync — the view model may already be playing by then.</summary>
@@ -102,7 +106,7 @@ public sealed partial class CompactReadingView : UserControl
         _voicePanelHideTimer.Tick += (_, _) =>
         {
             _voicePanelHideTimer.Stop();
-            if (!_hoveringSpeaker && !_hoveringVoicePanel)
+            if (!_hoveringSpeaker && !_hoveringVoicePanel && !_voiceDropdownOpen)
                 VoicePanel.Visibility = Visibility.Collapsed;
         };
         ProgressSlider.AddHandler(UIElement.PointerWheelChangedEvent, new PointerEventHandler(OnProgressWheelChanged), true);
@@ -129,8 +133,15 @@ public sealed partial class CompactReadingView : UserControl
         switch (key)
         {
             case VirtualKey.Space:
-                if (focusedElement is Button)
-                    return false; // a focused button handles Space itself.
+                // During an active read, Space is always Play/Pause —
+                // it must never fall through to a focused button (the
+                // repo link at the panel bottom got activated this way,
+                // intermittently, depending on which button held focus).
+                // The host intercepts Space at PreviewKeyDown, so the
+                // button never sees it. After the read finishes, Space
+                // is left alone — the share / Done buttons work normally.
+                if (_viewModel.IsFinished)
+                    return false;
                 _viewModel.SetPlaying(!_viewModel.IsPlaying);
                 return true;
             case VirtualKey.Left:
@@ -511,7 +522,7 @@ public sealed partial class CompactReadingView : UserControl
     private void UpdateVoicePanelVisibility()
     {
         _voicePanelHideTimer.Stop();
-        if (_hoveringSpeaker || _hoveringVoicePanel)
+        if (_hoveringSpeaker || _hoveringVoicePanel || _voiceDropdownOpen)
         {
             VoicePanel.Visibility = Visibility.Visible;
         }
@@ -519,6 +530,23 @@ public sealed partial class CompactReadingView : UserControl
         {
             _voicePanelHideTimer.Start();
         }
+    }
+
+    /// <summary>A voice picker dropdown opened / closed: the dropdown
+    /// is a Popup, so picking a voice would otherwise read as "the
+    /// mouse left the panel" and hide it mid-pick (Manh 2026-11-21).
+    /// While a dropdown is open the panel stays put; the 300 ms hide
+    /// only starts after it closes and the mouse has left.</summary>
+    private void OnVoiceDropDownOpened(object sender, object e)
+    {
+        _voiceDropdownOpen = true;
+        UpdateVoicePanelVisibility();
+    }
+
+    private void OnVoiceDropDownClosed(object sender, object e)
+    {
+        _voiceDropdownOpen = false;
+        UpdateVoicePanelVisibility();
     }
 
     private void OnEnglishVoiceChanged(object sender, SelectionChangedEventArgs e)
@@ -545,7 +573,7 @@ public sealed partial class CompactReadingView : UserControl
 
     /// <summary>Voice speed (mac: 0.6x–4x in the voice panel): the
     /// real voice-speed multiplier, shared with Settings → TTS
-    /// (SpeechRate). It takes effect from the next chunk/line — no
+    /// (SpeechRate). It takes effect from the next phrase — no
     /// restart needed, because SpeakAsync reads the setting fresh
     /// every time. WPM is untouched: it only paces silent reading.</summary>
     private void OnSpeedChanged(object sender, Microsoft.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)

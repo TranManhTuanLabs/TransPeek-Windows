@@ -47,6 +47,10 @@ public sealed partial class FastReadWindow : Window
     private readonly DispatcherTimer _voicePanelHideTimer = new();
     private bool _hoveringSpeaker;
     private bool _hoveringVoicePanel;
+    // A voice picker dropdown is open (the dropdown is a Popup — the
+    // pointer leaves the panel for it, so hover alone would hide the
+    // panel mid-pick). While a dropdown is open the panel stays put.
+    private bool _voiceDropdownOpen;
     /// <summary>Detached TextBlock for measuring word widths (same font
     /// as the displayed word): the ORP pivot is aligned by shifting
     /// the centered word so the pivot char's center lands exactly at
@@ -90,11 +94,15 @@ public sealed partial class FastReadWindow : Window
         _voicePanelHideTimer.Tick += (_, _) =>
         {
             _voicePanelHideTimer.Stop();
-            if (!_hoveringSpeaker && !_hoveringVoicePanel)
+            if (!_hoveringSpeaker && !_hoveringVoicePanel && !_voiceDropdownOpen)
                 VoicePanel.Visibility = Visibility.Collapsed;
         };
+        // PreviewKeyDown (tunnel), NOT KeyDown (bubble): Space must be
+        // caught before a focused button sees it — KeyDown reaches the
+        // parent only after the button already handled Space (the repo
+        // link got activated this way in the panel lite reader).
         if (Content is FrameworkElement contentRoot)
-            contentRoot.KeyDown += OnKeyDown;
+            contentRoot.PreviewKeyDown += OnKeyDown;
         // Wheel over the progress slider steps one word — a Slider
         // consumes the wheel itself (seek) and marks it handled, so a
         // plain XAML handler would never fire. Attach with
@@ -312,7 +320,6 @@ public sealed partial class FastReadWindow : Window
         SelectComboByTag(ContextSizeCombo, NearestContextPercent(_viewModel.ContextSizeRatio * 100).ToString());
         SelectComboByTag(ColorSchemeCombo, _viewModel.ColorScheme);
         SelectComboByTag(ContextDisplayCombo, _viewModel.ContextDisplay);
-        SelectComboByTag(ContextStyleCombo, _viewModel.ContextStyle);
         SelectComboByTag(ReadingStyleCombo, _viewModel.ReadingStyle);
         HighlightToggle.IsOn = _viewModel.HighlightCurrentLine;
         SelectComboByTag(EnglishVoiceCombo, App.Settings.EnglishVoiceId ?? "");
@@ -506,7 +513,7 @@ public sealed partial class FastReadWindow : Window
     private void UpdateVoicePanelVisibility()
     {
         _voicePanelHideTimer.Stop();
-        if (_hoveringSpeaker || _hoveringVoicePanel)
+        if (_hoveringSpeaker || _hoveringVoicePanel || _voiceDropdownOpen)
         {
             VoicePanel.Visibility = Visibility.Visible;
         }
@@ -514,6 +521,23 @@ public sealed partial class FastReadWindow : Window
         {
             _voicePanelHideTimer.Start();
         }
+    }
+
+    /// <summary>A voice picker dropdown opened / closed: the dropdown
+    /// is a Popup, so picking a voice would otherwise read as "the
+    /// mouse left the panel" and hide it mid-pick (Manh 2026-11-21).
+    /// While a dropdown is open the panel stays put; the 300 ms hide
+    /// only starts after it closes and the mouse has left.</summary>
+    private void OnVoiceDropDownOpened(object sender, object e)
+    {
+        _voiceDropdownOpen = true;
+        UpdateVoicePanelVisibility();
+    }
+
+    private void OnVoiceDropDownClosed(object sender, object e)
+    {
+        _voiceDropdownOpen = false;
+        UpdateVoicePanelVisibility();
     }
 
     private void OnEnglishVoiceChanged(object sender, SelectionChangedEventArgs e)
@@ -540,7 +564,7 @@ public sealed partial class FastReadWindow : Window
 
     /// <summary>Voice speed (mac: 0.6x–4x in the voice panel): the
     /// real voice-speed multiplier, shared with Settings → TTS
-    /// (SpeechRate). It takes effect from the next chunk/line — no
+    /// (SpeechRate). It takes effect from the next phrase — no
     /// restart needed, because SpeakAsync reads the setting fresh
     /// every time. WPM is untouched: it only paces silent reading.</summary>
     private void OnSpeedChanged(object sender, Microsoft.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
@@ -631,14 +655,6 @@ public sealed partial class FastReadWindow : Window
             return;
         if (ContextDisplayCombo.SelectedItem is ComboBoxItem item && item.Tag is string tag)
             _viewModel.SetContextDisplay(tag);
-    }
-
-    private void OnContextStyleChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (_loading)
-            return;
-        if (ContextStyleCombo.SelectedItem is ComboBoxItem item && item.Tag is string tag)
-            _viewModel.SetContextStyle(tag);
     }
 
     /// <summary>Reset to default (Manh 2026-11-19, mac round 7):
@@ -843,11 +859,14 @@ public sealed partial class FastReadWindow : Window
         switch (e.Key)
         {
             case VirtualKey.Space:
-                // A focused button handles Space itself (Play toggles,
-                // Restart restarts) — only toggle here when no button
-                // has focus.
-                if (focused is Button)
-                    return;
+                // During an active read, Space is always Play/Pause —
+                // it must never fall through to a focused button (a
+                // focused transport button would run its own action
+                // instead). PreviewKeyDown catches it before the
+                // button sees it. After the read finishes, Space is
+                // left alone — the share buttons work normally.
+                if (_viewModel.IsFinished)
+                    break;
                 _viewModel.SetPlaying(!_viewModel.IsPlaying);
                 e.Handled = true;
                 break;

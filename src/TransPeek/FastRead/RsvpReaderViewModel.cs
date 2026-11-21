@@ -24,6 +24,19 @@ using TransPeek.Services;
 
 namespace TransPeek.FastRead;
 
+/// <summary>Pro gate for word-sync read-along (mac parity: ProGate in
+/// RSVPView.swift). Word-sync is FREE for now (Manh 2026-11-21) — one
+/// flag to turn it off later (the read falls back to the silent WPM
+/// timer) or wire to a real Pro check (purchase / key). Future demo
+/// idea (NOT built yet): when gated, pressing the speaker plays a
+/// short DEMO — a different TTS voice reading a different text than
+/// the user's content, with a "this is a Pro feature" note — so the
+/// user hears the feature before buying.</summary>
+public static class ProGate
+{
+    public static bool WordSyncEnabled { get; set; } = true;
+}
+
 public sealed class RsvpReaderViewModel : INotifyPropertyChanged
 {
     private readonly DispatcherTimer _timer = new();
@@ -61,20 +74,26 @@ public sealed class RsvpReaderViewModel : INotifyPropertyChanged
     // mute/unmute toggle for the read, NOT a separate "speak the whole
     // text" action (that was mac CI314 bug 1). Default OFF, NOT
     // persisted — a new read starts silent, like today. When sound is
-    // on, Play/Space runs each chunk/line through TTS and the speech
-    // itself paces the read (no WPM timer); when off, the timer paces
-    // as today. The service is wired by the host (window / panel);
-    // null = no speaker at all (the Rest window).
+    // on (and word-sync is enabled), Play/Space speaks one phrase at
+    // a time and the speech itself paces the read (no WPM timer);
+    // when off, the timer paces as today. The service is wired by the
+    // host (window / panel); null = no speaker at all (the Rest window).
     private bool _soundOn;
     private SystemSpeechService? _speaker;
     // Language the read is spoken in (vi/en heuristic, same as the
     // float icon's speak — SystemSpeechService.DetectLanguage).
     private string _speakLanguageCode = "en";
-    // Speech generation: each spoken unit bumps it, so a SpeechEnded
+    // Speech generation: each spoken phrase bumps it, so a SpeechEnded
     // arriving for an older utterance (after a seek/stop) is ignored
-    // instead of advancing the read one extra unit.
+    // instead of advancing the read one extra phrase.
     private int _speechGeneration;
     private int _expectedSpeechGeneration;
+    // Phrases for continuous reading (phương án 1): the text split
+    // into sentence/clause utterances, and the phrase being spoken.
+    // The phrase owns the position while sound is on — the focus
+    // follows the voice phrase by phrase.
+    private IReadOnlyList<RsvpPhrase> _phrases = [];
+    private int _currentPhraseIndex;
     // Elapsed reading time (mac RSVPView.elapsedSeconds): banked across
     // the playing stretches of the current read, for the completion
     // line + share text. The stretch clock starts when playback starts
@@ -312,6 +331,10 @@ public sealed class RsvpReaderViewModel : INotifyPropertyChanged
         _document = RsvpEngine.Build(text, App.Settings.RsvpWpm, App.Settings.RsvpChunkSize);
         _style2Lines = RsvpEngine.BuildLines(text);
         _style2CurrentLineIndex = 0;
+        // Phrases for continuous reading (phương án 1): one spoken
+        // utterance per sentence/clause, built with the lines.
+        _phrases = RsvpEngine.BuildPhrases(text);
+        _currentPhraseIndex = 0;
         _speakLanguageCode = SystemSpeechService.DetectLanguage(text);
         _currentSlide = 0;
         IsFinished = false;
@@ -381,23 +404,56 @@ public sealed class RsvpReaderViewModel : INotifyPropertyChanged
     }
 
     /// <summary>Restart the pacing for the current unit after a change
-    /// (play / seek / style / WPM): with sound on, the speech itself
-    /// paces the read — speak the current unit and wait for its end;
-    /// otherwise the WPM timer paces, as today. The timer path is
-    /// untouched by the sound path, so silent reading behaves exactly
-    /// like before this feature.</summary>
+    /// (play / seek / style / WPM): with sound on and word-sync
+    /// enabled, the speech itself paces the read — one phrase at a
+    /// time, the focus following the voice (continuous reading,
+    /// phương án 1); otherwise the WPM timer paces, as today. The
+    /// timer path is untouched by the sound path, so silent reading
+    /// behaves exactly like before this feature.</summary>
     private void RestartPacing()
     {
         _timer.Stop();
-        if (_soundOn && _speaker is not null)
+        if (UsePhraseSpeech)
         {
-            _ = SpeakCurrentUnitAsync();
+            // The position may have moved (seek / style / WPM) — the
+            // phrase restarts from the phrase containing the current
+            // word (mac parity: resume from the current slide/line).
+            _currentPhraseIndex = PhraseIndexForWord(CurrentWordIndex);
+            _ = SpeakCurrentPhraseAsync();
         }
         else
         {
             _timer.Interval = CurrentUnitDelay;
             _timer.Start();
         }
+    }
+
+    /// <summary>Continuous reading is on when the speaker is on, a
+    /// speaker is wired, and the Pro gate allows word-sync. Gate off
+    /// (or no speaker) means the silent WPM timer, even with the
+    /// speaker button on — mac parity (ProGate.wordSyncEnabled).</summary>
+    private bool UsePhraseSpeech => _soundOn && _speaker is not null && ProGate.WordSyncEnabled;
+
+    /// <summary>Word index of the current position (the slide's first
+    /// word, Style 1, or the words before the current line, Style 2)
+    /// — for finding which phrase the read is in.</summary>
+    private int CurrentWordIndex => IsRsvpStyle
+        ? (_document.Slides.Count == 0 ? 0 : _document.Slides[_currentSlide].StartWordIndex)
+        : _style2Lines.Take(_style2CurrentLineIndex).Sum(CountWords);
+
+    /// <summary>Index of the phrase containing the given word (the
+    /// last phrase starting at or before it) — for resuming speech
+    /// from the current position after a pause / seek / style change.</summary>
+    private int PhraseIndexForWord(int wordIndex)
+    {
+        var found = 0;
+        for (var i = 0; i < _phrases.Count; i++)
+        {
+            if (_phrases[i].StartWordIndex > wordIndex)
+                break;
+            found = i;
+        }
+        return found;
     }
 
     /// <summary>Delay of the current unit for the timer path: the slide
@@ -435,20 +491,19 @@ public sealed class RsvpReaderViewModel : INotifyPropertyChanged
         return count;
     }
 
-    /// <summary>Speak the current unit aloud (Style 1: the slide text;
-    /// Style 2: the line). The returned false (no voice installed, or
+    /// <summary>Speak the current phrase aloud (continuous reading:
+    /// one sentence/clause per utterance, so the voice never stutters
+    /// between words). The returned false (no voice installed, or
     /// synthesis failed) falls back to the timer for this unit, so the
-    /// read keeps moving instead of stalling on a silent chunk.</summary>
-    private async Task SpeakCurrentUnitAsync()
+    /// read keeps moving instead of stalling on a silent phrase.</summary>
+    private async Task SpeakCurrentPhraseAsync()
     {
-        if (_speaker is null || !IsPlaying || !_soundOn)
+        if (_speaker is null || !IsPlaying || !_soundOn || _phrases.Count == 0)
             return;
         var generation = ++_speechGeneration;
         _expectedSpeechGeneration = generation;
-        var text = IsRsvpStyle
-            ? _document.Slides[_currentSlide].Text
-            : _style2Lines[_style2CurrentLineIndex];
-        var spoken = await _speaker.SpeakAsync(text, _speakLanguageCode);
+        var phrase = _phrases[Math.Clamp(_currentPhraseIndex, 0, _phrases.Count - 1)];
+        var spoken = await _speaker.SpeakAsync(phrase.Text, _speakLanguageCode);
         // The read may have paused / sought / switched style while the
         // speech was starting — only fall back when this utterance is
         // still the live one.
@@ -459,8 +514,8 @@ public sealed class RsvpReaderViewModel : INotifyPropertyChanged
         }
     }
 
-    /// <summary>A spoken unit ended on its own: advance one unit and
-    /// speak the next (TTS is the pacing clock while sound is on).
+    /// <summary>A spoken phrase ended on its own: advance one phrase
+    /// and speak the next (TTS is the pacing clock while sound is on).
     /// Stale events (an older utterance ending after a seek/stop) are
     /// ignored via the generation, and via IsSpeaking — if a newer
     /// utterance is already playing, this end belongs to the old one.
@@ -476,17 +531,36 @@ public sealed class RsvpReaderViewModel : INotifyPropertyChanged
             _dispatcherQueue.TryEnqueue(() => AdvanceAfterSpeechEnded(generation));
     }
 
-    /// <summary>The UI-thread half of OnSpeechEnded: advance one unit
-    /// and speak the next, unless this end is stale.</summary>
+    /// <summary>The UI-thread half of OnSpeechEnded: advance one phrase
+    /// and speak the next, unless this end is stale. The focus jumps
+    /// to the next phrase's slide / line, so the text follows the
+    /// voice phrase by phrase; after the last phrase the read
+    /// finishes, like the timer path.</summary>
     private void AdvanceAfterSpeechEnded(int generation)
     {
         if (generation != _expectedSpeechGeneration || !IsPlaying || !_soundOn)
             return;
         if (_speaker?.IsSpeaking == true)
             return;
-        AdvancePosition();
+        if (!UsePhraseSpeech || _phrases.Count == 0)
+            return;
+        if (_currentPhraseIndex + 1 >= _phrases.Count)
+        {
+            // Finish: bank the last stretch FIRST, so the completion
+            // line reads the final elapsed time when IsFinished flips.
+            SetPlaying(false);
+            IsFinished = true;
+            UpdateProgress();
+            return;
+        }
+        _currentPhraseIndex++;
+        var phrase = _phrases[_currentPhraseIndex];
+        if (IsRsvpStyle)
+            ShowSlide(RsvpEngine.SlideIndexForWord(_document, phrase.StartWordIndex));
+        else
+            ShowLine(LineIndexForWord(phrase.StartWordIndex));
         if (IsPlaying)
-            _ = SpeakCurrentUnitAsync();
+            _ = SpeakCurrentPhraseAsync();
     }
 
     /// <summary>Stop any speech (a no-op when nothing is speaking) and
@@ -515,8 +589,9 @@ public sealed class RsvpReaderViewModel : INotifyPropertyChanged
             return;
         if (soundOn && _speaker is not null)
         {
-            _timer.Stop();
-            _ = SpeakCurrentUnitAsync();
+            // Back to phrase speech (or the timer when the gate is
+            // off) from the current position — RestartPacing picks.
+            RestartPacing();
         }
         else
         {
@@ -747,9 +822,9 @@ public sealed class RsvpReaderViewModel : INotifyPropertyChanged
 
     /// <summary>Style 2 advance (mac startStyle2PlaybackTask): one
     /// focus line at a time, at the WPM pace for that line's words.
-    /// The timer path re-arms itself; the sound path is driven by
-    /// SpeechEnded instead (OnSpeechEnded calls AdvancePosition, so
-    /// this runs there too — the timer is stopped while sound is on).</summary>
+    /// The timer path re-arms itself; while sound is on, the speech
+    /// path advances phrases instead (AdvanceAfterSpeechEnded), so
+    /// this only runs on the timer when speech fell back to it.</summary>
     private void AdvanceLine()
     {
         if (_style2CurrentLineIndex + 1 >= _style2Lines.Count)

@@ -26,7 +26,8 @@
                        HorizontalAlignment="Center" />
             <TextBlock Text="The window closes when the timer ends." FontSize="12" Foreground="Gray"
                        HorizontalAlignment="Center" />
-            <Button Content="Done" Click="OnDoneClicked" HorizontalAlignment="Center" Margin="0,8,0,0" />
+            <Button Content="Done" Click="OnDoneClicked" HorizontalAlignment="Center" Margin="0,8,0,0"
+                    BorderBrush="#0078D4" BorderThickness="1" />
         </StackPanel>
     </Grid>
 </Window>

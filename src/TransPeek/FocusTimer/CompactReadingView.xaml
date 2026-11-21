@@ -252,7 +252,9 @@
              — NOT a Flyout/Popup, so clicking the speaker toggles the
              sound at once instead of dismissing a popup first (mac
              CI314 bug 2). Same contents as the reader window's panel;
-             the voice picks share the Settings → TTS keys, the speed
+             it stays open while the mouse is on the speaker button or
+             on the panel itself, or while a voice dropdown is open.
+             The voice picks share the Settings → TTS keys, the speed
              shares SpeechRate. -->
         <Border x:Name="VoicePanel" Grid.RowSpan="7" HorizontalAlignment="Center" VerticalAlignment="Bottom"
                 Margin="0,0,0,56" Width="300" Padding="12" CornerRadius="8" Visibility="Collapsed"
@@ -262,15 +264,17 @@
             <StackPanel Spacing="8">
                 <TextBlock Text="Voice" FontSize="14" FontWeight="SemiBold" />
                 <TextBlock Text="English voice" FontSize="13" />
-                <ComboBox x:Name="EnglishVoiceCombo" SelectionChanged="OnEnglishVoiceChanged" HorizontalAlignment="Stretch" />
+                <ComboBox x:Name="EnglishVoiceCombo" SelectionChanged="OnEnglishVoiceChanged" HorizontalAlignment="Stretch"
+                          DropDownOpened="OnVoiceDropDownOpened" DropDownClosed="OnVoiceDropDownClosed" />
                 <TextBlock Text="Vietnamese voice" FontSize="13" />
-                <ComboBox x:Name="VietnameseVoiceCombo" SelectionChanged="OnVietnameseVoiceChanged" HorizontalAlignment="Stretch" />
+                <ComboBox x:Name="VietnameseVoiceCombo" SelectionChanged="OnVietnameseVoiceChanged" HorizontalAlignment="Stretch"
+                          DropDownOpened="OnVoiceDropDownOpened" DropDownClosed="OnVoiceDropDownClosed" />
                 <Grid>
                     <TextBlock Text="Speed" FontSize="13" HorizontalAlignment="Left" VerticalAlignment="Center" />
                     <TextBlock x:Name="SpeedValueText" Text="1.0x" FontSize="13" HorizontalAlignment="Right" VerticalAlignment="Center" />
                 </Grid>
                 <Slider x:Name="SpeedSlider" Minimum="0.6" Maximum="4" StepFrequency="0.1" ValueChanged="OnSpeedChanged" />
-                <TextBlock Text="Applies to Windows system voices. Speed takes effect from the next chunk or line."
+                <TextBlock Text="Applies to Windows system voices. Speed takes effect from the next phrase."
                            FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
             </StackPanel>
         </Border>

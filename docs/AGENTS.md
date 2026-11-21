@@ -77,6 +77,11 @@
   `Microsoft.UI.Xaml`, KHÔNG phải `Microsoft.UI.Dispatching` (đã xác
   minh trên Microsoft Learn). File nào dùng DispatcherTimer mà chỉ có
   `using Microsoft.UI.Dispatching;` thì build lỗi CS0246.
+- **Bài học Space (2026-11-21):** `KeyDown` (bubble) tới parent CHỈ SAU
+  KHI nút đang focus đã xử lý Space — muốn chặn Space trước nút thì
+  dùng `PreviewKeyDown` (tunnel, đã xác minh trên Microsoft Learn:
+  `UIElement` có `PreviewKeyDownEvent`). Dùng cho phím Play/Pause khi
+  đang đọc (panel / Rest window / Full window đều đổi sang Preview).
 - **Bài học CI #215 (2026-11-21):** `TextBlock` trong WinUI KHÔNG có
   `Background` (chỉ WPF mới có — bẫy WPF→WinUI như `BaselineAlignment`
   ở CI #178); muốn tô nền dòng chữ thì bọc TextBlock trong `Border` và

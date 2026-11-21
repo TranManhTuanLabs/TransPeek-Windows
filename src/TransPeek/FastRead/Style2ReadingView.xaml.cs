@@ -12,6 +12,7 @@
 using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 
 namespace TransPeek.FastRead;
@@ -66,6 +67,33 @@ public sealed partial class Style2ReadingView : UserControl
     {
         InitializeComponent();
         LinesPanel.Padding = new Thickness(_horizontalPadding, 16, _horizontalPadding, 16);
+        // Wheel over the page changes the font size (Manh 2026-11-21,
+        // both the window and the lite reader — this control is
+        // shared): scroll up grows, scroll down shrinks, 5pt per tick
+        // — the same step as the Style 1 focus-size wheel. Attached
+        // with handledEventsToo, so it still fires when the
+        // ScrollViewer itself handles the wheel for scrolling. The
+        // wheel is the zoom here, so the page scrolls by dragging the
+        // scrollbar instead.
+        PageScroller.AddHandler(UIElement.PointerWheelChangedEvent, new PointerEventHandler(OnPageWheelChanged), true);
+    }
+
+    /// <summary>Wheel over the Basic Reading page: font size, not
+    /// scroll (Manh 2026-11-21). 5pt per tick, clamped 40–450 on the
+    /// focus size (16–180pt body) — the window's Style 2 range. The
+    /// current line stays centered after the rebuild, so the line
+    /// being read does not jump away while zooming.</summary>
+    private void OnPageWheelChanged(object sender, PointerRoutedEventArgs e)
+    {
+        if (_viewModel is null)
+            return;
+        var delta = e.GetCurrentPoint(PageScroller).Properties.MouseWheelDelta;
+        if (delta == 0)
+            return;
+        var size = Math.Clamp(_viewModel.FontSize + (delta > 0 ? 5 : -5), 40, 450);
+        _viewModel.ApplyFocusSize(size);
+        ScrollToCurrentLine(animate: false);
+        e.Handled = true;
     }
 
     private void OnViewModelChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -153,8 +181,9 @@ public sealed partial class Style2ReadingView : UserControl
 
     /// <summary>Keep the focused line in view as Play advances it —
     /// scrolled to the middle of the page (mac: scrollTo anchor
-    /// .center).</summary>
-    private void ScrollToCurrentLine()
+    /// .center). The wheel-zoom path passes animate: false — an
+    /// animated scroll on every zoom tick would lag behind the wheel.</summary>
+    private void ScrollToCurrentLine(bool animate = true)
     {
         if (_viewModel is null)
             return;
@@ -164,7 +193,7 @@ public sealed partial class Style2ReadingView : UserControl
         _lineBorders[index].StartBringIntoView(new BringIntoViewOptions
         {
             VerticalAlignmentRatio = 0.5,
-            AnimationDesired = true,
+            AnimationDesired = animate,
         });
     }
 }
