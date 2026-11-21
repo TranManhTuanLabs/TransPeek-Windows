@@ -26,16 +26,12 @@ namespace TransPeek.Views;
 
 public sealed partial class TriggerIconWindow : Window
 {
-    // Mac parity (TriggerIconPanel): 32 px.
-    private const int WidthPx = 32;
-    private const int HeightPx = 32;
-    // Compact (hover) icon (Manh 2026-11-21, mac parity: hover icon
-    // 24 pt vs 32 pt selection icon): ~3/4 of the full size, so the
-    // icon stays out of the mouse's way while resting on a block.
-    // Circle 22 (was 30), A 11 pt (was 15), FontIcon 12 (was 16),
-    // "+" 6 pt (was 8).
-    private const int CompactWidthPx = 24;
-    private const int CompactCirclePx = 22;
+    // Icon sizes are user settings now (Manh 2026-11-21, mac parity):
+    // FloatIconSize (default 26 pt) for the selection icon,
+    // AutoShowFloatIconSize (default 24 pt) for the block-text hover
+    // icon. The old fixed sizes (32 px window / 30 px circle, compact
+    // 24 / 22) are gone — ShowAt reads the settings live at each show,
+    // so a Settings change applies to the next icon that appears.
 
     private readonly DispatcherTimer _hoverTimer = new();
     private readonly DispatcherTimer _autoHideTimer = new();
@@ -94,7 +90,7 @@ public sealed partial class TriggerIconWindow : Window
         // NOTE: WinUI 3 Window has NO Width/Height properties (unlike
         // WPF) — setting them is a compile error (CS0103, runs 76/77).
         // The size comes from ShowAt, which resizes via AppWindow
-        // MoveAndResize in physical pixels (32 * DpiScale).
+        // MoveAndResize in physical pixels (setting * DpiScale).
         // WinUI 3 Window has no Loaded event (Loaded lives on
         // FrameworkElement): attach to the root content element instead.
         if (Content is FrameworkElement contentRoot)
@@ -284,13 +280,14 @@ public sealed partial class TriggerIconWindow : Window
     /// <summary>Show the icon just below-right of the selection point
     /// (physical pixels), clamped to the display work area. The window
     /// is sized in PHYSICAL pixels (AppWindow.MoveAndResize) but the
-    /// content is laid out in effective pixels (DIPs): the 32 DIP
-    /// window is scaled by the display DPI, or the 30 DIP circle
-    /// overflows (is clipped by) the window on a scaled display — the
-    /// "abnormal size" Manh saw in 0.1.3.68. Compact (hover) shows
-    /// the ~3/4 icon (24 px window, 22 px circle, smaller glyphs):
-    /// a hovered block gets the small icon, a manual selection the
-    /// full-size one (Manh 2026-11-21, mac parity).</summary>
+    /// content is laid out in effective pixels (DIPs): the window is
+    /// scaled by the display DPI, or the circle overflows (is clipped
+    /// by) the window on a scaled display — the "abnormal size" Manh
+    /// saw in 0.1.3.68. Sizes come from the user settings (Manh
+    /// 2026-11-21, mac parity): FloatIconSize (default 26 pt) for a
+    /// selection, AutoShowFloatIconSize (default 24 pt) for a hovered
+    /// block — the hover icon is smaller by default, so it stays out
+    /// of the mouse's way while resting on a block.</summary>
     public void ShowAt(int x, int y, bool compact = false)
     {
         // A new selection cancels a pending Read linger (fresh icon
@@ -303,19 +300,30 @@ public sealed partial class TriggerIconWindow : Window
         _altHeld = IsAltHeldGlobally();
         SetSpeaking(false); // fresh selection: back to the preview mark.
         UpdateGlyph(); // SetSpeaking returns early when already not speaking.
-        // Sizes, applied on every show: the compact (hover) icon is
-        // ~3/4 of the selection icon — so a full-size show after a
-        // compact one (or the reverse) resets the sizes.
-        var windowPx = compact ? CompactWidthPx : WidthPx;
-        var circlePx = compact ? CompactCirclePx : 30;
+        // Sizes, applied on every show from the user settings (Manh
+        // 2026-11-21, mac parity: TriggerIconPanel.size /
+        // compactSize read Defaults live): the window is the setting
+        // itself, the circle 2 pt smaller, and the glyphs scale with
+        // the circle — A = half the diameter, speaker ~44%, "+" a
+        // quarter — so a smaller circle still shows a proportional
+        // letter. At the old 32 pt this gives the same glyphs as
+        // before (A 15, "+" 8; speaker 13 — mac has 14, because the
+        // mac circle is the full 32 pt while ours is 30). A full-size
+        // show after a compact one (or the reverse) resets the sizes.
+        var windowPx = compact ? App.Settings.AutoShowFloatIconSize : App.Settings.FloatIconSize;
+        var circlePx = windowPx - 2;
+        var aSize = (int)Math.Round(circlePx * 0.5);
+        var speakerSize = (int)Math.Round(circlePx * 0.44);
+        var plusSize = (int)Math.Round(circlePx * 0.25);
         IconBorder.Width = circlePx;
         IconBorder.Height = circlePx;
-        PlainAMark.FontSize = compact ? 11 : 15;
-        BubbleMark.FontSize = compact ? 12 : 16;
-        SpeakerMark.FontSize = compact ? 12 : 16;
-        APlusMarkA.FontSize = compact ? 11 : 15;
-        APlusMarkPlus.FontSize = compact ? 6 : 8;
-        APlusMarkPlus.Margin = compact ? new Thickness(0, 3, 4, 0) : new Thickness(0, 4, 5, 0);
+        IconBorder.CornerRadius = new CornerRadius(circlePx / 2.0);
+        PlainAMark.FontSize = aSize;
+        BubbleMark.FontSize = speakerSize;
+        SpeakerMark.FontSize = speakerSize;
+        APlusMarkA.FontSize = aSize;
+        APlusMarkPlus.FontSize = plusSize;
+        APlusMarkPlus.Margin = new Thickness(0, plusSize / 2.0, plusSize / 2.0 + 1, 0);
         var scale = WindowHelpers.DpiScale(this);
         var w = Math.Max(1, (int)Math.Round(windowPx * scale));
         var h = Math.Max(1, (int)Math.Round(windowPx * scale));

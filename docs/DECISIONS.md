@@ -2703,6 +2703,12 @@ Manh test bản 0.1.4.191: Google 249 ngôn ngữ ngon. 4 việc còn lại làm
 - **Settings:** Picker mới "Hover text delay (default: 0.4s)" ngay dưới toggle block-text (Settings → General), các mức 0.2/0.3/0.4/0.5/0.7s (hiển thị bằng giây, giá trị lưu là ms), key resw `Settings.General.HoverBlockDelay(.Text)` + `HoverBlockDelayHint.Text`.
 - **Bản làm việc main thiếu file (bài học):** bản local main thiếu đúng 4 file của PR #3 (merge qua trình duyệt không qua snapshot push nên local không có) — phát hiện khi grep không thấy `BlockTextHoverService`; đã khôi phục từ raw ghim commit `a6d8c106` + đối chiếu hash toàn bộ cây file với main. Trước khi làm việc trên main, đối chiếu cây file local với main qua API.
 
+## Cỡ icon float cho người dùng chọn (2026-11-22, mac parity, main)
+
+- **2 picker trong Settings → General, ngay dưới toggle block-text + "Hover text delay" (Manh chọn General 2026-11-22 — tin nhắn gốc ghi Translation nhưng toggle + delay picker của Windows đang ở General nên đặt ở General cho cùng chỗ, theo tiền lệ hover polish):** "Float icon size" (icon bôi chọn, mặc định 26pt, 24/26/28/30/32) và "Auto-show float icon size" (icon hover block-text, mặc định 24pt, 18/20/22/24). Tên hiển thị giữ nguyên 2 tên mac đã chốt; key lưu Windows `FloatIconSize` / `AutoShowFloatIconSize` (PascalCase theo quy ước Windows; mac dùng camelCase `floatIconSize` / `autoShowFloatIconSize`).
+- **Chữ tự co theo vòng tròn (mac `6bbf32d7`):** cửa sổ = cỡ setting, vòng = cỡ − 2, A = 1/2 vòng, loa ≈ 44% vòng, dấu + = 1/4 vòng, `CornerRadius` = vòng / 2, margin dấu + co theo. Ở cỡ cũ 32pt: A 15, loa 13, + 8 (loa mac 14 vì vòng mac = 32, vòng Windows = 30 — lệch 1pt). Cỡ cố định cũ (32/30, compact 24/22) đã bỏ; `ShowAt` đọc setting live mỗi lần hiện nên đổi picker là icon sau hiện cỡ mới ngay, không cần khởi động lại.
+- **Mặc định mới nhỏ hơn trước:** icon bôi chọn 32 → 26pt (theo mac); icon hover giữ 24pt mặc định.
+
 ## Liên kết
 
 - [Bối cảnh AI](AI_CONTEXT.md)

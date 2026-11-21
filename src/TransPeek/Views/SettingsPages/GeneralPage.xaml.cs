@@ -50,6 +50,21 @@ public sealed partial class GeneralPage : Page
             700 => 4,
             _ => 2, // 400 ms (or an older saved value) -> default item.
         };
+        FloatIconSizeCombo.SelectedIndex = s.FloatIconSize switch
+        {
+            24 => 0,
+            28 => 2,
+            30 => 3,
+            32 => 4,
+            _ => 1, // 26 pt (or an older saved value) -> default item.
+        };
+        AutoShowFloatIconSizeCombo.SelectedIndex = s.AutoShowFloatIconSize switch
+        {
+            18 => 0,
+            20 => 1,
+            22 => 2,
+            _ => 3, // 24 pt (or an older saved value) -> default item.
+        };
         HoverDelayCombo.SelectedIndex = s.HoverDelayMs switch
         {
             500 => 1,
@@ -121,6 +136,31 @@ public sealed partial class GeneralPage : Page
             && item.Tag is string tag && int.TryParse(tag, out var ms))
         {
             App.Settings.HoverBlockDelayMs = ms;
+            Save();
+        }
+    }
+
+    // Float icon size (Manh 2026-11-21, mac parity): the selection
+    // icon's size. TriggerIconWindow reads the setting live at each
+    // show, so a change applies to the next icon that appears.
+    private void OnFloatIconSizeChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (FloatIconSizeCombo.SelectedItem is ComboBoxItem item
+            && item.Tag is string tag && int.TryParse(tag, out var pt))
+        {
+            App.Settings.FloatIconSize = pt;
+            Save();
+        }
+    }
+
+    // Auto-show float icon size (Manh 2026-11-21, mac parity): the
+    // block-text hover icon's size. Same live-read as above.
+    private void OnAutoShowFloatIconSizeChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (AutoShowFloatIconSizeCombo.SelectedItem is ComboBoxItem item
+            && item.Tag is string tag && int.TryParse(tag, out var pt))
+        {
+            App.Settings.AutoShowFloatIconSize = pt;
             Save();
         }
     }

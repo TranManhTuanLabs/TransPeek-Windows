@@ -195,6 +195,18 @@
   <data name="Settings.General.HoverBlockDelayHint.Text" xml:space="preserve">
     <value>How long the mouse must rest on a block of text before the icon appears.</value>
   </data>
+  <data name="Settings.General.FloatIconSize.Text" xml:space="preserve">
+    <value>Float icon size (default: 26pt)</value>
+  </data>
+  <data name="Settings.General.FloatIconSizeHint.Text" xml:space="preserve">
+    <value>Size of the icon that appears when you select text.</value>
+  </data>
+  <data name="Settings.General.AutoShowFloatIconSize.Text" xml:space="preserve">
+    <value>Auto-show float icon size (default: 24pt)</value>
+  </data>
+  <data name="Settings.General.AutoShowFloatIconSizeHint.Text" xml:space="preserve">
+    <value>Size of the icon that appears on its own when you hover a block of text.</value>
+  </data>
   <data name="Settings.General.HotkeyHint.Text" xml:space="preserve">
     <value>Click a hotkey box, then press the key combination — no typing needed. Esc cancels.</value>
   </data>

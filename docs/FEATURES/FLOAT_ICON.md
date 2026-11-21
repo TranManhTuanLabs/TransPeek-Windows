@@ -94,7 +94,7 @@ này từ commit `1ffcbb7`.
 - **How long to hover**: ComboBox 300/500/800/1000ms, mặc định 500ms.
 - **Hover text delay**: ComboBox 200/300/400/500/700ms, mặc định 400ms — chuột phải dừng yên chừng đó trên khối chữ thì icon hover mới hiện (ngay dưới toggle block-text).
 - **Trigger icon hides after**: NumberBox (gõ số giây), mặc định 5s.
-- **Kích thước icon**: bôi chọn 32px (vòng 30px, chữ A 15pt); hover 24px (vòng 22px, chữ A 11pt) — nhỏ ~3/4 để khỏi vướng chuột (Manh 2026-11-21).
+- **Kích thước icon** (Manh 2026-11-21, mac parity — user chọn trong Settings → General, ngay dưới toggle block-text + "Hover text delay"): **"Float icon size"** (icon bôi chọn, mặc định 26pt, chọn 24/26/28/30/32) và **"Auto-show float icon size"** (icon hover block-text, mặc định 24pt, chọn 18/20/22/24). Cửa sổ = cỡ chọn, vòng tròn = cỡ − 2, chữ tự co theo vòng: A = 1/2 vòng, loa ≈ 44% vòng, dấu + = 1/4 vòng — ở cỡ cũ 32pt ra đúng A 15pt / + 8pt (loa 13pt, mac 14pt vì vòng mac 32 còn vòng Windows 30). Đọc setting live mỗi lần hiện icon nên đổi là có hiệu lực ngay với icon tiếp theo.
 
 ## 3. Translate-first icon — IMPLEMENTED (Manh 2026-11-20 18:09)
 
