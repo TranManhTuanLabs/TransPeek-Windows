@@ -2723,6 +2723,13 @@ Manh test bản 0.1.4.191: Google 249 ngôn ngữ ngon. 4 việc còn lại làm
 - **Tự ẩn:** sau 5s (chung setting `TriggerIconAutoHideSeconds`), hoặc khi hết bôi đen, hoặc khi mặt Read không còn foreground. Text bôi được là around/context text (`BeforeTextBlock` / `AfterTextBlock` / `ContextTextBlock` đã `IsTextSelectionEnabled` sẵn); từ focus RSVP không bôi được.
 - **Không có toggle setting riêng:** icon inert trừ khi mặt Read đang foreground, nên không có gì để tắt.
 
+## Phím trong lúc đọc — hướng an toàn (2026-11-22, mac parity, main + nhánh)
+
+- **Phím trong lúc đọc (Space play/pause, ←/→ tua, ↑/↓ tốc độ) CHỈ ăn khi mặt đọc đang focus** (chuẩn: cửa sổ nào focus thì nhận phím). **KHÔNG bắt phím toàn cục.**
+- **Full đã đúng sẵn:** `FastReadWindow.ShowReader` làm `SetForegroundWindow` + `Activate()` lúc mở — Space ăn ngay; bấm sang app khác thì phím đi sang app đó.
+- **Lite:** panel tự kích hoạt khi bài đọc panel-right bắt đầu (`ActivateWindow` trong `OnFocusTimerStoreChanged`, nhánh `PanelRightRequest`) — Space ăn ngay không cần click trước, kể cả đường reminder (trước đây `ShowPanelNearCursor` mở không kích hoạt nên Space không ăn). Đảo ngược quyết định cũ "reminder reads do NOT activate" (FAST_READ.md) — quy tắc không cướp màn hình là về không lôi user ra khỏi bài đọc đang chạy (reminder chờ khi đang đọc), không phải về phím khi bài đọc của chính reminder đã bắt đầu.
+- **`GlobalSpaceTracker` (chỉ có trên nhánh `feature/fastread-speaker-style2`, chưa từng lên main) đã GỠ:** class + wiring 2 mặt + `VK_SPACE` + `GetForegroundWindow` trong `NativeMethods.cs` của nhánh. Nó poll Space toàn cục nên gõ dấu cách ở Notepad/Chrome/Word trong lúc đọc cũng pause/resume Read — đúng cái Manh không muốn. Đường phím duy nhất còn lại là `PreviewKeyDown` của mặt đang focus.
+
 ## Liên kết
 
 - [Bối cảnh AI](AI_CONTEXT.md)

@@ -878,6 +878,15 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
             if (request is not null)
             {
                 ShowTab(PanelTab.FastRead);
+                // Safe direction (Manh 2026-11-22, mac parity): a
+                // panel-right read starts KEYED — the panel activates
+                // itself, so Space (Play/Pause) works at once, no
+                // click into the panel first. This covers the reminder
+                // path (ShowPanelNearCursor shows without activation)
+                // as well as the manual paths (which already
+                // activated). No global key capture: once the user
+                // clicks to another app, the keys go there.
+                WindowHelpers.ActivateWindow(this);
                 _focusTimerStore.StartPanelReading(request.Text, request.CountdownSeconds, request.Title);
                 SetPinned(true);
             }

@@ -231,7 +231,15 @@ beyond this batch.
   (NOACTIVATE). A user-started panel-right read (panel button / float
   icon / tray) now activates the panel on start
   (`ShowPanelForReading`), so Space/←/→/↑/↓/R work at once.
-  Reminder reads do NOT activate (they must never steal focus).
+  **Reminder reads activate too since 2026-11-22 (Manh, mac parity —
+  safe direction):** the panel activates itself when ANY panel-right
+  read starts (`ActivateWindow` in the `PanelRightRequest` consume
+  handler), so Space works at once with no click first. The old
+  "reminder reads do NOT activate" line is reversed by this decision
+  — the no-steal rule is about not yanking the user out of a read in
+  progress (the reminder waits while reading), not about keys once the
+  reminder's own read has started. No global key capture anywhere:
+  clicking to another app hands all keys to that app.
 - Completion: when a full read finishes, both layouts show
   "Congratulations! You just read X words in Y minutes, Z seconds!"
   + the share row (see "Completion" below). The lite shows the full
