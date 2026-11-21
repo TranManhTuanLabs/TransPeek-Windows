@@ -189,6 +189,23 @@ public sealed class AppSettings
     /// the other controls stay the same. Settings popover in the
     /// reader window.</summary>
     public string RsvpContextStyle { get; set; } = "Style1";
+    /// <summary>Fast Read reading style (feature/fastread-speaker-style2,
+    /// mac parity: ReadingStyle, display names not numbers): "RsvpFocus"
+    /// (the RSVP focus window — one chunk centred, default) or
+    /// "BasicReading" (a scrollable page, Play advances one line at a
+    /// time). NOT the same as RsvpContextStyle ("Style1"/"Style2" for
+    /// the around-text display) — different keys, different values, so
+    /// the two can never be mixed up. Picked in the Settings popover
+    /// of both the reader window and the lite reader; any style works
+    /// with any color scheme. A mode preference like the color scheme,
+    /// so Reset to default does NOT reset it.</summary>
+    public string RsvpReadingStyle { get; set; } = "RsvpFocus";
+    /// <summary>Highlight the current line in the Basic Reading style
+    /// (feature/fastread-speaker-style2, mac parity): a toggle in the
+    /// Settings popover, default OFF (a pure page). While TTS is
+    /// reading, the highlight turns itself on (computed in the view
+    /// model, not stored here), so the spoken line stays visible.</summary>
+    public bool RsvpHighlightCurrentLine { get; set; } = false;
     /// <summary>Fast Read window size in physical pixels, remembered
     /// after resize (0 = auto: 70% x 55% of the work area, min 880x550).</summary>
     public double RsvpWindowWidth { get; set; } = 0;

@@ -11,10 +11,17 @@
          reader window (RSVPView.swift, round 7): one word at a time at
          a fixed ORP pivot (middle char, orange #F6861F), context
          +/-150 words on pause, WPM 275 default, chunk 1-6.
-         READ ONLY — no TTS in the reader (listening is the float
-         icon's job). Layout (Manh 2026-11-19, temporary): top bar
-         (title centered, Settings + "?" at the right), reading area
-         (Reading time top-left, hint top-right above it), completion
+         Two reading styles (feature/fastread-speaker-style2, mac
+         parity): Style 1 "RSVP Focus" (this layout, default) and
+         Style 2 "Basic Reading" (a scrollable page — Style2ReadingView
+         in the same cell as the reading grid, one replaces the other).
+         The speaker button (sound on/off for the read, with a voice
+         panel on hover) sits left of Play in the transport; the
+         voice panel is an in-tree overlay above the transport, NOT a
+         Flyout/Popup — a popup would swallow the first click on the
+         speaker (mac CI314 bug 2). Layout: top bar (title centered,
+         Settings + "?" at the right), reading area (Reading time
+         top-left, hint top-right above it), completion
          (congratulations + share, above the progress bar), progress,
          bottom bar (Words + Speed left, transport centered, Context
          size + Focus size right). The reading area has two context
@@ -66,6 +73,14 @@
                                     <ComboBoxItem Content="Style 1" Tag="Style1" />
                                     <ComboBoxItem Content="Style 2" Tag="Style2" />
                                 </ComboBox>
+                                <TextBlock Text="Reading Style" FontSize="14" FontWeight="SemiBold" />
+                                <ComboBox x:Name="ReadingStyleCombo" SelectionChanged="OnReadingStyleChanged" HorizontalAlignment="Stretch">
+                                    <ComboBoxItem Content="RSVP Focus" Tag="RsvpFocus" />
+                                    <ComboBoxItem Content="Basic Reading" Tag="BasicReading" />
+                                </ComboBox>
+                                <ToggleSwitch x:Name="HighlightToggle" Header="Highlight current line"
+                                              Toggled="OnHighlightToggled"
+                                              ToolTipService.ToolTip="Highlight the current line in the Basic Reading style" />
                                 <Button Content="Reset to default" Click="OnResetClicked"
                                         ToolTipService.ToolTip="Reset speed, focus size, context size and context display to their defaults" />
                             </StackPanel>
@@ -154,6 +169,10 @@
                 <TextBlock x:Name="AfterTextBlock" Grid.Row="2" TextWrapping="Wrap" IsTextSelectionEnabled="True"
                            VerticalAlignment="Top" Visibility="Collapsed" />
             </Grid>
+            <!-- Style 2 page (feature/fastread-speaker-style2): the
+                 scrollable page replaces the RSVP grid in the same
+                 cell — the control shows/hides itself by ReadingStyle. -->
+            <Style2ReadingView x:Name="Style2View" Grid.Row="1" Visibility="Collapsed" />
         </Grid>
 
         <!-- Pause context: +/-150 words around the current slide, the
@@ -222,11 +241,16 @@
                 <Button x:Name="RestartButton" Padding="8,4" Click="OnRestartClicked" ToolTipService.ToolTip="Restart from the beginning (R)">
                     <FontIcon Glyph="&#xE72C;" FontSize="16" />
                 </Button>
-                <Button x:Name="RewindButton" Padding="8,4" Click="OnRewindClicked" ToolTipService.ToolTip="Previous word (←)">
-                    <FontIcon Glyph="&#xEB9E;" FontSize="16" />
+                <Button x:Name="SpeakerButton" Padding="8,4" Click="OnSpeakerClicked"
+                        PointerEntered="OnSpeakerPointerEntered" PointerExited="OnSpeakerPointerExited"
+                        ToolTipService.ToolTip="Sound off — click to hear the reading">
+                    <FontIcon x:Name="SpeakerIcon" Glyph="&#xE74F;" FontSize="16" />
                 </Button>
                 <Button x:Name="PlayPauseButton" Padding="8,4" Click="OnPlayPauseClicked" ToolTipService.ToolTip="Play / Pause (Space)">
                     <FontIcon x:Name="PlayPauseIcon" Glyph="&#xE768;" FontSize="16" />
+                </Button>
+                <Button x:Name="RewindButton" Padding="8,4" Click="OnRewindClicked" ToolTipService.ToolTip="Previous word (←)">
+                    <FontIcon Glyph="&#xEB9E;" FontSize="16" />
                 </Button>
                 <Button x:Name="FastForwardButton" Padding="8,4" Click="OnFastForwardClicked" ToolTipService.ToolTip="Next word (→)">
                     <FontIcon Glyph="&#xEB9D;" FontSize="16" />
@@ -235,6 +259,36 @@
                     <FontIcon Glyph="&#xE922;" FontSize="16" />
                 </Button>
             </StackPanel>
+            <!-- Voice panel (feature/fastread-speaker-style2): the voice
+                 picker + speed, as an in-tree overlay above the
+                 transport — NOT a Flyout/Popup, so clicking the speaker
+                 toggles the sound at once instead of dismissing a
+                 popup first (mac CI314 bug 2). It stays open while the
+                 mouse is on the speaker button or on the panel itself,
+                 and hides 300 ms after leaving both. The voice picks
+                 share the Settings → TTS keys (EnglishVoiceId /
+                 VietnameseVoiceId); the speed shares SpeechRate — the
+                 same rate the float icon's speak uses. -->
+            <Border x:Name="VoicePanel" HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                    Margin="0,0,0,56" Width="300" Padding="12" CornerRadius="8" Visibility="Collapsed"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource ControlElevationBorderBrush}" BorderThickness="1"
+                    PointerEntered="OnVoicePanelPointerEntered" PointerExited="OnVoicePanelPointerExited">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Voice" FontSize="14" FontWeight="SemiBold" />
+                    <TextBlock Text="English voice" FontSize="13" />
+                    <ComboBox x:Name="EnglishVoiceCombo" SelectionChanged="OnEnglishVoiceChanged" HorizontalAlignment="Stretch" />
+                    <TextBlock Text="Vietnamese voice" FontSize="13" />
+                    <ComboBox x:Name="VietnameseVoiceCombo" SelectionChanged="OnVietnameseVoiceChanged" HorizontalAlignment="Stretch" />
+                    <Grid>
+                        <TextBlock Text="Speed" FontSize="13" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                        <TextBlock x:Name="SpeedValueText" Text="1.0x" FontSize="13" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                    </Grid>
+                    <Slider x:Name="SpeedSlider" Minimum="0.6" Maximum="4" StepFrequency="0.1" ValueChanged="OnSpeedChanged" />
+                    <TextBlock Text="Applies to Windows system voices. Speed takes effect from the next chunk or line."
+                               FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
             <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right" VerticalAlignment="Center">
                 <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                     <TextBlock Text="Context size" FontSize="13" VerticalAlignment="Center" />

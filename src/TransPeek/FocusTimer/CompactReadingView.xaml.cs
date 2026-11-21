@@ -15,7 +15,9 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Documents;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using TransPeek.Core.Settings;
 using TransPeek.FastRead;
+using TransPeek.Services;
 using TransPeek.Share;
 using Windows.Foundation;
 using Windows.System;
@@ -33,6 +35,16 @@ public sealed partial class CompactReadingView : UserControl
     // the buttons — re-filling on every chrome update would reset
     // hover/focus for nothing). Cleared when the finish clears.
     private bool _sharePopulated;
+    // TTS for the speaker button (feature/fastread-speaker-style2):
+    // wired by the host (the panel owns one service; the Rest window
+    // never sets one, so it gets no speaker button — mac parity).
+    private SystemSpeechService? _speakerService;
+    // Voice panel hover state (same as the reader window: the picker
+    // stays open while the mouse is on the speaker button or on the
+    // panel itself, hides 300 ms after leaving both).
+    private readonly DispatcherTimer _voicePanelHideTimer = new();
+    private bool _hoveringSpeaker;
+    private bool _hoveringVoicePanel;
 
     /// <summary>The view model to render. Rebinding (a new read) does
     /// a full sync — the view model may already be playing by then.</summary>
@@ -45,8 +57,27 @@ public sealed partial class CompactReadingView : UserControl
                 _viewModel.PropertyChanged -= OnViewModelChanged;
             _viewModel = value;
             if (_viewModel is not null)
+            {
                 _viewModel.PropertyChanged += OnViewModelChanged;
+                _viewModel.Speaker = _speakerService;
+            }
+            Style2View.ViewModel = value;
             FullSync();
+        }
+    }
+
+    /// <summary>The TTS service this read speaks through (set by the
+    /// host — the panel; never set by the Rest window). Null = no
+    /// speaker button at all, like mac (no coordinator, no button).</summary>
+    public SystemSpeechService? SpeakerService
+    {
+        get => _speakerService;
+        set
+        {
+            _speakerService = value;
+            if (_viewModel is not null)
+                _viewModel.Speaker = value;
+            SyncSpeakerButton();
         }
     }
 
@@ -65,6 +96,15 @@ public sealed partial class CompactReadingView : UserControl
         // uses a slider, which does not fit this tight top row).
         for (var wpm = 50; wpm <= 2000; wpm += 50)
             WpmCombo.Items.Add(new ComboBoxItem { Content = wpm.ToString(), Tag = wpm.ToString() });
+        PopulateVoices(EnglishVoiceCombo, "en");
+        PopulateVoices(VietnameseVoiceCombo, "vi");
+        _voicePanelHideTimer.Interval = TimeSpan.FromMilliseconds(300);
+        _voicePanelHideTimer.Tick += (_, _) =>
+        {
+            _voicePanelHideTimer.Stop();
+            if (!_hoveringSpeaker && !_hoveringVoicePanel)
+                VoicePanel.Visibility = Visibility.Collapsed;
+        };
         ProgressSlider.AddHandler(UIElement.PointerWheelChangedEvent, new PointerEventHandler(OnProgressWheelChanged), true);
         RootGrid.SizeChanged += (_, e) =>
         {
@@ -141,6 +181,8 @@ public sealed partial class CompactReadingView : UserControl
             case nameof(RsvpReaderViewModel.StatusText):
             case nameof(RsvpReaderViewModel.CurrentSlideIndex):
             case nameof(RsvpReaderViewModel.SlideCount):
+            case nameof(RsvpReaderViewModel.Style2CurrentLineIndex):
+            case nameof(RsvpReaderViewModel.Style2LineCount):
                 SyncProgress();
                 break;
             case nameof(RsvpReaderViewModel.PauseContext):
@@ -155,8 +197,70 @@ public sealed partial class CompactReadingView : UserControl
             case nameof(RsvpReaderViewModel.ChunkSize):
             case nameof(RsvpReaderViewModel.ContextDisplay):
             case nameof(RsvpReaderViewModel.ColorScheme):
+            case nameof(RsvpReaderViewModel.HighlightCurrentLine):
                 SyncControls();
                 break;
+            case nameof(RsvpReaderViewModel.ReadingStyle):
+                // The reading style swaps the reading surface (RSVP
+                // area vs Style 2 page) and the progress units.
+                SwitchReadingSurface();
+                SyncControls();
+                SyncProgress();
+                break;
+            case nameof(RsvpReaderViewModel.IsSoundOn):
+                SyncSpeakerIcon();
+                break;
+        }
+    }
+
+    /// <summary>Swap the reading surface by style: Style 2 hides the
+    /// RSVP reading area (the Style2 view shows itself); Style 1
+    /// hides the Style 2 page (it hides itself) and shows the RSVP
+    /// area again.</summary>
+    private void SwitchReadingSurface()
+    {
+        if (_viewModel is null)
+            return;
+        ReadingAreaGrid.Visibility = _viewModel.IsRsvpStyle ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    /// <summary>The speaker button only exists when a TTS service is
+    /// wired (the panel); the Rest window never wires one, so it gets
+    /// no speaker button — mac parity (no coordinator, no button).</summary>
+    private void SyncSpeakerButton()
+    {
+        SpeakerButton.Visibility = _speakerService is not null ? Visibility.Visible : Visibility.Collapsed;
+        SyncSpeakerIcon();
+    }
+
+    /// <summary>Speaker icon by sound state (mac: speaker.wave.2.fill
+    /// vs speaker.slash.fill): Volume E767 = sound on, Mute E74F =
+    /// sound off (both verified on Microsoft Learn, Segoe Fluent
+    /// Icons).</summary>
+    private void SyncSpeakerIcon()
+    {
+        if (_viewModel is null)
+            return;
+        SpeakerIcon.Glyph = _viewModel.IsSoundOn ? "\uE767" : "\uE74F";
+        ToolTipService.SetToolTip(SpeakerButton, _viewModel.IsSoundOn
+            ? "Sound on — click to mute the reading"
+            : "Sound off — click to hear the reading");
+    }
+
+    /// <summary>Voice picker lists (same source as Settings → TTS, so
+    /// the two lists can never drift): "System default" first, then
+    /// the installed voices for the language. The Tag is the voice Id,
+    /// saved to the same settings keys Settings → TTS uses.</summary>
+    private void PopulateVoices(ComboBox combo, string languagePrefix)
+    {
+        combo.Items.Clear();
+        combo.Items.Add(new ComboBoxItem { Content = "System default", Tag = "" });
+        foreach (var voice in SystemSpeechService.InstalledVoices)
+        {
+            if (!voice.Language.StartsWith(languagePrefix + "-", StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(voice.Language, languagePrefix, StringComparison.OrdinalIgnoreCase))
+                continue;
+            combo.Items.Add(new ComboBoxItem { Content = voice.DisplayName, Tag = voice.Id });
         }
     }
 
@@ -168,8 +272,10 @@ public sealed partial class CompactReadingView : UserControl
         SyncProgress();
         RenderContext();
         SyncControls();
+        SwitchReadingSurface();
         PlayPauseIcon.Glyph = _viewModel.IsPlaying ? "\uE769" : "\uE768";
         ReadingTimeText.Text = _viewModel.ReadingTimeText;
+        SyncSpeakerButton();
         UpdateChrome();
     }
 
@@ -219,6 +325,16 @@ public sealed partial class CompactReadingView : UserControl
         SideHintText.Visibility = !playing && _fullSize ? Visibility.Visible : Visibility.Collapsed;
         CloseButton.Visibility = OnCloseReading is not null ? Visibility.Visible : Visibility.Collapsed;
         MaximizeButton.Visibility = OnToggleMaximize is not null ? Visibility.Visible : Visibility.Collapsed;
+        SyncSpeakerButton();
+        // While playing, the transport hides — the voice panel (an
+        // overlay above it) hides too, so it never covers the reading.
+        if (playing)
+        {
+            _voicePanelHideTimer.Stop();
+            _hoveringSpeaker = false;
+            _hoveringVoicePanel = false;
+            VoicePanel.Visibility = Visibility.Collapsed;
+        }
     }
 
     private void SyncControls()
@@ -232,6 +348,13 @@ public sealed partial class CompactReadingView : UserControl
         SelectComboByTag(ChunkCombo, _viewModel.ChunkSize.ToString());
         SelectComboByTag(ColorSchemeCombo, _viewModel.ColorScheme);
         SelectComboByTag(ContextDisplayCombo, _viewModel.ContextDisplay);
+        SelectComboByTag(ReadingStyleCombo, _viewModel.ReadingStyle);
+        HighlightToggle.IsOn = _viewModel.HighlightCurrentLine;
+        SelectComboByTag(EnglishVoiceCombo, App.Settings.EnglishVoiceId ?? "");
+        SelectComboByTag(VietnameseVoiceCombo, App.Settings.VietnameseVoiceId ?? "");
+        SpeedSlider.Value = Math.Clamp(App.Settings.SpeechRate, SpeedSlider.Minimum, SpeedSlider.Maximum);
+        SpeedValueText.Text = $"{SpeedSlider.Value:0.0}x";
+        SyncSpeakerIcon();
         ApplyColorScheme();
         _loading = false;
     }
@@ -315,11 +438,12 @@ public sealed partial class CompactReadingView : UserControl
     {
         if (_viewModel is null)
             return;
-        var total = _viewModel.SlideCount;
+        // Style 2 counts lines, not slides (the slider seeks lines).
+        var total = _viewModel.PositionCount;
         _updatingProgress = true;
         ProgressSlider.Minimum = 0;
         ProgressSlider.Maximum = Math.Max(0, total - 1);
-        ProgressSlider.Value = _viewModel.CurrentSlideIndex;
+        ProgressSlider.Value = _viewModel.CurrentPositionIndex;
         _updatingProgress = false;
         StatusText.Text = _viewModel.StatusText;
     }
@@ -349,6 +473,105 @@ public sealed partial class CompactReadingView : UserControl
     private void OnPlayPauseClicked(object sender, RoutedEventArgs e)
         => _viewModel?.SetPlaying(!_viewModel.IsPlaying);
 
+    /// <summary>Speaker click: toggle the sound for this read. The
+    /// voice panel stays open (it is an in-tree overlay, not a popup)
+    /// — clicking the speaker never dismisses it first (mac CI314
+    /// bug 2: the popover swallowed the first click).</summary>
+    private void OnSpeakerClicked(object sender, RoutedEventArgs e)
+        => _viewModel?.SetSoundOn(!(_viewModel?.IsSoundOn ?? false));
+
+    /// <summary>Keep the voice panel open while the mouse is on the
+    /// speaker button or on the panel itself; close it 300 ms after
+    /// leaving both, so moving from the button into the panel does
+    /// not flicker it shut mid-move (mac parity).</summary>
+    private void OnSpeakerPointerEntered(object sender, PointerRoutedEventArgs e)
+    {
+        _hoveringSpeaker = true;
+        UpdateVoicePanelVisibility();
+    }
+
+    private void OnSpeakerPointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        _hoveringSpeaker = false;
+        UpdateVoicePanelVisibility();
+    }
+
+    private void OnVoicePanelPointerEntered(object sender, PointerRoutedEventArgs e)
+    {
+        _hoveringVoicePanel = true;
+        UpdateVoicePanelVisibility();
+    }
+
+    private void OnVoicePanelPointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        _hoveringVoicePanel = false;
+        UpdateVoicePanelVisibility();
+    }
+
+    private void UpdateVoicePanelVisibility()
+    {
+        _voicePanelHideTimer.Stop();
+        if (_hoveringSpeaker || _hoveringVoicePanel)
+        {
+            VoicePanel.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            _voicePanelHideTimer.Start();
+        }
+    }
+
+    private void OnEnglishVoiceChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_loading)
+            return;
+        if (EnglishVoiceCombo.SelectedItem is ComboBoxItem item && item.Tag is string id)
+        {
+            App.Settings.EnglishVoiceId = string.IsNullOrEmpty(id) ? null : id;
+            SettingsStore.Save(App.Settings);
+        }
+    }
+
+    private void OnVietnameseVoiceChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_loading)
+            return;
+        if (VietnameseVoiceCombo.SelectedItem is ComboBoxItem item && item.Tag is string id)
+        {
+            App.Settings.VietnameseVoiceId = string.IsNullOrEmpty(id) ? null : id;
+            SettingsStore.Save(App.Settings);
+        }
+    }
+
+    /// <summary>Voice speed (mac: 0.6x–4x in the voice panel): the
+    /// real voice-speed multiplier, shared with Settings → TTS
+    /// (SpeechRate). It takes effect from the next chunk/line — no
+    /// restart needed, because SpeakAsync reads the setting fresh
+    /// every time. WPM is untouched: it only paces silent reading.</summary>
+    private void OnSpeedChanged(object sender, Microsoft.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
+    {
+        SpeedValueText.Text = $"{e.NewValue:0.0}x";
+        if (_loading)
+            return;
+        App.Settings.SpeechRate = e.NewValue;
+        SettingsStore.Save(App.Settings);
+    }
+
+    private void OnReadingStyleChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_loading || _viewModel is null)
+            return;
+        if (ReadingStyleCombo.SelectedItem is ComboBoxItem item && item.Tag is string tag)
+            _viewModel.SetReadingStyle(tag);
+    }
+
+    private void OnHighlightToggled(object sender, RoutedEventArgs e)
+    {
+        if (_loading || _viewModel is null)
+            return;
+        _viewModel.SetHighlightCurrentLine(HighlightToggle.IsOn);
+    }
+
     private void OnRestartClicked(object sender, RoutedEventArgs e)
         => _viewModel?.Restart();
 
@@ -371,7 +594,7 @@ public sealed partial class CompactReadingView : UserControl
         _viewModel.SeekTo((int)Math.Round(e.NewValue));
     }
 
-    /// <summary>Wheel over the progress slider: one slide per tick,
+    /// <summary>Wheel over the progress slider: one unit per tick,
     /// like the window (attached with handledEventsToo — a Slider
     /// consumes the wheel itself and marks it handled).</summary>
     private void OnProgressWheelChanged(object sender, PointerRoutedEventArgs e)
@@ -381,7 +604,7 @@ public sealed partial class CompactReadingView : UserControl
         var delta = e.GetCurrentPoint((UIElement)sender).Properties.MouseWheelDelta;
         if (delta == 0)
             return;
-        _viewModel.SeekTo(_viewModel.CurrentSlideIndex + (delta < 0 ? 1 : -1));
+        _viewModel.SeekTo(_viewModel.CurrentPositionIndex + (delta < 0 ? 1 : -1));
         e.Handled = true;
     }
 

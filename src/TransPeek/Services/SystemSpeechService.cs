@@ -84,9 +84,12 @@ public sealed class SystemSpeechService : IDisposable
         try
         {
             // Rate from Settings (the TTS Speech tab, Default Speech
-            // Rate). SpeechSynthesizer takes 0.5 - 6.0; the setting
-            // is clamped to the 0.5 - 2.0 the UI offers.
-            _synth.Options.SpeakingRate = Math.Clamp(App.Settings.SpeechRate, 0.5, 2.0);
+            // Rate, and the voice panel's Speed slider — same key).
+            // SpeechSynthesizer takes 0.5 - 6.0; the setting is
+            // clamped to the 0.5 - 4.0 the UI offers (the voice panel
+            // offers 0.6x-4x, Settings → TTS 0.5x-4x; 4x is the
+            // mac-parity cap).
+            _synth.Options.SpeakingRate = Math.Clamp(App.Settings.SpeechRate, 0.5, 4.0);
             // Always set the voice explicitly (matched voice, else
             // the system default) — otherwise the voice from a
             // previous SpeakAsync would stick to the next language.

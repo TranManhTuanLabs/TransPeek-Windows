@@ -19,6 +19,7 @@ using System.Runtime.CompilerServices;
 using Microsoft.UI.Xaml;
 using TransPeek.Core.FastRead;
 using TransPeek.Core.Settings;
+using TransPeek.Services;
 
 namespace TransPeek.FastRead;
 
@@ -37,6 +38,37 @@ public sealed class RsvpReaderViewModel : INotifyPropertyChanged
     private string _contextDisplay = "Paused";
     private string _colorScheme = "Light";
     private string _contextStyle = "Style1";
+    // Reading style (feature/fastread-speaker-style2, mac parity):
+    // "RsvpFocus" (the RSVP focus window, default) or "BasicReading"
+    // (a scrollable page, Play advances one line at a time). A mode
+    // preference like the color scheme — Reset does NOT reset it.
+    private string _readingStyle = "RsvpFocus";
+    // Highlight the current line in the Basic Reading style (a toggle
+    // in the Settings popover, default OFF). The highlight also turns
+    // itself on while TTS is reading — see HighlightVisible.
+    private bool _highlightCurrentLine;
+    // Style 2 lines (paragraphs split into ≤12-word lines) and the
+    // line the focus is on. Built at LoadText, like the slides.
+    private IReadOnlyList<string> _style2Lines = [];
+    private int _style2CurrentLineIndex;
+    // Sound (feature/fastread-speaker-style2): the speaker button is a
+    // mute/unmute toggle for the read, NOT a separate "speak the whole
+    // text" action (that was mac CI314 bug 1). Default OFF, NOT
+    // persisted — a new read starts silent, like today. When sound is
+    // on, Play/Space runs each chunk/line through TTS and the speech
+    // itself paces the read (no WPM timer); when off, the timer paces
+    // as today. The service is wired by the host (window / panel);
+    // null = no speaker at all (the Rest window).
+    private bool _soundOn;
+    private SystemSpeechService? _speaker;
+    // Language the read is spoken in (vi/en heuristic, same as the
+    // float icon's speak — SystemSpeechService.DetectLanguage).
+    private string _speakLanguageCode = "en";
+    // Speech generation: each spoken unit bumps it, so a SpeechEnded
+    // arriving for an older utterance (after a seek/stop) is ignored
+    // instead of advancing the read one extra unit.
+    private int _speechGeneration;
+    private int _expectedSpeechGeneration;
     // Elapsed reading time (mac RSVPView.elapsedSeconds): banked across
     // the playing stretches of the current read, for the completion
     // line + share text. The stretch clock starts when playback starts
@@ -117,6 +149,74 @@ public sealed class RsvpReaderViewModel : INotifyPropertyChanged
         private set => SetField(ref _contextStyle, value);
     }
 
+    /// <summary>Reading style: "RsvpFocus" (default) or "BasicReading".
+    /// Display names are "RSVP Focus" / "Basic Reading" (never "Style
+    /// 1" / "Style 2" — mac parity).</summary>
+    public string ReadingStyle
+    {
+        get => _readingStyle;
+        private set => SetField(ref _readingStyle, value);
+    }
+
+    /// <summary>True for the RSVP focus style (the current design).</summary>
+    public bool IsRsvpStyle => string.Equals(_readingStyle, "RsvpFocus", StringComparison.OrdinalIgnoreCase);
+
+    public bool HighlightCurrentLine
+    {
+        get => _highlightCurrentLine;
+        private set => SetField(ref _highlightCurrentLine, value);
+    }
+
+    /// <summary>The line highlight is on when the toggle is on, or
+    /// automatically while TTS is reading (mac parity: the spoken line
+    /// stays visible without the reader having to turn the toggle on
+    /// first). Computed, not stored.</summary>
+    public bool HighlightVisible => _highlightCurrentLine || (_soundOn && _playing);
+
+    /// <summary>Style 2 lines of the text (paragraphs split into
+    /// ≤12-word lines). Empty when there is no text.</summary>
+    public IReadOnlyList<string> Style2Lines => _style2Lines;
+
+    public int Style2CurrentLineIndex => _style2CurrentLineIndex;
+
+    public int Style2LineCount => _style2Lines.Count;
+
+    /// <summary>Current position in the active style's unit: the slide
+    /// index (Style 1) or the line index (Style 2). The progress bar
+    /// and the step keys read this, not the slide index directly.</summary>
+    public int CurrentPositionIndex => IsRsvpStyle ? _currentSlide : _style2CurrentLineIndex;
+
+    /// <summary>Total units in the active style: slides (Style 1) or
+    /// lines (Style 2).</summary>
+    public int PositionCount => IsRsvpStyle ? _document.Slides.Count : _style2Lines.Count;
+
+    /// <summary>Sound on/off for this read (the speaker button). Not
+    /// persisted — a new read starts silent.</summary>
+    public bool IsSoundOn
+    {
+        get => _soundOn;
+        private set => SetField(ref _soundOn, value);
+    }
+
+    /// <summary>The TTS service this read speaks through (wired by the
+    /// host: the reader window / the panel). Null = no speaker (the
+    /// Rest window never wires one, like mac).</summary>
+    public SystemSpeechService? Speaker
+    {
+        get => _speaker;
+        set
+        {
+            if (_speaker == value)
+                return;
+            if (_speaker is not null)
+                _speaker.SpeechEnded -= OnSpeechEnded;
+            _speaker = value;
+            if (_speaker is not null)
+                _speaker.SpeechEnded += OnSpeechEnded;
+            OnPropertyChanged();
+        }
+    }
+
     public RsvpContext? PauseContext
     {
         get => _pauseContext;
@@ -185,14 +285,15 @@ public sealed class RsvpReaderViewModel : INotifyPropertyChanged
     /// <summary>Whether the pause context shows right now (mac round 7,
     /// SwiftRead's contextDisplayStyle): Always = even while playing;
     /// Paused = only while paused (default); Never = never. An unknown
-    /// value behaves like Paused.</summary>
-    public bool ShowContext => _document.Slides.Count > 0
+    /// value behaves like Paused. Style 2 never shows it — the whole
+    /// page IS the context there.</summary>
+    public bool ShowContext => IsRsvpStyle && _document.Slides.Count > 0
         && (string.Equals(_contextDisplay, "Always", StringComparison.OrdinalIgnoreCase)
             || (!_playing && !string.Equals(_contextDisplay, "Never", StringComparison.OrdinalIgnoreCase)));
 
     public RsvpReaderViewModel()
     {
-        _timer.Tick += (_, _) => AdvanceSlide();
+        _timer.Tick += (_, _) => AdvancePosition();
     }
 
     /// <summary>Load new text and show the first slide (paused — the
@@ -202,10 +303,17 @@ public sealed class RsvpReaderViewModel : INotifyPropertyChanged
     {
         _sourceText = text;
         _document = RsvpEngine.Build(text, App.Settings.RsvpWpm, App.Settings.RsvpChunkSize);
+        _style2Lines = RsvpEngine.BuildLines(text);
+        _style2CurrentLineIndex = 0;
+        _speakLanguageCode = SystemSpeechService.DetectLanguage(text);
         _currentSlide = 0;
         IsFinished = false;
         _timer.Stop();
+        StopSpeech();
         IsPlaying = false;
+        // A new read starts silent (sound is not persisted).
+        if (_soundOn)
+            IsSoundOn = false;
         // A new text is a new read — the elapsed clock restarts.
         _accumulatedElapsed = TimeSpan.Zero;
         _playStartedAt = null;
@@ -216,7 +324,11 @@ public sealed class RsvpReaderViewModel : INotifyPropertyChanged
         ContextDisplay = App.Settings.RsvpContextDisplay;
         ColorScheme = App.Settings.RsvpColorScheme;
         ContextStyle = NormalizeContextStyle(App.Settings.RsvpContextStyle);
-        Notify(nameof(SlideCount), nameof(TotalWords), nameof(TotalDuration), nameof(HasSlides));
+        ReadingStyle = NormalizeReadingStyle(App.Settings.RsvpReadingStyle);
+        HighlightCurrentLine = App.Settings.RsvpHighlightCurrentLine;
+        Notify(nameof(SlideCount), nameof(TotalWords), nameof(TotalDuration), nameof(HasSlides),
+            nameof(Style2Lines), nameof(Style2LineCount), nameof(Style2CurrentLineIndex),
+            nameof(CurrentPositionIndex), nameof(PositionCount), nameof(HighlightVisible));
         ShowSlide(0);
         UpdateProgress();
         UpdateReadingTime();
@@ -224,7 +336,7 @@ public sealed class RsvpReaderViewModel : INotifyPropertyChanged
 
     public void SetPlaying(bool playing)
     {
-        if (_document.Slides.Count == 0)
+        if (PositionCount == 0)
             playing = false;
         IsPlaying = playing;
         if (playing)
@@ -235,21 +347,218 @@ public sealed class RsvpReaderViewModel : INotifyPropertyChanged
                 // elapsed clock restarts with it.
                 IsFinished = false;
                 _accumulatedElapsed = TimeSpan.Zero;
-                _currentSlide = 0;
-                ShowSlide(0);
+                if (IsRsvpStyle)
+                {
+                    _currentSlide = 0;
+                    ShowSlide(0);
+                }
+                else
+                {
+                    _style2CurrentLineIndex = 0;
+                    ShowLine(0);
+                }
             }
             // A playing stretch starts: the clock runs until pause.
             _playStartedAt = DateTimeOffset.UtcNow;
-            _timer.Interval = _document.Slides[_currentSlide].Delay;
-            _timer.Start();
+            RestartPacing();
         }
         else
         {
             // A stretch ends: bank its time into the total.
             BankElapsed();
             _timer.Stop();
+            StopSpeech();
         }
         UpdateContext();
+        Notify(nameof(HighlightVisible));
+    }
+
+    /// <summary>Restart the pacing for the current unit after a change
+    /// (play / seek / style / WPM): with sound on, the speech itself
+    /// paces the read — speak the current unit and wait for its end;
+    /// otherwise the WPM timer paces, as today. The timer path is
+    /// untouched by the sound path, so silent reading behaves exactly
+    /// like before this feature.</summary>
+    private void RestartPacing()
+    {
+        _timer.Stop();
+        if (_soundOn && _speaker is not null)
+        {
+            _ = SpeakCurrentUnitAsync();
+        }
+        else
+        {
+            _timer.Interval = CurrentUnitDelay;
+            _timer.Start();
+        }
+    }
+
+    /// <summary>Delay of the current unit for the timer path: the slide
+    /// delay (Style 1) or the line delay (Style 2 — words in the line
+    /// at the WPM rate, mac startStyle2PlaybackTask).</summary>
+    private TimeSpan CurrentUnitDelay => IsRsvpStyle
+        ? _document.Slides[_currentSlide].Delay
+        : LineDelay(_style2CurrentLineIndex);
+
+    /// <summary>How long one Style 2 line takes at the current WPM
+    /// (words / WPM, floored at 10 ms like a slide).</summary>
+    private TimeSpan LineDelay(int lineIndex)
+    {
+        if (_style2Lines.Count == 0)
+            return TimeSpan.FromMilliseconds(RsvpEngine.MinSlideMs);
+        var words = CountWords(_style2Lines[Math.Clamp(lineIndex, 0, _style2Lines.Count - 1)]);
+        var ms = words * 60000.0 / Math.Max(_wpm, 1);
+        return TimeSpan.FromMilliseconds(Math.Max(RsvpEngine.MinSlideMs, ms));
+    }
+
+    private static int CountWords(string line)
+    {
+        var count = 0;
+        var inWord = false;
+        foreach (var c in line)
+        {
+            if (char.IsWhiteSpace(c))
+                inWord = false;
+            else if (!inWord)
+            {
+                inWord = true;
+                count++;
+            }
+        }
+        return count;
+    }
+
+    /// <summary>Speak the current unit aloud (Style 1: the slide text;
+    /// Style 2: the line). The returned false (no voice installed, or
+    /// synthesis failed) falls back to the timer for this unit, so the
+    /// read keeps moving instead of stalling on a silent chunk.</summary>
+    private async Task SpeakCurrentUnitAsync()
+    {
+        if (_speaker is null || !IsPlaying || !_soundOn)
+            return;
+        var generation = ++_speechGeneration;
+        _expectedSpeechGeneration = generation;
+        var text = IsRsvpStyle
+            ? _document.Slides[_currentSlide].Text
+            : _style2Lines[_style2CurrentLineIndex];
+        var spoken = await _speaker.SpeakAsync(text, _speakLanguageCode);
+        // The read may have paused / sought / switched style while the
+        // speech was starting — only fall back when this utterance is
+        // still the live one.
+        if (!spoken && generation == _expectedSpeechGeneration && IsPlaying && _soundOn)
+        {
+            _timer.Interval = CurrentUnitDelay;
+            _timer.Start();
+        }
+    }
+
+    /// <summary>A spoken unit ended on its own: advance one unit and
+    /// speak the next (TTS is the pacing clock while sound is on).
+    /// Stale events (an older utterance ending after a seek/stop) are
+    /// ignored via the generation, and via IsSpeaking — if a newer
+    /// utterance is already playing, this end belongs to the old one.
+    /// The event may arrive off the UI thread, so the advance runs on
+    /// the timer's dispatcher queue.</summary>
+    private void OnSpeechEnded(object? sender, EventArgs e)
+    {
+        var generation = _expectedSpeechGeneration;
+        _timer.DispatcherQueue.TryEnqueue(() =>
+        {
+            if (generation != _expectedSpeechGeneration || !IsPlaying || !_soundOn)
+                return;
+            if (_speaker?.IsSpeaking == true)
+                return;
+            AdvancePosition();
+            if (IsPlaying)
+                _ = SpeakCurrentUnitAsync();
+        });
+    }
+
+    /// <summary>Stop any speech (a no-op when nothing is speaking) and
+    /// invalidate the pending SpeechEnded, so it cannot advance the
+    /// read after the stop.</summary>
+    private void StopSpeech()
+    {
+        _speechGeneration++;
+        _speaker?.Stop();
+    }
+
+    /// <summary>Turn the sound on/off for this read (the speaker
+    /// button). On while playing: stop the timer, speak the current
+    /// unit. Off while playing: stop the speech, the timer takes over
+    /// from the current unit — playback continues silently.</summary>
+    public void SetSoundOn(bool soundOn)
+    {
+        // No speaker wired (the Rest window) — sound cannot turn on.
+        if (soundOn && _speaker is null)
+            return;
+        if (soundOn == _soundOn)
+            return;
+        IsSoundOn = soundOn;
+        Notify(nameof(HighlightVisible));
+        if (!IsPlaying)
+            return;
+        if (soundOn && _speaker is not null)
+        {
+            _timer.Stop();
+            _ = SpeakCurrentUnitAsync();
+        }
+        else
+        {
+            StopSpeech();
+            _timer.Interval = CurrentUnitDelay;
+            _timer.Start();
+        }
+    }
+
+    /// <summary>Switch the reading style (the Settings picker). The
+    /// reading position is kept as a fraction (mac parity: the same
+    /// share of the text in the new style). Changing style stops the
+    /// sound (mac: the voice stops with the style); playback itself
+    /// continues in the new style.</summary>
+    public void SetReadingStyle(string style)
+    {
+        style = NormalizeReadingStyle(style);
+        if (string.Equals(style, _readingStyle, StringComparison.OrdinalIgnoreCase))
+            return;
+        var fraction = PositionCount > 1
+            ? (double)CurrentPositionIndex / (PositionCount - 1)
+            : 0;
+        // Stop the sound first (without touching the timer — the
+        // pacing restarts below for the new style).
+        if (_soundOn)
+        {
+            StopSpeech();
+            IsSoundOn = false;
+        }
+        ReadingStyle = style;
+        App.Settings.RsvpReadingStyle = style;
+        SettingsStore.Save(App.Settings);
+        var newCount = PositionCount;
+        var newIndex = newCount == 0 ? 0 : (int)Math.Round(fraction * (newCount - 1));
+        if (IsRsvpStyle)
+            ShowSlide(newIndex);
+        else
+            ShowLine(newIndex);
+        if (IsPlaying)
+            RestartPacing();
+        Notify(nameof(HighlightVisible));
+    }
+
+    private static string NormalizeReadingStyle(string style)
+        => string.Equals(style, "BasicReading", StringComparison.OrdinalIgnoreCase) ? "BasicReading" : "RsvpFocus";
+
+    /// <summary>Toggle the Style 2 line highlight (the Settings
+    /// popover). Persisted; the highlight also auto-shows while TTS
+    /// is reading (HighlightVisible), whether or not this is on.</summary>
+    public void SetHighlightCurrentLine(bool highlight)
+    {
+        if (highlight == _highlightCurrentLine)
+            return;
+        HighlightCurrentLine = highlight;
+        App.Settings.RsvpHighlightCurrentLine = highlight;
+        SettingsStore.Save(App.Settings);
+        Notify(nameof(HighlightVisible));
     }
 
     /// <summary>Bank the running stretch into the elapsed total (called
@@ -265,22 +574,21 @@ public sealed class RsvpReaderViewModel : INotifyPropertyChanged
 
     public void SeekTo(int index)
     {
-        if (_document.Slides.Count == 0)
+        if (PositionCount == 0)
             return;
         IsFinished = false;
-        ShowSlide(index);
+        if (IsRsvpStyle)
+            ShowSlide(index);
+        else
+            ShowLine(index);
         if (IsPlaying)
-        {
-            _timer.Stop();
-            _timer.Interval = _document.Slides[_currentSlide].Delay;
-            _timer.Start();
-        }
+            RestartPacing();
         UpdateProgress();
     }
 
-    public void StepBack() => SeekTo(_currentSlide - 1);
+    public void StepBack() => SeekTo(CurrentPositionIndex - 1);
 
-    public void StepForward() => SeekTo(_currentSlide + 1);
+    public void StepForward() => SeekTo(CurrentPositionIndex + 1);
 
     /// <summary>Restart from the beginning: a fresh read, so the
     /// elapsed clock restarts too (a restart mid-read does not keep
@@ -398,6 +706,14 @@ public sealed class RsvpReaderViewModel : INotifyPropertyChanged
         ShowSlide(_currentSlide);
     }
 
+    private void AdvancePosition()
+    {
+        if (IsRsvpStyle)
+            AdvanceSlide();
+        else
+            AdvanceLine();
+    }
+
     private void AdvanceSlide()
     {
         if (_currentSlide + 1 >= _document.Slides.Count)
@@ -412,6 +728,56 @@ public sealed class RsvpReaderViewModel : INotifyPropertyChanged
         ShowSlide(_currentSlide + 1);
         if (IsPlaying)
             _timer.Interval = _document.Slides[_currentSlide].Delay;
+    }
+
+    /// <summary>Style 2 advance (mac startStyle2PlaybackTask): one
+    /// focus line at a time, at the WPM pace for that line's words.
+    /// The timer path re-arms itself; the sound path is driven by
+    /// SpeechEnded instead (OnSpeechEnded calls AdvancePosition, so
+    /// this runs there too — the timer is stopped while sound is on).</summary>
+    private void AdvanceLine()
+    {
+        if (_style2CurrentLineIndex + 1 >= _style2Lines.Count)
+        {
+            // Finish: same bank-first order as AdvanceSlide.
+            SetPlaying(false);
+            IsFinished = true;
+            UpdateProgress();
+            return;
+        }
+        ShowLine(_style2CurrentLineIndex + 1);
+        if (IsPlaying)
+            _timer.Interval = LineDelay(_style2CurrentLineIndex);
+    }
+
+    private void ShowLine(int index)
+    {
+        if (_style2Lines.Count == 0)
+        {
+            _style2CurrentLineIndex = 0;
+            Notify(nameof(Style2CurrentLineIndex), nameof(CurrentPositionIndex), nameof(PositionCount));
+            UpdateProgress();
+            return;
+        }
+        _style2CurrentLineIndex = Math.Clamp(index, 0, _style2Lines.Count - 1);
+        Notify(nameof(Style2CurrentLineIndex), nameof(CurrentPositionIndex), nameof(PositionCount));
+        UpdateProgress();
+    }
+
+    /// <summary>Index of the Style 2 line containing the given word
+    /// index (for keeping the reading position when WPM changes —
+    /// the slide equivalent is RsvpEngine.SlideIndexForWord).</summary>
+    private int LineIndexForWord(int wordIndex)
+    {
+        wordIndex = Math.Clamp(wordIndex, 0, Math.Max(0, TotalWords - 1));
+        var seen = 0;
+        for (var i = 0; i < _style2Lines.Count; i++)
+        {
+            seen += CountWords(_style2Lines[i]);
+            if (wordIndex < seen)
+                return i;
+        }
+        return Math.Max(0, _style2Lines.Count - 1);
     }
 
     private void ShowSlide(int index)
@@ -431,39 +797,75 @@ public sealed class RsvpReaderViewModel : INotifyPropertyChanged
     }
 
     /// <summary>Rebuild the document (WPM/chunk changed) keeping the
-    /// reading position: the slide containing the current word.</summary>
+    /// reading position: the slide containing the current word (Style
+    /// 1) or the line containing it (Style 2 — the lines do not depend
+    /// on WPM/chunk, only their pace does).</summary>
     private void RebuildKeepingPosition()
     {
         if (_document.Slides.Count == 0 || string.IsNullOrEmpty(_sourceText))
             return;
-        var wordIndex = _document.Slides[_currentSlide].StartWordIndex;
+        var wordIndex = IsRsvpStyle
+            ? _document.Slides[_currentSlide].StartWordIndex
+            : _style2Lines.Take(_style2CurrentLineIndex).Sum(CountWords);
         _document = RsvpEngine.Build(_sourceText, _wpm, _chunkSize);
-        _currentSlide = RsvpEngine.SlideIndexForWord(_document, wordIndex);
+        if (IsRsvpStyle)
+        {
+            _currentSlide = RsvpEngine.SlideIndexForWord(_document, wordIndex);
+        }
+        else
+        {
+            _style2CurrentLineIndex = LineIndexForWord(wordIndex);
+            Notify(nameof(Style2CurrentLineIndex), nameof(CurrentPositionIndex));
+        }
         IsFinished = false;
         Notify(nameof(SlideCount), nameof(TotalWords), nameof(TotalDuration));
-        ShowSlide(_currentSlide);
+        if (IsRsvpStyle)
+            ShowSlide(_currentSlide);
+        else
+            ShowLine(_style2CurrentLineIndex);
         if (IsPlaying)
-        {
-            _timer.Stop();
-            _timer.Interval = _document.Slides[_currentSlide].Delay;
-            _timer.Start();
-        }
+            RestartPacing();
         UpdateReadingTime();
     }
 
     private void UpdateProgress()
     {
-        var total = _document.TotalSlides;
-        if (total == 0)
+        if (PositionCount == 0)
         {
             StatusText = "No text to read.";
             return;
         }
-        var remaining = _document.RemainingDuration(_currentSlide);
+        if (IsRsvpStyle)
+        {
+            var total = _document.TotalSlides;
+            var remaining = _document.RemainingDuration(_currentSlide);
+            StatusText = IsFinished
+                ? $"Finished — {_document.TotalWords} words in {FormatDuration(_document.TotalDuration)}"
+                : $"Slide {_currentSlide + 1} / {total} • {FormatDuration(remaining)} left • {_document.TotalWords} words";
+            return;
+        }
+        // Style 2 counts lines, not slides (mac: "3 / 42").
+        var totalLines = _style2Lines.Count;
+        var remainingLines = Style2RemainingDuration(_style2CurrentLineIndex);
         StatusText = IsFinished
-            ? $"Finished — {_document.TotalWords} words in {FormatDuration(_document.TotalDuration)}"
-            : $"Slide {_currentSlide + 1} / {total} • {FormatDuration(remaining)} left • {_document.TotalWords} words";
+            ? $"Finished — {TotalWords} words in {FormatDuration(Style2TotalDuration())}"
+            : $"Line {_style2CurrentLineIndex + 1} / {totalLines} • {FormatDuration(remainingLines)} left • {TotalWords} words";
     }
+
+    /// <summary>Time left from the given line to the end (inclusive),
+    /// at the current WPM — the line equivalent of
+    /// RsvpDocument.RemainingDuration.</summary>
+    private TimeSpan Style2RemainingDuration(int lineIndex)
+    {
+        var total = TimeSpan.Zero;
+        for (var i = Math.Clamp(lineIndex, 0, Math.Max(0, _style2Lines.Count - 1)); i < _style2Lines.Count; i++)
+            total += LineDelay(i);
+        return total;
+    }
+
+    /// <summary>Total Style 2 reading time at the current WPM (all
+    /// lines' delays).</summary>
+    private TimeSpan Style2TotalDuration() => Style2RemainingDuration(0);
 
     private void UpdateContext()
     {
@@ -472,10 +874,12 @@ public sealed class RsvpReaderViewModel : INotifyPropertyChanged
     }
 
     /// <summary>Total estimated reading time (mac: "Reading time:
-    /// 2mins", under a minute -&gt; "0min").</summary>
+    /// 2mins", under a minute -&gt; "0min"). Style 2 estimates from
+    /// the line delays at the current WPM, not the slide total.</summary>
     private void UpdateReadingTime()
     {
-        var mins = (int)Math.Round(_document.TotalDuration.TotalMinutes);
+        var duration = IsRsvpStyle ? _document.TotalDuration : Style2TotalDuration();
+        var mins = (int)Math.Round(duration.TotalMinutes);
         ReadingTimeText = mins <= 0 ? "Reading time: 0min" : $"Reading time: {mins}mins";
     }
 

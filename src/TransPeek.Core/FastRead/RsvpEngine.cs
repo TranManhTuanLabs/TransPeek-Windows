@@ -134,6 +134,26 @@ public static class RsvpEngine
         return new RsvpDocument(words, slides, total);
     }
 
+    /// <summary>Style 2 ("basic reading") lines (feature/fastread-speaker-style2,
+    /// mac parity: RSVPViewModel.lines(for:maxWordsPerLine: 12)): each
+    /// paragraph split into short lines of at most 12 words, so the
+    /// focus can advance line by line at a readable pace. A logical
+    /// split, not the visual wrap (which depends on font size and
+    /// window width); matching visual lines is a later refinement.</summary>
+    public static IReadOnlyList<string> BuildLines(string? text, int maxWordsPerLine = 12)
+    {
+        var lines = new List<string>();
+        foreach (var paragraph in SplitParagraphs(text))
+        {
+            for (var i = 0; i < paragraph.Count; i += maxWordsPerLine)
+            {
+                var count = Math.Min(maxWordsPerLine, paragraph.Count - i);
+                lines.Add(string.Join(" ", paragraph.GetRange(i, count)));
+            }
+        }
+        return lines;
+    }
+
     /// <summary>ORP pivot: the middle character, floor(n/2). "hello" (5)
     /// -&gt; 2, "hi" (2) -&gt; 1, "a" (1) -&gt; 0. Empty word -&gt; -1.</summary>
     public static int PivotCharIndex(string word)

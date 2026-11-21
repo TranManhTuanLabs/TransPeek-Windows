@@ -66,6 +66,10 @@
   Focus — mac "heart"), Walk **E805** (mục Rest eyes — mac "figure.walk"),
   Cafe **EC32** (màn countdown Rest window — mac "cup.and.saucer.fill"),
   Ringer **EA8F** (chuông banner — mac "bell.fill").
+- **Glyph mới đã kiểm chứng trên Microsoft Learn 2026-11-21
+  (feature/fastread-speaker-style2):** Volume **E767** (loa bật tiếng —
+  mac "speaker.wave.2.fill"), Mute **E74F** (loa tắt tiếng — mac
+  "speaker.slash.fill").
 - **Bài học CI #193–#196 (2026-11-19):** `Window` trong WinUI 3 KHÔNG có
   `IsLoaded` — chỉ `FrameworkElement` mới có. **Bài học CI #198:** biến
   vòng lặp không được trùng tên với biến đang sống ở scope ngoài (CS0136).
