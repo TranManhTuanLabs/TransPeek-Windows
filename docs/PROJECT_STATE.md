@@ -1,48 +1,51 @@
 # Project State — TransPeek-Windows
 
-> Trạng thái dự án tại thời điểm ghi. Cập nhật mỗi khi có thay đổi lớn.
-> Việc đang làm / chờ: `TASK_QUEUE.md`. Lộ trình: `MASTER_PLAN.md`.
+> ẢNH CHỤP NHANH tình hình hiện tại — đọc file này là nắm được dự án đang ở đâu.
+> Log thay đổi theo ngày: `CHANGELOG.md`. Việc đang làm / chờ: `TASK_QUEUE.md`.
+> Lộ trình: `MASTER_PLAN.md`. Cập nhật mỗi khi có thay đổi lớn.
 
-## 1. Tổng quan (17/11/2026 ~05:00)
+## 1. Tổng quan (22/11/2026 ~03:20)
 
-- **Version:** 0.1.3 (pre-release tự động). Stable sau: 0.1.4 (tạo thủ công).
-- **Head trên GitHub:** `ba2b9af` (commit docs: cấu trúc docs + panel UX chốt).
-- **Build app mới nhất:** #159 (commit `93bbd8e`), CI XANH, release `v0.1.3.159`
-  đã verify 150.4MB. Link đã gửi Manh lúc 04:31.
+- **Version:** 0.1.4 (pre-release tự động mỗi code push — cổng `[build-app]` đã bỏ 18/11).
+  Stable 0.1.4 tạo thủ công sau.
+- **Head trên GitHub (main):** `4aa959b5` (hướng an toàn cho phím tắt lúc đọc).
+- **Build app mới nhất:** #238 (commit `4aa959b5`), CI XANH, pre-release `v0.1.4.238`
+  (151 MB, đã verify + mục "What's new"). Link đã gửi Manh 02:20.
+- **Nhánh `feature/fastread-speaker-style2` (PR #4, chưa gộp):** head `714d933`,
+  CI #237 XANH, artifact `TransPeek-Windows-237-branch`. Link trang run đã gửi Manh 02:27.
 
 ## 2. Đang mở
 
-- **Bug che loa/Copy panel (#149→#159, vẫn MỞ):** tra 1–5 line bị che loa/Copy ở mép
-  dưới card; từ 6 line trở lên không bị. Nguyên nhân thật CHƯA RA (giả thuyết ~8px
-  cố định đã bị bác bởi dữ kiện 3-line cũng bị). Đang chờ Manh xác nhận đang test
-  bản nào + video/ảnh so sánh 3-line (bị) vs 6-line (không bị). KHÔNG đẩy thêm bản mò.
-  Chi tiết: `UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md` (§6).
+- **PR #4 — Style 2 "Basic Reading" + nút loa ở Read mode:** CI nhánh xanh (#237),
+  chờ Manh test bản nhánh rồi merge (có xung đột docs ở `AGENTS.md` + `DECISIONS.md`,
+  gỡ lúc sync main vào nhánh). Xem `docs/FEATURES/FAST_READ.md`.
+- **Bug che loa/Copy panel:** nguyên nhân thật ĐÃ tìm ra, fix #164 đã vào main (CI xanh)
+  — chờ Manh xác nhận hết che trên bản mới. Chi tiết:
+  `UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md` §6. (Khi anh xác nhận thì viết lại case study
+  ở `AGENTS.md` §3 theo nguyên nhân thật.)
+- **Panel focus — click 1 không kích hoạt, click 2 mới kích hoạt; chuột ra ngoài mất
+  viền/bóng:** chưa giải thích được, điều tra sau (test bản cũ `v0.1.4.211` không có
+  auto-detect). Chi tiết: panel doc §11.7.
 
-## 3. Đã xong gần đây
+## 3. Chờ Manh
 
-- **Docs (17/11 ~04:50–05:00):** cấu trúc docs đầy đủ + panel UX chốt size +
-  cross-link + docs tree; `AGENTS.md`, `AI_CONTEXT.md`, `PROJECT_STATE.md`.
-  Cùng cấu trúc đã gửi sang repo mac (`TranManhTuanLabs/TransPeek`), riêng panel UX
-  mac là placeholder vì chưa chốt size.
-- **Panel baseline #153** làm chuẩn (420×450, min 400×450, max 600/800, cap 260).
-- **Tab TTS Speech** (giọng hệ thống, 0.5x–2x, auto-play) — xong (#135–#140).
-- **Tesseract tải thêm ngôn ngữ** (catalog 123) — xong (#141/#142).
-- **SAPI: ĐÃ ĐÓNG** — Manh chốt không làm (16/11 23:32).
-
-## 4. Chờ Manh
-
-- Test #159 + gửi bằng chứng 3-line vs 6-line (bug che loa).
+- Test bản main `v0.1.4.238` (cỡ icon 24pt + icon alternative + hướng an toàn phím)
+  + bản nhánh #237 (Style 2 + loa, đã gỡ bắt Space toàn cục).
+- Quyết định merge PR #4 sau khi test nhánh OK.
 - Link từ điển — Manh tự sưu tập, gửi 1 thể; chỉ sửa khi Manh nói "bắt đầu fix".
 - Lệnh bắt đầu 0.1.4: Velopack → Privacy Policy → SignPath → Store.
-- Saved pre-release: chờ panel ổn + Manh test OK.
+- Saved pre-release: chờ panel ổn (hết che loa) + Manh test OK thì save làm baseline
+  (tag `0.1.4.<run>-saved`).
 
-## 5. Baseline
+## 4. Baseline
 
-- **Panel:** #153 làm chuẩn (xem `UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md` §1).
-- **Saved pre-release:** `0.1.3.132-saved` vẫn còn (tiêu đề "(saved preview)").
+- **Panel:** #153 làm chuẩn (xem panel doc §1); bug che loa fix #164 đã vào.
+- **Saved pre-release:** `0.1.4.199-saved`, `0.1.4.200-saved`, `0.1.4.201-saved`
+  (đều có zip); `0.1.3.185-saved` rỗng, chờ Manh upload zip.
 
 ## Liên kết
 
+- [Log thay đổi](CHANGELOG.md)
 - [Việc đang làm / chờ](TASK_QUEUE.md)
 - [Lộ trình](MASTER_PLAN.md)
 - [Panel UX (CHỐT)](UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md)

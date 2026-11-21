@@ -312,6 +312,18 @@ speaker on Alt held (Click = Fast Read) or while speaking; see
 fresh selection (< 10 s old, else the clipboard re-grab) → clipboard
 text. Nothing to read shows a toast.
 
+## Alternative icon in Read (2026-11-22, mac parity, main)
+
+Bôi đen text trong lúc đọc Fast Read thì hiện icon giả ("alternative icon") để tra từ /
+nghe — chữ A xanh trong ô chat, giống nhau lúc thường lẫn lúc hover; đang nói thì hiện
+loa. **Hành vi:** rê chuột lên icon → dịch (Full: mở panel tại chỗ chuột; Lite: dịch
+tại chỗ trong panel, panel không di chuyển); bấm icon → nghe từ đã bôi qua TTS riêng
+(không chung đường loa Read / RSVP sync), bấm lần 2 thì dừng. **KHÔNG có Read, KHÔNG
+menu chuột phải, bỏ qua setting "Click icon for:".** Chỉ hiện khi đang ở mặt Fast Read
+(cửa sổ Window Read đang mở, hoặc panel đang ở tab Fast Read); không hiện ở ô dịch hay
+Settings. Tự ẩn sau 5s, hoặc khi hết bôi đen, hoặc khi mặt Read không còn foreground.
+Cỡ theo setting auto-show (mặc định 24pt). Chi tiết: `ALTERNATIVE_ICON.md`.
+
 ## Settings
 
 - `IconClickAction` (`"Speak"` default / `"FastRead"`): what a plain

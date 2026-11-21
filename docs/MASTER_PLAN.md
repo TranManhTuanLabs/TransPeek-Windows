@@ -4,7 +4,8 @@
 
 ## 1. Version
 
-- Hiện tại: **0.1.3** (pre-release tự động mỗi build `[build-app]`).
+- Hiện tại: **0.1.4** (pre-release tự động mỗi code push — cổng `[build-app]` đã bỏ 18/11,
+  mọi code push đều build app + up artifact).
 - **Stable sau: 0.1.4**, tạo thủ công khi đạt baseline (TTS xong).
 - Velopack bắt buộc đổi versioning sang SemVer 2 (`0.1.4`).
 

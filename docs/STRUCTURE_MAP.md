@@ -37,6 +37,7 @@
 | `docs/AGENTS.md` | Quy tắc làm việc cho AI trong repo | Đang dùng |
 | `docs/AI_CONTEXT.md` | Bối cảnh cho AI | Đang dùng |
 | `docs/PROJECT_STATE.md` | Trạng thái dự án hiện tại | Đang dùng |
+| `docs/CHANGELOG.md` | Log thay đổi theo ngày | Đang dùng |
 | `docs/BUILD_FROM_ZERO.md` | Build app từ máy trắng | Đang dùng |
 | `docs/RESEARCH/README.md` | Chỉ mục research | Đang dùng |
 | `docs/RESEARCH/transpeek-windows-packaging-signing/report.md` | Research đóng gói/ký/Store | Đang dùng |
@@ -53,6 +54,7 @@ docs/
 ├── AGENTS.md                     # quy tắc làm việc cho AI
 ├── AI_CONTEXT.md                 # bối cảnh cho AI
 ├── PROJECT_STATE.md              # trạng thái dự án hiện tại
+├── CHANGELOG.md                   # log thay đổi theo ngày
 ├── BUILD_FROM_ZERO.md            # build app từ máy trắng
 ├── RESEARCH/
 │   ├── README.md                     # chỉ mục research
@@ -90,5 +92,6 @@ docs/
 - [Quy tắc làm việc](AGENTS.md)
 - [Bối cảnh AI](AI_CONTEXT.md)
 - [Trạng thái dự án](PROJECT_STATE.md)
+- [Log thay đổi](CHANGELOG.md)
 - [Panel UX (CHỐT)](UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md)
 - [Chỉ mục UX](UI_DESIGN.md)

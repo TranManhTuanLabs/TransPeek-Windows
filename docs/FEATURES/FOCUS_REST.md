@@ -1,8 +1,7 @@
 # Focus & Rest — Pomodoro + 20-20-20 eye-rest (feature/focus-timer-decor)
 
-> Status: on branch `feature/focus-timer-decor` (2026-11-20), ported from
-> mac branch `feature/focus-timer-decor` @ `54717ca` (not merged on mac
-> either at port time). Manh approved the frame 2026-11-20 08:26 +
+> Status: on main since 2026-11-20 (merged via PR #2, `0f8fdc7`), ported from
+> mac branch `feature/focus-timer-decor` @ `54717ca`. Manh approved the frame 2026-11-20 08:26 +
 > 08:31. Module: `src/TransPeek/FocusTimer/` (UI) + engine in
 > `src/TransPeek.Core/FocusTimer/FocusTimerEngine.cs` (pure logic,
 > unit-tested — the test project only references Core).
@@ -73,6 +72,11 @@ FastRead Window" / "FastRead Lite" (đổi tên 2026-11-20 18:09, KHÔNG thêm
   read / hides the panel) → the waiting reminder **shows itself** per
   the "Run reminder in" setting.
 - Not reading → the reminder shows at once per the setting.
+- **Reminder read tự kích hoạt panel (2026-11-22, main `4aa959b5`):** khi bài đọc
+  panel-right bắt đầu (đường reminder), panel tự thành cửa sổ đang focus nên Space ăn
+  ngay, không cần click vào panel trước. Áp dụng cả focus (Pomodoro) lẫn rest-eyes —
+  2 đường này đi chung luồng `fireReminder` → `showReminder`. Quy tắc không cướp màn
+  hình vẫn giữ: nhắc chỉ tự hiện khi user KHÔNG đang đọc.
 - "Take a break" while reading is impossible by construction (the
   banner's button is the only way, and it shows the reminder — the
   current read is replaced, not kept).
