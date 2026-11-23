@@ -103,6 +103,81 @@
             <TextBlock x:Uid="Settings.General.HoverBlockTextHint" Text="When on, hovering over a block of text shows the trigger icon, without selecting anything first. Only text the app exposes to UI Automation is detected."
                        FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
 
+            <!-- Hover text delay (Manh 2026-11-21, mac parity:
+                 hoverBlockDelayMs, default 400 ms): how long the
+                 mouse must rest on a block before the icon appears.
+                 Sits directly under the block-text toggle. Same
+                 layout as Hover delay below — label left, picker
+                 right, description below. Seconds, not milliseconds
+                 (same as Hover delay): the value stored is ms. -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Uid="Settings.General.HoverBlockDelay" Text="Hover text delay (default: 0.4s)"
+                           VerticalAlignment="Center" />
+                <ComboBox x:Name="HoverBlockDelayCombo" Grid.Column="1" MinWidth="120"
+                          SelectionChanged="OnHoverBlockDelayChanged">
+                    <ComboBoxItem Content="0.2s" Tag="200" />
+                    <ComboBoxItem Content="0.3s" Tag="300" />
+                    <ComboBoxItem Content="0.4s" Tag="400" />
+                    <ComboBoxItem Content="0.5s" Tag="500" />
+                    <ComboBoxItem Content="0.7s" Tag="700" />
+                </ComboBox>
+            </Grid>
+            <TextBlock x:Uid="Settings.General.HoverBlockDelayHint" Text="How long the mouse must rest on a block of text before the icon appears."
+                       FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
+
+            <!-- Float icon size (Manh 2026-11-21, mac parity:
+                 floatIconSize, default 24 pt): size of the icon that
+                 appears when the user selects text. Sits directly
+                 under the hover delay picker, same layout — label
+                 left, picker right, description below. -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Uid="Settings.General.FloatIconSize" Text="Float icon size (default: 24pt — recommend 20-24pt)"
+                           VerticalAlignment="Center" />
+                <ComboBox x:Name="FloatIconSizeCombo" Grid.Column="1" MinWidth="120"
+                          SelectionChanged="OnFloatIconSizeChanged">
+                    <ComboBoxItem Content="18 pt" Tag="18" />
+                    <ComboBoxItem Content="20 pt" Tag="20" />
+                    <ComboBoxItem Content="22 pt" Tag="22" />
+                    <ComboBoxItem Content="24 pt" Tag="24" />
+                    <ComboBoxItem Content="26 pt" Tag="26" />
+                    <ComboBoxItem Content="28 pt" Tag="28" />
+                    <ComboBoxItem Content="30 pt" Tag="30" />
+                    <ComboBoxItem Content="32 pt" Tag="32" />
+                </ComboBox>
+            </Grid>
+            <TextBlock x:Uid="Settings.General.FloatIconSizeHint" Text="Size of the icon that appears when you select text."
+                       FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
+
+            <!-- Auto-show float icon size (Manh 2026-11-21, mac parity:
+                 autoShowFloatIconSize, default 24 pt): size of the
+                 icon that appears on its own when the mouse rests on a
+                 block of text. Same layout as above. -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Uid="Settings.General.AutoShowFloatIconSize" Text="Auto-show float icon size (default: 24pt — recommend 20, 22pt)"
+                           VerticalAlignment="Center" />
+                <ComboBox x:Name="AutoShowFloatIconSizeCombo" Grid.Column="1" MinWidth="120"
+                          SelectionChanged="OnAutoShowFloatIconSizeChanged">
+                    <ComboBoxItem Content="18 pt" Tag="18" />
+                    <ComboBoxItem Content="20 pt" Tag="20" />
+                    <ComboBoxItem Content="22 pt" Tag="22" />
+                    <ComboBoxItem Content="24 pt" Tag="24" />
+                </ComboBox>
+            </Grid>
+            <TextBlock x:Uid="Settings.General.AutoShowFloatIconSizeHint" Text="Size of the icon that appears on its own when you hover a block of text."
+                       FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
+
             <!-- Click icon (Fast Read, feature/fast-read-rsvp, Manh
                  2026-11-17; renamed "Click icon for:" and moved one
                  slot up, Manh 2026-11-20): what a click on the float

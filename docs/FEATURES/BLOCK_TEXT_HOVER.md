@@ -48,14 +48,26 @@ This feature is **Model A** exactly as the TTS research defines it
   `SelectionMonitor`: FlaUI UIA3, background thread, every UIA call
   in try/catch, own process excluded. **No tree scan anywhere** — one
   `FromPoint` per dwell session only.
-- **Dwell 150 ms (fixed), poll 100 ms.** The research recommends a
-  ~150 ms debounce (`speechify-report.md` §11.1 Windows: "only
-  hit-test when the mouse has stopped ~100–150 ms"; `recommendation.md`
-  §2: "debounce ~150 ms"). Each tick only reads the cursor position
-  (`GetCursorPos` — trivial) plus a few integer compares, so polling
-  every 100 ms costs nothing measurable; the expensive UIA work happens
-  only on a probe. Effective timing: the icon appears ~150–250 ms
-  after the mouse stops.
+- **Dwell (setting `HoverBlockDelayMs`, default 400 ms), poll 100 ms.**
+  The research recommends a ~150 ms debounce
+  (`speechify-report.md` §11.1 Windows: "only hit-test when the
+  mouse has stopped ~100–150 ms"; `recommendation.md` §2: "debounce
+  ~150 ms"), but real-machine testing found 150 ms too eager — the
+  icon popped up while the mouse just swept past text (Manh
+  2026-11-21, mac parity: `hoverBlockDelayMs`). The dwell is now a
+  setting (Settings → General, right under the block-text toggle):
+  200/300/400/500/700 ms, shown in seconds, stored as ms. Each tick
+  only reads the cursor position (`GetCursorPos` — trivial) plus a
+  few integer compares, so polling every 100 ms costs nothing
+  measurable; the expensive UIA work happens only on a probe.
+  Effective timing: the icon appears ~400–500 ms after the mouse stops.
+- **Compact hover icon (24 px vs 32 px selection icon).** A hovered
+  block gets the small icon (24 px window, 22 px circle, A 11 pt) —
+  still readable and clickable, but out of the mouse's way; a manual
+  selection keeps the full-size icon (32 px window, 30 px circle, A
+  15 pt). `TriggerIconWindow.ShowAt(x, y, compact: true)`; sizes are
+  applied on every show, so switching between the two sizes cannot
+  get stuck.
 - **Reading the block**, richest source first:
   1. **Paragraph under the cursor** — `TextPattern.RangeFromPoint`
      → `ExpandToEnclosingUnit(Paragraph)` → `GetText(-1)` +
@@ -95,15 +107,17 @@ This feature is **Model A** exactly as the TTS research defines it
 
 ## Where this build deliberately differs from the research
 
-- **Debounce is FIXED at 150 ms, not `HoverDelayMs` (default 500 ms).**
-  The research's ~150 ms and the setting's 500 ms conflict; the
-  research wins for this gesture. `HoverDelayMs` governs a different
-  interaction — how long to hover the ICON before the PANEL opens —
-  and reusing it would make block hover feel laggy (icon half a second
-  after the mouse stops). The 150 ms value is a named const
-  (`BlockTextHoverState.DefaultDwellMilliseconds`, unit-tested), not a
-  magic number. If real-machine testing finds 150 ms too eager, a
-  separate setting can be added; the toggle is the off-switch.
+- **Dwell is a setting now (`HoverBlockDelayMs`, default 400 ms), not
+  `HoverDelayMs` (default 500 ms).** The research's ~150 ms and the
+  setting's 500 ms conflict; the research wins for this gesture.
+  `HoverDelayMs` governs a different interaction — how long to hover
+  the ICON before the PANEL opens — and reusing it would make block
+  hover feel laggy (icon half a second after the mouse stops). The
+  150 ms value survives as a named const
+  (`BlockTextHoverState.DefaultDwellMilliseconds`, unit-tested) — the
+  pure state machine's fallback, not the app default. The setting
+  lives in Settings → General, directly under the block-text toggle
+  (200/300/400/500/700 ms, shown in seconds).
 - **Default ON, not opt-in.** The research (§11.1) recommends opt-in
   (default OFF) because hover quality varies by app. Manh chose
   default ON (2026-11-21 00:13, both repos: "Settings có tùy chọn,
@@ -200,6 +214,8 @@ the items Manh needs to measure / check live:
    wheel — the icon stays up to 5 s at the old spot, then hides. Note
    whether that feels wrong enough to want the follow (next round) or
    the hide-on-scroll alternative.
-10. **Latency feel:** is 150 ms too eager (icon popping up while just
-    reading with the mouse resting on text)? If yes, note it — the fix
-    is a separate dwell setting, not a code change to the probe.
+10. **Latency feel:** is the 400 ms default right (icon popping up
+    while just reading with the mouse resting on text, or feeling
+    slow to appear)? Try the other levels (0.2/0.3/0.5/0.7s) in
+    Settings → General — the dwell is a setting now, no code change
+    needed to retune it.

@@ -99,7 +99,7 @@ minH = max(450, fixedH + cardMin + cardMargin + 24)
 - Auto-fit (`ResizeToFitContent`): đo `DesiredSize` của root, kẹp giữa min height động
   và max 800, rộng kẹp 400–600.
 
-## 6. Bug che loa/Copy — nguyên nhân đã tìm ra, fix #164 đã vào (chờ Manh xác nhận hết che)
+## 6. Bug che loa/Copy — fix #164 KHÔNG hết che, đang chẩn đoán khung cửa sổ (22/11)
 
 > **Trạng thái hiện tại (20/11/2026):** fix thật là **#164** (`SettleResizedSize`
 > thêm nhánh dài panel khi cần — commit `bf74379`, CI xanh), KHÔNG phải
@@ -209,6 +209,16 @@ dưới card khi tra 1–5 line; từ 6 line trở lên không bị. **Nguyên n
 Lịch sử mò số (để tránh lặp lại): min output card 150 → 160 (#151) → 170 (#152) →
 180 (#154) → 210 (#155, đo từ ảnh: card 3 line ~206px, card 1 word ~193px, chênh 13px)
 → 218 (#159). Không lần nào hết che.
+
+> **Cập nhật 22/11/2026 — fix #164 KHÔNG hết che:** Manh xác nhận trên bản v0.1.4.238
+> vẫn che. Repro: mở lần đầu đã che; kéo nhỏ hết cỡ dừng ĐÚNG điểm che; dịch từ mới
+> không kéo vẫn che; text rất dài không che, 3–6 dòng vẫn che. Nghi phạm mới: khung cửa
+> sổ thừa (`WS_DLGFRAME` sót lại sau `SetBorderAndTitleBar`, chỉ icon mới được strip
+> frame) ăn mất chiều cao vùng hiển thị — phần thiếu là hằng số, không đổi khi tăng
+> cardMin (giải thích #163 +20 vô ích). **Bản chẩn đoán:** log kích thước panel
+> (outer/client/min/baseline) vào `windows.log` mỗi lần fit + submenu tray Diagnose
+> (List windows / Open windows.log) để đo đúng số px thiếu, rồi sửa theo số đo.
+> Chi tiết: `docs/TASK_QUEUE.md` + `docs/DECISIONS.md`.
 
 ## 7. Quy tắc sửa (để không phá layout)
 
@@ -474,7 +484,7 @@ dùng chung view model với Window Read); theme lite ĐÃ CHỐT, không đổi
 "Congratulations!" — đọc nhắc nghỉ xong thì màn đếm ngược cafe ở giữa
 (cafe EC32 + tiêu đề + mm:ss 56pt + Done), reader ẩn trong lúc đếm,
 hết giờ về demo; Space = play/pause (đọc do user bấm thì panel tự
-kích hoạt; đọc do nhắc nghỉ thì KHÔNG); **KHÔNG phím tắt ←/→ chuyển tab**,
+kích hoạt; đọc do nhắc nghỉ cũng tự kích hoạt — từ 2026-11-22, xem §11.7); **KHÔNG phím tắt ←/→ chuyển tab**,
 chevron ‹ › giữ nguyên.
 
 **Icon float (`FLOAT_ICON.md`):** translate-first — idle LUÔN là A thường
@@ -558,6 +568,34 @@ nhãn UI sửa cả XAML lẫn `.resw` (resw thắng lúc chạy).
   trước PR #3) — mở panel xem có viền accent/bóng đậm không, click 1
   có kích hoạt không. Kết quả sẽ chốt được auto-detect có liên quan
   hay không.
+### 11.7 Panel focus / activation — hành vi CHỐT (2026-11-22, main `4aa959b5`)
+
+> Panel mở KHÔNG kích hoạt là ĐÚNG THIẾT KẾ, không phải bug. Phím (Space, Ctrl+V)
+> chỉ tới panel SAU khi panel được kích hoạt.
+
+**Mở panel (không kích hoạt):** `ShowPanelNear` dùng `WindowHelpers.ShowWithoutActivation`
+— gắn `WS_EX_NOACTIVATE` vào ex-style + `SetWindowPos` HWND_TOPMOST. Cửa sổ NOACTIVATE
+không bao giờ thành foreground khi hiện hay khi click → lúc mở panel không có viền
+accent 1px ở mép đỉnh + bóng nhạt (như mất focus) là đúng thiết kế.
+
+**Kích hoạt (khi nào):** `WindowHelpers.ActivateWindow` (gỡ NOACTIVATE + `window.Activate()`),
+gọi ở:
+- handler `PointerReleased` trên contentRoot (chủ ý chạy ở lúc NHẢ chuột, không phải lúc
+  bấm — test 0.1.3.53: kích hoạt giữa click nuốt mất `Click` của Button; test 0.1.3.64:
+  guard `_visible` vì nút gear ẩn panel trước rồi handler mới chạy);
+- `ShowInputMode` + 2 chỗ dòng 784/799;
+- **khi bài đọc panel-right bắt đầu** (`OnFocusTimerStoreChanged`, nhánh `PanelRightRequest`,
+  main `4aa959b5`, 2026-11-22) — Space ăn ngay không cần click trước, kể cả đường
+  reminder. Đảo ngược quyết định cũ "reminder reads do NOT activate".
+
+**Quan sát chưa giải thích được (Manh test CI230, 23:28 ngày 21/11):** theo thiết kế
+1 click (bấm + nhả) là đủ kích hoạt, nhưng quan sát cần click 2 cùng/gần vị trí mới
+kích hoạt; chuột ra ngoài panel thì bóng nhạt đi, mất viền 1px (trái hành vi Windows
+chuẩn). Hướng điều tra: (a) cú `PointerReleased` đầu có bị nuốt không (fade-in 150ms?
+`ClickOutsideMonitor`? click bắt đầu từ cửa sổ icon?); (b) `SetForegroundWindow` /
+`window.Activate()` lần đầu có bị foreground lockdown chặn không; (c) viền/bóng có trễ
+1 chu kỳ kích hoạt không. **Test chốt: bản cũ KHÔNG có auto-detect (vd `v0.1.4.211`,
+trước PR #3) — mở panel xem viền/bóng + click 1 có kích hoạt không.**
 
 ## Liên kết
 

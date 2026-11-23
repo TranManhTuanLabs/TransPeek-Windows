@@ -38,13 +38,16 @@ public sealed class BlockTextHoverState
     // recommends for Model A hover (research TTS 16/11:
     // speechify-report.md §11.1 Windows — "only hit-test when the
     // mouse has stopped ~100-150 ms" — and recommendation.md §2:
-    // "debounce ~150 ms"). Deliberately NOT Settings.HoverDelayMs
+    // "debounce ~150 ms"). This const is the PURE state machine's
+    // fallback (and the tests' anchor — one test asserts it is 150);
+    // the APP default is Settings.HoverBlockDelayMs (400 ms, Manh
+    // 2026-11-21, mac parity: hoverBlockDelayMs), passed in by the
+    // service constructor. Deliberately NOT Settings.HoverDelayMs
     // (default 500 ms): that setting governs a different gesture —
     // how long to hover the ICON before the panel opens — and reusing
     // it would make block hover feel laggy (the icon would appear
     // half a second after the mouse stops, and users would think it
-    // is broken). If real-machine testing finds 150 ms too eager, a
-    // separate setting can be added; the toggle is the off-switch.
+    // is broken).
     public const int DefaultDwellMilliseconds = 150;
 
     private readonly TimeSpan _dwell;

@@ -51,8 +51,14 @@
   <data name="Tray.Menu.Restart" xml:space="preserve">
     <value>Restart TransPeek</value>
   </data>
+  <data name="Tray.Menu.Diagnose" xml:space="preserve">
+    <value>Diagnose</value>
+  </data>
   <data name="Tray.Menu.DiagnoseWindows" xml:space="preserve">
-    <value>Diagnose: list windows</value>
+    <value>List windows</value>
+  </data>
+  <data name="Tray.Menu.DiagnoseOpenLog" xml:space="preserve">
+    <value>Open windows.log</value>
   </data>
   <data name="Tray.Section.Capture" xml:space="preserve">
     <value>Text Capture from Screen</value>
@@ -71,6 +77,9 @@
   </data>
   <data name="App.Toast.WindowsListed" xml:space="preserve">
     <value>Window list saved to windows.log — send that file to diagnose the floating 'Esc' pill.</value>
+  </data>
+  <data name="App.Toast.NoWindowsLog" xml:space="preserve">
+    <value>windows.log does not exist yet — use Diagnose → List windows first.</value>
   </data>
   <data name="App.Toast.NoSelection" xml:space="preserve">
     <value>No text selected to translate.</value>
@@ -188,6 +197,24 @@
   </data>
   <data name="Settings.General.HoverBlockTextHint.Text" xml:space="preserve">
     <value>When on, hovering over a block of text shows the trigger icon, without selecting anything first. Only text the app exposes to UI Automation is detected.</value>
+  </data>
+  <data name="Settings.General.HoverBlockDelay.Text" xml:space="preserve">
+    <value>Hover text delay (default: 0.4s)</value>
+  </data>
+  <data name="Settings.General.HoverBlockDelayHint.Text" xml:space="preserve">
+    <value>How long the mouse must rest on a block of text before the icon appears.</value>
+  </data>
+  <data name="Settings.General.FloatIconSize.Text" xml:space="preserve">
+    <value>Float icon size (default: 24pt — recommend 20-24pt)</value>
+  </data>
+  <data name="Settings.General.FloatIconSizeHint.Text" xml:space="preserve">
+    <value>Size of the icon that appears when you select text.</value>
+  </data>
+  <data name="Settings.General.AutoShowFloatIconSize.Text" xml:space="preserve">
+    <value>Auto-show float icon size (default: 24pt — recommend 20, 22pt)</value>
+  </data>
+  <data name="Settings.General.AutoShowFloatIconSizeHint.Text" xml:space="preserve">
+    <value>Size of the icon that appears on its own when you hover a block of text.</value>
   </data>
   <data name="Settings.General.HotkeyHint.Text" xml:space="preserve">
     <value>Click a hotkey box, then press the key combination — no typing needed. Esc cancels.</value>

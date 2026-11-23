@@ -67,4 +67,24 @@ internal static class WindowDiagnostics
             // Diagnostics must never crash the app.
         }
     }
+
+    /// <summary>Append one timestamped line to windows.log (panel-size
+    /// diagnostic, Manh 2026-11-22 — covered speaker, frame hypothesis).
+    /// Diagnostics must never crash the app, so every call is guarded.
+    /// Temporary: remove with the panel log once the speaker bug is
+    /// fixed.</summary>
+    public static void AppendLine(string line)
+    {
+        try
+        {
+            var dir = TransPeek.Core.Dictionary.AppPaths.LocalDataDirectory;
+            Directory.CreateDirectory(dir);
+            File.AppendAllText(Path.Combine(dir, "windows.log"),
+                $"[{DateTimeOffset.Now:yyyy-MM-dd HH:mm:ss}] {line}{Environment.NewLine}");
+        }
+        catch
+        {
+            // Diagnostics must never crash the app.
+        }
+    }
 }

@@ -193,6 +193,11 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// depends on the run location (see OnFastReadClicked): the Fast
     /// Read window hides it, panel-right reading keeps it open.</summary>
     private readonly Func<string, Task> _fastReadRequested;
+    // Window-read request from the demo's "FastRead Full Window"
+    // button (Manh 2026-11-22, mac parity): opens the Fast Read window
+    // directly, bypassing the "Run FastRead in" setting — the sibling
+    // _fastReadRequested routes via the setting instead.
+    private readonly Action<string> _fastReadWindowRequested;
     /// <summary>Focus & Rest (feature/focus-timer-decor): the single
     /// store for the Pomodoro / rest-eyes timers, the pending reminder
     /// and the panel-right read. Created once by App and shared with
@@ -256,6 +261,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         Action openSettings,
         IReadOnlyList<PanelShortcutEntry> shortcuts,
         Func<string, Task> fastReadRequested,
+        Action<string> fastReadWindowRequested,
         FocusTimerStore focusTimerStore)
     {
         _translateAsync = translateAsync;
@@ -263,6 +269,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         _openSettings = openSettings;
         _shortcuts = shortcuts;
         _fastReadRequested = fastReadRequested;
+        _fastReadWindowRequested = fastReadWindowRequested;
         _focusTimerStore = focusTimerStore;
         InitializeComponent();
         PopulateLangCombos();
@@ -280,6 +287,7 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         ReminderBanner.Store = _focusTimerStore;
         FastReadTabPanel.Store = _focusTimerStore;
         FastReadTabPanel.OnStartReading = () => SetPinned(true);
+        FastReadTabPanel.OnOpenInWindow = () => _fastReadWindowRequested(FastReadTabPanel.SourceText);
         FastReadTabPanel.OnToggleMaximize = TogglePanelSize;
         _focusTimerStore.PropertyChanged += OnFocusTimerStoreChanged;
         // Auto-play chain: when the auto-played source finishes and
@@ -495,6 +503,30 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         TranslationTextBox.Text = AppStrings.Get("Panel.Translating", "Translating…");
         ProviderStatusText.Text = "";
         SetProviderCardExpanded(true);
+        _ = TranslateAndShowAsync(text);
+    }
+
+    /// <summary>True when the panel is visible on the Fast Read tab —
+    /// the alternative icon's Lite surface (mac FAST_READ_SELECT_ICON
+    /// §7). App's gate reads this from the monitor's background
+    /// thread: a plain bool/enum field read, atomic and safe to poll.</summary>
+    public bool IsFastReadTabActive => _visible && _activeTab == PanelTab.FastRead;
+
+    /// <summary>Translate in place (alternative icon, Lite — mac
+    /// FAST_READ_SELECT_ICON §5): the panel is ALREADY open on the
+    /// Fast Read tab, so only switch it to the Translate tab and
+    /// translate the text. It must NOT call ShowPanelNear — that would
+    /// move the panel to the cursor. Unlike HidePanel, switching tabs
+    /// does not stop the panel-right read: the read keeps running
+    /// behind the translate tab.</summary>
+    public void TranslateInPlace(string text)
+    {
+        _ocrMode = false;
+        SetSource(text);
+        TranslationTextBox.Text = AppStrings.Get("Panel.Translating", "Translating…");
+        ProviderStatusText.Text = "";
+        SetProviderCardExpanded(true);
+        ShowTab(PanelTab.Translate);
         _ = TranslateAndShowAsync(text);
     }
 
@@ -1020,6 +1052,11 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         // expand dài". Dragging the window taller by hand still grows
         // the box — SettleResizedSize raises the cap for manual drags.)
         var height = (int)Math.Clamp(Math.Ceiling(baseline * scale), minHeight, maxHeight);
+        // Panel-size diagnostic (Manh 2026-11-22 — covered speaker, frame
+        // hypothesis): log the outer vs client size on every fit, so the
+        // leftover window frame is MEASURED instead of guessed. Temporary:
+        // remove once the speaker bug is fixed.
+        LogPanelSize(minHeight, baseline, height);
         // Horizontal snap-back on a NEW translation (Manh 2026-11-16):
         // auto-fit used to keep the current width, so after a long
         // text had widened the panel, a one-word translation left it
@@ -1052,6 +1089,41 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         {
             _lastProgrammaticSize = new Windows.Graphics.SizeInt32(width, height);
             WindowHelpers.MoveAndResize(this, pos.X, y, width, height);
+        }
+    }
+
+    /// <summary>Panel-size diagnostic (Manh 2026-11-22 — covered speaker):
+    /// log the outer window size vs the client size on every auto-fit, so
+    /// the leftover window frame (WS_DLGFRAME left by
+    /// SetBorderAndTitleBar — see TransparentWindow) is measured in
+    /// physical pixels instead of guessed. The frame eats a fixed amount
+    /// from the client area, so a shortfall that survives every cardMin
+    /// increase points at the frame, not at the card. Temporary: remove
+    /// once the speaker bug is fixed. Diagnostics must never break the
+    /// panel, so every call is guarded.</summary>
+    private void LogPanelSize(int minHeightPhysical, double baselineLogical, int heightPhysical)
+    {
+        try
+        {
+            var hwnd = WindowNative.GetWindowHandle(this);
+            var scale = WindowHelpers.DpiScale(this);
+            var outer = AppWindow.Size;
+            var clientW = 0;
+            var clientH = 0;
+            if (NativeMethods.GetClientRect(hwnd, out var client))
+            {
+                clientW = client.Right - client.Left;
+                clientH = client.Bottom - client.Top;
+            }
+            WindowDiagnostics.AppendLine(
+                $"[PanelSize] outer={outer.Width}x{outer.Height} client={clientW}x{clientH} " +
+                $"frame={outer.Width - clientW}x{outer.Height - clientH} scale={scale:0.##} " +
+                $"minH={minHeightPhysical} baseline={baselineLogical:0.#} height={heightPhysical} " +
+                $"minParts=({_diagMinParts}) expanded={_providerCardExpanded} tab={_activeTab}");
+        }
+        catch
+        {
+            // Diagnostics must never break the panel.
         }
     }
 
@@ -1218,6 +1290,12 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         return true;
     }
 
+    // Diagnostic parts for the panel-size log (Manh 2026-11-22): filled
+    // by ComputeMinPanelHeight on every call, read by LogPanelSize on
+    // every fit. Temporary: remove with the log once the speaker bug
+    // is fixed.
+    private string _diagMinParts = "";
+
     /// <summary>Minimum panel height in DIPs, from the CURRENT content:
     /// the fixed rows' measured heights (title + input + hint +
     /// language + actions + dictionary + footer) plus the minimum
@@ -1273,10 +1351,18 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         // fine because its height came from the full content measure,
         // which does include the margin. Read the margin from the
         // Border itself so it stays right if the XAML margin changes.
+        // NOTE 2026-11-22: the margin fix did NOT end the covering —
+        // Manh still sees it on build 238, so the "missing margin"
+        // conclusion above is stale. Current suspect: the leftover
+        // window frame (see LogPanelSize); the diagnostic log measures
+        // it instead of guessing.
         var cardMargin = _providerCardExpanded
             ? ProviderCardBorder.Margin.Top + ProviderCardBorder.Margin.Bottom
             : 0;
         var minH = Math.Max(MinPanelHeight, fixedH + cardMin + cardMargin + 24);
+        // Diagnostic parts for the panel-size log (see LogPanelSize):
+        // the fit logs these alongside the outer/client sizes.
+        _diagMinParts = $"fixedH={fixedH:0.#} cardMin={cardMin} cardMargin={cardMargin} minH={minH:0.#}";
         var work = WindowHelpers.DisplayWorkArea(AppWindow.Position.X, AppWindow.Position.Y);
         var maxH = Math.Min(MaxPanelSize, work.Height / WindowHelpers.DpiScale(this));
         return Math.Min(minH, Math.Max(MinPanelHeight, maxH));

@@ -2733,6 +2733,75 @@ Manh test bản 0.1.4.191: Google 249 ngôn ngữ ngon. 4 việc còn lại làm
 - **Quan sát (Manh test CI230, bản `ff33cce5`):** panel mở lên KHÔNG có viền màu 1px ở đỉnh + bóng nhạt (như mất focus); click 1 vào bất kỳ chỗ nào trong panel cũng không đổi; click 2 đúng/gần vị trí click 1 thì viền 1px + bóng đậm xuất hiện (như đang focus). Chuột ra ngoài panel: bóng nhạt lại, mất viền; auto-detect ngoài panel vẫn chạy bình thường. Nghi ngờ đây là lý do Space play/pause không ăn khi chưa click vào panel.
 - **Đúng thiết kế (đã xác minh code):** panel mở bằng `ShowWithoutActivation` (`WS_EX_NOACTIVATE` dính) nên không active lúc mở — không cướp focus khỏi text đang đọc. Kích hoạt do app tự làm ở `PointerReleased` (chủ ý từ test 0.1.3.53 — kích hoạt lúc bấm nuốt mất `Click` của nút). Phím chỉ tới panel sau khi kích hoạt — nên đợt `ff33cce5` mới phải poll Space toàn cục (`GlobalSpaceTracker`) thay cho phím tới panel. **Hướng an toàn 2026-11-22 (Manh, mac parity): tracker toàn cục đã GỠ — thay bằng panel tự kích hoạt khi bài đọc panel-right bắt đầu (`ActivateWindow` trong `OnFocusTimerStoreChanged`), nên Space ăn ngay không cần click trước; bấm sang app khác thì phím đi sang app đó (đúng chuẩn).**
 - **Chưa giải thích được:** theo thiết kế thì 1 click (bấm + nhả) là đủ kích hoạt, nhưng quan sát cần tới click 2; chuột ra ngoài làm mất viền/bóng cũng trái với hành vi Windows chuẩn (chuột rời không deactivate cửa sổ). Chưa rõ có từ auto-detect block text (PR #3) hay đã có từ trước — Manh chưa test bản cũ. Chi tiết đầy đủ + hướng điều tra: `UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md` §11.7; việc điều tra ở `TASK_QUEUE.md`.
+## Block-text hover polish: icon nhỏ lại + dwell theo setting (2026-11-21, Manh, main)
+
+- **Icon hover nhỏ lại ~3/4 (mac parity 32 → 24pt):** icon khi rê qua khối chữ chỉ còn 24px (vòng 22px, chữ A 11pt, loa/bong bóng 12pt) so với icon bôi chọn 32px (vòng 30px, chữ A 15pt) — vẫn nhìn rõ, bấm được, đỡ vướng chuột. `TriggerIconWindow.ShowAt(x, y, compact: true)`; App truyền compact cho đường hover, đường selection giữ nguyên cỡ đầy đủ; kích thước áp lại mỗi lần hiện nên đổi qua lại giữa 2 cỡ không bị kẹt.
+- **Dwell theo setting, mặc định 400ms (mac parity `hoverBlockDelayMs`):** trước đây dwell cố định 150ms (const `BlockTextHoverState.DefaultDwellMilliseconds`); nay setting mới `HoverBlockDelayMs` (mặc định 400ms) truyền vào `BlockTextHoverService` lúc tạo, App rebuild service khi lưu Settings nên đổi có hiệu lực ngay. Const 150ms giữ nguyên làm fallback của state machine thuần + neo cho test (1 test khóa nó = 150). KHÔNG dùng lại `HoverDelayMs` (500ms, hover icon để mở panel) — cử chỉ khác nhau.
+- **Settings:** Picker mới "Hover text delay (default: 0.4s)" ngay dưới toggle block-text (Settings → General), các mức 0.2/0.3/0.4/0.5/0.7s (hiển thị bằng giây, giá trị lưu là ms), key resw `Settings.General.HoverBlockDelay(.Text)` + `HoverBlockDelayHint.Text`.
+- **Bản làm việc main thiếu file (bài học):** bản local main thiếu đúng 4 file của PR #3 (merge qua trình duyệt không qua snapshot push nên local không có) — phát hiện khi grep không thấy `BlockTextHoverService`; đã khôi phục từ raw ghim commit `a6d8c106` + đối chiếu hash toàn bộ cây file với main. Trước khi làm việc trên main, đối chiếu cây file local với main qua API.
+
+## Cỡ icon float cho người dùng chọn (2026-11-22, mac parity, main)
+
+- **2 picker trong Settings → General, ngay dưới toggle block-text + "Hover text delay" (Manh chọn General 2026-11-22 — tin nhắn gốc ghi Translation nhưng toggle + delay picker của Windows đang ở General nên đặt ở General cho cùng chỗ, theo tiền lệ hover polish):** "Float icon size" (icon bôi chọn, mặc định 26pt, 24/26/28/30/32) và "Auto-show float icon size" (icon hover block-text, mặc định 24pt, 18/20/22/24). Tên hiển thị giữ nguyên 2 tên mac đã chốt; key lưu Windows `FloatIconSize` / `AutoShowFloatIconSize` (PascalCase theo quy ước Windows; mac dùng camelCase `floatIconSize` / `autoShowFloatIconSize`).
+- **Chữ tự co theo vòng tròn (mac `6bbf32d7`):** cửa sổ = cỡ setting, vòng = cỡ − 2, A = 1/2 vòng, loa ≈ 44% vòng, dấu + = 1/4 vòng, `CornerRadius` = vòng / 2, margin dấu + co theo. Ở cỡ cũ 32pt: A 15, loa 13, + 8 (loa mac 14 vì vòng mac = 32, vòng Windows = 30 — lệch 1pt). Cỡ cố định cũ (32/30, compact 24/22) đã bỏ; `ShowAt` đọc setting live mỗi lần hiện nên đổi picker là icon sau hiện cỡ mới ngay, không cần khởi động lại.
+- **Mặc định mới nhỏ hơn trước:** icon bôi chọn 32 → 26pt (theo mac); icon hover giữ 24pt mặc định.
+
+## Cỡ icon float: mặc định 26 → 24pt + thêm cỡ nhỏ + gợi ý (2026-11-22, mac parity, main)
+
+- **"Float icon size" mặc định 26 → 24pt (mac `b77c3102`):** picker thêm 18/20/22 → 18/20/22/24/26/28/30/32; nhãn thành "Float icon size (default: 24pt — recommend 20-24pt)". "Auto-show float icon size" giữ mặc định 24pt + picker 18/20/22/24, nhãn thành "Auto-show float icon size (default: 24pt — recommend 20, 22pt)". "recommend" viết đúng chính tả (Manh gõ "recomend" — tự sửa theo quy tắc tự correct chính tả). Gạch nối cho khoảng (20-24), dấu phẩy liệt kê 2 cỡ (20, 22).
+- **Chỉ đổi mặc định + nhãn + thêm mục picker:** logic cỡ (`ShowAt` đọc live, chữ co theo vòng) không đổi. User nào đã chọn cỡ rồi thì giữ nguyên cỡ đã chọn (setting đã lưu không bị ghi đè).
+
+## Icon alternative trong Fast Read (2026-11-22, mac parity, main)
+
+- **Bôi đen text trong lúc đọc Fast Read thì hiện icon giả ("alternative icon") để tra từ / nghe** (mac `b6388f20`, thiết kế `docs/UI/UX_DESIGN/FAST_READ_SELECT_ICON.md` bên mac). Module riêng `src/TransPeek/AlternativeIcon/` — đường riêng, không động vào logic icon float chính (`ARCHITECTURE.md` §5: cái đang ngon thì để nguyên, nối đường riêng qua callback).
+- **Hình dạng:** chữ A xanh trong ô chat (E8BD + "A"), giống nhau lúc thường lẫn lúc hover; đang nói thì hiện loa (E767). Cỡ theo setting auto-show (mặc định 24pt). **Hành vi:** rê chuột → dịch; bấm → nghe qua `SystemSpeechService` RIÊNG (không chung đường loa Read / RSVP sync). **KHÔNG có Read, KHÔNG menu chuột phải, bỏ qua setting "Click icon for:".**
+- **Hover khác nhau theo mặt:** Full (cửa sổ Read riêng) → mở panel tại chỗ chọn (`ShowTranslationFlow`, như icon chính). Lite (panel đang ở tab Fast Read) → dịch tại chỗ qua `TranslatePanelWindow.TranslateInPlace(text)` — KHÔNG gọi `ShowPanelNear` (sẽ di chuyển panel); chuyển tab không dừng bài đọc đang chạy (chỉ `HidePanel` mới dừng).
+- **Khi nào hiện:** chỉ khi đang ở mặt Fast Read — cửa sổ Window Read đang mở, HOẶC panel đang ở tab Fast Read. Không hiện ở ô dịch hay Settings. Monitor riêng `ReadSelectionMonitor` — cùng kiểu poll UIA `TextPattern.GetSelection` ~300ms như `SelectionMonitor` nhưng lọc NGƯỢC (chỉ process của mình) + gate bằng cửa sổ foreground (`GetForegroundWindow()` so với HWND của cửa sổ Read / panel đã capture trên UI thread lúc tạo; panel chỉ tính khi đang ở tab Fast Read qua `IsFastReadTabActive`). **Lệch so với mac (lựa chọn có ghi rõ):** mac dùng mouse-up monitor; Windows dùng lại kiểu poll sẵn có trong codebase — cùng kết quả với user, lại bắt được cả bôi đen bằng bàn phím (Shift+mũi tên) mà mouse-up bỏ sót.
+- **Tự ẩn:** sau 5s (chung setting `TriggerIconAutoHideSeconds`), hoặc khi hết bôi đen, hoặc khi mặt Read không còn foreground. Text bôi được là around/context text (`BeforeTextBlock` / `AfterTextBlock` / `ContextTextBlock` đã `IsTextSelectionEnabled` sẵn); từ focus RSVP không bôi được.
+- **Không có toggle setting riêng:** icon inert trừ khi mặt Read đang foreground, nên không có gì để tắt.
+
+## Phím trong lúc đọc — hướng an toàn (2026-11-22, mac parity, main + nhánh)
+
+- **Phím trong lúc đọc (Space play/pause, ←/→ tua, ↑/↓ tốc độ) CHỈ ăn khi mặt đọc đang focus** (chuẩn: cửa sổ nào focus thì nhận phím). **KHÔNG bắt phím toàn cục.**
+- **Full đã đúng sẵn:** `FastReadWindow.ShowReader` làm `SetForegroundWindow` + `Activate()` lúc mở — Space ăn ngay; bấm sang app khác thì phím đi sang app đó.
+- **Lite:** panel tự kích hoạt khi bài đọc panel-right bắt đầu (`ActivateWindow` trong `OnFocusTimerStoreChanged`, nhánh `PanelRightRequest`) — Space ăn ngay không cần click trước, kể cả đường reminder (trước đây `ShowPanelNearCursor` mở không kích hoạt nên Space không ăn). Đảo ngược quyết định cũ "reminder reads do NOT activate" (FAST_READ.md) — quy tắc không cướp màn hình là về không lôi user ra khỏi bài đọc đang chạy (reminder chờ khi đang đọc), không phải về phím khi bài đọc của chính reminder đã bắt đầu.
+- **`GlobalSpaceTracker` (chỉ có trên nhánh `feature/fastread-speaker-style2`, chưa từng lên main) đã GỠ:** class + wiring 2 mặt + `VK_SPACE` + `GetForegroundWindow` trong `NativeMethods.cs` của nhánh. Nó poll Space toàn cục nên gõ dấu cách ở Notepad/Chrome/Word trong lúc đọc cũng pause/resume Read — đúng cái Manh không muốn. Đường phím duy nhất còn lại là `PreviewKeyDown` của mặt đang focus.
+
+## Bản chẩn đoán bug che loa — log kích thước panel + submenu tray Diagnose (2026-11-22)
+
+- **Vấn đề:** fix #164 đã vào main nhưng Manh xác nhận 22/11 vẫn che trên bản v0.1.4.238.
+  Repro: mở lần đầu đã che; kéo nhỏ hết cỡ dừng ĐÚNG điểm che; dịch từ mới không kéo vẫn
+  che; text rất dài không che, 3–6 dòng vẫn che.
+- **Nghi phạm:** khung cửa sổ thừa — `SetBorderAndTitleBar(false, false)` để sót
+  `WS_DLGFRAME` (+ `WS_THICKFRAME` vì panel resizable); chỉ icon mới được strip frame
+  (`TransparentWindow.RemoveWindowFrame`), panel thì không. Vùng hiển thị thực nhỏ hơn
+  kích thước cửa sổ một lượng cố định → mọi chiều cao tính ra đều thiếu đúng lượng đó.
+  Giải thích được #163 (+20 cardMin vô ích: tăng card và tăng panel cùng lúc, phần thiếu
+  không đổi).
+- **Bản chẩn đoán (tạm, gỡ sau khi sửa xong):** `TranslatePanelWindow` log mỗi lần fit vào
+  `windows.log` — outer/client/frame/scale/minH/baseline/height + các số hạng của min
+  (`WindowDiagnostics.AppendLine`, `[PanelSize]`); tray có submenu Diagnose
+  (List windows / Open windows.log) để mở file log.
+- **Rule mới (Manh 22/11, áp dụng mọi repo):** bug sửa 2–3 lần không ra thì dừng đoán —
+  làm bộ test + log + bắt lỗi + docs (xem `docs/AGENTS.md` §9).
+
+## "Read in:" + "Run reminder in:" — Lite lên trên, tên FastRead Full Window (2026-11-22, mac parity b0e314f0 + 46c8e357 + 2cb39c10)
+
+- **Panel right demo:** thêm tiêu đề "Read in:" (kiểu chữ như "Run FastRead in:") trên 2 nút
+  đọc ngay: **"FastRead Lite"** (đọc trong panel) / **"FastRead Full Window"** (mở Window
+  Read, ẩn panel, dừng đọc panel nếu đang đọc). Cả 2 bỏ qua setting "Run FastRead in:"
+  (nút panel luôn đọc trong panel, nút window luôn mở Window Read). "Read in:" = đọc ngay
+  văn bản này; "Run FastRead in:" = mặc định cho lần mở sau (icon nổi / tray / phím tắt /
+  nhắc nhở) — GIỮ NGUYÊN tên, không đổi thành "Open ... on".
+- **Tên chốt chung:** "FastRead Full Window" (đổi từ "New FastRead Window") — radio "Run
+  FastRead in:" thành "FastRead Full Window (recommended)"; "FastRead Lite" giữ nguyên;
+  không dùng tên "ReadMode".
+- **"Run reminder in:" (Focus panel):** đổi thứ tự cho "FastRead Lite" lên trên, "FastRead
+  Full Window" xuống dưới — khớp thứ tự "Run FastRead in:". Giá trị lưu không đổi
+  ("RightPanel" / "NewWindow" — chỉ đổi thứ tự + nhãn, combo chọn theo Tag nên an toàn).
+- **Kỹ thuật:** nút window đi đường riêng `fastReadWindowRequested` (Action<string>,
+  App → `ShowFastReadWindow`, ẩn panel) thay vì `fastReadRequested` (đi qua setting);
+  view dừng đọc panel trước nếu đang đọc (`StopPanelReading` khi có VM).
 
 ## Liên kết
 

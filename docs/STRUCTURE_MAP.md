@@ -26,6 +26,7 @@
 | `docs/FEATURES/SPEECH_ENGINE.md` | Engine TTS | Bản nháp |
 | `docs/FEATURES/SPEECH_PLAYER.md` | Player TTS + RSVP | Bản nháp |
 | `docs/FEATURES/FAST_READ.md` | Fast Read (RSVP) — cửa sổ đọc riêng | Bản nháp |
+| `docs/FEATURES/ALTERNATIVE_ICON.md` | Icon alternative trong Fast Read (bôi đen → tra từ / nghe) | Bản nháp |
 | `docs/FEATURES/OCR_TEXT_CAPTURE.md` | OCR | Bản nháp |
 | `docs/FEATURES/SETTINGS.md` | Tính năng Settings | **CHƯA VIẾT** |
 | `docs/UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md` | **Panel UX — size đã CHỐT** | **CHỐT 17/11/2026 (#161)** |
@@ -36,6 +37,7 @@
 | `docs/AGENTS.md` | Quy tắc làm việc cho AI trong repo | Đang dùng |
 | `docs/AI_CONTEXT.md` | Bối cảnh cho AI | Đang dùng |
 | `docs/PROJECT_STATE.md` | Trạng thái dự án hiện tại | Đang dùng |
+| `docs/CHANGELOG.md` | Log thay đổi theo ngày | Đang dùng |
 | `docs/BUILD_FROM_ZERO.md` | Build app từ máy trắng | Đang dùng |
 | `docs/RESEARCH/README.md` | Chỉ mục research | Đang dùng |
 | `docs/RESEARCH/transpeek-windows-packaging-signing/report.md` | Research đóng gói/ký/Store | Đang dùng |
@@ -52,6 +54,7 @@ docs/
 ├── AGENTS.md                     # quy tắc làm việc cho AI
 ├── AI_CONTEXT.md                 # bối cảnh cho AI
 ├── PROJECT_STATE.md              # trạng thái dự án hiện tại
+├── CHANGELOG.md                   # log thay đổi theo ngày
 ├── BUILD_FROM_ZERO.md            # build app từ máy trắng
 ├── RESEARCH/
 │   ├── README.md                     # chỉ mục research
@@ -66,6 +69,7 @@ docs/
 │   ├── SPEECH_ENGINE.md          # engine TTS
 │   ├── SPEECH_PLAYER.md          # player TTS + RSVP
 │   ├── FAST_READ.md              # Fast Read (RSVP) — cửa sổ đọc riêng
+│   ├── ALTERNATIVE_ICON.md       # icon alternative trong Fast Read
 │   ├── OCR_TEXT_CAPTURE.md       # OCR
 │   └── SETTINGS.md               # tính năng Settings (CHƯA VIẾT)
 └── UI/
@@ -88,5 +92,6 @@ docs/
 - [Quy tắc làm việc](AGENTS.md)
 - [Bối cảnh AI](AI_CONTEXT.md)
 - [Trạng thái dự án](PROJECT_STATE.md)
+- [Log thay đổi](CHANGELOG.md)
 - [Panel UX (CHỐT)](UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md)
 - [Chỉ mục UX](UI_DESIGN.md)

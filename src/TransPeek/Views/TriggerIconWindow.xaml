@@ -3,9 +3,13 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <!-- 32 px window with a 30 px circle — mac parity (TriggerIconPanel:
-         32 pt panel, 30 pt circle inset 1 pt). Translate-first icon
-         (Manh 2026-11-20 18:09 — the "future idea" in
+    <!-- Sizes come from the user settings (Manh 2026-11-21, mac parity):
+         FloatIconSize (default 24 pt) for a selection, AutoShowFloatIconSize
+         (default 24 pt) for a hovered block — the window is the setting,
+         the circle 2 pt smaller, the glyphs scale with the circle (see
+         ShowAt in the code-behind). The XAML values below are only the
+         first-paint defaults; ShowAt re-applies the real sizes on every show.
+         Translate-first icon (Manh 2026-11-20 18:09 — the "future idea" in
          docs/FEATURES/FLOAT_ICON.md §3, now approved; it replaces
          Style B's preview-the-next-click, Manh 2026-11-18): the icon's
          normal face is the plain A, so it has three marks, one visible
@@ -18,17 +22,18 @@
            element stays defined (Visibility Collapsed) so the style
            can be restored by using it in UpdateGlyph again. The old
            plain "A" lettermark (Manh 2026-11-14) is back as PlainAMark.
-         - PlainAMark: the normal icon — a plain "A" (15pt, NOT bold,
+         - PlainAMark: the normal icon — a plain "A" (NOT bold,
            blue #0078D4, Style 1 — Manh 2026-11-19: Click=Listen shows
            a non-bold blue A, not the turmeric one), shown whenever
            nothing else applies, whatever Click is set to (hover means
-           translate — that is the icon's primary job).
-         - APlusMark: custom-drawn Fast Read mark — bold "A" (15pt)
-           with a small bold "+" (8pt) as a superscript at the A's
+           translate — that is the icon's primary job). Its size scales
+           with the circle (see ShowAt).
+         - APlusMark: custom-drawn Fast Read mark — bold "A"
+           with a small bold "+" as a superscript at the A's
            top-right corner, turmeric #C7800D (rgb 0.78/0.50/0.05) so
            it reads on light and dark — Alt held while Click=Speak
            (Alt+click will Fast Read), and it also shows for 2.5s after
-           any Fast Read trigger.
+           any Fast Read trigger. Both sizes scale with the circle.
          - SpeakerMark: E767 Volume — blue #0078D4 (Manh 2026-11-20
            18:09 — the speaker is a highlight, not a dark glyph) —
            while speaking, and as the Alt preview when Alt+click will
@@ -53,9 +58,9 @@
                      build #178 with WMC0011). The "+" sits at the A's
                      top-right corner via alignment + margin. -->
                 <Grid x:Name="APlusMark" Visibility="Collapsed">
-                    <TextBlock Text="A" FontSize="15" FontWeight="Bold" Foreground="#C7800D"
+                    <TextBlock x:Name="APlusMarkA" Text="A" FontSize="15" FontWeight="Bold" Foreground="#C7800D"
                                HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    <TextBlock Text="+" FontSize="8" FontWeight="Bold" Foreground="#C7800D"
+                    <TextBlock x:Name="APlusMarkPlus" Text="+" FontSize="8" FontWeight="Bold" Foreground="#C7800D"
                                HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,4,5,0" />
                 </Grid>
                 <!-- Speaker mark (click = listen/TTS mode): E767 Volume —

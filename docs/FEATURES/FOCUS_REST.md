@@ -1,8 +1,7 @@
 # Focus & Rest — Pomodoro + 20-20-20 eye-rest (feature/focus-timer-decor)
 
-> Status: on branch `feature/focus-timer-decor` (2026-11-20), ported from
-> mac branch `feature/focus-timer-decor` @ `54717ca` (not merged on mac
-> either at port time). Manh approved the frame 2026-11-20 08:26 +
+> Status: on main since 2026-11-20 (merged via PR #2, `0f8fdc7`), ported from
+> mac branch `feature/focus-timer-decor` @ `54717ca`. Manh approved the frame 2026-11-20 08:26 +
 > 08:31. Module: `src/TransPeek/FocusTimer/` (UI) + engine in
 > `src/TransPeek.Core/FocusTimer/FocusTimerEngine.cs` (pure logic,
 > unit-tested — the test project only references Core).
@@ -45,6 +44,10 @@ collapse/expand; collapsed state in `FocusTimerCollapsed`).
 - **"Run reminder in:"** picker — "FastRead Full Window" (default) /
   "FastRead Lite". Applies ONLY to focus / rest-eyes reminders, not to
   Fast Read itself.
+- **"Run reminder in:"** picker — "FastRead Lite" / "FastRead Full
+  Window" (default). Lite first, Manh 2026-11-22 (same order as "Run
+  FastRead in:" on panel right). Applies ONLY to focus / rest-eyes
+  reminders, not to Fast Read itself.
 
 **Bố cục CHỐT của thẻ (Manh 2026-11-20, căn giữa cho đẹp — ghi lại để
 sau đối chiếu, không phá):** countdown 28pt Consolas Bold **center**;
@@ -54,8 +57,8 @@ dưới 4 chấm, center**; nút Start focus / Pause / Resume + Reset
 **center** trên 1 hàng; "Repeat automatically" + "Auto start focus
 (default: Off)" là **ToggleSwitch** (nút gạt — nhãn trên, gạt dưới, sát
 lề trái trong thẻ); nút "Start eye reminders" **center**; "Run reminder
-in:" nhãn trên, picker **xuống dòng riêng, full-width**, lựa chọn "New
-FastRead Window" / "FastRead Lite" (đổi tên 2026-11-20 18:09, KHÔNG thêm
+in:" nhãn trên, picker **xuống dòng riêng, full-width**, lựa chọn "FastRead Lite" /
+"FastRead Full Window" (Lite lên trên, đổi tên 2026-11-22, KHÔNG thêm
 "(recommended)"), dòng note xám ở dưới. Xem thêm panel spec
 `docs/UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md` §11.3 + §11.6.
 
@@ -74,6 +77,11 @@ FastRead Window" / "FastRead Lite" (đổi tên 2026-11-20 18:09, KHÔNG thêm
   read / hides the panel) → the waiting reminder **shows itself** per
   the "Run reminder in" setting.
 - Not reading → the reminder shows at once per the setting.
+- **Reminder read tự kích hoạt panel (2026-11-22, main `4aa959b5`):** khi bài đọc
+  panel-right bắt đầu (đường reminder), panel tự thành cửa sổ đang focus nên Space ăn
+  ngay, không cần click vào panel trước. Áp dụng cả focus (Pomodoro) lẫn rest-eyes —
+  2 đường này đi chung luồng `fireReminder` → `showReminder`. Quy tắc không cướp màn
+  hình vẫn giữ: nhắc chỉ tự hiện khi user KHÔNG đang đọc.
 - "Take a break" while reading is impossible by construction (the
   banner's button is the only way, and it shows the reminder — the
   current read is replaced, not kept).
@@ -96,6 +104,14 @@ FastRead Window" / "FastRead Lite" (đổi tên 2026-11-20 18:09, KHÔNG thêm
   Read Lite when the timer ends." + Done — same screen as the Rest window,
   Manh 2026-11-20 18:19) and returns to the demo at zero. No "Congratulations!"
   for a reminder read (that is only for a manual read).
+- **FastRead Full Window (default):** a separate `RestWindow` (560×400,
+  fixed size, title "TransPeek — Rest") that reads the reminder text
+  with the lite reader, then counts the break down (coffee cup EC32 +
+  title + mm:ss 56pt bold + "The window closes when the timer ends." +
+  Done) and closes itself at zero. Esc closes the window. It never
+  touches the Fast Read window — a read in progress keeps reading. The
+  panel hides first (it is topmost and would float above the Rest
+  window).
 
 ## System notifications — DEFERRED (Manh 2026-11-20)
 

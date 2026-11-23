@@ -64,6 +64,7 @@ public sealed class TrayIconService : IDisposable
         Action openSettings,
         Action restart,
         Action diagnoseWindows,
+        Action diagnoseOpenLog,
         Action quit)
     {
         // The constructor runs on the UI thread: the menu actions are
@@ -113,7 +114,20 @@ public sealed class TrayIconService : IDisposable
         // temporary (remove once the Esc pill's owner was known), but
         // Manh keeps it — it proved its worth finding the PopupHost —
         // and wants it above Restart.
-        menu.Items.Add(Item("Tray.Menu.DiagnoseWindows", "Diagnose: list windows", "\uE946", diagnoseWindows));
+        // Diagnose submenu (Manh 2026-11-22): the panel-size diagnostic
+        // writes to windows.log, so the log needs a tray way in — list
+        // the windows (as before) plus open the log file itself.
+        // MenuFlyoutSubItem renders as a nested submenu in the tray menu
+        // (H.NotifyIcon converts the MenuFlyout to a Win32 popup menu);
+        // if a build ever shows it flat, fall back to two top-level items.
+        var diagnoseSub = new MenuFlyoutSubItem
+        {
+            Text = AppStrings.Get("Tray.Menu.Diagnose", "Diagnose"),
+            Icon = new FontIcon { Glyph = "\uE946" },
+        };
+        diagnoseSub.Items.Add(Item("Tray.Menu.DiagnoseWindows", "List windows", "\uE946", diagnoseWindows));
+        diagnoseSub.Items.Add(Item("Tray.Menu.DiagnoseOpenLog", "Open windows.log", "\uE8A5", diagnoseOpenLog));
+        menu.Items.Add(diagnoseSub);
         // Restart (Manh 2026-11-14): recovery when the app misbehaves,
         // e.g. after an OCR engine switch that crashes it. Glyph E72C
         // is Refresh (no dedicated Restart glyph in Segoe MDL2).

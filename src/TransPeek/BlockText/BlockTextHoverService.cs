@@ -62,9 +62,11 @@ public sealed class BlockTextHoverService : IDisposable
     /// monitor's callback, so App feeds it into the same icon path.</param>
     /// <param name="dwell">How long the cursor must stay still before
     /// a probe. Null = the research default
-    /// (BlockTextHoverState.DefaultDwellMilliseconds, 150 ms) —
-    /// deliberately NOT Settings.HoverDelayMs (see the const's
-    /// comment: that setting governs hovering the icon, not text).</param>
+    /// (BlockTextHoverState.DefaultDwellMilliseconds, 150 ms). App
+    /// passes Settings.HoverBlockDelayMs (default 400 ms, Manh
+    /// 2026-11-21, mac parity: hoverBlockDelayMs) — deliberately NOT
+    /// Settings.HoverDelayMs (see the const's comment: that setting
+    /// governs hovering the icon, not text).</param>
     public BlockTextHoverService(Action<string, (int X, int Y)> onBlockHovered,
         TimeSpan? dwell = null, TimeSpan? interval = null)
     {

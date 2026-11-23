@@ -171,7 +171,9 @@ folder per feature, UI + logic together in it; only the thin joints
 Same structure on mac + Windows: `FastRead/` (RSVP engine + reader
 window + view here), `FocusTimer/` (Pomodoro/focus/20-20-20 timer +
 panel-right lite reader + Rest window — `feature/focus-timer-decor`,
-2026-11-20; see `FOCUS_REST.md`), `Shortcuts/` (one shortcut table
+2026-11-20; see `FOCUS_REST.md`), `AlternativeIcon/` (the fake icon
+over a selection inside Fast Read — hover translates, click listens
+through its own TTS path; see `ALTERNATIVE_ICON.md`), `Shortcuts/` (one shortcut table
 shared by the "?" embed and the shortcut panel — still a TODO refactor,
 not this branch).
 
@@ -189,6 +191,11 @@ context display / color scheme). Behaviour is the window's, moved
 unchanged: same delays, same clamps on WPM/chunk/context ratio, same
 status and reading-time text.
 
+**"Read in:"** (panel right demo, Manh 2026-11-22, mac parity): read
+THIS text right now — two buttons naming only the destination:
+**"FastRead Lite"** (reads in the panel) / **"FastRead Full Window"**
+(opens the Window Read, hides the panel, stops a panel read first if
+one is running). Both bypass the "Run FastRead in:" setting below.
 **"Run FastRead in:"** (panel right demo, radios — also the setting
 `FastReadRunLocation`, "NewWindow" default / "RightPanel"): where Fast
 Read opens from EVERY entry point (panel button, float icon, tray,
@@ -196,6 +203,10 @@ shortcut). Labels (Manh 2026-11-20, mac parity): **"FastRead Lite"**
 (panel right) / **"FastRead Full Window (recommended)"** (window).
 The demo's **"Read in panel" button always reads in the panel**,
 whatever the radios say. Panel-right reading: the panel stays open,
+`FastReadRunLocation`, "NewWindow" default / "RightPanel"): the DEFAULT
+for later entries (float icon, tray, shortcut, reminder). Labels:
+**"FastRead Lite"** (panel right) / **"FastRead Full Window
+(recommended)"** (window). Panel-right reading: the panel stays open,
 switches to the Fast Read tab, starts the read and pins itself; the
 demo shows the word "reading" with its "a" in yellow between two
 half-bars (the pivot preview). The demo title is **"Fast Read Lite"**
@@ -448,6 +459,18 @@ speaker on Alt held (Click = Fast Read) or while speaking; see
 fresh selection (< 10 s old, else the clipboard re-grab) → clipboard
 text. Nothing to read shows a toast.
 
+## Alternative icon in Read (2026-11-22, mac parity, main)
+
+Bôi đen text trong lúc đọc Fast Read thì hiện icon giả ("alternative icon") để tra từ /
+nghe — chữ A xanh trong ô chat, giống nhau lúc thường lẫn lúc hover; đang nói thì hiện
+loa. **Hành vi:** rê chuột lên icon → dịch (Full: mở panel tại chỗ chuột; Lite: dịch
+tại chỗ trong panel, panel không di chuyển); bấm icon → nghe từ đã bôi qua TTS riêng
+(không chung đường loa Read / RSVP sync), bấm lần 2 thì dừng. **KHÔNG có Read, KHÔNG
+menu chuột phải, bỏ qua setting "Click icon for:".** Chỉ hiện khi đang ở mặt Fast Read
+(cửa sổ Window Read đang mở, hoặc panel đang ở tab Fast Read); không hiện ở ô dịch hay
+Settings. Tự ẩn sau 5s, hoặc khi hết bôi đen, hoặc khi mặt Read không còn foreground.
+Cỡ theo setting auto-show (mặc định 24pt). Chi tiết: `ALTERNATIVE_ICON.md`.
+
 ## Settings
 
 - `IconClickAction` (`"Speak"` default / `"FastRead"`): what a plain
@@ -490,6 +513,8 @@ text. Nothing to read shows a toast.
 
 ## Links
 
+- Alternative icon (select in Read → look up / listen):
+  `ALTERNATIVE_ICON.md`
 - Research: mac repo `docs/RESEARCH/tts-speechify-naturalreader/rsvp-report.md`
 - Panel multi-tab hub (the Fast Read tab, now the lite reader):
   `docs/UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md` §10–§11

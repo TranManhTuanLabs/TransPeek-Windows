@@ -13,6 +13,8 @@
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using System.Diagnostics;
+using System.IO;
+using TransPeek.AlternativeIcon;
 using TransPeek.BlockText;
 using TransPeek.Core.Barcode;
 using TransPeek.Core.Dictionary;
@@ -42,9 +44,9 @@ public sealed partial class App : Application
     /// (feature/block-text-detection): the mouse resting on a block
     /// shows the trigger icon without a manual selection. Same
     /// lifecycle as the selection monitor — rebuilt when settings are
-    /// saved (the on/off toggle applies). The dwell is the research
-    /// default (150 ms, BlockTextHoverState.DefaultDwellMilliseconds),
-    /// NOT Settings.HoverDelayMs — see that const's comment.</summary>
+    /// saved (the on/off toggle and the dwell apply). The dwell is
+    /// Settings.HoverBlockDelayMs (default 400 ms, Manh 2026-11-21),
+    /// NOT Settings.HoverDelayMs — see the state's comment.</summary>
     private BlockTextHoverService? _blockTextHoverService;
     private GlobalHotkeyService? _hotkeys;
     private TriggerIconWindow? _triggerIcon;
@@ -67,6 +69,16 @@ public sealed partial class App : Application
     /// service — the icon speaks the selection without opening the
     /// panel, so it needs its own synthesizer/player.</summary>
     private SystemSpeechService? _iconSpeech;
+    /// <summary>Alternative icon (mac FAST_READ_SELECT_ICON, Manh
+    /// 2026-11-22): the fake icon over a selection inside Fast Read.
+    /// Own monitor + window + TTS path — it never touches the main
+    /// float icon's logic, glyphs, or settings.</summary>
+    private AlternativeIconController? _altIconController;
+    /// <summary>HWNDs for the alternative icon's foreground gate,
+    /// captured on the UI thread at window creation (a WinUI Window
+    /// must not be touched from the monitor's background thread).</summary>
+    private IntPtr _panelHwnd;
+    private IntPtr _fastReadWindowHwnd;
     private string _lastSelection = "";
     private DateTimeOffset _lastSelectionAt = DateTimeOffset.MinValue;
     private (int X, int Y) _lastPoint;
@@ -129,7 +141,8 @@ public sealed partial class App : Application
         // Auto start focus (Manh 2026-11-20, 09:47): when the toggle is
         // ON, the focus timer starts on its own at launch.
         _focusTimerStore.AutoStartFocusIfEnabled();
-        _panel = new TranslatePanelWindow(TranslateAsync, () => _ocrFlow!.RunOcrAsync(), ShowSettings, BuildShortcutEntries(), text => _ = OpenFastReadAsync(text), _focusTimerStore);
+        _panel = new TranslatePanelWindow(TranslateAsync, () => _ocrFlow!.RunOcrAsync(), ShowSettings, BuildShortcutEntries(), text => _ = OpenFastReadAsync(text), text => ShowFastReadWindow(text), _focusTimerStore);
+        _panelHwnd = WinRT.Interop.WindowNative.GetWindowHandle(_panel);
         _triggerIcon = new TriggerIconWindow();
         _triggerIcon.OpenRequested += OnTriggerIconOpenRequested;
         _triggerIcon.FastReadRequested += () => _ = OpenFastReadFromSelectionAsync();
@@ -171,16 +184,48 @@ public sealed partial class App : Application
                 WindowDiagnostics.Write();
                 _toast?.Show(AppStrings.Get("App.Toast.WindowsListed", "Window list saved to windows.log — send that file to diagnose the floating 'Esc' pill."));
             },
+            diagnoseOpenLog: () =>
+            {
+                // Open windows.log in its default viewer (Notepad) so
+                // Manh can read / send the panel-size diagnostic lines.
+                // The log lives in %LOCALAPPDATA%\TransPeek; it does not
+                // exist until something writes it (list windows, or a
+                // panel fit on the diagnostic build).
+                var path = Path.Combine(AppPaths.LocalDataDirectory, "windows.log");
+                try
+                {
+                    if (File.Exists(path))
+                        Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+                    else
+                        _toast?.Show(AppStrings.Get("App.Toast.NoWindowsLog", "windows.log does not exist yet — use Diagnose → List windows first."));
+                }
+                catch (Exception ex) { CrashLog.Write("TrayMenu", ex); }
+            },
             quit: QuitApp);
 
         _selectionMonitor = new SelectionMonitor(OnSelectionChanged);
         if (Settings.WatchSelection)
             _selectionMonitor.Start();
 
+        // Alternative icon (mac FAST_READ_SELECT_ICON, Manh 2026-11-22):
+        // a selection inside a Fast Read surface shows the fake icon
+        // (A in a chat bubble) — hover translates, click listens
+        // through its own TTS path. The gate is the foreground window:
+        // only the Fast Read window, or the panel on its Fast Read tab,
+        // counts — never the translate input or Settings. Inert unless
+        // a Read surface is foreground, so it needs no settings toggle
+        // and no rebuild on settings save (sizes/delays read live).
+        _altIconController = new AlternativeIconController(
+            IsReadSurfaceForeground,
+            OnAlternativeIconTranslateRequested,
+            _uiQueue);
+        _altIconController.Start();
+
         // Hover-to-show (feature/block-text-detection): the dwell is
-        // the research default (150 ms) — no argument passed, the
-        // service uses BlockTextHoverState.DefaultDwellMilliseconds.
-        _blockTextHoverService = new BlockTextHoverService(OnBlockTextHovered);
+        // Settings.HoverBlockDelayMs (default 400 ms) — the mouse
+        // must rest that long before the icon appears.
+        _blockTextHoverService = new BlockTextHoverService(OnBlockTextHovered,
+            dwell: TimeSpan.FromMilliseconds(Settings.HoverBlockDelayMs));
         if (Settings.HoverBlockText)
             _blockTextHoverService.Start();
 
@@ -283,12 +328,15 @@ public sealed partial class App : Application
         _lastPoint = point;
         _lastTextIsHover = true;
         // Same UI-thread marshal + own-window guard as the selection
-        // path (the monitor runs on a background thread).
+        // path (the monitor runs on a background thread). Compact
+        // icon: a hovered block gets the small (~3/4) icon, so it
+        // stays out of the mouse's way — the full-size icon is only
+        // for a manual selection (Manh 2026-11-21, mac parity).
         _uiQueue.TryEnqueue(() =>
         {
             if (IsPointInsideOwnWindow(point))
                 return;
-            _triggerIcon?.ShowAt(point.X, point.Y);
+            _triggerIcon?.ShowAt(point.X, point.Y, compact: true);
         });
     }
 
@@ -334,6 +382,40 @@ public sealed partial class App : Application
         _triggerIcon?.HideIcon();
         if (!string.IsNullOrWhiteSpace(_lastSelection))
             _panel?.ShowTranslationFlow(_lastSelection, _lastPoint.X, _lastPoint.Y);
+    }
+
+    // ----- alternative icon (Fast Read selection) -----
+
+    /// <summary>True when the user is working in a Fast Read surface:
+    /// the Fast Read window is foreground, or the panel is foreground
+    /// on its Fast Read tab. The monitor polls this from its background
+    /// thread, so it only uses the HWNDs captured on the UI thread at
+    /// creation + plain field reads — never a WinUI Window call.</summary>
+    private bool IsReadSurfaceForeground()
+    {
+        var fg = NativeMethods.GetForegroundWindow();
+        if (fg == IntPtr.Zero)
+            return false;
+        if (_fastReadWindow is not null && fg == _fastReadWindowHwnd)
+            return true;
+        return _panel is not null && fg == _panelHwnd && _panel.IsFastReadTabActive;
+    }
+
+    /// <summary>Alternative icon hover = translate (mac §5). Full
+    /// window: the panel is closed, so open it at the selection like
+    /// the main icon. Lite: the panel is already open, so translate in
+    /// place — never move it to the cursor.</summary>
+    private void OnAlternativeIconTranslateRequested(string text, (int X, int Y) point)
+    {
+        if (_fastReadWindow is not null
+            && NativeMethods.GetForegroundWindow() == _fastReadWindowHwnd)
+        {
+            _panel?.ShowTranslationFlow(text, point.X, point.Y);
+        }
+        else
+        {
+            _panel?.TranslateInPlace(text);
+        }
     }
 
     /// <summary>Float icon click = listen (mac handleIconClick,
@@ -452,9 +534,11 @@ public sealed partial class App : Application
         if (_fastReadWindow is null)
         {
             _fastReadWindow = new FastReadWindow();
+            _fastReadWindowHwnd = WinRT.Interop.WindowNative.GetWindowHandle(_fastReadWindow);
             _fastReadWindow.Closed += (_, _) =>
             {
                 _fastReadWindow = null;
+                _fastReadWindowHwnd = IntPtr.Zero;
                 // A pending reminder shows itself now that the read
                 // stopped (feature/focus-timer-decor, mac parity:
                 // fastReadWindowClosed in FocusTimerStore).
@@ -718,11 +802,12 @@ public sealed partial class App : Application
         if (Settings.WatchSelection)
             _selectionMonitor.Start();
         // Restart the block-text hover service if the user toggled
-        // HoverBlockText. (The dwell is fixed at the research default,
-        // so a changed HoverDelayMs does not rebuild it — only the
-        // on/off toggle does.)
+        // HoverBlockText or changed the dwell (HoverBlockDelayMs).
+        // The rebuild picks up both at once — the service reads the
+        // dwell at construction.
         _blockTextHoverService?.Dispose();
-        _blockTextHoverService = new BlockTextHoverService(OnBlockTextHovered);
+        _blockTextHoverService = new BlockTextHoverService(OnBlockTextHovered,
+            dwell: TimeSpan.FromMilliseconds(Settings.HoverBlockDelayMs));
         if (Settings.HoverBlockText)
             _blockTextHoverService.Start();
         _panel?.RefreshDictionaryBar(Settings.DictionaryLinks, Settings.DictionaryDisplayMode);

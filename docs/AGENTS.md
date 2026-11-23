@@ -20,6 +20,11 @@
   qua API (`git trees ... recursive=1`), khôi phục file thiếu/stale từ raw
   ghim commit rồi mới sửa; kiểm tra hash file sẽ sửa so với nhánh để khỏi
   đẩy code cũ đè code mới.
+  2026-11-21: bản main thiếu đúng 4 file của PR #3 — merge qua trình duyệt
+  không qua snapshot push nên local không có): trước khi làm việc, đối chiếu
+  cây file local với main qua API (`git trees ... recursive=1`), khôi phục
+  file thiếu từ raw ghim commit rồi mới sửa; kiểm tra hash file sẽ sửa so
+  với main để khỏi đẩy code cũ đè code mới.
 - Sau mỗi lần đẩy, **tự theo dõi run CI mới nhất tới khi kết luận**, rồi báo kết quả.
 
 ## 2. Theo dõi CI
@@ -183,6 +188,21 @@
   mode — không sửa logic icon float hiện tại, làm icon giả y hệt, hover/click
   thì kích hoạt trigger vào icon hiện tại.
 - Ghi đầy đủ hơn ở `ARCHITECTURE.md` §5 (nguyên tắc kiến trúc).
+
+## 9. Sửa lặp nhiều lần không ra thì làm bộ test + log + bắt lỗi + docs (Manh 22/11/2026)
+
+- **Bài học (bug che loa panel #149→#164, 17–22/11):** mò số (nâng min card 150→218, 6 vòng)
+  + đoán nguyên nhân bằng trí nhớ không sửa được bug — mỗi lần đoán sai tốn 1 run CI + 1 lượt
+  test của Manh. Chỉ khi có log số thật (outer/client/min/baseline) mới biết đúng chỗ thiếu.
+- **Quy tắc:** một bug mà sửa 2–3 lần vẫn không ra thì DỪNG đoán — làm luôn: (1) **bộ test**
+  (test hồi quy cho logic trong Core; logic chỉ có ở UI thì checklist test tay rõ ràng);
+  (2) **bộ ghi log** (log số thật/trạng thái thật tại chỗ lỗi, ghi vào file log có đường mở
+  từ tray, không log bằng trí nhớ); (3) **sự kiện bắt lỗi** (log + toast/crash log khi lỗi
+  xảy ra, để lần sau có bằng chứng ngay); (4) **ghi docs liên quan** (nguyên nhân, giả thuyết
+  đã bác, bằng chứng, hướng sửa — vào doc tính năng + TASK_QUEUE + CHANGELOG).
+- **Áp dụng mọi repo** (Manh 22/11/2026): rule này có trong AGENTS.md của TransPeek (mac),
+  TransPeek-Windows, SeekZip + AGENTS.md chung của Muse — agent mới vào repo nào cũng đọc
+  được ngay, không học lại từ đầu.
 
 ## Liên kết
 
