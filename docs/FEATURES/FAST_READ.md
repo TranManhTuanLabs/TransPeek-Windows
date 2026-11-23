@@ -399,9 +399,16 @@ different text, with a "Pro feature" note.
 **Space during a read (2026-11-21):** Space is always Play/Pause
 while a read is active — the hosts intercept it at `PreviewKeyDown`
 (tunnel), so it never falls through to a focused button (the repo
-link at the panel bottom got activated that way). After the read
-finishes, Space is left alone — the share / Done buttons work
-normally. **Space when the window lost focus (Manh 2026-11-21, test
+link at the panel bottom got activated that way). **Space after the
+read finishes (Manh 2026-11-23, mac parity):** Space replays the read
+from the beginning — `SetPlaying(true)` on a finished read starts a
+new read at position 0 (both styles, Full + panel Lite). The share /
+Done buttons still work with Enter and the mouse (Enter is not
+intercepted, so a focused button still fires on Enter). The Rest
+window is the exception: once its read finishes the countdown is
+showing and the reader is hidden, so read keys (Space / ←/→ / R)
+do nothing there — Space must not restart the read behind the
+countdown. **Space when the window lost focus (Manh 2026-11-21, test
 CI230):** the lite panel opens without activation and the Full window
 loses focus as soon as the mouse leaves it — Space then went to the
 other app, so the user had to click into the panel/window first. The

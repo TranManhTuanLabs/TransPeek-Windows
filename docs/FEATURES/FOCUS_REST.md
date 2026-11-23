@@ -93,7 +93,10 @@ dưới. Xem thêm panel spec
   fixed size, title "TransPeek — Rest") that reads the reminder text
   with the lite reader, then counts the break down (coffee cup EC32 +
   title + mm:ss 56pt bold + "The window closes when the timer ends." +
-  Done) and closes itself at zero. Esc closes the window. It never
+  Done) and closes itself at zero. Esc closes the window. Read keys
+  (Space / ←/→ / R) do nothing once the countdown is showing — the
+  replay-on-Space rule (Manh 2026-11-23, mac parity) applies to the
+  Full / panel completion UI, not the rest countdown. It never
   touches the Fast Read window — a read in progress keeps reading. The
   panel hides first (it is topmost and would float above the Rest
   window). The Rest window has no speaker button yet — one will be added (Manh 2026-11-23) so the user can listen instead of reading while resting their eyes; it follows the same shared speaker state as Full + Lite.

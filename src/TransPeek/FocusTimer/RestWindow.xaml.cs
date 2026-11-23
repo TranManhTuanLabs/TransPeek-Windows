@@ -124,6 +124,13 @@ public sealed partial class RestWindow : Window
         }
         // The reader's own keys (Space / arrows / R) go to the compact
         // view — it ignores Esc itself, so there is no double-handling.
+        // Once the read finished, the countdown is showing and the
+        // reader is hidden — read keys no longer apply. Space must
+        // not restart the read behind the countdown (the mac-parity
+        // replay is for the Full / panel completion UI, not the rest
+        // countdown). Esc above still closes the window.
+        if (_viewModel.IsFinished)
+            return;
         if (CompactView.HandleKey(e.Key, FocusManager.GetFocusedElement()))
             e.Handled = true;
     }

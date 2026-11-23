@@ -139,9 +139,10 @@ public sealed partial class CompactReadingView : UserControl
                 // intermittently, depending on which button held focus).
                 // The host intercepts Space at PreviewKeyDown, so the
                 // button never sees it. After the read finishes, Space
-                // is left alone — the share / Done buttons work normally.
-                if (_viewModel.IsFinished)
-                    return false;
+                // replays it from the beginning (mac parity, Manh
+                // 2026-11-23) — SetPlaying(true) on a finished read
+                // starts a new read at position 0. The share / Done
+                // buttons still work with Enter and the mouse.
                 _viewModel.SetPlaying(!_viewModel.IsPlaying);
                 return true;
             case VirtualKey.Left:

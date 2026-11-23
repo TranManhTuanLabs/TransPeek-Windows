@@ -877,10 +877,11 @@ public sealed partial class FastReadWindow : Window
                 // it must never fall through to a focused button (a
                 // focused transport button would run its own action
                 // instead). PreviewKeyDown catches it before the
-                // button sees it. After the read finishes, Space is
-                // left alone — the share buttons work normally.
-                if (_viewModel.IsFinished)
-                    break;
+                // button sees it. After the read finishes, Space
+                // replays it from the beginning (mac parity, Manh
+                // 2026-11-23) — SetPlaying(true) on a finished read
+                // starts a new read at position 0. The share buttons
+                // still work with Enter and the mouse.
                 _viewModel.SetPlaying(!_viewModel.IsPlaying);
                 e.Handled = true;
                 break;

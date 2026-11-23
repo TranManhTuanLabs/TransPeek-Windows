@@ -2818,6 +2818,13 @@ Manh test bản 0.1.4.191: Google 249 ngôn ngữ ngon. 4 việc còn lại làm
 - **NOT renamed:** "Run FastRead in:" (panel right — opens the real Full window) and the "Read in:" buttons ("FastRead Lite" / "FastRead Full Window" — the window button opens the real Full window). Both keep "FastRead Full Window".
 - **Supersedes (reminder picker only):** the 2026-11-22 naming decision ("FastRead Full Window" for both "Run FastRead in:" and "Run reminder in:") — the "Run FastRead in:" part still stands.
 
+## Space replays a finished read (2026-11-23, Manh, mac parity)
+
+- **Rule:** once a read finishes, Space replays it from the beginning (both reading styles, Full window + panel Lite). Before this change Space did nothing after a finish — a deliberate choice so a focused share / Done button could be triggered with Space. Mac does replay-on-Space (`play()` goes back to the start only when at the last slide/line), and Manh chose the same behaviour for Windows for consistency (one app, one Space key) and because replay is the most common action after finishing.
+- **Mechanism:** `SetPlaying(true)` on a finished view model already starts a new read at position 0 (it resets slide/line, elapsed clock and `IsFinished`, then paces from the start) — so the change is only to stop swallowing Space when finished: `CompactReadingView.HandleKey` (Lite) and `FastReadWindow.OnKeyDown` (Full) no longer early-return on `IsFinished`. The completion UI hides on the `IsFinished` → false change (`UpdateChrome` / `UpdateCompletion`).
+- **Share / Done still work:** Enter is not intercepted by either key path, so a focused share / Done button still fires on Enter; mouse click works as before. Only Space changes hands (button activation → replay).
+- **Rest window exception:** once the Rest window's read finishes, the countdown is showing and the reader is hidden — read keys (Space / ←/→ / R) do nothing there (`RestWindow.OnKeyDown` returns early on `IsFinished`). Space must not restart the read behind the countdown: the countdown is the break timer, and a restart would play invisibly while the window counts down to close. Esc still closes the window.
+
 ## Liên kết
 
 - [Bối cảnh AI](AI_CONTEXT.md)
