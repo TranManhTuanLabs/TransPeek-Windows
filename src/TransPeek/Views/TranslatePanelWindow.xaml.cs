@@ -97,8 +97,12 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// for the horizontal (Manh 2026-11-16: the output shrank to
     /// nothing when the panel was dragged small, even with long
     /// text). When the provider is collapsed the border MinHeight
-    /// goes to 0 instead (see SetProviderCardExpanded).</summary>
-    private const double MinOutputCardHeight = 218;
+    /// goes to 0 instead (see SetProviderCardExpanded).
+    /// 2026-11-23: 232 = 218 visible minimum + 14 measured frame
+    /// (StripWindowFrame recovered only 2 px, 16 -> 14); visible card
+    /// is cardMin - frame, so 232 shows exactly 218. XAML MinHeight
+    /// on ProviderCardBorder must match this number.</summary>
+    private const double MinOutputCardHeight = 232;
     /// <summary>Window-subclass delegate for the WM_GETMINMAXINFO
     /// minimum-size enforcement. Kept in a field (not a local) so the
     /// GC cannot collect it while the window lives — a collected
@@ -322,11 +326,14 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
                 // measured frame is 16x16, so the height math (computed
                 // for the client area, applied to the outer size) came
                 // up 16 px short and the output card lost its bottom
-                // 8 px, covering the speaker/copy buttons. With the
-                // frame stripped, outer == client and every measurement
-                // matches. Only frame bits are removed — the panel stays
-                // an opaque card. Must run after MakeBorderlessTopmost
-                // + MakeToolWindow (both touch the window style).
+                // 8 px, covering the speaker/copy buttons. NOTE 2026-11-23:
+                // stripping recovered only 2 px (frame 16 -> 14 on Manh's
+                // PC, build 241) — outer still != client, so the card
+                // minimum now compensates for the measured frame instead
+                // (see MinOutputCardHeight). Only frame bits are removed —
+                // the panel stays an opaque card. Must run after
+                // MakeBorderlessTopmost + MakeToolWindow (both touch the
+                // window style).
                 WindowHelpers.StripWindowFrame(hwnd);
                 InstallMinSizeSubclass(hwnd);
                 // Native drag region (see UpdateCaptionRegion): set once
@@ -1366,6 +1373,19 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         // conclusion above is stale. Current suspect: the leftover
         // window frame (see LogPanelSize); the diagnostic log measures
         // it instead of guessing.
+        // NOTE 2026-11-23: stripping the frame recovered only 2 px
+        // (frame 16x16 -> 14x14 on Manh's PC, build 241) — the
+        // remaining 14 px is NOT in the window styles, so the
+        // strip-frame hypothesis is disproven as a complete fix.
+        // Try (Manh): raise the card minimum by the measured frame —
+        // MinOutputCardHeight 218 -> 232 (218 visible + 14 frame).
+        // Visible card = cardMin - frame, so 232 shows exactly 218;
+        // the panel minimum and the drag minimum grow with it
+        // (ComputeMinPanelHeight + WM_GETMINMAXINFO), so opening and
+        // dragging to the minimum both show the full card. The
+        // [PanelSize] log will confirm the new numbers on the test
+        // build — if the speaker is still short, the log says by how
+        // much instead of guessing again.
         var cardMargin = _providerCardExpanded
             ? ProviderCardBorder.Margin.Top + ProviderCardBorder.Margin.Bottom
             : 0;

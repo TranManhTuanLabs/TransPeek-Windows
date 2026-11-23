@@ -2804,11 +2804,23 @@ Manh test bản 0.1.4.191: Google 249 ngôn ngữ ngon. 4 việc còn lại làm
   `MakeBorderlessTopmost` + `MakeToolWindow`. Panel vẫn là card mờ đục — không chạm
   tới blur/backdrop trong suốt. Resize tay không đổi: các vùng kéo là
   `InputNonClientPointerSource.SetRegionRects` (không phụ thuộc `WS_THICKFRAME`).
-- **Log chẩn đoán GIỮ LẠI trên bản nhánh** để test xác nhận frame=0x0; gỡ khi gộp main
-  (submenu Diagnose thì giữ — đó là tính năng thường trực).
+- **Log chẩn đoán GIỮ LẠI trên bản nhánh** để test xác nhận số mới (frame, card thấy được);
+  gỡ khi gộp main (submenu Diagnose thì giữ — đó là tính năng thường trực).
 - **Rủi ro đã biết:** gỡ khung cũng gỡ bóng đổ DWM của panel — panel có thể trông phẳng
   hơn; Manh test bản nhánh sẽ thấy rõ. Nếu bóng mất mà trông xấu thì tính sau (không
   quay lại cộng bù 16px khi chưa bàn).
+- **KẾT QUẢ TEST BẢN NHÁNH #241 (Manh, 23/11 — giả thuyết gỡ khung BỊ BÁC):** frame chỉ
+  16x16 → **14x14** (client 404x538 → 406x540, log `[PanelSize]` 12:34 trong doc cty);
+  loa vẫn che ("1 chữ bị che loa/copy ô output"). `StripWindowFrame` chỉ gỡ được viền
+  1px mỗi phía (`WS_BORDER`); 14px còn lại không nằm ở style cửa sổ. (Manh chưa báo về
+  bóng đổ.)
+- **Thử tiếp (Manh chỉ 23/11 — tăng min card theo số đo):** `MinOutputCardHeight` 218 →
+  **232** (= 218 cần thấy + 14 frame đo được; card thấy được = cardMin − frame nên 232
+  cho đúng 218). XAML `MinHeight` đổi theo cho khớp. minH panel lên 568 nên cả lúc mở
+  lẫn kéo tới mức tối thiểu đều cho card đủ 218. Log `[PanelSize]` GIỮ LẠI để xác nhận
+  số mới trên bản test. Lưu ý lịch sử: mức 238 (#163) từng bị #164 trả về trước khi
+  Manh kịp test nên chưa có kết luận thực nghiệm về việc tăng min card — lần này test
+  có log đi kèm, số nào thiếu sẽ thấy ngay.
 
 ## "Read in:" + "Run reminder in:" — Lite lên trên, tên FastRead Full Window (2026-11-22, mac parity b0e314f0 + 46c8e357 + 2cb39c10)
 

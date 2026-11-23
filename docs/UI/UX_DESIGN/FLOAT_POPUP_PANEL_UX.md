@@ -99,14 +99,15 @@ minH = max(450, fixedH + cardMin + cardMargin + 24)
 - Auto-fit (`ResizeToFitContent`): đo `DesiredSize` của root, kẹp giữa min height động
   và max 800, rộng kẹp 400–600.
 
-## 6. Bug che loa/Copy — nguyên nhân thật: khung cửa sổ thừa 16x16, đang sửa trên nhánh (23/11)
+## 6. Bug che loa/Copy — khung còn 14x14 sau khi gỡ khung, đang thử tăng min card (23/11)
 
-> **Trạng thái hiện tại (23/11/2026):** nguyên nhân thật ĐÃ XÁC NHẬN bằng số đo:
-> khung cửa sổ thừa **16x16** (outer 420x554, client 404x538 — log `[PanelSize]`
-> trên máy Manh 23/11). Fix #164 / #161 / #163 đều không hết che vì không đụng tới
-> khung. Đang sửa trên nhánh `fix/panel-strip-frame` (gỡ khung panel, xem cập nhật
-> 23/11 cuối §6) — chờ Manh test bản nhánh xác nhận hết che. Toàn bộ §6 dưới đây giữ
-> nguyên làm lịch sử điều tra. Loa/Copy GIỮ NGUYÊN trong ô output (Manh chốt 17/11).
+> **Trạng thái hiện tại (23/11/2026):** khung cửa sổ thừa **16x16** đã xác nhận bằng số đo
+> (outer 420x554, client 404x538 — log `[PanelSize]` trên máy Manh 23/11), nhưng gỡ khung
+> (`StripWindowFrame`, bản nhánh #241) chỉ gỡ được 2px → khung còn **14x14** (client
+> 406x540), loa vẫn che. 14px còn lại không nằm ở style cửa sổ. Đang thử tiếp trên nhánh
+> `fix/panel-strip-frame` (tăng min output card 218 → 232 = 218 + 14 frame đo được, xem cập
+> nhật 23/11 cuối §6) — chờ Manh test bản nhánh mới. Toàn bộ §6 dưới đây giữ nguyên làm
+> lịch sử điều tra. Loa/Copy GIỮ NGUYÊN trong ô output (Manh chốt 17/11).
 
 **Bug che loa/Copy (từ #149):** nút loa/Copy ở góc dưới-phải ô output bị cắt ở mép
 dưới card khi tra 1–5 line; từ 6 line trở lên không bị. **Nguyên nhân thật đã tìm ra
@@ -230,9 +231,17 @@ Lịch sử mò số (để tránh lặp lại): min output card 150 → 160 (#1
 > **Fix (hướng 1, Manh duyệt 23/11):** tách `TransparentWindow.RemoveWindowFrame`
 > thành `WindowHelpers.StripWindowFrame` dùng chung (chỉ gỡ khung, panel vẫn là card mờ
 > đục) + panel gọi ở Loaded sau `MakeBorderlessTopmost` + `MakeToolWindow`. Log chẩn đoán
-> GIỮ LẠI trên bản nhánh để test xác nhận frame=0x0; gỡ khi gộp main. Rủi ro: gỡ khung
+> GIỮ LẠI trên bản nhánh để xác nhận số mới; gỡ khi gộp main. Rủi ro: gỡ khung
 > cũng gỡ bóng đổ DWM — panel có thể trông phẳng hơn, Manh test sẽ thấy.
 > Chi tiết: `docs/DECISIONS.md` (mục Strip frame panel) + `docs/TASK_QUEUE.md`.
+
+> **Cập nhật 23/11/2026 (chiều) — gỡ khung chỉ được 2px, đang thử tăng min card:**
+> Manh test bản nhánh #241 (12:34, cùng máy): frame 16x16 → **14x14** (client 406x540),
+> loa vẫn che. `StripWindowFrame` chỉ gỡ được viền 1px mỗi phía; 14px còn lại không nằm
+> ở style cửa sổ — giả thuyết gỡ khung triệt để BỊ BÁC. Thử tiếp (Manh chỉ): tăng min
+> output card 218 → 232 (= 218 + 14 frame đo được; card thấy được = cardMin − frame).
+> Log `[PanelSize]` giữ lại để xác nhận số mới. Chi tiết: `docs/DECISIONS.md` (mục Strip
+> frame panel) + `docs/TASK_QUEUE.md`.
 
 ## 7. Quy tắc sửa (để không phá layout)
 

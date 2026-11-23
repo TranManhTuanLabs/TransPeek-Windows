@@ -124,8 +124,12 @@ internal static class WindowHelpers
     /// area but applied to the outer size, and the measured frame is
     /// 16x16 (outer 420x554 vs client 404x538 on Manh's PC) — the panel
     /// came up 16 px short and the output card lost its bottom 8 px,
-    /// covering the speaker/copy buttons. Stripping the frame makes
-    /// every measurement match. No transparency is touched: the window
+    /// covering the speaker/copy buttons. NOTE 2026-11-23: stripping
+    /// recovered only 2 px on Manh's PC (frame 16x16 -> 14x14, build
+    /// 241) — the remaining 14 px is not in the window styles, so
+    /// stripping alone does NOT make the measurements match; the card
+    /// minimum now compensates for the measured frame instead (see
+    /// MinOutputCardHeight). No transparency is touched: the window
     /// keeps its opaque background (unlike TransparentWindow).</summary>
     public static void StripWindowFrame(IntPtr hwnd)
     {

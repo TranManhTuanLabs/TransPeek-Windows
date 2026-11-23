@@ -16,10 +16,13 @@
   16px chiều cao vùng hiển thị → ô output nhận 210 thay vì tối thiểu 218 → loa/copy bị
   che ~8px. Khớp ghi chú của Manh: 1 chữ bị che, 3 dòng không bị. **Đang sửa trên nhánh
   `fix/panel-strip-frame`** (tách `RemoveWindowFrame` thành `WindowHelpers.StripWindowFrame`
-  dùng chung, panel gọi ở Loaded; log `[PanelSize]` GIỮ LẠI trên bản nhánh để test xác
-  nhận frame=0). Chờ Manh test bản nhánh → OK thì gỡ log + gộp main. Case study
-  `docs/AGENTS.md` §3 đã viết lại theo nguyên nhân thật (trên nhánh). Chi tiết:
-  `docs/UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md` (§6).
+  dùng chung, panel gọi ở Loaded; log `[PanelSize]` GIỮ LẠI trên bản nhánh). **Test bản
+  nhánh #241 (Manh 23/11): CHƯA ĐƯỢC — frame chỉ 16x16 → 14x14, loa vẫn che; giả thuyết
+  gỡ khung triệt để bị bác.** Đã sync main vào nhánh (merge `9dc6f59`, PR #6 draft; PR #5
+  sync ngược đã đóng vì nút gỡ xung đột sẽ commit lên main). Đang thử tiếp (Manh chỉ):
+  tăng min output card 218 → 232 (= 218 + 14 frame đo được). Chờ Manh test bản nhánh mới
+  → OK thì gỡ log + gộp main (qua PR #6). Case study `docs/AGENTS.md` §3 đã cập nhật theo
+  kết quả test (trên nhánh). Chi tiết: `docs/UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md` (§6).
 - [ ] **Doc UI/UX** (Windows — TransPeek-Windows): panel đã chốt + viết xong;
   các doc còn lại là bản nháp, cập nhật dần khi hoàn thiện hoặc Manh yêu cầu.
   `SETTINGS.md` và `SETTING_UX.md` CHƯA VIẾT.

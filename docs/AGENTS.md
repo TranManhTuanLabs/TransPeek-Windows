@@ -54,7 +54,10 @@
   trên máy Manh 23/11 — khớp đúng repro (mở lần đầu đã che; 1 chữ bị che, 3 dòng không
   bị: chỉ khi card ở mức tối thiểu mới bị kẹp). **Fix: gỡ khung panel** (`WindowHelpers.
   StripWindowFrame`, tách từ `TransparentWindow.RemoveWindowFrame`, chỉ gỡ khung —
-  panel vẫn là card mờ đục), nhánh `fix/panel-strip-frame`, chờ Manh test xác nhận.
+  panel vẫn là card mờ đục), nhánh `fix/panel-strip-frame`. **Kết quả test #241 (23/11):
+  gỡ khung chỉ gỡ được 2px (frame 16x16 → 14x14), loa vẫn che — giả thuyết gỡ khung
+  triệt để BỊ BÁC.** Đang thử tiếp (Manh chỉ): tăng min output card 218 → 232 (= 218 +
+  14 frame đo được; card thấy được = cardMin − frame), log giữ lại để xác nhận số mới.
   Bài học: (1) có bằng chứng rồi vẫn phải hỏi **sửa đúng tầng chưa**; (2) quan sát của
   user (mở lần đầu đã che, kéo nhỏ dừng đúng điểm che) loại được cả loạt giả thuyết —
   **hỏi user "nó thay đổi theo cái gì" trước khi đoán**; (3) comment trong code cũng có
