@@ -318,6 +318,16 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
                 // enough to hide the output. The post-hoc clamp in
                 // SettleResizedSize stays as a backstop.
                 var hwnd = WindowNative.GetWindowHandle(this);
+                // Strip the window frame (che-loa fix, 2026-11-23): the
+                // measured frame is 16x16, so the height math (computed
+                // for the client area, applied to the outer size) came
+                // up 16 px short and the output card lost its bottom
+                // 8 px, covering the speaker/copy buttons. With the
+                // frame stripped, outer == client and every measurement
+                // matches. Only frame bits are removed — the panel stays
+                // an opaque card. Must run after MakeBorderlessTopmost
+                // + MakeToolWindow (both touch the window style).
+                WindowHelpers.StripWindowFrame(hwnd);
                 InstallMinSizeSubclass(hwnd);
                 // Native drag region (see UpdateCaptionRegion): set once
                 // the layout is known, and again whenever the title bar

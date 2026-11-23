@@ -393,7 +393,7 @@ internal static class NativeMethods
     //   * the native client surface cleared to BLACK (WinUI clears it with
     //     the theme background first; black + alpha composition = fully
     //     transparent pixels), via a window subclass on WM_ERASEBKGND,
-    //   * the frame bits stripped (RemoveWindowFrame) — SetBorderAndTitleBar
+    //   * the frame bits stripped (StripWindowFrame) — SetBorderAndTitleBar
     //     leaves WS_DLGFRAME, which is what the white outline/shadow came
     //     from. Drop any one of these and the window is an opaque box.
     public const int GWL_STYLE = -16;

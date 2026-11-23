@@ -9,12 +9,16 @@
   Fix #164 (`bf74379`, CI xanh) đã vào main nhưng **Manh xác nhận 22/11 VẪN CHE trên bản
   v0.1.4.238** — nguyên nhân 18/11 (kéo ngang khoá auto-fit + settle chỉ biết co) KHÔNG phải
   nguyên nhân cuối. Repro 22/11: mở lần đầu đã che; kéo nhỏ hết cỡ dừng ĐÚNG điểm che;
-  dịch từ mới không kéo vẫn che; text rất dài không che, 3–6 dòng vẫn che. Nghi phạm mới:
-  khung cửa sổ thừa (`WS_DLGFRAME` sót lại sau `SetBorderAndTitleBar`) ăn mất chiều cao
-  vùng hiển thị — giải thích được cả #163 (+20 cardMin vô ích). **Đang làm bản chẩn đoán
-  ghi log** (outer/client/min/baseline vào `windows.log`, mở từ tray Diagnose) để đo đúng
-  số px thiếu, rồi sửa theo số đo. Xác nhận hết che thật thì viết lại case study ở
-  `docs/AGENTS.md` §3 theo nguyên nhân thật (hiện §3 vẫn theo kết luận cũ). Chi tiết:
+  dịch từ mới không kéo vẫn che; text rất dài không che, 3–6 dòng vẫn che.
+  **Nguyên nhân thật ĐÃ XÁC NHẬN bằng số đo 23/11** (Manh test bản 240, máy công ty Dell
+  Pro 24, 1920x1080, scale 100%): frame=16x16 (outer 420x554, client 404x538) — khung
+  cửa sổ thừa (`WS_DLGFRAME` sót lại sau `SetBorderAndTitleBar` + `WS_THICKFRAME`) ăn mất
+  16px chiều cao vùng hiển thị → ô output nhận 210 thay vì tối thiểu 218 → loa/copy bị
+  che ~8px. Khớp ghi chú của Manh: 1 chữ bị che, 3 dòng không bị. **Đang sửa trên nhánh
+  `fix/panel-strip-frame`** (tách `RemoveWindowFrame` thành `WindowHelpers.StripWindowFrame`
+  dùng chung, panel gọi ở Loaded; log `[PanelSize]` GIỮ LẠI trên bản nhánh để test xác
+  nhận frame=0). Chờ Manh test bản nhánh → OK thì gỡ log + gộp main. Case study
+  `docs/AGENTS.md` §3 đã viết lại theo nguyên nhân thật (trên nhánh). Chi tiết:
   `docs/UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md` (§6).
 - [ ] **Doc UI/UX** (Windows — TransPeek-Windows): panel đã chốt + viết xong;
   các doc còn lại là bản nháp, cập nhật dần khi hoàn thiện hoặc Manh yêu cầu.

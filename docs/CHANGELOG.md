@@ -4,10 +4,20 @@
 > Quyết định chi tiết: `DECISIONS.md`. Trạng thái hiện tại (ảnh chụp nhanh):
 > `PROJECT_STATE.md`.
 
+## 2026-11-23
+
+- **nhánh `fix/panel-strip-frame` — sửa bug che loa theo số đo (chưa có số CI):** Manh test
+  bản 240, log `[PanelSize]` đo được frame=16x16 (outer 420x554, client 404x538) — nguyên
+  nhân thật đã rõ: chiều cao tính cho vùng hiển thị nhưng đặt theo kích thước ngoài, panel
+  thiếu 16px, ô output nhận 210 thay vì tối thiểu 218 → loa/copy bị che ~8px. Sửa: tách
+  `RemoveWindowFrame` thành `WindowHelpers.StripWindowFrame` dùng chung (chỉ gỡ khung,
+  panel vẫn là card mờ đục) + panel gọi ở Loaded; log chẩn đoán GIỮ LẠI trên bản nhánh để
+  test xác nhận frame=0. Chờ Manh test bản nhánh.
+
 ## 2026-11-22
 
-- **main — "Read in:" + thứ tự reminder (theo mac b0e314f0 + 46c8e357 + 2cb39c10, chưa có
-  số CI):** panel right demo thêm tiêu đề "Read in:" + 2 nút "FastRead Lite" / "FastRead
+- **main — "Read in:" + thứ tự reminder (theo mac b0e314f0 + 46c8e357 + 2cb39c10, CI #240
+  XANH, pre-release `v0.1.4.240`):** panel right demo thêm tiêu đề "Read in:" + 2 nút "FastRead Lite" / "FastRead
   Full Window" (đọc ngay, bỏ qua setting); radio thành "FastRead Full Window
   (recommended)"; "Run reminder in:" đổi thứ tự Lite lên trên.
 - **main — bản chẩn đoán bug che loa (chưa có số CI):** log kích thước panel

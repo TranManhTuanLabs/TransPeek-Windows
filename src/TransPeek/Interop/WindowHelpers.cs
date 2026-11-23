@@ -114,6 +114,42 @@ internal static class WindowHelpers
         appWindow.IsShownInSwitchers = false;
     }
 
+    /// <summary>Strip every frame bit from a window so its outer size
+    /// equals its client size — this is what actually removes the
+    /// outline/shadow. Only the frame bits are cleared (deliberately
+    /// with &amp;= ~): overwriting GWL_STYLE wholesale drops
+    /// WS_CLIPCHILDREN/WS_CLIPSIBLINGS, which makes content render
+    /// blurry after animations (Action-Wheel). Purpose (che-loa fix,
+    /// 2026-11-23): the panel's height math is computed for the client
+    /// area but applied to the outer size, and the measured frame is
+    /// 16x16 (outer 420x554 vs client 404x538 on Manh's PC) — the panel
+    /// came up 16 px short and the output card lost its bottom 8 px,
+    /// covering the speaker/copy buttons. Stripping the frame makes
+    /// every measurement match. No transparency is touched: the window
+    /// keeps its opaque background (unlike TransparentWindow).</summary>
+    public static void StripWindowFrame(IntPtr hwnd)
+    {
+        var style = NativeMethods.GetWindowLongPtr(hwnd, NativeMethods.GWL_STYLE).ToInt64();
+        style &= ~(long)(NativeMethods.WS_CAPTION | NativeMethods.WS_BORDER |
+            NativeMethods.WS_DLGFRAME | NativeMethods.WS_THICKFRAME);
+        NativeMethods.SetWindowLongPtr(hwnd, NativeMethods.GWL_STYLE, new IntPtr(style));
+
+        var exStyle = NativeMethods.GetWindowLongPtr(hwnd, NativeMethods.GWL_EXSTYLE).ToInt64();
+        exStyle &= ~(long)(NativeMethods.WS_EX_WINDOWEDGE | NativeMethods.WS_EX_CLIENTEDGE |
+            NativeMethods.WS_EX_STATICEDGE | NativeMethods.WS_EX_DLGMODALFRAME);
+        NativeMethods.SetWindowLongPtr(hwnd, NativeMethods.GWL_EXSTYLE, new IntPtr(exStyle));
+
+        // Windows 11 rounds top-level windows; on a transparent overlay
+        // the rounding is visible as curved corners of the outline.
+        int corners = NativeMethods.DWMWCP_DONOTROUND;
+        NativeMethods.DwmSetWindowAttribute(hwnd, NativeMethods.DWMWA_WINDOW_CORNER_PREFERENCE, ref corners, sizeof(int));
+
+        // The cached frame is only recomputed when told it changed.
+        NativeMethods.SetWindowPos(hwnd, IntPtr.Zero, 0, 0, 0, 0,
+            NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOZORDER |
+            NativeMethods.SWP_NOACTIVATE | NativeMethods.SWP_FRAMECHANGED);
+    }
+
     /// <summary>Current cursor position in physical pixels.</summary>
     public static (int X, int Y) CursorPosition()
     {

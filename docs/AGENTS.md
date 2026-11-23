@@ -36,17 +36,24 @@
 - **Bài học chuỗi #150→#159 (bug che loa):** nâng min output card 150→160→170→180→
   210→218 mà không tìm nguyên nhân gốc — không lần nào hết. Đừng lặp lại:
   **điều tra nguyên nhân trước (cần bằng chứng: ảnh/video đo được), rồi mới sửa.**
-- **Chuỗi #149→#161 — kết thúc (17/11):** #160 sửa BÊN TRONG card (loa sang hàng Auto
-  riêng) vẫn không hết, vì chỗ bị bóp là Ở PANEL (hàng `*`), nằm trên card — sửa sai
-  tầng thì không bao giờ hết. **Nguyên nhân thật do Manh tìm ra bằng quan sát**
-  (kéo rộng → hint 1 dòng, hết che; kéo hẹp → hint xuống 2 dòng, che lại): hint
-  `TextWrapping="Wrap"` (~103 ký tự) đổi chiều cao theo chiều rộng, còn
-  `ComputeMinPanelHeight()` đọc `ActualHeight` của layout lần trước (comment trong code
-  còn ghi sai là "kéo thì chiều cao không đổi"). Fix #161: rút ngắn hint còn 51 ký tự,
-  vừa 1 dòng ở rộng tối thiểu 400. Bài học: (1) có bằng chứng rồi vẫn phải hỏi
-  **sửa đúng tầng chưa**; (2) quan sát hành vi của user (kéo rộng/hẹp) tìm ra nguyên
-  nhân mà đọc code không thấy — **hỏi user "nó thay đổi theo cái gì" trước khi đoán**;
-  (3) comment trong code cũng có thể sai — tin bằng chứng, không tin comment.
+- **Chuỗi #149→#164 — kết thúc (23/11):** fix #161 (rút hint) dựa trên kết luận SAI —
+  hint đổi chiều cao theo chiều rộng là thật nhưng không phải nguyên nhân che loa:
+  #161 vẫn che, #163 (+20 cardMin) vẫn che, fix #164 vẫn che. **Nguyên nhân thật:
+  khung cửa sổ thừa 16x16** — `SetBorderAndTitleBar(false, false)` để sót `WS_DLGFRAME`
+  (+ `WS_THICKFRAME` vì panel resizable); chỉ icon được strip frame, panel thì không.
+  Mọi chiều cao (công thức min + phép đo baseline) đều tính cho vùng hiển thị nhưng đặt
+  theo kích thước ngoài → vùng hiển thị thực thiếu 16px → ô output nhận 210 thay vì tối
+  thiểu 218 → loa/copy ở đáy ô bị che ~8px. **Bằng chứng quyết định là log số thật:**
+  bản chẩn đoán 22/11 ghi `[PanelSize]` (outer 420x554, client 404x538, frame=16x16)
+  trên máy Manh 23/11 — khớp đúng repro (mở lần đầu đã che; 1 chữ bị che, 3 dòng không
+  bị: chỉ khi card ở mức tối thiểu mới bị kẹp). **Fix: gỡ khung panel** (`WindowHelpers.
+  StripWindowFrame`, tách từ `TransparentWindow.RemoveWindowFrame`, chỉ gỡ khung —
+  panel vẫn là card mờ đục), nhánh `fix/panel-strip-frame`, chờ Manh test xác nhận.
+  Bài học: (1) có bằng chứng rồi vẫn phải hỏi **sửa đúng tầng chưa**; (2) quan sát của
+  user (mở lần đầu đã che, kéo nhỏ dừng đúng điểm che) loại được cả loạt giả thuyết —
+  **hỏi user "nó thay đổi theo cái gì" trước khi đoán**; (3) comment trong code cũng có
+  thể sai — tin bằng chứng, không tin comment; (4) **đo bằng log số thật rồi mới sửa**
+  (rule §9) — mò số 150→218 sáu vòng không lần nào hết.
   Chi tiết kỹ thuật đầy đủ ở `UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md` §6.
 - Số đã chốt trong `UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md` là spec — đổi số cần Manh duyệt,
   và cập nhật doc trong cùng đợt.

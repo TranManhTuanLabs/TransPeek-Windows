@@ -99,16 +99,14 @@ minH = max(450, fixedH + cardMin + cardMargin + 24)
 - Auto-fit (`ResizeToFitContent`): đo `DesiredSize` của root, kẹp giữa min height động
   và max 800, rộng kẹp 400–600.
 
-## 6. Bug che loa/Copy — fix #164 KHÔNG hết che, đang chẩn đoán khung cửa sổ (22/11)
+## 6. Bug che loa/Copy — nguyên nhân thật: khung cửa sổ thừa 16x16, đang sửa trên nhánh (23/11)
 
-> **Trạng thái hiện tại (20/11/2026):** fix thật là **#164** (`SettleResizedSize`
-> thêm nhánh dài panel khi cần — commit `bf74379`, CI xanh), KHÔNG phải
-> #160/#161 như tiêu đề cũ ghi. Fix đã có trong mọi bản từ #167 trở đi.
-> Manh test các bản 199/200/201 và báo "đã ổn định tốt" / "giờ quá tốt"
-> mà KHÔNG nhắc lại che loa — nhưng anh chưa nói rõ câu "hết che loa",
-> nên phần điều tra dưới đây vẫn giữ nguyên làm lịch sử, và case study
-> trong `docs/AGENTS.md` §3 vẫn chờ viết lại theo nguyên nhân thật khi
-> anh xác nhận. Loa/Copy GIỮ NGUYÊN trong ô output (Manh chốt 17/11).
+> **Trạng thái hiện tại (23/11/2026):** nguyên nhân thật ĐÃ XÁC NHẬN bằng số đo:
+> khung cửa sổ thừa **16x16** (outer 420x554, client 404x538 — log `[PanelSize]`
+> trên máy Manh 23/11). Fix #164 / #161 / #163 đều không hết che vì không đụng tới
+> khung. Đang sửa trên nhánh `fix/panel-strip-frame` (gỡ khung panel, xem cập nhật
+> 23/11 cuối §6) — chờ Manh test bản nhánh xác nhận hết che. Toàn bộ §6 dưới đây giữ
+> nguyên làm lịch sử điều tra. Loa/Copy GIỮ NGUYÊN trong ô output (Manh chốt 17/11).
 
 **Bug che loa/Copy (từ #149):** nút loa/Copy ở góc dưới-phải ô output bị cắt ở mép
 dưới card khi tra 1–5 line; từ 6 line trở lên không bị. **Nguyên nhân thật đã tìm ra
@@ -219,6 +217,22 @@ Lịch sử mò số (để tránh lặp lại): min output card 150 → 160 (#1
 > (outer/client/min/baseline) vào `windows.log` mỗi lần fit + submenu tray Diagnose
 > (List windows / Open windows.log) để đo đúng số px thiếu, rồi sửa theo số đo.
 > Chi tiết: `docs/TASK_QUEUE.md` + `docs/DECISIONS.md`.
+
+> **Cập nhật 23/11/2026 — nguyên nhân thật ĐÃ XÁC NHẬN bằng số đo, đang sửa:**
+> Manh test bản 240 (máy công ty Dell Pro 24, 1920x1080, scale 100%), log
+> `[PanelSize]` ở đầu Google Doc test: outer=420x554, client=404x538, **frame=16x16**,
+> minH=554 (fixedH=304 + cardMin=218 + cardMargin=8 + 24), baseline=554, height=554.
+> Cơ chế: chiều cao tính cho vùng hiển thị nhưng đặt theo kích thước ngoài → vùng hiển
+> thị thực chỉ 538, thiếu 16px → ô output nhận 210 thay vì tối thiểu 218 → loa/copy bị
+> che ~8px. Khớp ghi chú của Manh: "1 chữ bị che loa/copy ô output", "3 line không bị"
+> (chỉ khi card ở mức tối thiểu mới bị kẹp; text dài hơn thì 16px thiếu được hấp thụ bởi
+> text cuộn trong ô). Chiều rộng cũng lệch tương tự (đo ở 420 nhưng hiển thị ở 404).
+> **Fix (hướng 1, Manh duyệt 23/11):** tách `TransparentWindow.RemoveWindowFrame`
+> thành `WindowHelpers.StripWindowFrame` dùng chung (chỉ gỡ khung, panel vẫn là card mờ
+> đục) + panel gọi ở Loaded sau `MakeBorderlessTopmost` + `MakeToolWindow`. Log chẩn đoán
+> GIỮ LẠI trên bản nhánh để test xác nhận frame=0x0; gỡ khi gộp main. Rủi ro: gỡ khung
+> cũng gỡ bóng đổ DWM — panel có thể trông phẳng hơn, Manh test sẽ thấy.
+> Chi tiết: `docs/DECISIONS.md` (mục Strip frame panel) + `docs/TASK_QUEUE.md`.
 
 ## 7. Quy tắc sửa (để không phá layout)
 

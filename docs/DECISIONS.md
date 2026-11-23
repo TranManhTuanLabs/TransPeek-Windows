@@ -2748,6 +2748,31 @@ Manh test bản 0.1.4.191: Google 249 ngôn ngữ ngon. 4 việc còn lại làm
 - **Rule mới (Manh 22/11, áp dụng mọi repo):** bug sửa 2–3 lần không ra thì dừng đoán —
   làm bộ test + log + bắt lỗi + docs (xem `docs/AGENTS.md` §9).
 
+## Strip frame panel — sửa bug che loa theo số đo (2026-11-23, nhánh fix/panel-strip-frame)
+
+- **Số đo quyết định (Manh test bản 240, 23/11, máy công ty Dell Pro 24, 1920x1080,
+  scale 100%):** `[PanelSize]` outer=420x554 client=404x538 **frame=16x16**, minH=554
+  (fixedH=304 + cardMin=218 + cardMargin=8 + 24), baseline=554, height=554. Khung thừa
+  8px mỗi phía. Cơ chế: chiều cao tính cho vùng hiển thị nhưng đặt theo kích thước
+  ngoài → vùng hiển thị thực chỉ 538, thiếu 16px → ô output nhận 210 thay vì tối thiểu
+  218 → loa/copy bị che ~8px. Khớp ghi chú của Manh: "1 chữ bị che loa/copy ô output",
+  "3 line không bị" — chỉ khi card ở mức tối thiểu mới bị kẹp; text dài hơn thì 16px
+  thiếu được hấp thụ bởi text cuộn trong ô. Chiều rộng cũng lệch tương tự (đo ở 420
+  nhưng hiển thị ở 404).
+- **Fix (hướng 1, Manh duyệt 23/11 — gỡ khung, không cộng bù 16px):** tách
+  `TransparentWindow.RemoveWindowFrame` (private) thành `WindowHelpers.StripWindowFrame`
+  (public, dùng chung) — chỉ gỡ các bit khung (`WS_CAPTION | WS_BORDER | WS_DLGFRAME |
+  WS_THICKFRAME` + edge bits, `DWMWA_WINDOW_CORNER_PREFERENCE = DONOTROUND`,
+  `SWP_FRAMECHANGED`); icon gọi helper mới thay cho hàm cũ; panel gọi ở Loaded sau
+  `MakeBorderlessTopmost` + `MakeToolWindow`. Panel vẫn là card mờ đục — không chạm
+  tới blur/backdrop trong suốt. Resize tay không đổi: các vùng kéo là
+  `InputNonClientPointerSource.SetRegionRects` (không phụ thuộc `WS_THICKFRAME`).
+- **Log chẩn đoán GIỮ LẠI trên bản nhánh** để test xác nhận frame=0x0; gỡ khi gộp main
+  (submenu Diagnose thì giữ — đó là tính năng thường trực).
+- **Rủi ro đã biết:** gỡ khung cũng gỡ bóng đổ DWM của panel — panel có thể trông phẳng
+  hơn; Manh test bản nhánh sẽ thấy rõ. Nếu bóng mất mà trông xấu thì tính sau (không
+  quay lại cộng bù 16px khi chưa bàn).
+
 ## "Read in:" + "Run reminder in:" — Lite lên trên, tên FastRead Full Window (2026-11-22, mac parity b0e314f0 + 46c8e357 + 2cb39c10)
 
 - **Panel right demo:** thêm tiêu đề "Read in:" (kiểu chữ như "Run FastRead in:") trên 2 nút
