@@ -13,6 +13,9 @@
   `RemoveWindowFrame` thành `WindowHelpers.StripWindowFrame` dùng chung (chỉ gỡ khung,
   panel vẫn là card mờ đục) + panel gọi ở Loaded; log chẩn đoán GIỮ LẠI trên bản nhánh để
   test xác nhận frame=0. Chờ Manh test bản nhánh.
+- **PR #4 MERGED — main `9b0369d` (CI #244 XANH, pre-release `v0.1.4.244`):** Fast Read Style 2 (Basic Reading) + speaker in Read mode — continuous phrase-by-phrase speech synced with focus, voice panel with Speed slider (0.6x–4x), safer keys (Space only when the read surface is focused), drag-to-resize font in Basic Reading, solid orange reminder banner, blue Done border, Maximize E9E3, "FastRead Full Window" naming.
+- **3 quyết định mới về loa read (Manh, docs-only):** (1) thêm loa vào cửa sổ nghỉ; (2) loa nhớ trạng thái chung Full + Lite, lưu bền (thay khung Style 2 "mặc định TẮT, không lưu bền"); (3) sau này gộp speed audio vào WPM thành 1 control chung. Ghi vào `DECISIONS.md` + `FAST_READ.md` + `FOCUS_REST.md` + `TASK_QUEUE.md`. (Docs mac đã đẩy cùng ngày, commit `b4aa6042`.)
+- **Đổi tên đích nhắc nhở (theo mac f08a9a3f):** "Run reminder in:" đổi "FastRead Full Window" → "FastRead Lite Window" (cửa sổ Nghỉ hiển thị view Lite, không phải cửa sổ Full thật). Chỉ đổi nhãn hiển thị; key/value/default của setting không đổi. "Run FastRead in:" và nút "Read in:" giữ nguyên tên cũ. (Dọn luôn 2 bullet trùng lặp trong `FOCUS_REST.md` từ đợt gộp PR #4.)
 
 ## 2026-11-22
 

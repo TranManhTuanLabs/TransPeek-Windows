@@ -1,0 +1,23 @@
+<UserControl
+    x:Class="TransPeek.FastRead.Style2ReadingView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Style 2 ("basic reading") page — feature/fastread-speaker-style2,
+         mac parity: Style2ReadingPage.swift. A scrollable reading page,
+         not RSVP chunks: the whole text is shown at once and the reader
+         scrolls freely; Play advances a focus line one line at a time.
+         Shared by the reader window and the panel-right lite reader —
+         the only difference is the horizontal padding (window 32, lite
+         12). The control shows itself only when the view model's
+         ReadingStyle is BasicReading; the host hides the RSVP reading
+         area itself. Body size is the focus size x 0.4 (mac ratio);
+         the current line gets a soft accent highlight when the
+         highlight is on (toggle, or automatically while TTS reads). -->
+    <ScrollViewer x:Name="PageScroller" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <!-- Transparent background: the page stays hit-testable even
+             between lines, so a font-size drag can start anywhere on
+             the page (not only on the glyphs). Visually unchanged. -->
+        <StackPanel x:Name="LinesPanel" Background="Transparent" Spacing="10" Padding="32,16,32,16" />
+    </ScrollViewer>
+</UserControl>
