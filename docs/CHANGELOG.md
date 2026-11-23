@@ -6,6 +6,7 @@
 
 ## 2026-11-23
 
+- **nhánh `fix/panel-strip-frame` — TRẢ KHUNG + SỬA CÔNG THỨC (Manh chốt 23/11, chưa có số CI):** Manh test bản nhánh #248: frame vẫn 14x14, card thấy được chỉ 218 thay vì 232, pin mờ + mất bo tròn — gốc là công thức minH tính số đo trong (client) nhưng đặt làm chiều cao ngoài, thiếu đúng khung 14px. Sửa: gỡ `StripWindowFrame` ở panel (trả bo tròn + bóng đổ + pin sắc như bản 211), card về lại 218 (const + XAML), cộng khung đo live (`FrameHeightDips`: outer − client, chia scale) vào `ComputeMinPanelHeight` — panel mở đúng 568 ngoài, card đủ 218 trong. Log `[PanelSize]` giữ lại (thêm `frameH`) để xác nhận số mới. Chờ Manh test bản nhánh mới.
 - **nhánh `fix/panel-strip-frame` — gỡ khung CHƯA ĐỦ + tăng min card 218→232 (chưa có số CI):** Manh test bản nhánh #241: frame chỉ 16x16 → 14x14 (client 406x540), loa vẫn che — `StripWindowFrame` chỉ gỡ được 2px, 14px còn lại không nằm ở style cửa sổ. Đã sync main vào nhánh (merge `9dc6f59`, PR #6 draft — PR #5 sync ngược đã đóng vì nút gỡ xung đột sẽ commit lên main). Thử tiếp theo hướng Manh chỉ: `MinOutputCardHeight` 218 → 232 (= 218 + 14 frame đo được) + XAML `MinHeight` đổi theo; log `[PanelSize]` giữ lại để xác nhận số mới.
 - **nhánh `fix/panel-strip-frame` — sửa bug che loa theo số đo (chưa có số CI):** Manh test
   bản 240, log `[PanelSize]` đo được frame=16x16 (outer 420x554, client 404x538) — nguyên

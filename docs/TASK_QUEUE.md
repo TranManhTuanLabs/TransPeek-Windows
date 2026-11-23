@@ -19,10 +19,14 @@
   dùng chung, panel gọi ở Loaded; log `[PanelSize]` GIỮ LẠI trên bản nhánh). **Test bản
   nhánh #241 (Manh 23/11): CHƯA ĐƯỢC — frame chỉ 16x16 → 14x14, loa vẫn che; giả thuyết
   gỡ khung triệt để bị bác.** Đã sync main vào nhánh (merge `9dc6f59`, PR #6 draft; PR #5
-  sync ngược đã đóng vì nút gỡ xung đột sẽ commit lên main). Đang thử tiếp (Manh chỉ):
-  tăng min output card 218 → 232 (= 218 + 14 frame đo được). Chờ Manh test bản nhánh mới
-  → OK thì gỡ log + gộp main (qua PR #6). Case study `docs/AGENTS.md` §3 đã cập nhật theo
-  kết quả test (trên nhánh). Chi tiết: `docs/UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md` (§6).
+  sync ngược đã đóng vì nút gỡ xung đột sẽ commit lên main). Tăng min card 218 → 232
+  (Manh chỉ) cũng không hết: test bản nhánh #248 (Manh 23/11) frame vẫn 14x14, card
+  thấy được chỉ 218 thay vì 232 — **gốc là CÔNG THỨC (minH tính số đo trong nhưng đặt
+  làm chiều cao ngoài). Manh chốt TRẢ KHUNG + SỬA CÔNG THỨC:** gỡ `StripWindowFrame` ở
+  panel, card về lại 218, cộng khung đo live vào `ComputeMinPanelHeight`. Chờ Manh test
+  bản nhánh mới → OK thì gỡ log + gộp main (qua PR #6). Case study `docs/AGENTS.md` §3
+  đã cập nhật theo kết quả test (trên nhánh). Chi tiết:
+  `docs/UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md` (§6).
 - [ ] **Doc UI/UX** (Windows — TransPeek-Windows): panel đã chốt + viết xong;
   các doc còn lại là bản nháp, cập nhật dần khi hoàn thiện hoặc Manh yêu cầu.
   `SETTINGS.md` và `SETTING_UX.md` CHƯA VIẾT.

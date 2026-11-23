@@ -36,10 +36,11 @@
 //      transparent instead of a white box.
 //
 // Only the trigger icon uses the full transparent setup (it is the only
-// window that must be a bare circle). The panel strips its frame bits
-// too (WindowHelpers.StripWindowFrame, che-loa fix 2026-11-23) so its
-// outer size equals its client size, but it stays an opaque card — no
-// blur, no transparent backdrop. The toast keeps the normal window
+// window that must be a bare circle). The panel tried stripping its
+// frame bits too (che-loa fix 2026-11-23) but went back to its frame
+// (Manh 2026-11-23: only 2 px recovered, rounded corners / shadow /
+// sharp pin lost) — the frame is now carried in the panel's
+// minimum-height formula instead. The toast keeps the normal window
 // setup (MakeBorderlessTopmost + MakeToolWindow).
 
 using System.Runtime.InteropServices;

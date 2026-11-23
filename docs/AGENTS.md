@@ -56,8 +56,13 @@
   StripWindowFrame`, tách từ `TransparentWindow.RemoveWindowFrame`, chỉ gỡ khung —
   panel vẫn là card mờ đục), nhánh `fix/panel-strip-frame`. **Kết quả test #241 (23/11):
   gỡ khung chỉ gỡ được 2px (frame 16x16 → 14x14), loa vẫn che — giả thuyết gỡ khung
-  triệt để BỊ BÁC.** Đang thử tiếp (Manh chỉ): tăng min output card 218 → 232 (= 218 +
-  14 frame đo được; card thấy được = cardMin − frame), log giữ lại để xác nhận số mới.
+  triệt để BỊ BÁC.** Tăng min card 218 → 232 (Manh chỉ) cũng không hết: test #248
+  (23/11) frame vẫn 14x14, card thấy được chỉ 218 thay vì 232 — **gốc là CÔNG THỨC:
+  minH tính bằng số đo trong (client) nhưng đặt làm chiều cao ngoài, thiếu đúng khung.**
+  **Fix đúng (hướng 2, Manh chốt 23/11 — TRẢ KHUNG + SỬA CÔNG THỨC):** gỡ bỏ
+  `StripWindowFrame` ở panel (trả bo tròn + bóng đổ + pin sắc như bản 211), card về lại
+  218, cộng khung đo live vào `ComputeMinPanelHeight` (outer = nhu cầu client + frame).
+  Log `[PanelSize]` giữ lại để xác nhận số mới trên bản test.
   Bài học: (1) có bằng chứng rồi vẫn phải hỏi **sửa đúng tầng chưa**; (2) quan sát của
   user (mở lần đầu đã che, kéo nhỏ dừng đúng điểm che) loại được cả loạt giả thuyết —
   **hỏi user "nó thay đổi theo cái gì" trước khi đoán**; (3) comment trong code cũng có

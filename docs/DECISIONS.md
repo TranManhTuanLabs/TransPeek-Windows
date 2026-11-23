@@ -2822,6 +2822,29 @@ Manh test bản 0.1.4.191: Google 249 ngôn ngữ ngon. 4 việc còn lại làm
   Manh kịp test nên chưa có kết luận thực nghiệm về việc tăng min card — lần này test
   có log đi kèm, số nào thiếu sẽ thấy ngay.
 
+## Trả khung + sửa công thức minH (hướng 2) — bug che loa (2026-11-23, Manh, nhánh fix/panel-strip-frame)
+
+- **Kết quả test bản nhánh #248 (Manh, 23/11 — tăng min card KHÔNG hết):** frame vẫn
+  **14x14** (log `[PanelSize]` 14:19: outer=420x568, client=406x554, minH=568,
+  cardMin=232), loa vẫn che; pin mờ hơn + mất bo tròn 4 góc (ảnh so sánh bản 211 vs
+  248). **Gốc là CÔNG THỨC, không phải card:** `ComputeMinPanelHeight` tính bằng số đo
+  trong (client: fixedH + cardMin + cardMargin + 24) nhưng `MoveAndResize` +
+  `WM_GETMINMAXINFO` đặt theo kích thước NGOÀI → card thực chỉ 218 thay vì 232, loa/copy
+  ở đáy card bị cắt đúng ~14px. Tăng cardMin chỉ dời số thiếu, không sửa được gốc.
+- **Quyết định (Manh chốt 23/11 — TRẢ KHUNG + SỬA CÔNG THỨC):** (1) gỡ
+  `StripWindowFrame` ở panel (trả khung như trước — bo tròn + bóng đổ DWM + pin sắc như
+  bản 211; pin mờ là tác dụng phụ của gỡ khung, code pin không đổi nên không cần sửa
+  riêng pin); (2) card về lại **218** (const + XAML — 232 chỉ là cách vá tạm cộng khung
+  vào card); (3) cộng khung đo live vào `ComputeMinPanelHeight` (`FrameHeightDips()`:
+  outer − client qua `AppWindow.Size` + `GetClientRect`, chia scale → DIPs; kẹp ≥ 0 khi
+  chưa đo được) — minH ngoài = nhu cầu client + khung. Panel mở đúng 568 ngoài, card đủ
+  218 trong.
+- **`StripWindowFrame` KHÔNG bị xoá:** `TransparentWindow` (icon nổi trong suốt) vẫn
+  dùng nó — chỉ gỡ lời gọi ở panel + cập nhật chú thích (nó chỉ còn là helper cho icon
+  trong suốt). `DWMWA_WINDOW_CORNER_PREFERENCE` / `DWMWCP_DONOTROUND` giữ nguyên.
+- **Log chẩn đoán GIỮ LẠI trên bản nhánh** (thêm `frameH` vào `minParts`) để test xác
+  nhận số mới; gỡ khi gộp main (submenu Diagnose thì giữ).
+
 ## "Read in:" + "Run reminder in:" — Lite lên trên, tên FastRead Full Window (2026-11-22, mac parity b0e314f0 + 46c8e357 + 2cb39c10)
 
 - **Panel right demo:** thêm tiêu đề "Read in:" (kiểu chữ như "Run FastRead in:") trên 2 nút
