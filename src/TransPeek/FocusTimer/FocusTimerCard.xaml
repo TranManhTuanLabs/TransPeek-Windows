@@ -126,19 +126,22 @@
                      sits on its OWN line below the label, not on the
                      same row — the row was cramped at panel width, and
                      the full-width picker is easier to hit. Options
-                     are "FastRead Full Window" / "FastRead Lite" (renamed
-                     Manh 2026-11-20 18:09, same as mac — NO "(recommended)"
-                     are "FastRead Lite" / "FastRead Full Window" (Lite
+                     are "FastRead Lite" / "FastRead Lite Window" (Lite
                      first, Manh 2026-11-22, same as mac — NO "(recommended)"
                      here, that hint belongs to "Run FastRead in:" only;
                      this is the reminder destination, a different setting
-                     from "Run FastRead in:"). -->
+                     from "Run FastRead in:"). The window option is named
+                     "FastRead Lite Window" (Manh 2026-11-23, same as mac
+                     f08a9a3f): the Rest window shows the Lite view
+                     (CompactReadingView), not the Full window — the old
+                     name "FastRead Full Window" made it sound like the
+                     reminder opens the real Full reading window. -->
                 <StackPanel Spacing="4">
                     <TextBlock Text="Run reminder in:" FontSize="13" FontWeight="SemiBold" />
                     <ComboBox x:Name="ReminderDestinationCombo" HorizontalAlignment="Stretch"
                               SelectionChanged="OnReminderDestinationChanged">
                         <ComboBoxItem Content="FastRead Lite" Tag="RightPanel" />
-                        <ComboBoxItem Content="FastRead Full Window" Tag="NewWindow" />
+                        <ComboBoxItem Content="FastRead Lite Window" Tag="NewWindow" />
                     </ComboBox>
                     <TextBlock Text="Applies only to focus / rest-eyes reminders — not to Fast Read itself."
                                FontSize="12" Foreground="Gray" TextWrapping="Wrap" />

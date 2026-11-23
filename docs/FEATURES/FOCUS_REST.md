@@ -41,13 +41,13 @@ collapse/expand; collapsed state in `FocusTimerCollapsed`).
   rest your eyes for 20 s — look at something 20 feet away." + Start /
   Stop eye reminders. **Default OFF** (Manh 2026-11-20 07:25 — no
   reminder until the user turns it on).
-- **"Run reminder in:"** picker — "FastRead Full Window" (default) /
-  "FastRead Lite". Applies ONLY to focus / rest-eyes reminders, not to
-  Fast Read itself.
-- **"Run reminder in:"** picker — "FastRead Lite" / "FastRead Full
+- **"Run reminder in:"** picker — "FastRead Lite" / "FastRead Lite
   Window" (default). Lite first, Manh 2026-11-22 (same order as "Run
-  FastRead in:" on panel right). Applies ONLY to focus / rest-eyes
-  reminders, not to Fast Read itself.
+  FastRead in:" on panel right); window option renamed 2026-11-23 (mac
+  parity f08a9a3f) — the Rest window shows the Lite view, not the Full
+  window, so "FastRead Full Window" sounded like the reminder opens the
+  real Full reading window. Applies ONLY to focus / rest-eyes reminders,
+  not to Fast Read itself.
 
 **Bố cục CHỐT của thẻ (Manh 2026-11-20, căn giữa cho đẹp — ghi lại để
 sau đối chiếu, không phá):** countdown 28pt Consolas Bold **center**;
@@ -58,8 +58,9 @@ dưới 4 chấm, center**; nút Start focus / Pause / Resume + Reset
 (default: Off)" là **ToggleSwitch** (nút gạt — nhãn trên, gạt dưới, sát
 lề trái trong thẻ); nút "Start eye reminders" **center**; "Run reminder
 in:" nhãn trên, picker **xuống dòng riêng, full-width**, lựa chọn "FastRead Lite" /
-"FastRead Full Window" (Lite lên trên, đổi tên 2026-11-22, KHÔNG thêm
-"(recommended)"), dòng note xám ở dưới. Xem thêm panel spec
+"FastRead Lite Window" (Lite lên trên, đổi tên 2026-11-22; cửa sổ đổi thành
+"FastRead Lite Window" 2026-11-23, KHÔNG thêm "(recommended)"), dòng note xám ở
+dưới. Xem thêm panel spec
 `docs/UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md` §11.3 + §11.6.
 
 ## The reminder rule (Manh 2026-11-20, mac parity)
@@ -88,7 +89,7 @@ in:" nhãn trên, picker **xuống dòng riêng, full-width**, lựa chọn "Fas
 
 ## Where a reminder shows
 
-- **FastRead Full Window (default):** a separate `RestWindow` (560×400,
+- **FastRead Lite Window (default):** a separate `RestWindow` (560×400,
   fixed size, title "TransPeek — Rest") that reads the reminder text
   with the lite reader, then counts the break down (coffee cup EC32 +
   title + mm:ss 56pt bold + "The window closes when the timer ends." +
@@ -104,15 +105,6 @@ in:" nhãn trên, picker **xuống dòng riêng, full-width**, lựa chọn "Fas
   Read Lite when the timer ends." + Done — same screen as the Rest window,
   Manh 2026-11-20 18:19) and returns to the demo at zero. No "Congratulations!"
   for a reminder read (that is only for a manual read).
-- **FastRead Full Window (default):** a separate `RestWindow` (560×400,
-  fixed size, title "TransPeek — Rest") that reads the reminder text
-  with the lite reader, then counts the break down (coffee cup EC32 +
-  title + mm:ss 56pt bold + "The window closes when the timer ends." +
-  Done) and closes itself at zero. Esc closes the window. It never
-  touches the Fast Read window — a read in progress keeps reading. The
-  panel hides first (it is topmost and would float above the Rest
-  window).
-
 ## System notifications — DEFERRED (Manh 2026-11-20)
 
 **No Windows toast notification in this branch.** Manh prefers to wait

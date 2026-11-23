@@ -2799,6 +2799,8 @@ Manh test bản 0.1.4.191: Google 249 ngôn ngữ ngon. 4 việc còn lại làm
 - **"Run reminder in:" (Focus panel):** đổi thứ tự cho "FastRead Lite" lên trên, "FastRead
   Full Window" xuống dưới — khớp thứ tự "Run FastRead in:". Giá trị lưu không đổi
   ("RightPanel" / "NewWindow" — chỉ đổi thứ tự + nhãn, combo chọn theo Tag nên an toàn).
+  (Tên "FastRead Full Window" ở picker này đã đổi thành "FastRead Lite Window" 2026-11-23 —
+  xem mục riêng bên dưới.)
 - **Kỹ thuật:** nút window đi đường riêng `fastReadWindowRequested` (Action<string>,
   App → `ShowFastReadWindow`, ẩn panel) thay vì `fastReadRequested` (đi qua setting);
   view dừng đọc panel trước nếu đang đọc (`StopPanelReading` khi có VM).
@@ -2808,6 +2810,13 @@ Manh test bản 0.1.4.191: Google 249 ngôn ngữ ngon. 4 việc còn lại làm
 - **Speaker in the Rest window (NOT built yet):** the Rest window (reminder / rest-eyes countdown) will get a speaker button so the user can listen instead of reading while resting their eyes. The Rest window currently has NO speaker button (it never wires a TTS service — mac parity: no coordinator, no button). The same gap was found on mac the same day (CI348 test).
 - **Speaker state is SHARED across Full + Lite and REMEMBERED:** one on/off flag for all read surfaces (Full window + Lite panel; the Rest window speaker, when added, follows the same flag), persisted across sessions. Default is still OFF on first run; toggling the speaker on one surface is remembered by the other, and the state survives app restarts. This supersedes the 2026-11-21 frame ("mặc định TẮT, không lưu bền") and differs from mac's 2026-11-21 decision (Lite keeps its own flag — that was a bug fix for the Lite button not toggling + code simplicity, not a UX preference for separate states). Implementation: a single persisted setting (proposed name `RsvpSoundOn`), read when a read session starts and saved on toggle; no live sync between surfaces open at the same time (a surface picks up a change on its next read session).
 - **Audio speed merges into WPM (LATER — not scheduled yet):** the separate TTS speed slider (0.6x–4x, key `ttsSpeechRate`/`SpeechRate`) will be merged into the WPM control — one speed control for reading, not two. Manh's sketch: 100 WPM ↔ 0.1x, 200 WPM ↔ 1.5x (recorded verbatim; the conversion table needs confirming before implementation — a normal TTS voice reads ~150 WPM at 1.0x, so 100 WPM ≈ 0.6–0.7x).
+
+## Reminder destination renamed "FastRead Lite Window" (2026-11-23, mac parity f08a9a3f)
+
+- **Scope — reminder picker ONLY:** in "Run reminder in:" (Focus panel), the window option is renamed **"FastRead Full Window" → "FastRead Lite Window"**. "FastRead Lite" is unchanged. Only the display label changes; the saved setting key/value/default are unchanged (`FocusReminderDestination`, "RightPanel" / "NewWindow", default "NewWindow" — the combo selects by `Tag`, so the rename is safe).
+- **Why:** the Rest window shows the Lite view (`CompactReadingView`), not the Full window (`RSVPView`) — the old name made it sound like the reminder opens the real Full reading window. Manh decided this on mac (commit `f08a9a3f`) after the mac model was written down: reminders NEVER target the Full window; there are only 2 read surfaces, Lite (panel + Rest window, one shared view) and Full (its own view).
+- **NOT renamed:** "Run FastRead in:" (panel right — opens the real Full window) and the "Read in:" buttons ("FastRead Lite" / "FastRead Full Window" — the window button opens the real Full window). Both keep "FastRead Full Window".
+- **Supersedes (reminder picker only):** the 2026-11-22 naming decision ("FastRead Full Window" for both "Run FastRead in:" and "Run reminder in:") — the "Run FastRead in:" part still stands.
 
 ## Liên kết
 
