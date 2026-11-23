@@ -95,7 +95,7 @@ in:" nhãn trên, picker **xuống dòng riêng, full-width**, lựa chọn "Fas
   Done) and closes itself at zero. Esc closes the window. It never
   touches the Fast Read window — a read in progress keeps reading. The
   panel hides first (it is topmost and would float above the Rest
-  window).
+  window). The Rest window has no speaker button yet — one will be added (Manh 2026-11-23) so the user can listen instead of reading while resting their eyes; it follows the same shared speaker state as Full + Lite.
 - **FastRead Lite:** the reminder text is read in panel right (the panel
   comes forward, switches to the Fast Read tab, starts the read, pins
   itself). When the read finishes, the reader hides and a coffee

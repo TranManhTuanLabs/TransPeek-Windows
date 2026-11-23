@@ -329,8 +329,12 @@ Play, Rewind, Forward, Maximize — lite adds Close first; the
 Maximize glyph is ArrowExpand E9E3, a diagonal double arrow — the
 square E922 read as a stop button, Manh 2026-11-21):** the
 speaker is a mute/unmute toggle for the read, NOT a separate "speak
-the whole text" action. Sound is OFF by default and NOT persisted —
-a new read starts silent, like today. Sound on: Play/Space speaks
+the whole text" action. Sound is OFF by default on first run, and the
+on/off state is SHARED across Full + Lite and REMEMBERED (Manh
+2026-11-23) — toggling the speaker on one surface is remembered by the
+other, and the state survives app restarts (this supersedes the
+2026-11-21 frame, "OFF by default and NOT persisted"). A new read
+starts silent only until the user turns the sound on once. Sound on: Play/Space speaks
 one phrase at a time and the speech itself paces the read —
 continuous reading (phương án 1, Manh 2026-11-21): the text is split
 into sentence/clause phrases (`RsvpEngine.BuildPhrases`, cap 20
@@ -342,8 +346,14 @@ sound path. Pausing, restarting, or switching style stops the
 speech; a failed speak (no voice installed) falls back to the timer
 for that unit, so the read never stalls. Language is the vi/en
 heuristic (same as the float icon's speak). The Rest window has NO
-speaker button (it never wires a TTS service — mac parity: no
-coordinator, no button).
+speaker button YET (it never wires a TTS service — mac parity: no
+coordinator, no button) — a speaker will be added to the Rest window
+so the user can listen instead of reading while resting their eyes
+(Manh 2026-11-23, NOT built yet). Audio speed merges into WPM (Manh
+2026-11-23, LATER — not scheduled yet): the Speed slider (0.6x–4x)
+will be merged into the WPM control — one speed control, not two;
+the conversion table needs confirming first (Manh's sketch: 100 WPM
+↔ 0.1x, 200 WPM ↔ 1.5x).
 
 **Voice panel (hover the speaker):** an in-tree overlay above the
 transport — NOT a Flyout/Popup, so clicking the speaker toggles the

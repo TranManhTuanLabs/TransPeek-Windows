@@ -4,6 +4,11 @@
 > Quyết định chi tiết: `DECISIONS.md`. Trạng thái hiện tại (ảnh chụp nhanh):
 > `PROJECT_STATE.md`.
 
+## 2026-11-23
+
+- **PR #4 MERGED — main `9b0369d` (CI #244 XANH, pre-release `v0.1.4.244`):** Fast Read Style 2 (Basic Reading) + speaker in Read mode — continuous phrase-by-phrase speech synced with focus, voice panel with Speed slider (0.6x–4x), safer keys (Space only when the read surface is focused), drag-to-resize font in Basic Reading, solid orange reminder banner, blue Done border, Maximize E9E3, "FastRead Full Window" naming.
+- **3 quyết định mới về loa read (Manh, docs-only):** (1) thêm loa vào cửa sổ nghỉ; (2) loa nhớ trạng thái chung Full + Lite, lưu bền (thay khung Style 2 "mặc định TẮT, không lưu bền"); (3) sau này gộp speed audio vào WPM thành 1 control chung. Ghi vào `DECISIONS.md` + `FAST_READ.md` + `FOCUS_REST.md` + `TASK_QUEUE.md`. (Docs mac đã đẩy cùng ngày, commit `b4aa6042`.)
+
 ## 2026-11-22
 
 - **main — "Read in:" + thứ tự reminder (theo mac b0e314f0 + 46c8e357 + 2cb39c10, chưa có
