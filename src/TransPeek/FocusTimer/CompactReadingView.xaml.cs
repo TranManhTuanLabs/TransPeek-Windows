@@ -36,8 +36,8 @@ public sealed partial class CompactReadingView : UserControl
     // hover/focus for nothing). Cleared when the finish clears.
     private bool _sharePopulated;
     // TTS for the speaker button (feature/fastread-speaker-style2):
-    // wired by the host (the panel owns one service; the Rest window
-    // never sets one, so it gets no speaker button — mac parity).
+    // wired by the host (the panel and the Rest window each own one
+    // service; null = no speaker button — mac parity).
     private SystemSpeechService? _speakerService;
     // Voice panel hover state (same as the reader window: the picker
     // stays open while the mouse is on the speaker button or on the
@@ -71,8 +71,8 @@ public sealed partial class CompactReadingView : UserControl
     }
 
     /// <summary>The TTS service this read speaks through (set by the
-    /// host — the panel; never set by the Rest window). Null = no
-    /// speaker button at all, like mac (no coordinator, no button).</summary>
+    /// host — the panel / the Rest window). Null = no speaker button
+    /// at all, like mac (no coordinator, no button).</summary>
     public SystemSpeechService? SpeakerService
     {
         get => _speakerService;
@@ -237,8 +237,8 @@ public sealed partial class CompactReadingView : UserControl
     }
 
     /// <summary>The speaker button only exists when a TTS service is
-    /// wired (the panel); the Rest window never wires one, so it gets
-    /// no speaker button — mac parity (no coordinator, no button).</summary>
+    /// wired (the panel / the Rest window). No service = no button —
+    /// mac parity (no coordinator, no button).</summary>
     private void SyncSpeakerButton()
     {
         SpeakerButton.Visibility = _speakerService is not null ? Visibility.Visible : Visibility.Collapsed;

@@ -28,7 +28,7 @@ public sealed partial class PanelFastReadView : UserControl
     // (feature/fastread-speaker-style2): the panel owns one service
     // for its CompactReadingView — the float icon has its own, so a
     // lite read speaking never fights the icon over one MediaPlayer.
-    // The Rest window never wires one, so it gets no speaker button.
+    // The Rest window owns one too (Manh 2026-11-23).
     private readonly SystemSpeechService _speech = new();
 
     private string _sourceText = "";

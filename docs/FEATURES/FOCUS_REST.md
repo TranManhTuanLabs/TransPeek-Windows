@@ -99,7 +99,7 @@ dưới. Xem thêm panel spec
   Full / panel completion UI, not the rest countdown. It never
   touches the Fast Read window — a read in progress keeps reading. The
   panel hides first (it is topmost and would float above the Rest
-  window). The Rest window has no speaker button yet — one will be added (Manh 2026-11-23) so the user can listen instead of reading while resting their eyes; it follows the same shared speaker state as Full + Lite.
+  window). The Rest window has a speaker button (Manh 2026-11-23, built) so the user can listen instead of reading while resting their eyes; it follows the same shared speaker state as Full + Lite (one on/off flag, `RsvpSoundOn`, remembered across reads — the button writes it at once). Both reminder kinds (Pomodoro + eye-rest) go through the same Rest window, so one wiring covers both.
 - **FastRead Lite:** the reminder text is read in panel right (the panel
   comes forward, switches to the Fast Read tab, starts the read, pins
   itself). When the read finishes, the reader hides and a coffee

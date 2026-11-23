@@ -245,6 +245,13 @@ public sealed class AppSettings
     /// reading, the highlight turns itself on (computed in the view
     /// model, not stored here), so the spoken line stays visible.</summary>
     public bool RsvpHighlightCurrentLine { get; set; } = false;
+    /// <summary>Read speaker on/off, shared by the Full window, the
+    /// Lite panel and the Rest window and remembered across reads
+    /// (Manh 2026-11-23, mac parity: one key transpeek_rsvpTTSEnabled,
+    /// default OFF). The speaker button writes it at once; a new read
+    /// reads it at LoadText. Only the button changes it — a style
+    /// change only stops the sound for the current read.</summary>
+    public bool RsvpSoundOn { get; set; } = false;
     /// <summary>Fast Read window size in physical pixels, remembered
     /// after resize (0 = auto: 70% x 55% of the work area, min 880x550).</summary>
     public double RsvpWindowWidth { get; set; } = 0;

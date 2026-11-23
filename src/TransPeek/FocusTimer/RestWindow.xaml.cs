@@ -12,6 +12,7 @@ using Microsoft.UI.Xaml.Input;
 using TransPeek.Core.FocusTimer;
 using TransPeek.FastRead;
 using TransPeek.Interop;
+using TransPeek.Services;
 using Windows.System;
 using WinRT.Interop;
 
@@ -20,6 +21,15 @@ namespace TransPeek.FocusTimer;
 public sealed partial class RestWindow : Window
 {
     private readonly RsvpReaderViewModel _viewModel = new();
+    // TTS for the Rest window's speaker button (Manh 2026-11-23, mac
+    // parity): the compact view shows the speaker button only when a
+    // service is wired, and the Rest window owns one service for its
+    // read — the float icon has its own, so a rest read speaking never
+    // fights the icon over one MediaPlayer. Both reminder kinds
+    // (Pomodoro + eye-rest) go through ShowRest, so one wiring covers
+    // both. A new window (and service) is created per reminder, so the
+    // service is disposed on Closed (like FastReadWindow).
+    private readonly SystemSpeechService _speech = new();
     private readonly DispatcherTimer _countdownTimer = new() { Interval = TimeSpan.FromSeconds(1) };
     private int _countdownSeconds;
 
@@ -33,6 +43,8 @@ public sealed partial class RestWindow : Window
         if (AppWindow.Presenter is Microsoft.UI.Windowing.OverlappedPresenter presenter)
             presenter.IsResizable = false;
         CompactView.ViewModel = _viewModel;
+        // Wire the speaker so the compact view shows its button.
+        CompactView.SpeakerService = _speech;
         _viewModel.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(RsvpReaderViewModel.IsFinished) && _viewModel.IsFinished)
@@ -59,6 +71,7 @@ public sealed partial class RestWindow : Window
         {
             _countdownTimer.Stop();
             _viewModel.SetPlaying(false);
+            _speech.Dispose();
         };
     }
 

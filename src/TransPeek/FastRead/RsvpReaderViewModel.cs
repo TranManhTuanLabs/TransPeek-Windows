@@ -72,12 +72,14 @@ public sealed class RsvpReaderViewModel : INotifyPropertyChanged
     private int _style2CurrentLineIndex;
     // Sound (feature/fastread-speaker-style2): the speaker button is a
     // mute/unmute toggle for the read, NOT a separate "speak the whole
-    // text" action (that was mac CI314 bug 1). Default OFF, NOT
-    // persisted — a new read starts silent, like today. When sound is
-    // on (and word-sync is enabled), Play/Space speaks one phrase at
-    // a time and the speech itself paces the read (no WPM timer);
-    // when off, the timer paces as today. The service is wired by the
-    // host (window / panel); null = no speaker at all (the Rest window).
+    // text" action (that was mac CI314 bug 1). Shared + remembered
+    // (Manh 2026-11-23, mac parity): default OFF, persisted in
+    // App.Settings.RsvpSoundOn — a new read starts with the last saved
+    // state. When sound is on (and word-sync is enabled), Play/Space
+    // speaks one phrase at a time and the speech itself paces the read
+    // (no WPM timer); when off, the timer paces as today. The service
+    // is wired by the host (window / panel / Rest window); null = no
+    // speaker at all.
     private bool _soundOn;
     private SystemSpeechService? _speaker;
     // Language the read is spoken in (vi/en heuristic, same as the
@@ -215,8 +217,10 @@ public sealed class RsvpReaderViewModel : INotifyPropertyChanged
     /// lines (Style 2).</summary>
     public int PositionCount => IsRsvpStyle ? _document.Slides.Count : _style2Lines.Count;
 
-    /// <summary>Sound on/off for this read (the speaker button). Not
-    /// persisted — a new read starts silent.</summary>
+    /// <summary>Sound on/off for this read (the speaker button).
+    /// Shared with the Full / Lite / Rest reads and persisted
+    /// (App.Settings.RsvpSoundOn, Manh 2026-11-23, mac parity) — a
+    /// new read starts with the last saved state.</summary>
     public bool IsSoundOn
     {
         get => _soundOn;
@@ -224,8 +228,8 @@ public sealed class RsvpReaderViewModel : INotifyPropertyChanged
     }
 
     /// <summary>The TTS service this read speaks through (wired by the
-    /// host: the reader window / the panel). Null = no speaker (the
-    /// Rest window never wires one, like mac).</summary>
+    /// host: the reader window / the panel / the Rest window — the Rest
+    /// window got its speaker 2026-11-23, Manh). Null = no speaker.</summary>
     public SystemSpeechService? Speaker
     {
         get => _speaker;
@@ -341,9 +345,10 @@ public sealed class RsvpReaderViewModel : INotifyPropertyChanged
         _timer.Stop();
         StopSpeech();
         IsPlaying = false;
-        // A new read starts silent (sound is not persisted).
-        if (_soundOn)
-            IsSoundOn = false;
+        // A new read starts with the last saved speaker state (shared
+        // + remembered, Manh 2026-11-23, mac parity: one key, default
+        // OFF). Only the speaker button changes the saved state.
+        IsSoundOn = App.Settings.RsvpSoundOn;
         // A new text is a new read — the elapsed clock restarts.
         _accumulatedElapsed = TimeSpan.Zero;
         _playStartedAt = null;
@@ -578,12 +583,18 @@ public sealed class RsvpReaderViewModel : INotifyPropertyChanged
     /// from the current unit — playback continues silently.</summary>
     public void SetSoundOn(bool soundOn)
     {
-        // No speaker wired (the Rest window) — sound cannot turn on.
+        // No speaker wired — sound cannot turn on. (Every host wires
+        // one now; the Rest window got its speaker 2026-11-23.)
         if (soundOn && _speaker is null)
             return;
         if (soundOn == _soundOn)
             return;
         IsSoundOn = soundOn;
+        // Shared + remembered (Manh 2026-11-23, mac parity): the
+        // speaker button writes the state at once, so every new read
+        // (Full / Lite / Rest) starts with the last saved state.
+        App.Settings.RsvpSoundOn = soundOn;
+        SettingsStore.Save(App.Settings);
         Notify(nameof(HighlightVisible));
         if (!IsPlaying)
             return;
