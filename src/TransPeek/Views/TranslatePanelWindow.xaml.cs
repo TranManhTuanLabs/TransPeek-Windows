@@ -369,7 +369,14 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
             // above the panel and in the capture screen. The accelerator
             // was only a backup (it needs a focused element); KeyDown +
             // the hook already cover Esc.
-            contentRoot.KeyDown += (_, e) =>
+            // PreviewKeyDown (tunnel), NOT KeyDown (bubble): Space must
+            // be caught before a focused button sees it — KeyDown
+            // reaches this handler only after the button already
+            // handled Space (the repo link at the bottom got activated
+            // this way, intermittently, depending on which button held
+            // focus). The read keys go to the lite reader while the
+            // Fast Read tab is open.
+            contentRoot.PreviewKeyDown += (_, e) =>
             {
                 // Esc is two-stage while a panel-right read is running
                 // (feature/focus-timer-decor, mac parity: the first Esc

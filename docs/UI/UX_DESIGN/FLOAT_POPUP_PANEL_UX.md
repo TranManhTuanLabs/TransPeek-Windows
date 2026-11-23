@@ -308,8 +308,9 @@ card "How the icon works" bị đặt nhầm vào panel center thay vì panel le
   điều kiện, không thì đường panel phải tự ẩn panel nó vừa mở). (2) Click
   icon A+: `TriggerIconWindow.FastReadRequested` → `OpenFastReadFromSelectionAsync`
   (lấy selection/clipboard) → `RouteFastRead`. Tray + shortcut cũng qua
-  `OpenFastReadFromSelectionAsync`. Nhãn UI mới (2026-11-20): "FastRead
-  Lite" / "New FastRead Window (recommended)". Xem `docs/FEATURES/FAST_READ.md`.
+  `OpenFastReadFromSelectionAsync`. Nhãn UI mới (2026-11-20, đổi tên
+  2026-11-21): "FastRead Lite" / "FastRead Full Window (recommended)".
+  Xem `docs/FEATURES/FAST_READ.md`.
 
 ## 11. Panel center + Panel left — thiết kế CHỐT (20/11/2026, nhánh `feature/focus-timer-decor`, CI #207)
 
@@ -340,7 +341,7 @@ card "How the icon works" bị đặt nhầm vào panel center thay vì panel le
 - Panel right là **lite reader** từ 2026-11-20
   (feature/focus-timer-decor): demo ("Fast Read Lite" + preview focus
   "reading" + nút "Read in panel" + radios "Run FastRead in" — nhãn
-  "FastRead Lite" / "New FastRead Window (recommended)", section
+  "FastRead Lite" / "FastRead Full Window (recommended)", section
   radios căn LEFT) khi chưa đọc, và `CompactReadingView` khi đang đọc
   — cùng view model với Fast Read window. Đọc xong ở lite: câu chúc
   mừng đầy đủ + share chỉ ở full-size (≥ 540), size bé chỉ
@@ -355,8 +356,9 @@ card "How the icon works" bị đặt nhầm vào panel center thay vì panel le
   `docs/FEATURES/FAST_READ.md` (mục "Shared view model") +
   `docs/FEATURES/FOCUS_REST.md`.
 - **Banner nhắc nghỉ** (feature/focus-timer-decor): overlay ở đầu vùng
-  tab, hiện trên CẢ 3 tab khi có nhắc đang chờ — nền cam 0.25 (mac
-  0.12; Windows tăng fill 2026-11-20 cho dễ đọc) — xem
+  tab (mép trên sát hint dưới slogan, Manh 2026-11-21), hiện trên CẢ 3
+  tab khi có nhắc đang chờ — nền cam ĐẶC, không opacity (Manh
+  2026-11-21 — fill 0.25 trước đó để chữ đọc phía sau xuyên qua) — xem
   `docs/FEATURES/FOCUS_REST.md`.
 
 ### 11.2 Panel center (dịch, tab mặc định)
@@ -490,7 +492,7 @@ xanh #0078D4 không bold; A+ nghệ chỉ khi giữ Alt lúc Click=Speak hoặc
 linger 2.5s sau Read; loa E767 xanh khi giữ Alt lúc Click=FastRead hoặc
 đang nói; bubble E8BD chỉ là mẫu dự phòng, luôn ẩn.
 
-**Nhắc nghỉ (`FOCUS_REST.md`):** đang đọc thì nhắc CHỜ (banner cam 0.25
+**Nhắc nghỉ (`FOCUS_REST.md`):** đang đọc thì nhắc CHỜ (banner cam đặc
 trên cả 3 tab + chấm cam thẻ Focus-Rest + tự hiện khi dừng đọc); KHÔNG
 toast hệ thống (chờ bản cài/Store); "Take a break" / "Snooze 5 min";
 "Run reminder in:" là setting RIÊNG, khác "Run FastRead in:".
@@ -501,6 +503,71 @@ phải MinWidth 120, mô tả dưới) với nhãn giây "0.5s" / "5s" (chỉ đ
 thị, giá trị 500 ms giữ nguyên); KHÔNG ô hotkey ở tab OCR (trùng General);
 nhãn UI sửa cả XAML lẫn `.resw` (resw thắng lúc chạy).
 
+### 11.7 Panel focus/activation — hành vi quan sát (Manh test CI230, 2026-11-21)
+
+> Ghi lại để sau còn biết hướng sửa khi có lỗi liên quan (Manh
+> 2026-11-21 23:28, test bản nhánh CI230 `ff33cce5`). Phân biệt rõ: phần
+> nào đã xác minh bằng code, phần nào chỉ là quan sát chưa giải thích
+> được — đừng đoán nguyên nhân rồi sửa theo.
+
+**Quan sát (Manh, test máy thật):**
+- Select text → hover icon → panel hiện: panel KHÔNG có viền màu 1px ở
+  mép đỉnh topbar + đổ bóng nhạt (như cửa sổ đang mất focus).
+- Click lần 1 vào bất kỳ chỗ nào trong panel (đã thử topbar, bottom,
+  input, output, action) → vẫn vậy. Click lần 2 vào đúng/hoặc gần đúng
+  vị trí click 1 → mới thấy viền màu 1px ở đỉnh mép trên cùng + đổ bóng
+  đậm hơn (như panel đang được focus).
+- Hover chuột ra ngoài panel → đổ bóng nhạt đi, mất viền màu 1px;
+  auto-detect block text ngoài panel vẫn nhận bình thường, hover icon
+  bình thường, mở panel mới được.
+- Hệ quả nghi ngờ: Space play/pause không ăn vì panel chưa được focus —
+  phải click vào panel mới ấn được (đợt `ff33cce5` từng làm
+  `GlobalSpaceTracker` poll Space toàn cục thay cho phím tới panel —
+  **đã GỠ 2026-11-22, hướng an toàn: panel tự kích hoạt khi bài đọc
+  panel-right bắt đầu, Space ăn ngay không cần click trước**).
+- Chưa rõ: có phải từ khi có auto-detect block text (PR #3) mới bị vậy,
+  hay trước đó đã bị — Manh chưa test lại bản cũ chưa có auto-detect nên
+  chưa kết luận được.
+
+**Đã xác minh bằng code (đúng thiết kế, không phải bug):**
+- Panel mở bằng `ShowWithoutActivation` (`TranslatePanelWindow.
+  ShowPanelNear`): set `WS_EX_NOACTIVATE` (dính vào style của cửa sổ,
+  không phải cờ 1 lần) + `SetWindowPos` hiện cửa sổ. Cửa sổ NOACTIVATE
+  KHÔNG bao giờ thành foreground/active khi hiện lên hay khi click —
+  nên "mở lên không có viền accent + bóng nhạt" là ĐÚNG THIẾT KẾ (panel
+  không được cướp focus khỏi text user đang đọc).
+- Kích hoạt là do app tự làm: `WindowHelpers.ActivateWindow` gỡ
+  `WS_EX_NOACTIVATE` + `SWP_FRAMECHANGED` + `window.Activate()`; gọi
+  khi user click vào panel (và các đường `ShowInputMode` /
+  `ShowPanelForReading` mở panel kiểu nhập liệu). Vì vậy phím (Space,
+  Ctrl+V) chỉ tới được panel SAU khi kích hoạt — đúng với quan sát
+  "phải click vào panel mới bấm Space được".
+- Kích hoạt chạy ở `PointerReleased`, KHÔNG phải `PointerPressed` — có
+  chủ ý (test 0.1.3.53: kích hoạt giữa lúc bấm — giữa mouse-down và
+  mouse-up — nuốt mất `Click` của Button, nút Settings không làm gì;
+  kích hoạt lúc nhả thì chạy sau `Click`). Handler gắn bằng
+  `AddHandler(..., handledEventsToo: true)` trên `contentRoot`; có guard
+  `_visible` (test 0.1.3.64: nút gear ẩn panel trước rồi handler mới
+  chạy, kích hoạt lại sẽ hiện panel lại ngay).
+
+**Chưa giải thích được — KHÔNG đoán, để điều tra sau:**
+- Theo thiết kế trên, 1 click (bấm + nhả) là đủ kích hoạt qua handler
+  `PointerReleased`. Quan sát lại là click 1 không kích hoạt, click 2
+  cùng/gần vị trí mới kích hoạt. Cơ chế chưa rõ. Hướng điều tra khi làm:
+  (a) cú `PointerReleased` đầu có bị nuốt không (fade-in đổi tab 150ms?
+  `ClickOutsideMonitor`? cú click bắt đầu từ cửa sổ icon?); (b)
+  `SetForegroundWindow` / `window.Activate()` lần đầu có bị chặn không
+  (foreground lockdown: TransPeek chưa phải tiến trình foreground lúc
+  panel mở); (c) viền accent/bóng có trễ 1 chu kỳ kích hoạt không (hiện
+  sau ở lần kích hoạt thứ 2).
+- Chuột ra ngoài panel thì bóng nhạt + mất viền accent cũng chưa giải
+  thích được: Windows chuẩn không deactivate cửa sổ khi chuột rời khỏi
+  nó. Cần xác minh lại lúc đó panel có thật sự đang active không (hay
+  viền/bóng lúc click 2 chỉ là trạng thái hover của khung cửa sổ).
+- Câu hỏi mở: test bản cũ KHÔNG có auto-detect (vd bản v0.1.4.211,
+  trước PR #3) — mở panel xem có viền accent/bóng đậm không, click 1
+  có kích hoạt không. Kết quả sẽ chốt được auto-detect có liên quan
+  hay không.
 ### 11.7 Panel focus / activation — hành vi CHỐT (2026-11-22, main `4aa959b5`)
 
 > Panel mở KHÔNG kích hoạt là ĐÚNG THIẾT KẾ, không phải bug. Phím (Space, Ctrl+V)

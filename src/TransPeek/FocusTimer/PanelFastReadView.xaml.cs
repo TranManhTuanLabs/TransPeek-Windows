@@ -13,6 +13,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using TransPeek.Core.FocusTimer;
 using TransPeek.FastRead;
+using TransPeek.Services;
 using Windows.Foundation;
 
 namespace TransPeek.FocusTimer;
@@ -23,6 +24,12 @@ public sealed partial class PanelFastReadView : UserControl
     private RsvpReaderViewModel? _boundViewModel;
     private readonly TextBlock _demoMeasurer = new();
     private bool _loading;
+    // TTS for the lite reader's speaker button
+    // (feature/fastread-speaker-style2): the panel owns one service
+    // for its CompactReadingView — the float icon has its own, so a
+    // lite read speaking never fights the icon over one MediaPlayer.
+    // The Rest window never wires one, so it gets no speaker button.
+    private readonly SystemSpeechService _speech = new();
 
     private string _sourceText = "";
 
@@ -79,6 +86,7 @@ public sealed partial class PanelFastReadView : UserControl
         InitializeComponent();
         CompactView.OnCloseReading = () => _store?.StopPanelReading();
         CompactView.OnToggleMaximize = () => OnToggleMaximize?.Invoke();
+        CompactView.SpeakerService = _speech;
         Loaded += (_, _) =>
         {
             AlignDemoPivot();

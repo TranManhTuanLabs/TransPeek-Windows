@@ -126,6 +126,8 @@
                      sits on its OWN line below the label, not on the
                      same row — the row was cramped at panel width, and
                      the full-width picker is easier to hit. Options
+                     are "FastRead Full Window" / "FastRead Lite" (renamed
+                     Manh 2026-11-20 18:09, same as mac — NO "(recommended)"
                      are "FastRead Lite" / "FastRead Full Window" (Lite
                      first, Manh 2026-11-22, same as mac — NO "(recommended)"
                      here, that hint belongs to "Run FastRead in:" only;

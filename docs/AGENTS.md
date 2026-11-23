@@ -14,6 +14,12 @@
   Muốn chạy lại build phải có thay đổi ở file code.
 - **Local phải đồng bộ mới nhất theo main trước khi đẩy** — tránh dùng code cũ.
 - **Bản làm việc local có thể thiếu file sau merge qua trình duyệt** (bài học
+  2026-11-21: bản main thiếu đúng 4 file của PR #3, bản nhánh này thiếu 2
+  file + 6 file stale — merge qua trình duyệt không qua snapshot push nên
+  local không có): trước khi làm việc, đối chiếu cây file local với nhánh
+  qua API (`git trees ... recursive=1`), khôi phục file thiếu/stale từ raw
+  ghim commit rồi mới sửa; kiểm tra hash file sẽ sửa so với nhánh để khỏi
+  đẩy code cũ đè code mới.
   2026-11-21: bản main thiếu đúng 4 file của PR #3 — merge qua trình duyệt
   không qua snapshot push nên local không có): trước khi làm việc, đối chiếu
   cây file local với main qua API (`git trees ... recursive=1`), khôi phục
@@ -72,6 +78,10 @@
   Focus — mac "heart"), Walk **E805** (mục Rest eyes — mac "figure.walk"),
   Cafe **EC32** (màn countdown Rest window — mac "cup.and.saucer.fill"),
   Ringer **EA8F** (chuông banner — mac "bell.fill").
+- **Glyph mới đã kiểm chứng trên Microsoft Learn 2026-11-21
+  (feature/fastread-speaker-style2):** Volume **E767** (loa bật tiếng —
+  mac "speaker.wave.2.fill"), Mute **E74F** (loa tắt tiếng — mac
+  "speaker.slash.fill").
 - **Bài học CI #193–#196 (2026-11-19):** `Window` trong WinUI 3 KHÔNG có
   `IsLoaded` — chỉ `FrameworkElement` mới có. **Bài học CI #198:** biến
   vòng lặp không được trùng tên với biến đang sống ở scope ngoài (CS0136).
@@ -79,6 +89,46 @@
   `Microsoft.UI.Xaml`, KHÔNG phải `Microsoft.UI.Dispatching` (đã xác
   minh trên Microsoft Learn). File nào dùng DispatcherTimer mà chỉ có
   `using Microsoft.UI.Dispatching;` thì build lỗi CS0246.
+- **Bài học Space (2026-11-21):** `KeyDown` (bubble) tới parent CHỈ SAU
+  KHI nút đang focus đã xử lý Space — muốn chặn Space trước nút thì
+  dùng `PreviewKeyDown` (tunnel, đã xác minh trên Microsoft Learn:
+  `UIElement` có `PreviewKeyDownEvent`). Dùng cho phím Play/Pause khi
+  đang đọc (panel / Rest window / Full window đều đổi sang Preview).
+- **Bài học CI #215 (2026-11-21):** `TextBlock` trong WinUI KHÔNG có
+  `Background` (chỉ WPF mới có — bẫy WPF→WinUI như `BaselineAlignment`
+  ở CI #178); muốn tô nền dòng chữ thì bọc TextBlock trong `Border` và
+  tô `Border.Background`. **`DispatcherTimer` KHÔNG có thuộc tính
+  `DispatcherQueue`** — muốn marshal event về UI thread thì capture
+  `DispatcherQueue.GetForCurrentThread()` ở constructor (view model
+  luôn được tạo trên UI thread). 2 lỗi này làm kiểu
+  `Style2ReadingView` không biên dịch được nên XAML gọi nó cũng lỗi
+  theo (WMC0001 + WMC9999 chỉ là hệ quả).
+- **Bài học CI #224 (2026-11-21):** record/model dùng chung giữa Core
+  và app PHẢI khai ở top-level namespace, không lồng trong `static
+  class` — lồng trong class thì file khác không dùng được tên trần
+  (CS0246: `RsvpPhrase` lồng trong `RsvpEngine`, view model không thấy);
+  WMC0001 + WMC9999 lại chỉ là hệ quả (mẫu CI #215).
+- **Glyph đã kiểm chứng trên Microsoft Learn 2026-11-21
+  (feature/fastread-speaker-style2):** ArrowExpand **E9E3** (gạch
+  chéo 2 đầu mũi tên — nút Maximize, thay ô vuông E922 trông như
+  stop; đã xem ảnh glyph thật trên trang Segoe Fluent Icons).
+- **Bài học drag chuột (2026-11-21):** `IsLeftButtonPressed` ĐÚNG
+  cả với touch (touch chạm mặt cũng là "primary action") — muốn
+  chỉ chuột thì gate bằng `PointerDeviceType.Mouse`
+  (`Microsoft.UI.Input.PointerDeviceType`, đã xác minh trên
+  Microsoft Learn). Kéo đổi số thì áp live với `save: false`,
+  lưu 1 lần lúc thả (mẫu `SetContextSizeRatio`).
+- **Bài học Space toàn cục (2026-11-21):** `GetAsyncKeyState` trả
+  bit thấp (0x0001) = phím đã bấm từ lần gọi trước — bắt được cú
+  bấm nhanh lọt giữa 2 lần poll; bit cao (0x8000) = phím đang giữ.
+  Dùng cả 2 (cạnh xuống HOẶC bấm-nhả giữa 2 tick) thì 1 lần bấm
+  chỉ kích hoạt 1 lần, giữ phím không lặp lại. Nhớ xả (flush) bit
+  thấp khi bắt đầu poll, không thì phím bấm trước lúc start cũng
+  kích hoạt 1 lần. `VK_SPACE` = 0x20 (Microsoft Learn, Virtual-Key
+  Codes); `GetForegroundWindow()` cho biết cửa sổ nào đang focus —
+  poll phải bỏ qua khi chính cửa sổ mình đang focus (đường
+  `PreviewKeyDown` đã xử lý Space rồi, làm nữa là bấm 1 lần mà
+  toggle 2 lần).
 
 ## 5. Quy tắc chung
 

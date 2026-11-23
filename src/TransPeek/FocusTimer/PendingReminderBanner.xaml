@@ -9,18 +9,17 @@
          the banner says so, and the two buttons either take the break
          now or snooze it 5 minutes. Bell: Ringer EA8F (Segoe Fluent
          Icons, verified on Microsoft Learn 2026-11-20 — mac uses
-         bell.fill). Background: orange at 0.25 opacity — mac uses
-         0.12, but on Windows that was too see-through over the
-         reading text behind the banner, so the fill is raised
-         (Manh 2026-11-20) to make the banner easy to read. -->
-    <Border x:Name="BannerBorder" CornerRadius="8" Background="#40F6861F"
+         bell.fill). Background: solid orange, NO opacity (Manh
+         2026-11-21 — the 0.25 wash let the reading text show through
+         and looked faded); the text and bell are white on it. -->
+    <Border x:Name="BannerBorder" CornerRadius="8" Background="#F6861F"
             Padding="12,8" Margin="0,0,0,8" Visibility="Collapsed">
         <StackPanel Spacing="6">
             <StackPanel Orientation="Horizontal" Spacing="8">
-                <FontIcon Glyph="&#xEA8F;" FontSize="14" Foreground="#F6861F" VerticalAlignment="Top" Margin="0,2,0,0" />
+                <FontIcon Glyph="&#xEA8F;" FontSize="14" Foreground="White" VerticalAlignment="Top" Margin="0,2,0,0" />
                 <StackPanel Spacing="2">
-                    <TextBlock x:Name="TitleText" FontSize="13" FontWeight="SemiBold" TextWrapping="Wrap" />
-                    <TextBlock Text="Your reading stays as it is." FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
+                    <TextBlock x:Name="TitleText" FontSize="13" FontWeight="SemiBold" Foreground="White" TextWrapping="Wrap" />
+                    <TextBlock Text="Your reading stays as it is." FontSize="12" Foreground="White" TextWrapping="Wrap" />
                 </StackPanel>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Spacing="8">

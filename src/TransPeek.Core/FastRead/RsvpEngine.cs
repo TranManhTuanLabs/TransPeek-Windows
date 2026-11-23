@@ -63,6 +63,20 @@ public sealed record RsvpContext(
     int CurrentStart,
     int CurrentCount);
 
+/// <summary>One continuous-reading phrase: a sentence or clause
+/// spoken as a single utterance (continuous reading, phương án 1 —
+/// Manh 2026-11-21). Windows.Media.SpeechSynthesis has no per-word
+/// callback (unlike mac's willSpeakRangeOfSpeechString), so the
+/// focus follows the voice phrase by phrase, not word by word — a
+/// phrase ends at a natural pause (sentence end / clause
+/// punctuation), so the gaps between utterances land where a
+/// speaker would pause anyway. StartWordIndex is the phrase's first
+/// word in the whole text (for mapping the phrase back to its
+/// slide / line). Top-level on purpose, next to the other records —
+/// nested inside RsvpEngine the view model could not use the bare
+/// name (CS0246, CI #224).</summary>
+public sealed record RsvpPhrase(string Text, int StartWordIndex, int WordCount);
+
 public static class RsvpEngine
 {
     public const int DefaultWpm = 275;
@@ -132,6 +146,65 @@ public static class RsvpEngine
             }
         }
         return new RsvpDocument(words, slides, total);
+    }
+
+    /// <summary>Style 2 ("basic reading") lines (feature/fastread-speaker-style2,
+    /// mac parity: RSVPViewModel.lines(for:maxWordsPerLine: 12)): each
+    /// paragraph split into short lines of at most 12 words, so the
+    /// focus can advance line by line at a readable pace. A logical
+    /// split, not the visual wrap (which depends on font size and
+    /// window width); matching visual lines is a later refinement.</summary>
+    public static IReadOnlyList<string> BuildLines(string? text, int maxWordsPerLine = 12)
+    {
+        var lines = new List<string>();
+        foreach (var paragraph in SplitParagraphs(text))
+        {
+            for (var i = 0; i < paragraph.Count; i += maxWordsPerLine)
+            {
+                var count = Math.Min(maxWordsPerLine, paragraph.Count - i);
+                lines.Add(string.Join(" ", paragraph.GetRange(i, count)));
+            }
+        }
+        return lines;
+    }
+
+    /// <summary>Split text into speakable phrases for continuous
+    /// reading: each paragraph is walked word by word; a phrase ends
+    /// after a word ending a sentence (. ? !), a clause (, ; :), or the
+    /// paragraph — and, as a safety cap, at MaxWordsPerPhrase words (a
+    /// comma-less monster sentence still splits, so the focus keeps
+    /// moving). The phrase text keeps the original words (punctuation
+    /// attached), so the voice pauses naturally at sentence ends inside
+    /// the utterance too. Pure logic — unit-tested.</summary>
+    public static IReadOnlyList<RsvpPhrase> BuildPhrases(string? text, int maxWordsPerPhrase = 20)
+    {
+        maxWordsPerPhrase = Math.Max(1, maxWordsPerPhrase);
+        var phrases = new List<RsvpPhrase>();
+        var index = 0;
+        foreach (var paragraph in SplitParagraphs(text))
+        {
+            var phrase = new List<string>();
+            var phraseStart = index;
+            foreach (var word in paragraph)
+            {
+                phrase.Add(word);
+                index++;
+                // A phrase ends at a natural pause — or at the cap, so
+                // a long sentence without punctuation still splits.
+                if (EndsSentence(word) || EndsPunctuation(word) || phrase.Count >= maxWordsPerPhrase)
+                {
+                    phrases.Add(new RsvpPhrase(string.Join(" ", phrase), phraseStart, phrase.Count));
+                    phrase = [];
+                    phraseStart = index;
+                }
+            }
+            // The paragraph's tail (no trailing punctuation) is a
+            // phrase too — a paragraph end is a pause, like a
+            // sentence end.
+            if (phrase.Count > 0)
+                phrases.Add(new RsvpPhrase(string.Join(" ", phrase), phraseStart, phrase.Count));
+        }
+        return phrases;
     }
 
     /// <summary>ORP pivot: the middle character, floor(n/2). "hello" (5)
