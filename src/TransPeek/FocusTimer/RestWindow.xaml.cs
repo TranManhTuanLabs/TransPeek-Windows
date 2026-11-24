@@ -135,6 +135,17 @@ public sealed partial class RestWindow : Window
             e.Handled = true;
             return;
         }
+        // Enter confirms Done whenever the countdown (and its Done
+        // button) is showing — the user must be able to press Enter
+        // instead of clicking Done with the mouse (Manh 2026-11-24:
+        // Enter must work whenever Done is visible). Same action as
+        // the Done button (Close).
+        if (e.Key == VirtualKey.Enter && CountdownGrid.Visibility == Visibility.Visible)
+        {
+            Close();
+            e.Handled = true;
+            return;
+        }
         // The reader's own keys (Space / arrows / R) go to the compact
         // view — it ignores Esc itself, so there is no double-handling.
         // Once the read finished, the countdown is showing and the

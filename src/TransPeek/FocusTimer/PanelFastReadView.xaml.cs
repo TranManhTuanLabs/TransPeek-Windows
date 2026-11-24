@@ -165,11 +165,24 @@ public sealed partial class PanelFastReadView : UserControl
     /// here — the panel host stops the read / hides the panel itself
     /// (two-stage Esc). While the countdown screen shows, the reader
     /// is hidden, so no key reaches it (a Space must not restart the
-    /// finished read while the break counts down).</summary>
+    /// finished read while the break counts down) — except Enter, which
+    /// confirms Done (Manh 2026-11-24: Enter must work whenever Done
+    /// is visible).</summary>
     public bool HandleKey(Windows.System.VirtualKey key, object? focusedElement)
     {
         if (_store?.PanelReminderCountdown is not null)
+        {
+            // Enter confirms Done whenever the countdown (and its Done
+            // button) is showing — the user must be able to press Enter
+            // instead of clicking Done with the mouse (Manh 2026-11-24).
+            // Same action as the Done button (StopPanelReading).
+            if (key == Windows.System.VirtualKey.Enter)
+            {
+                _store?.StopPanelReading();
+                return true;
+            }
             return false;
+        }
         return CompactView.HandleKey(key, focusedElement);
     }
 

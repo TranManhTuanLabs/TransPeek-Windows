@@ -93,7 +93,9 @@ dưới. Xem thêm panel spec
   fixed size, title "TransPeek — Rest") that reads the reminder text
   with the lite reader, then counts the break down (coffee cup EC32 +
   title + mm:ss 56pt bold + "The window closes when the timer ends." +
-  Done) and closes itself at zero. Esc closes the window. Read keys
+  Done) and closes itself at zero. Esc closes the window. Enter confirms
+  Done whenever the countdown is showing (Manh 2026-11-24) — the user
+  does not have to click Done with the mouse. Read keys
   (Space / ←/→ / R) do nothing once the countdown is showing — the
   replay-on-Space rule (Manh 2026-11-23, mac parity) applies to the
   Full / panel completion UI, not the rest countdown. It never
@@ -106,7 +108,9 @@ dưới. Xem thêm panel spec
   countdown screen shows in the middle (Cafe EC32 32pt + title "Take a
   break" / "Rest your eyes" + big mm:ss 56pt bold Consolas + "Back to Fast
   Read Lite when the timer ends." + Done — same screen as the Rest window,
-  Manh 2026-11-20 18:19) and returns to the demo at zero. No "Congratulations!"
+  Manh 2026-11-20 18:19) and returns to the demo at zero. Enter confirms
+  Done while this countdown shows (Manh 2026-11-24), same as the Rest
+  window. No "Congratulations!"
   for a reminder read (that is only for a manual read).
 ## System notifications — DEFERRED (Manh 2026-11-20)
 
