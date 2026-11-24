@@ -4,11 +4,9 @@
 > Quyết định chi tiết: `DECISIONS.md`. Trạng thái hiện tại (ảnh chụp nhanh):
 > `PROJECT_STATE.md`.
 
-## 2026-11-23
+## 2026-11-24
 
 - **nhánh `fix/panel-strip-frame` — TRẢ KHUNG + SỬA CÔNG THỨC — MANH TEST #250 OK 24/11:** Manh test bản nhánh #250 (CI xanh, commit `76fbe04`): **loa HẾT CHE** — log `[PanelSize]` 24/11 09:41: outer=420x570, client=404x554, **frame=16x16**, minH=570, minParts=(fixedH=304 cardMin=218 cardMargin=8 **frameH=16** minH=570) — công thức đúng: 304+218+8+24+16=570, card thấy được = 554−304−8−24 = **218 đúng thiết kế**. Bo tròn 4 góc về lại. Kéo thu nhỏ hết cỡ dừng đúng điểm không che. **Pin VẪN MỜ — giả thuyết "gỡ khung làm mờ pin" BỊ BÁC** (khung đã trả lại, frame 16, mà pin vẫn mờ) — pin là việc riêng, điều tra sau, không chặn gộp. Gốc: minH tính số đo trong (client) nhưng đặt làm chiều cao ngoài, thiếu đúng khung; sửa: gỡ `StripWindowFrame` ở panel, card về lại 218, cộng khung đo live (`FrameHeightDips`) vào `ComputeMinPanelHeight`.
-- **Loa cửa sổ Nghỉ + loa nhớ trạng thái chung (Manh, mac parity):** cửa sổ Nghỉ có nút loa (cả 2 loại nhắc Pomodoro + nghỉ mắt đều qua `ShowRest` nên 1 chỗ nối đủ cả 2; service riêng, dispose khi đóng cửa sổ). Trạng thái loa CHUNG cho Full + Lite + Rest, lưu bền ở setting mới `RsvpSoundOn` (mặc định lần đầu TẮT; bấm loa ở mặt nào ghi ngay, mặt khác nhớ theo; read mới đọc trạng thái lần cuối; không sync live). Bấm loa khi đang tạm dừng chỉ đổi chế độ, vẫn cần bấm Play mới nói.
-- **Space đọc lại khi đọc xong (Manh, mac parity):** Space khi đã đọc xong thì đọc lại từ đầu (trước đây không làm gì để nút share/Done hoạt động); cả 2 Style, Full + panel Lite. Nút share/Done vẫn bấm được bằng Enter + chuột. Ngoại lệ: cửa sổ Nghỉ — đọc xong thì hiện đếm ngược, phím đọc (Space / ←/→ / R) không làm gì để khỏi đọc lại sau lưng đếm ngược.
 - **nhánh `fix/panel-strip-frame` — gỡ khung CHƯA ĐỦ + tăng min card 218→232 (chưa có số CI):** Manh test bản nhánh #241: frame chỉ 16x16 → 14x14 (client 406x540), loa vẫn che — `StripWindowFrame` chỉ gỡ được 2px, 14px còn lại không nằm ở style cửa sổ. Đã sync main vào nhánh (merge `9dc6f59`, PR #6 draft — PR #5 sync ngược đã đóng vì nút gỡ xung đột sẽ commit lên main). Thử tiếp theo hướng Manh chỉ: `MinOutputCardHeight` 218 → 232 (= 218 + 14 frame đo được) + XAML `MinHeight` đổi theo; log `[PanelSize]` giữ lại để xác nhận số mới.
 - **nhánh `fix/panel-strip-frame` — sửa bug che loa theo số đo (chưa có số CI):** Manh test
   bản 240, log `[PanelSize]` đo được frame=16x16 (outer 420x554, client 404x538) — nguyên
@@ -17,14 +15,19 @@
   `RemoveWindowFrame` thành `WindowHelpers.StripWindowFrame` dùng chung (chỉ gỡ khung,
   panel vẫn là card mờ đục) + panel gọi ở Loaded; log chẩn đoán GIỮ LẠI trên bản nhánh để
   test xác nhận frame=0. Chờ Manh test bản nhánh.
+
+## 2026-11-23
+
+- **Loa cửa sổ Nghỉ + loa nhớ trạng thái chung (Manh, mac parity):** cửa sổ Nghỉ có nút loa (cả 2 loại nhắc Pomodoro + nghỉ mắt đều qua `ShowRest` nên 1 chỗ nối đủ cả 2; service riêng, dispose khi đóng cửa sổ). Trạng thái loa CHUNG cho Full + Lite + Rest, lưu bền ở setting mới `RsvpSoundOn` (mặc định lần đầu TẮT; bấm loa ở mặt nào ghi ngay, mặt khác nhớ theo; read mới đọc trạng thái lần cuối; không sync live). Bấm loa khi đang tạm dừng chỉ đổi chế độ, vẫn cần bấm Play mới nói.
+- **Space đọc lại khi đọc xong (Manh, mac parity):** Space khi đã đọc xong thì đọc lại từ đầu (trước đây không làm gì để nút share/Done hoạt động); cả 2 Style, Full + panel Lite. Nút share/Done vẫn bấm được bằng Enter + chuột. Ngoại lệ: cửa sổ Nghỉ — đọc xong thì hiện đếm ngược, phím đọc (Space / ←/→ / R) không làm gì để khỏi đọc lại sau lưng đếm ngược.
 - **PR #4 MERGED — main `9b0369d` (CI #244 XANH, pre-release `v0.1.4.244`):** Fast Read Style 2 (Basic Reading) + speaker in Read mode — continuous phrase-by-phrase speech synced with focus, voice panel with Speed slider (0.6x–4x), safer keys (Space only when the read surface is focused), drag-to-resize font in Basic Reading, solid orange reminder banner, blue Done border, Maximize E9E3, "FastRead Full Window" naming.
 - **3 quyết định mới về loa read (Manh, docs-only):** (1) thêm loa vào cửa sổ nghỉ; (2) loa nhớ trạng thái chung Full + Lite, lưu bền (thay khung Style 2 "mặc định TẮT, không lưu bền"); (3) sau này gộp speed audio vào WPM thành 1 control chung. Ghi vào `DECISIONS.md` + `FAST_READ.md` + `FOCUS_REST.md` + `TASK_QUEUE.md`. (Docs mac đã đẩy cùng ngày, commit `b4aa6042`.)
 - **Đổi tên đích nhắc nhở (theo mac f08a9a3f):** "Run reminder in:" đổi "FastRead Full Window" → "FastRead Lite Window" (cửa sổ Nghỉ hiển thị view Lite, không phải cửa sổ Full thật). Chỉ đổi nhãn hiển thị; key/value/default của setting không đổi. "Run FastRead in:" và nút "Read in:" giữ nguyên tên cũ. (Dọn luôn 2 bullet trùng lặp trong `FOCUS_REST.md` từ đợt gộp PR #4.)
 
 ## 2026-11-22
 
-- **main — "Read in:" + thứ tự reminder (theo mac b0e314f0 + 46c8e357 + 2cb39c10, CI #240
-  XANH, pre-release `v0.1.4.240`):** panel right demo thêm tiêu đề "Read in:" + 2 nút "FastRead Lite" / "FastRead
+- **main — "Read in:" + thứ tự reminder (theo mac b0e314f0 + 46c8e357 + 2cb39c10, chưa có
+  số CI):** panel right demo thêm tiêu đề "Read in:" + 2 nút "FastRead Lite" / "FastRead
   Full Window" (đọc ngay, bỏ qua setting); radio thành "FastRead Full Window
   (recommended)"; "Run reminder in:" đổi thứ tự Lite lên trên.
 - **main — bản chẩn đoán bug che loa (chưa có số CI):** log kích thước panel
