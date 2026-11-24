@@ -2832,13 +2832,13 @@ Manh test bản 0.1.4.191: Google 249 ngôn ngữ ngon. 4 việc còn lại làm
   `WM_GETMINMAXINFO` đặt theo kích thước NGOÀI → card thực chỉ 218 thay vì 232, loa/copy
   ở đáy card bị cắt đúng ~14px. Tăng cardMin chỉ dời số thiếu, không sửa được gốc.
 - **Quyết định (Manh chốt 23/11 — TRẢ KHUNG + SỬA CÔNG THỨC):** (1) gỡ
-  `StripWindowFrame` ở panel (trả khung như trước — bo tròn + bóng đổ DWM + pin sắc như
-  bản 211; pin mờ là tác dụng phụ của gỡ khung, code pin không đổi nên không cần sửa
-  riêng pin); (2) card về lại **218** (const + XAML — 232 chỉ là cách vá tạm cộng khung
-  vào card); (3) cộng khung đo live vào `ComputeMinPanelHeight` (`FrameHeightDips()`:
-  outer − client qua `AppWindow.Size` + `GetClientRect`, chia scale → DIPs; kẹp ≥ 0 khi
-  chưa đo được) — minH ngoài = nhu cầu client + khung. Panel mở đúng 568 ngoài, card đủ
-  218 trong.
+  `StripWindowFrame` ở panel (trả khung như trước — bo tròn + bóng đổ DWM; pin mờ KHÔNG
+  hết khi trả khung — xem kết quả test #250 bên dưới, pin là việc riêng); (2) card về
+  lại **218** (const + XAML — 232 chỉ là cách vá tạm cộng khung vào card); (3) cộng
+  khung đo live vào `ComputeMinPanelHeight` (`FrameHeightDips()`: outer − client qua
+  `AppWindow.Size` + `GetClientRect`, chia scale → DIPs; kẹp ≥ 0 khi chưa đo được) — minH
+  ngoài = nhu cầu client + khung. Panel mở đúng 570 ngoài (khung 16), card đủ 218 trong.
+- **Kết quả test bản nhánh #250 (Manh, 24/11 — XÁC MINH BẰNG SỐ THẬT, loa HẾT CHE):** log `[PanelSize]` 24/11 09:41 (máy công ty Dell Pro 24, 1920x1080, scale 100%): outer=420x570, client=404x554, **frame=16x16**, minH=570, minParts=(fixedH=304 cardMin=218 cardMargin=8 **frameH=16** minH=570) — công thức đúng: 304+218+8+24+16=570; card thấy được = 554−304−8−24 = **218 đúng thiết kế**. Loa/copy không còn che; bo tròn 4 góc về lại; kéo dọc thu nhỏ hết cỡ dừng đúng điểm không che. **Pin VẪN MỜ — giả thuyết "gỡ khung làm mờ pin" BỊ BÁC:** khung đã trả lại (frame 16) mà pin vẫn mờ, nên pin mờ không phải tác dụng phụ của gỡ khung; pin là việc riêng (nguyên nhân chưa biết), điều tra sau, không chặn gộp PR #6. Manh quyết định gộp luôn 24/11.
 - **`StripWindowFrame` KHÔNG bị xoá:** `TransparentWindow` (icon nổi trong suốt) vẫn
   dùng nó — chỉ gỡ lời gọi ở panel + cập nhật chú thích (nó chỉ còn là helper cho icon
   trong suốt). `DWMWA_WINDOW_CORNER_PREFERENCE` / `DWMWCP_DONOTROUND` giữ nguyên.

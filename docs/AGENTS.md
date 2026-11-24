@@ -60,8 +60,12 @@
   (23/11) frame vẫn 14x14, card thấy được chỉ 218 thay vì 232 — **gốc là CÔNG THỨC:
   minH tính bằng số đo trong (client) nhưng đặt làm chiều cao ngoài, thiếu đúng khung.**
   **Fix đúng (hướng 2, Manh chốt 23/11 — TRẢ KHUNG + SỬA CÔNG THỨC):** gỡ bỏ
-  `StripWindowFrame` ở panel (trả bo tròn + bóng đổ + pin sắc như bản 211), card về lại
+  `StripWindowFrame` ở panel (trả bo tròn + bóng đổ), card về lại
   218, cộng khung đo live vào `ComputeMinPanelHeight` (outer = nhu cầu client + frame).
+  **XÁC MINH bằng số thật (Manh test #250, 24/11):** frame 16x16, minH=570
+  (304+218+8+24+16), card thấy được đúng 218 — **loa HẾT CHE**, bo tròn về lại, kéo thu
+  nhỏ dừng đúng điểm. **Pin VẪN MỜ — giả thuyết "gỡ khung làm mờ pin" BỊ BÁC** (khung đã
+  trả lại mà pin vẫn mờ); pin là việc riêng, điều tra sau, không chặn gộp PR #6.
   Log `[PanelSize]` giữ lại để xác nhận số mới trên bản test.
   Bài học: (1) có bằng chứng rồi vẫn phải hỏi **sửa đúng tầng chưa**; (2) quan sát của
   user (mở lần đầu đã che, kéo nhỏ dừng đúng điểm che) loại được cả loạt giả thuyết —

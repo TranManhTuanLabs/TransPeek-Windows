@@ -5,7 +5,7 @@
 
 ## ĐANG LÀM
 
-- [ ] **Bug che loa/Copy panel** (Windows — TransPeek-Windows, #149→#159, fix #164 đã vào):
+- [x] **Bug che loa/Copy panel** (Windows — TransPeek-Windows, #149→#159, fix #164 đã vào):
   Fix #164 (`bf74379`, CI xanh) đã vào main nhưng **Manh xác nhận 22/11 VẪN CHE trên bản
   v0.1.4.238** — nguyên nhân 18/11 (kéo ngang khoá auto-fit + settle chỉ biết co) KHÔNG phải
   nguyên nhân cuối. Repro 22/11: mở lần đầu đã che; kéo nhỏ hết cỡ dừng ĐÚNG điểm che;
@@ -23,9 +23,14 @@
   (Manh chỉ) cũng không hết: test bản nhánh #248 (Manh 23/11) frame vẫn 14x14, card
   thấy được chỉ 218 thay vì 232 — **gốc là CÔNG THỨC (minH tính số đo trong nhưng đặt
   làm chiều cao ngoài). Manh chốt TRẢ KHUNG + SỬA CÔNG THỨC:** gỡ `StripWindowFrame` ở
-  panel, card về lại 218, cộng khung đo live vào `ComputeMinPanelHeight`. Chờ Manh test
-  bản nhánh mới → OK thì gỡ log + gộp main (qua PR #6). Case study `docs/AGENTS.md` §3
-  đã cập nhật theo kết quả test (trên nhánh). Chi tiết:
+  panel, card về lại 218, cộng khung đo live vào `ComputeMinPanelHeight`. **Manh test
+  bản nhánh #250 OK 24/11 (CI xanh, commit `76fbe04`): loa HẾT CHE — log `[PanelSize]`
+  24/11 09:41: outer=420x570, client=404x554, frame=16x16, minH=570, frameH=16, card
+  thấy được đúng 218; bo tròn về lại; kéo thu nhỏ dừng đúng điểm không che. Pin VẪN MỜ
+  — giả thuyết "gỡ khung làm mờ pin" BỊ BÁC; pin là việc riêng, điều tra sau. Manh quyết
+  định GỘP LUÔN 24/11 (pin không chặn gộp). Đang gộp PR #6 (sync main vào nhánh — xung
+  đột `CHANGELOG.md` đã gỡ bằng cách gộp tay cả 2 phía; gỡ log + pin làm đợt sau). Case
+  study `docs/AGENTS.md` §3 đã cập nhật theo kết quả test (trên nhánh). Chi tiết:
   `docs/UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md` (§6).
 - [ ] **Doc UI/UX** (Windows — TransPeek-Windows): panel đã chốt + viết xong;
   các doc còn lại là bản nháp, cập nhật dần khi hoàn thiện hoặc Manh yêu cầu.

@@ -101,12 +101,12 @@ minH = max(450, fixedH + cardMin + cardMargin + 24)
 
 ## 6. Bug che loa/Copy — TRẢ KHUNG + SỬA CÔNG THỨC (Manh chốt 23/11)
 
-> **Trạng thái hiện tại (23/11/2026):** gốc là **công thức** — minH tính bằng số đo trong
-> (client) nhưng đặt làm chiều cao ngoài, thiếu đúng khung 14px (log `[PanelSize]` bản
-> 248: outer=420x568, client=406x554, frame=14x14, card thấy được chỉ 218 thay vì 232).
-> Đang sửa trên nhánh `fix/panel-strip-frame` (Manh chốt: **TRẢ KHUNG + SỬA CÔNG THỨC**
-> — gỡ `StripWindowFrame` ở panel, card về lại 218, cộng khung đo live vào
-> `ComputeMinPanelHeight`) — chờ Manh test bản nhánh mới. Toàn bộ §6 dưới đây giữ nguyên
+> **Trạng thái hiện tại (24/11/2026 — Manh test #250 OK, loa HẾT CHE):** gốc là **công
+> thức** — minH tính bằng số đo trong (client) nhưng đặt làm chiều cao ngoài, thiếu đúng
+> khung (log `[PanelSize]` bản 250, 24/11: outer=420x570, client=404x554, frame=16x16,
+> minH=570, frameH=16, card thấy được đúng 218). **Pin VẪN MỜ** — giả thuyết "gỡ khung
+> làm mờ pin" BỊ BÁC (khung đã trả lại mà pin vẫn mờ); pin là việc riêng, điều tra sau.
+> Nhánh `fix/panel-strip-frame` đang gộp vào main (PR #6). Toàn bộ §6 dưới đây giữ nguyên
 > làm lịch sử điều tra. Loa/Copy GIỮ NGUYÊN trong ô output (Manh chốt 17/11).
 
 **Bug che loa/Copy (từ #149):** nút loa/Copy ở góc dưới-phải ô output bị cắt ở mép
@@ -258,6 +258,16 @@ Lịch sử mò số (để tránh lặp lại): min output card 150 → 160 (#1
 > `StripWindowFrame` KHÔNG bị xoá (icon nổi trong suốt vẫn dùng). Log `[PanelSize]` giữ
 > lại (thêm `frameH`) để xác nhận số mới. Chi tiết: `docs/DECISIONS.md` (mục Trả khung +
 > sửa công thức minH) + `docs/TASK_QUEUE.md`.
+
+> **Cập nhật 24/11/2026 — Manh test #250 OK, loa HẾT CHE (xác minh bằng số thật):**
+> Log `[PanelSize]` 24/11 09:41 (cùng máy): outer=420x570, client=404x554,
+> **frame=16x16**, minH=570, minParts=(fixedH=304 cardMin=218 cardMargin=8 frameH=16
+> minH=570) — công thức đúng: 304+218+8+24+16=570, card thấy được = 554−304−8−24 =
+> **218 đúng thiết kế**. Loa/copy không còn che; bo tròn 4 góc về lại; kéo dọc thu nhỏ
+> hết cỡ dừng đúng điểm không che. **Pin VẪN MỜ — giả thuyết "gỡ khung làm mờ pin" BỊ
+> BÁC** (khung đã trả lại, frame 16, mà pin vẫn mờ); pin là việc riêng, điều tra sau,
+> không chặn gộp PR #6. Chi tiết: `docs/DECISIONS.md` (mục Trả khung + sửa công thức
+> minH) + `docs/TASK_QUEUE.md`.
 
 ## 7. Quy tắc sửa (để không phá layout)
 
