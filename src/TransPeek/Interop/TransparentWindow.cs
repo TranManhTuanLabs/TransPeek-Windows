@@ -16,7 +16,7 @@
 //      changes made before it are silently reverted (measured).
 //   2. WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE (no taskbar / Alt+Tab, never
 //      steals focus).
-//   3. RemoveWindowFrame: strip WS_CAPTION | WS_BORDER | WS_DLGFRAME |
+//   3. StripWindowFrame: strip WS_CAPTION | WS_BORDER | WS_DLGFRAME |
 //      WS_THICKFRAME from GWL_STYLE and the edge bits from GWL_EXSTYLE.
 //      OverlappedPresenter.SetBorderAndTitleBar(false, false) clears
 //      WS_EX_WINDOWEDGE but LEAVES WS_DLGFRAME — that is what the white
@@ -35,9 +35,13 @@
 //      DWM alpha composition those untouched pixels become fully
 //      transparent instead of a white box.
 //
-// Only the trigger icon uses this (it is the only window that must be a
-// bare circle). The panel and toast are opaque cards and keep their
-// normal window setup (MakeBorderlessTopmost + MakeToolWindow).
+// Only the trigger icon uses the full transparent setup (it is the only
+// window that must be a bare circle). The panel tried stripping its
+// frame bits too (che-loa fix 2026-11-23) but went back to its frame
+// (Manh 2026-11-23: only 2 px recovered, rounded corners / shadow /
+// sharp pin lost) — the frame is now carried in the panel's
+// minimum-height formula instead. The toast keeps the normal window
+// setup (MakeBorderlessTopmost + MakeToolWindow).
 
 using System.Runtime.InteropServices;
 using Microsoft.UI.Windowing;
@@ -105,7 +109,7 @@ internal static class TransparentWindow
             NativeMethods.SetWindowLongPtr(hwnd, NativeMethods.GWL_EXSTYLE, new IntPtr(exStyle));
 
             // 3. Strip the frame bits (the real shadow/outline source).
-            RemoveWindowFrame(hwnd);
+            WindowHelpers.StripWindowFrame(hwnd);
 
             // 4. DWM alpha composition over the whole client area.
             var blurBehind = new NativeMethods.DWM_BLURBEHIND
@@ -149,34 +153,6 @@ internal static class TransparentWindow
         {
             return false;
         }
-    }
-
-    /// <summary>Strip every frame bit from the window — this is what
-    /// actually removes the outline/shadow. Only the frame bits are
-    /// cleared (deliberately with &= ~): overwriting GWL_STYLE wholesale
-    /// drops WS_CLIPCHILDREN/WS_CLIPSIBLINGS, which makes content render
-    /// blurry after animations (Action-Wheel).</summary>
-    private static void RemoveWindowFrame(IntPtr hwnd)
-    {
-        var style = NativeMethods.GetWindowLongPtr(hwnd, NativeMethods.GWL_STYLE).ToInt64();
-        style &= ~(long)(NativeMethods.WS_CAPTION | NativeMethods.WS_BORDER |
-            NativeMethods.WS_DLGFRAME | NativeMethods.WS_THICKFRAME);
-        NativeMethods.SetWindowLongPtr(hwnd, NativeMethods.GWL_STYLE, new IntPtr(style));
-
-        var exStyle = NativeMethods.GetWindowLongPtr(hwnd, NativeMethods.GWL_EXSTYLE).ToInt64();
-        exStyle &= ~(long)(NativeMethods.WS_EX_WINDOWEDGE | NativeMethods.WS_EX_CLIENTEDGE |
-            NativeMethods.WS_EX_STATICEDGE | NativeMethods.WS_EX_DLGMODALFRAME);
-        NativeMethods.SetWindowLongPtr(hwnd, NativeMethods.GWL_EXSTYLE, new IntPtr(exStyle));
-
-        // Windows 11 rounds top-level windows; on a transparent overlay
-        // the rounding is visible as curved corners of the outline.
-        int corners = NativeMethods.DWMWCP_DONOTROUND;
-        NativeMethods.DwmSetWindowAttribute(hwnd, NativeMethods.DWMWA_WINDOW_CORNER_PREFERENCE, ref corners, sizeof(int));
-
-        // The cached frame is only recomputed when told it changed.
-        NativeMethods.SetWindowPos(hwnd, IntPtr.Zero, 0, 0, 0, 0,
-            NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOZORDER |
-            NativeMethods.SWP_NOACTIVATE | NativeMethods.SWP_FRAMECHANGED);
     }
 
     private static IntPtr TransparentWindowProc(

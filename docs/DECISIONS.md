@@ -2785,6 +2785,66 @@ Manh test bản 0.1.4.191: Google 249 ngôn ngữ ngon. 4 việc còn lại làm
 - **Rule mới (Manh 22/11, áp dụng mọi repo):** bug sửa 2–3 lần không ra thì dừng đoán —
   làm bộ test + log + bắt lỗi + docs (xem `docs/AGENTS.md` §9).
 
+## Strip frame panel — sửa bug che loa theo số đo (2026-11-23, nhánh fix/panel-strip-frame)
+
+- **Số đo quyết định (Manh test bản 240, 23/11, máy công ty Dell Pro 24, 1920x1080,
+  scale 100%):** `[PanelSize]` outer=420x554 client=404x538 **frame=16x16**, minH=554
+  (fixedH=304 + cardMin=218 + cardMargin=8 + 24), baseline=554, height=554. Khung thừa
+  8px mỗi phía. Cơ chế: chiều cao tính cho vùng hiển thị nhưng đặt theo kích thước
+  ngoài → vùng hiển thị thực chỉ 538, thiếu 16px → ô output nhận 210 thay vì tối thiểu
+  218 → loa/copy bị che ~8px. Khớp ghi chú của Manh: "1 chữ bị che loa/copy ô output",
+  "3 line không bị" — chỉ khi card ở mức tối thiểu mới bị kẹp; text dài hơn thì 16px
+  thiếu được hấp thụ bởi text cuộn trong ô. Chiều rộng cũng lệch tương tự (đo ở 420
+  nhưng hiển thị ở 404).
+- **Fix (hướng 1, Manh duyệt 23/11 — gỡ khung, không cộng bù 16px):** tách
+  `TransparentWindow.RemoveWindowFrame` (private) thành `WindowHelpers.StripWindowFrame`
+  (public, dùng chung) — chỉ gỡ các bit khung (`WS_CAPTION | WS_BORDER | WS_DLGFRAME |
+  WS_THICKFRAME` + edge bits, `DWMWA_WINDOW_CORNER_PREFERENCE = DONOTROUND`,
+  `SWP_FRAMECHANGED`); icon gọi helper mới thay cho hàm cũ; panel gọi ở Loaded sau
+  `MakeBorderlessTopmost` + `MakeToolWindow`. Panel vẫn là card mờ đục — không chạm
+  tới blur/backdrop trong suốt. Resize tay không đổi: các vùng kéo là
+  `InputNonClientPointerSource.SetRegionRects` (không phụ thuộc `WS_THICKFRAME`).
+- **Log chẩn đoán GIỮ LẠI trên bản nhánh** để test xác nhận số mới (frame, card thấy được);
+  gỡ khi gộp main (submenu Diagnose thì giữ — đó là tính năng thường trực).
+- **Rủi ro đã biết:** gỡ khung cũng gỡ bóng đổ DWM của panel — panel có thể trông phẳng
+  hơn; Manh test bản nhánh sẽ thấy rõ. Nếu bóng mất mà trông xấu thì tính sau (không
+  quay lại cộng bù 16px khi chưa bàn).
+- **KẾT QUẢ TEST BẢN NHÁNH #241 (Manh, 23/11 — giả thuyết gỡ khung BỊ BÁC):** frame chỉ
+  16x16 → **14x14** (client 404x538 → 406x540, log `[PanelSize]` 12:34 trong doc cty);
+  loa vẫn che ("1 chữ bị che loa/copy ô output"). `StripWindowFrame` chỉ gỡ được viền
+  1px mỗi phía (`WS_BORDER`); 14px còn lại không nằm ở style cửa sổ. (Manh chưa báo về
+  bóng đổ.)
+- **Thử tiếp (Manh chỉ 23/11 — tăng min card theo số đo):** `MinOutputCardHeight` 218 →
+  **232** (= 218 cần thấy + 14 frame đo được; card thấy được = cardMin − frame nên 232
+  cho đúng 218). XAML `MinHeight` đổi theo cho khớp. minH panel lên 568 nên cả lúc mở
+  lẫn kéo tới mức tối thiểu đều cho card đủ 218. Log `[PanelSize]` GIỮ LẠI để xác nhận
+  số mới trên bản test. Lưu ý lịch sử: mức 238 (#163) từng bị #164 trả về trước khi
+  Manh kịp test nên chưa có kết luận thực nghiệm về việc tăng min card — lần này test
+  có log đi kèm, số nào thiếu sẽ thấy ngay.
+
+## Trả khung + sửa công thức minH (hướng 2) — bug che loa (2026-11-23, Manh, nhánh fix/panel-strip-frame)
+
+- **Kết quả test bản nhánh #248 (Manh, 23/11 — tăng min card KHÔNG hết):** frame vẫn
+  **14x14** (log `[PanelSize]` 14:19: outer=420x568, client=406x554, minH=568,
+  cardMin=232), loa vẫn che; pin mờ hơn + mất bo tròn 4 góc (ảnh so sánh bản 211 vs
+  248). **Gốc là CÔNG THỨC, không phải card:** `ComputeMinPanelHeight` tính bằng số đo
+  trong (client: fixedH + cardMin + cardMargin + 24) nhưng `MoveAndResize` +
+  `WM_GETMINMAXINFO` đặt theo kích thước NGOÀI → card thực chỉ 218 thay vì 232, loa/copy
+  ở đáy card bị cắt đúng ~14px. Tăng cardMin chỉ dời số thiếu, không sửa được gốc.
+- **Quyết định (Manh chốt 23/11 — TRẢ KHUNG + SỬA CÔNG THỨC):** (1) gỡ
+  `StripWindowFrame` ở panel (trả khung như trước — bo tròn + bóng đổ DWM; pin mờ KHÔNG
+  hết khi trả khung — xem kết quả test #250 bên dưới, pin là việc riêng); (2) card về
+  lại **218** (const + XAML — 232 chỉ là cách vá tạm cộng khung vào card); (3) cộng
+  khung đo live vào `ComputeMinPanelHeight` (`FrameHeightDips()`: outer − client qua
+  `AppWindow.Size` + `GetClientRect`, chia scale → DIPs; kẹp ≥ 0 khi chưa đo được) — minH
+  ngoài = nhu cầu client + khung. Panel mở đúng 570 ngoài (khung 16), card đủ 218 trong.
+- **Kết quả test bản nhánh #250 (Manh, 24/11 — XÁC MINH BẰNG SỐ THẬT, loa HẾT CHE):** log `[PanelSize]` 24/11 09:41 (máy công ty Dell Pro 24, 1920x1080, scale 100%): outer=420x570, client=404x554, **frame=16x16**, minH=570, minParts=(fixedH=304 cardMin=218 cardMargin=8 **frameH=16** minH=570) — công thức đúng: 304+218+8+24+16=570; card thấy được = 554−304−8−24 = **218 đúng thiết kế**. Loa/copy không còn che; bo tròn 4 góc về lại; kéo dọc thu nhỏ hết cỡ dừng đúng điểm không che. **Pin VẪN MỜ — giả thuyết "gỡ khung làm mờ pin" BỊ BÁC:** khung đã trả lại (frame 16) mà pin vẫn mờ, nên pin mờ không phải tác dụng phụ của gỡ khung; pin là việc riêng (nguyên nhân chưa biết), điều tra sau, không chặn gộp PR #6. Manh quyết định gộp luôn 24/11.
+- **`StripWindowFrame` KHÔNG bị xoá:** `TransparentWindow` (icon nổi trong suốt) vẫn
+  dùng nó — chỉ gỡ lời gọi ở panel + cập nhật chú thích (nó chỉ còn là helper cho icon
+  trong suốt). `DWMWA_WINDOW_CORNER_PREFERENCE` / `DWMWCP_DONOTROUND` giữ nguyên.
+- **Log chẩn đoán GIỮ LẠI trên bản nhánh** (thêm `frameH` vào `minParts`) để test xác
+  nhận số mới; gỡ khi gộp main (submenu Diagnose thì giữ).
+
 ## "Read in:" + "Run reminder in:" — Lite lên trên, tên FastRead Full Window (2026-11-22, mac parity b0e314f0 + 46c8e357 + 2cb39c10)
 
 - **Panel right demo:** thêm tiêu đề "Read in:" (kiểu chữ như "Run FastRead in:") trên 2 nút

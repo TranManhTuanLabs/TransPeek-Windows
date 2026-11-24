@@ -99,16 +99,15 @@ minH = max(450, fixedH + cardMin + cardMargin + 24)
 - Auto-fit (`ResizeToFitContent`): đo `DesiredSize` của root, kẹp giữa min height động
   và max 800, rộng kẹp 400–600.
 
-## 6. Bug che loa/Copy — fix #164 KHÔNG hết che, đang chẩn đoán khung cửa sổ (22/11)
+## 6. Bug che loa/Copy — TRẢ KHUNG + SỬA CÔNG THỨC (Manh chốt 23/11)
 
-> **Trạng thái hiện tại (20/11/2026):** fix thật là **#164** (`SettleResizedSize`
-> thêm nhánh dài panel khi cần — commit `bf74379`, CI xanh), KHÔNG phải
-> #160/#161 như tiêu đề cũ ghi. Fix đã có trong mọi bản từ #167 trở đi.
-> Manh test các bản 199/200/201 và báo "đã ổn định tốt" / "giờ quá tốt"
-> mà KHÔNG nhắc lại che loa — nhưng anh chưa nói rõ câu "hết che loa",
-> nên phần điều tra dưới đây vẫn giữ nguyên làm lịch sử, và case study
-> trong `docs/AGENTS.md` §3 vẫn chờ viết lại theo nguyên nhân thật khi
-> anh xác nhận. Loa/Copy GIỮ NGUYÊN trong ô output (Manh chốt 17/11).
+> **Trạng thái hiện tại (24/11/2026 — Manh test #250 OK, loa HẾT CHE):** gốc là **công
+> thức** — minH tính bằng số đo trong (client) nhưng đặt làm chiều cao ngoài, thiếu đúng
+> khung (log `[PanelSize]` bản 250, 24/11: outer=420x570, client=404x554, frame=16x16,
+> minH=570, frameH=16, card thấy được đúng 218). **Pin VẪN MỜ** — giả thuyết "gỡ khung
+> làm mờ pin" BỊ BÁC (khung đã trả lại mà pin vẫn mờ); pin là việc riêng, điều tra sau.
+> Nhánh `fix/panel-strip-frame` đang gộp vào main (PR #6). Toàn bộ §6 dưới đây giữ nguyên
+> làm lịch sử điều tra. Loa/Copy GIỮ NGUYÊN trong ô output (Manh chốt 17/11).
 
 **Bug che loa/Copy (từ #149):** nút loa/Copy ở góc dưới-phải ô output bị cắt ở mép
 dưới card khi tra 1–5 line; từ 6 line trở lên không bị. **Nguyên nhân thật đã tìm ra
@@ -219,6 +218,56 @@ Lịch sử mò số (để tránh lặp lại): min output card 150 → 160 (#1
 > (outer/client/min/baseline) vào `windows.log` mỗi lần fit + submenu tray Diagnose
 > (List windows / Open windows.log) để đo đúng số px thiếu, rồi sửa theo số đo.
 > Chi tiết: `docs/TASK_QUEUE.md` + `docs/DECISIONS.md`.
+
+> **Cập nhật 23/11/2026 — nguyên nhân thật ĐÃ XÁC NHẬN bằng số đo, đang sửa:**
+> Manh test bản 240 (máy công ty Dell Pro 24, 1920x1080, scale 100%), log
+> `[PanelSize]` ở đầu Google Doc test: outer=420x554, client=404x538, **frame=16x16**,
+> minH=554 (fixedH=304 + cardMin=218 + cardMargin=8 + 24), baseline=554, height=554.
+> Cơ chế: chiều cao tính cho vùng hiển thị nhưng đặt theo kích thước ngoài → vùng hiển
+> thị thực chỉ 538, thiếu 16px → ô output nhận 210 thay vì tối thiểu 218 → loa/copy bị
+> che ~8px. Khớp ghi chú của Manh: "1 chữ bị che loa/copy ô output", "3 line không bị"
+> (chỉ khi card ở mức tối thiểu mới bị kẹp; text dài hơn thì 16px thiếu được hấp thụ bởi
+> text cuộn trong ô). Chiều rộng cũng lệch tương tự (đo ở 420 nhưng hiển thị ở 404).
+> **Fix (hướng 1, Manh duyệt 23/11):** tách `TransparentWindow.RemoveWindowFrame`
+> thành `WindowHelpers.StripWindowFrame` dùng chung (chỉ gỡ khung, panel vẫn là card mờ
+> đục) + panel gọi ở Loaded sau `MakeBorderlessTopmost` + `MakeToolWindow`. Log chẩn đoán
+> GIỮ LẠI trên bản nhánh để xác nhận số mới; gỡ khi gộp main. Rủi ro: gỡ khung
+> cũng gỡ bóng đổ DWM — panel có thể trông phẳng hơn, Manh test sẽ thấy.
+> Chi tiết: `docs/DECISIONS.md` (mục Strip frame panel) + `docs/TASK_QUEUE.md`.
+
+> **Cập nhật 23/11/2026 (chiều) — gỡ khung chỉ được 2px, đang thử tăng min card:**
+> Manh test bản nhánh #241 (12:34, cùng máy): frame 16x16 → **14x14** (client 406x540),
+> loa vẫn che. `StripWindowFrame` chỉ gỡ được viền 1px mỗi phía; 14px còn lại không nằm
+> ở style cửa sổ — giả thuyết gỡ khung triệt để BỊ BÁC. Thử tiếp (Manh chỉ): tăng min
+> output card 218 → 232 (= 218 + 14 frame đo được; card thấy được = cardMin − frame).
+> Log `[PanelSize]` giữ lại để xác nhận số mới. Chi tiết: `docs/DECISIONS.md` (mục Strip
+> frame panel) + `docs/TASK_QUEUE.md`.
+
+> **Cập nhật 23/11/2026 (tối) — tăng min card KHÔNG hết, TRẢ KHUNG + SỬA CÔNG THỨC:**
+> Manh test bản nhánh #248 (14:19, cùng máy): frame vẫn **14x14** (outer=420x568,
+> client=406x554, minH=568, cardMin=232), loa vẫn che; pin mờ hơn + mất bo tròn 4 góc
+> (ảnh so sánh bản 211 vs 248). **Gốc là công thức:** minH = fixedH(304) + cardMin(232) +
+> cardMargin(8) + 24 = 568 tính cho vùng hiển thị, nhưng `MoveAndResize` +
+> `WM_GETMINMAXINFO` đặt theo kích thước ngoài → card thực chỉ 218 thay vì 232, loa/copy
+> ở đáy card bị cắt đúng ~14px. Tăng cardMin chỉ dời số thiếu, không sửa được gốc.
+> **Fix (hướng 2, Manh chốt 23/11):** (1) gỡ `StripWindowFrame` ở panel — trả bo tròn +
+> bóng đổ + pin sắc như bản 211 (pin mờ là tác dụng phụ của gỡ khung, code pin không
+> đổi); (2) card về lại **218** (const + XAML — 232 chỉ là cách vá tạm); (3) cộng khung
+> đo live (`FrameHeightDips()`: outer − client qua `AppWindow.Size` + `GetClientRect`,
+> chia scale) vào `ComputeMinPanelHeight` — panel mở đúng 568 ngoài, card đủ 218 trong.
+> `StripWindowFrame` KHÔNG bị xoá (icon nổi trong suốt vẫn dùng). Log `[PanelSize]` giữ
+> lại (thêm `frameH`) để xác nhận số mới. Chi tiết: `docs/DECISIONS.md` (mục Trả khung +
+> sửa công thức minH) + `docs/TASK_QUEUE.md`.
+
+> **Cập nhật 24/11/2026 — Manh test #250 OK, loa HẾT CHE (xác minh bằng số thật):**
+> Log `[PanelSize]` 24/11 09:41 (cùng máy): outer=420x570, client=404x554,
+> **frame=16x16**, minH=570, minParts=(fixedH=304 cardMin=218 cardMargin=8 frameH=16
+> minH=570) — công thức đúng: 304+218+8+24+16=570, card thấy được = 554−304−8−24 =
+> **218 đúng thiết kế**. Loa/copy không còn che; bo tròn 4 góc về lại; kéo dọc thu nhỏ
+> hết cỡ dừng đúng điểm không che. **Pin VẪN MỜ — giả thuyết "gỡ khung làm mờ pin" BỊ
+> BÁC** (khung đã trả lại, frame 16, mà pin vẫn mờ); pin là việc riêng, điều tra sau,
+> không chặn gộp PR #6. Chi tiết: `docs/DECISIONS.md` (mục Trả khung + sửa công thức
+> minH) + `docs/TASK_QUEUE.md`.
 
 ## 7. Quy tắc sửa (để không phá layout)
 

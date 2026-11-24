@@ -5,16 +5,32 @@
 
 ## ĐANG LÀM
 
-- [ ] **Bug che loa/Copy panel** (Windows — TransPeek-Windows, #149→#159, fix #164 đã vào):
+- [x] **Bug che loa/Copy panel** (Windows — TransPeek-Windows, #149→#159, fix #164 đã vào):
   Fix #164 (`bf74379`, CI xanh) đã vào main nhưng **Manh xác nhận 22/11 VẪN CHE trên bản
   v0.1.4.238** — nguyên nhân 18/11 (kéo ngang khoá auto-fit + settle chỉ biết co) KHÔNG phải
   nguyên nhân cuối. Repro 22/11: mở lần đầu đã che; kéo nhỏ hết cỡ dừng ĐÚNG điểm che;
-  dịch từ mới không kéo vẫn che; text rất dài không che, 3–6 dòng vẫn che. Nghi phạm mới:
-  khung cửa sổ thừa (`WS_DLGFRAME` sót lại sau `SetBorderAndTitleBar`) ăn mất chiều cao
-  vùng hiển thị — giải thích được cả #163 (+20 cardMin vô ích). **Đang làm bản chẩn đoán
-  ghi log** (outer/client/min/baseline vào `windows.log`, mở từ tray Diagnose) để đo đúng
-  số px thiếu, rồi sửa theo số đo. Xác nhận hết che thật thì viết lại case study ở
-  `docs/AGENTS.md` §3 theo nguyên nhân thật (hiện §3 vẫn theo kết luận cũ). Chi tiết:
+  dịch từ mới không kéo vẫn che; text rất dài không che, 3–6 dòng vẫn che.
+  **Nguyên nhân thật ĐÃ XÁC NHẬN bằng số đo 23/11** (Manh test bản 240, máy công ty Dell
+  Pro 24, 1920x1080, scale 100%): frame=16x16 (outer 420x554, client 404x538) — khung
+  cửa sổ thừa (`WS_DLGFRAME` sót lại sau `SetBorderAndTitleBar` + `WS_THICKFRAME`) ăn mất
+  16px chiều cao vùng hiển thị → ô output nhận 210 thay vì tối thiểu 218 → loa/copy bị
+  che ~8px. Khớp ghi chú của Manh: 1 chữ bị che, 3 dòng không bị. **Đang sửa trên nhánh
+  `fix/panel-strip-frame`** (tách `RemoveWindowFrame` thành `WindowHelpers.StripWindowFrame`
+  dùng chung, panel gọi ở Loaded; log `[PanelSize]` GIỮ LẠI trên bản nhánh). **Test bản
+  nhánh #241 (Manh 23/11): CHƯA ĐƯỢC — frame chỉ 16x16 → 14x14, loa vẫn che; giả thuyết
+  gỡ khung triệt để bị bác.** Đã sync main vào nhánh (merge `9dc6f59`, PR #6 draft; PR #5
+  sync ngược đã đóng vì nút gỡ xung đột sẽ commit lên main). Tăng min card 218 → 232
+  (Manh chỉ) cũng không hết: test bản nhánh #248 (Manh 23/11) frame vẫn 14x14, card
+  thấy được chỉ 218 thay vì 232 — **gốc là CÔNG THỨC (minH tính số đo trong nhưng đặt
+  làm chiều cao ngoài). Manh chốt TRẢ KHUNG + SỬA CÔNG THỨC:** gỡ `StripWindowFrame` ở
+  panel, card về lại 218, cộng khung đo live vào `ComputeMinPanelHeight`. **Manh test
+  bản nhánh #250 OK 24/11 (CI xanh, commit `76fbe04`): loa HẾT CHE — log `[PanelSize]`
+  24/11 09:41: outer=420x570, client=404x554, frame=16x16, minH=570, frameH=16, card
+  thấy được đúng 218; bo tròn về lại; kéo thu nhỏ dừng đúng điểm không che. Pin VẪN MỜ
+  — giả thuyết "gỡ khung làm mờ pin" BỊ BÁC; pin là việc riêng, điều tra sau. Manh quyết
+  định GỘP LUÔN 24/11 (pin không chặn gộp). Đang gộp PR #6 (sync main vào nhánh — xung
+  đột `CHANGELOG.md` đã gỡ bằng cách gộp tay cả 2 phía; gỡ log + pin làm đợt sau). Case
+  study `docs/AGENTS.md` §3 đã cập nhật theo kết quả test (trên nhánh). Chi tiết:
   `docs/UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md` (§6).
 - [ ] **Doc UI/UX** (Windows — TransPeek-Windows): panel đã chốt + viết xong;
   các doc còn lại là bản nháp, cập nhật dần khi hoàn thiện hoặc Manh yêu cầu.

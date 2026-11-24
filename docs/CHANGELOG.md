@@ -4,6 +4,18 @@
 > Quyết định chi tiết: `DECISIONS.md`. Trạng thái hiện tại (ảnh chụp nhanh):
 > `PROJECT_STATE.md`.
 
+## 2026-11-24
+
+- **nhánh `fix/panel-strip-frame` — TRẢ KHUNG + SỬA CÔNG THỨC — MANH TEST #250 OK 24/11:** Manh test bản nhánh #250 (CI xanh, commit `76fbe04`): **loa HẾT CHE** — log `[PanelSize]` 24/11 09:41: outer=420x570, client=404x554, **frame=16x16**, minH=570, minParts=(fixedH=304 cardMin=218 cardMargin=8 **frameH=16** minH=570) — công thức đúng: 304+218+8+24+16=570, card thấy được = 554−304−8−24 = **218 đúng thiết kế**. Bo tròn 4 góc về lại. Kéo thu nhỏ hết cỡ dừng đúng điểm không che. **Pin VẪN MỜ — giả thuyết "gỡ khung làm mờ pin" BỊ BÁC** (khung đã trả lại, frame 16, mà pin vẫn mờ) — pin là việc riêng, điều tra sau, không chặn gộp. Gốc: minH tính số đo trong (client) nhưng đặt làm chiều cao ngoài, thiếu đúng khung; sửa: gỡ `StripWindowFrame` ở panel, card về lại 218, cộng khung đo live (`FrameHeightDips`) vào `ComputeMinPanelHeight`.
+- **nhánh `fix/panel-strip-frame` — gỡ khung CHƯA ĐỦ + tăng min card 218→232 (chưa có số CI):** Manh test bản nhánh #241: frame chỉ 16x16 → 14x14 (client 406x540), loa vẫn che — `StripWindowFrame` chỉ gỡ được 2px, 14px còn lại không nằm ở style cửa sổ. Đã sync main vào nhánh (merge `9dc6f59`, PR #6 draft — PR #5 sync ngược đã đóng vì nút gỡ xung đột sẽ commit lên main). Thử tiếp theo hướng Manh chỉ: `MinOutputCardHeight` 218 → 232 (= 218 + 14 frame đo được) + XAML `MinHeight` đổi theo; log `[PanelSize]` giữ lại để xác nhận số mới.
+- **nhánh `fix/panel-strip-frame` — sửa bug che loa theo số đo (chưa có số CI):** Manh test
+  bản 240, log `[PanelSize]` đo được frame=16x16 (outer 420x554, client 404x538) — nguyên
+  nhân thật đã rõ: chiều cao tính cho vùng hiển thị nhưng đặt theo kích thước ngoài, panel
+  thiếu 16px, ô output nhận 210 thay vì tối thiểu 218 → loa/copy bị che ~8px. Sửa: tách
+  `RemoveWindowFrame` thành `WindowHelpers.StripWindowFrame` dùng chung (chỉ gỡ khung,
+  panel vẫn là card mờ đục) + panel gọi ở Loaded; log chẩn đoán GIỮ LẠI trên bản nhánh để
+  test xác nhận frame=0. Chờ Manh test bản nhánh.
+
 ## 2026-11-23
 
 - **Loa cửa sổ Nghỉ + loa nhớ trạng thái chung (Manh, mac parity):** cửa sổ Nghỉ có nút loa (cả 2 loại nhắc Pomodoro + nghỉ mắt đều qua `ShowRest` nên 1 chỗ nối đủ cả 2; service riêng, dispose khi đóng cửa sổ). Trạng thái loa CHUNG cho Full + Lite + Rest, lưu bền ở setting mới `RsvpSoundOn` (mặc định lần đầu TẮT; bấm loa ở mặt nào ghi ngay, mặt khác nhớ theo; read mới đọc trạng thái lần cuối; không sync live). Bấm loa khi đang tạm dừng chỉ đổi chế độ, vẫn cần bấm Play mới nói.

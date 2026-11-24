@@ -114,6 +114,45 @@ internal static class WindowHelpers
         appWindow.IsShownInSwitchers = false;
     }
 
+    /// <summary>Strip every frame bit from a window so its outer size
+    /// equals its client size — this is what actually removes the
+    /// outline/shadow. Only the frame bits are cleared (deliberately
+    /// with &amp;= ~): overwriting GWL_STYLE wholesale drops
+    /// WS_CLIPCHILDREN/WS_CLIPSIBLINGS, which makes content render
+    /// blurry after animations (Action-Wheel). Used by
+    /// TransparentWindow (the trigger icon's transparent window —
+    /// the frame bits are the shadow/outline source there). The
+    /// panel used it too as a che-loa fix (2026-11-23, branch
+    /// fix/panel-strip-frame) but it recovered only 2 px (frame
+    /// 16x16 -> 14x14, build 241) and cost the rounded corners,
+    /// shadow and a sharp pin — so the panel went back to its frame
+    /// (Manh 2026-11-23) and the frame is now carried in the panel's
+    /// minimum-height formula instead (see ComputeMinPanelHeight).
+    /// No transparency is touched: the window keeps its opaque
+    /// background (unlike TransparentWindow).</summary>
+    public static void StripWindowFrame(IntPtr hwnd)
+    {
+        var style = NativeMethods.GetWindowLongPtr(hwnd, NativeMethods.GWL_STYLE).ToInt64();
+        style &= ~(long)(NativeMethods.WS_CAPTION | NativeMethods.WS_BORDER |
+            NativeMethods.WS_DLGFRAME | NativeMethods.WS_THICKFRAME);
+        NativeMethods.SetWindowLongPtr(hwnd, NativeMethods.GWL_STYLE, new IntPtr(style));
+
+        var exStyle = NativeMethods.GetWindowLongPtr(hwnd, NativeMethods.GWL_EXSTYLE).ToInt64();
+        exStyle &= ~(long)(NativeMethods.WS_EX_WINDOWEDGE | NativeMethods.WS_EX_CLIENTEDGE |
+            NativeMethods.WS_EX_STATICEDGE | NativeMethods.WS_EX_DLGMODALFRAME);
+        NativeMethods.SetWindowLongPtr(hwnd, NativeMethods.GWL_EXSTYLE, new IntPtr(exStyle));
+
+        // Windows 11 rounds top-level windows; on a transparent overlay
+        // the rounding is visible as curved corners of the outline.
+        int corners = NativeMethods.DWMWCP_DONOTROUND;
+        NativeMethods.DwmSetWindowAttribute(hwnd, NativeMethods.DWMWA_WINDOW_CORNER_PREFERENCE, ref corners, sizeof(int));
+
+        // The cached frame is only recomputed when told it changed.
+        NativeMethods.SetWindowPos(hwnd, IntPtr.Zero, 0, 0, 0, 0,
+            NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOZORDER |
+            NativeMethods.SWP_NOACTIVATE | NativeMethods.SWP_FRAMECHANGED);
+    }
+
     /// <summary>Current cursor position in physical pixels.</summary>
     public static (int X, int Y) CursorPosition()
     {

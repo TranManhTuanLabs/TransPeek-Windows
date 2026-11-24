@@ -97,7 +97,13 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// for the horizontal (Manh 2026-11-16: the output shrank to
     /// nothing when the panel was dragged small, even with long
     /// text). When the provider is collapsed the border MinHeight
-    /// goes to 0 instead (see SetProviderCardExpanded).</summary>
+    /// goes to 0 instead (see SetProviderCardExpanded).
+    /// 2026-11-23: back to 218 — the 232 (218 + 14 measured frame)
+    /// was frame compensation baked into the card; the frame is now
+    /// added in ComputeMinPanelHeight instead (direction 2, Manh
+    /// 2026-11-23: restore the frame + fix the formula), so the card
+    /// minimum is its true client requirement again. XAML MinHeight
+    /// on ProviderCardBorder must match this number.</summary>
     private const double MinOutputCardHeight = 218;
     /// <summary>Window-subclass delegate for the WM_GETMINMAXINFO
     /// minimum-size enforcement. Kept in a field (not a local) so the
@@ -1296,6 +1302,34 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     // is fixed.
     private string _diagMinParts = "";
 
+    /// <summary>Window frame height in DIPs, measured live (outer
+    /// minus client): AppWindow.Size is the outer size, GetClientRect
+    /// is the client area — the same pair the [PanelSize] log
+    /// measures. The frame is a fixed property of the window style
+    /// and DPI, so the current size measures it correctly at any
+    /// time after the window is shown. Zero (clamped) when the
+    /// window is not shown yet or the measure fails — then the
+    /// minimum is just the client need, as before (never worse).</summary>
+    private double FrameHeightDips()
+    {
+        try
+        {
+            var hwnd = WindowNative.GetWindowHandle(this);
+            var outerH = AppWindow.Size.Height;
+            if (!NativeMethods.GetClientRect(hwnd, out var client))
+                return 0;
+            var clientH = client.Bottom - client.Top;
+            var scale = WindowHelpers.DpiScale(this);
+            return Math.Max(0, (outerH - clientH) / scale);
+        }
+        catch
+        {
+            // A failed measure must never break the panel — same rule
+            // as LogPanelSize: fall back to no frame.
+            return 0;
+        }
+    }
+
     /// <summary>Minimum panel height in DIPs, from the CURRENT content:
     /// the fixed rows' measured heights (title + input + hint +
     /// language + actions + dictionary + footer) plus the minimum
@@ -1356,13 +1390,32 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         // conclusion above is stale. Current suspect: the leftover
         // window frame (see LogPanelSize); the diagnostic log measures
         // it instead of guessing.
+        // NOTE 2026-11-23: stripping the frame recovered only 2 px
+        // (frame 16x16 -> 14x14 on Manh's PC, build 241) — the
+        // remaining 14 px is NOT in the window styles, so the
+        // strip-frame hypothesis is disproven as a complete fix.
+        // The 232 card minimum (218 + 14 frame) was tried next, but
+        // Manh's test of build 248 (frame still 14, card still 218
+        // visible) proved the real fault is the FORMULA, not the
+        // card: minH is computed from client-area sizes but applied
+        // as the OUTER size, so the card always comes up short by
+        // exactly the frame. Fix (direction 2, Manh 2026-11-23):
+        // add the live frame height here, in DIPs, so the outer
+        // minimum = client need + frame. The card minimum is back
+        // to its true 218 (the 232 compensation is reverted), and
+        // the panel is restored to its frame (see Loaded) — rounded
+        // corners, shadow and a sharp pin come back with it. The
+        // [PanelSize] log will confirm the new numbers on the test
+        // build — if the speaker is still short, the log says by how
+        // much instead of guessing again.
         var cardMargin = _providerCardExpanded
             ? ProviderCardBorder.Margin.Top + ProviderCardBorder.Margin.Bottom
             : 0;
-        var minH = Math.Max(MinPanelHeight, fixedH + cardMin + cardMargin + 24);
+        var frameH = FrameHeightDips();
+        var minH = Math.Max(MinPanelHeight, fixedH + cardMin + cardMargin + 24 + frameH);
         // Diagnostic parts for the panel-size log (see LogPanelSize):
         // the fit logs these alongside the outer/client sizes.
-        _diagMinParts = $"fixedH={fixedH:0.#} cardMin={cardMin} cardMargin={cardMargin} minH={minH:0.#}";
+        _diagMinParts = $"fixedH={fixedH:0.#} cardMin={cardMin} cardMargin={cardMargin} frameH={frameH:0.#} minH={minH:0.#}";
         var work = WindowHelpers.DisplayWorkArea(AppWindow.Position.X, AppWindow.Position.Y);
         var maxH = Math.Min(MaxPanelSize, work.Height / WindowHelpers.DpiScale(this));
         return Math.Min(minH, Math.Max(MinPanelHeight, maxH));
