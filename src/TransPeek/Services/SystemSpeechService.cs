@@ -2,8 +2,12 @@
 // voices, offline, no key, no account. Speaks the panel text (source
 // or translation) with the voice matching the text language; falls
 // back to the default voice when no voice for that language is
-// installed. Speak again while speaking stops (toggle); playback
-// ending on its own clears the speaking state.
+// installed. Play/pause/resume (Manh 2026-11-26, Speechify /
+// NaturalReader behaviour): one speaker press toggles play/pause,
+// resume picks up where playback stopped, and only the end of the
+// unit stops it on its own. Pause keeps the MediaPlayer stream
+// alive, so Resume plays on from the same position — no
+// re-synthesis, no word-boundary callback needed (WinRT has none).
 //
 // This is the 0.1.4 TTS (Manh 2026-11-16): system voices only. The
 // neural voices (Azure, Edge Read Aloud) are a later opt-in — Azure
@@ -23,11 +27,21 @@ public sealed class SystemSpeechService : IDisposable
     private readonly MediaPlayer _player = new();
     private SpeechSynthesisStream? _currentStream;
     private bool _speaking;
+    private bool _paused;
     private bool _disposed;
 
-    /// <summary>True while audio is playing (set on Play, cleared on
-    /// Stop or when the stream ends).</summary>
+    /// <summary>True while a playback session is active — playing or
+    /// paused. Cleared on Stop or when the stream ends on its own.</summary>
     public bool IsSpeaking => _speaking;
+
+    /// <summary>True while the session is paused (audio halted, the
+    /// stream and its position kept, so Resume plays on from the
+    /// same spot). Only true while IsSpeaking is also true.</summary>
+    public bool IsPaused => _paused;
+
+    /// <summary>True while audio is actually playing (a session is
+    /// active and not paused).</summary>
+    public bool IsPlaying => _speaking && !_paused;
 
     /// <summary>Raised when playback ends on its own (not via Stop),
     /// so the UI can reset the speaker state.</summary>
@@ -38,9 +52,14 @@ public sealed class SystemSpeechService : IDisposable
         _player.MediaEnded += (_, _) =>
         {
             _speaking = false;
+            _paused = false;
             SpeechEnded?.Invoke(this, EventArgs.Empty);
         };
-        _player.MediaFailed += (_, _) => _speaking = false;
+        _player.MediaFailed += (_, _) =>
+        {
+            _speaking = false;
+            _paused = false;
+        };
     }
 
     /// <summary>All voices installed on this machine (for the Settings
@@ -71,8 +90,8 @@ public sealed class SystemSpeechService : IDisposable
     /// <paramref name="languageCode"/> (an app code like "en", "vi",
     /// "zh-Hans", or "auto" for the default voice). Returns false
     /// when there is nothing to speak, no voice is installed, or
-    /// synthesis failed. A call while speaking stops the current
-    /// playback first.</summary>
+    /// synthesis failed. A call while a session is active stops that
+    /// session first, so a new play always starts from the top.</summary>
     public async Task<bool> SpeakAsync(string text, string languageCode)
     {
         if (_disposed || string.IsNullOrWhiteSpace(text))
@@ -101,23 +120,50 @@ public sealed class SystemSpeechService : IDisposable
             _currentStream = stream;
             _player.Source = MediaSource.CreateFromStream(stream, stream.ContentType);
             _speaking = true;
+            _paused = false;
             _player.Play();
             return true;
         }
         catch
         {
             _speaking = false;
+            _paused = false;
             return false;
         }
     }
 
-    /// <summary>Stop playback (a no-op when not speaking). The current
-    /// stream is released, so a later SpeakAsync starts fresh.</summary>
+    /// <summary>Pause playback (a no-op unless a session is playing).
+    /// Only halts the MediaPlayer — the stream and its position stay,
+    /// so Resume plays on from the same spot. The session stays
+    /// active (IsSpeaking stays true) until Stop or the stream ends.</summary>
+    public void Pause()
+    {
+        if (!_speaking || _paused)
+            return;
+        _paused = true;
+        _player.Pause();
+    }
+
+    /// <summary>Resume a paused session from where it stopped (a
+    /// no-op unless paused). Plays the same stream on — no
+    /// re-synthesis, so the voice keeps the same position.</summary>
+    public void Resume()
+    {
+        if (!_speaking || !_paused)
+            return;
+        _paused = false;
+        _player.Play();
+    }
+
+    /// <summary>Stop playback (a no-op when no session is active).
+    /// The current stream is released, so a later SpeakAsync starts
+    /// fresh from the top.</summary>
     public void Stop()
     {
         if (!_speaking && _currentStream is null)
             return;
         _speaking = false;
+        _paused = false;
         _player.Pause();
         _player.Source = null;
         _currentStream?.Dispose();

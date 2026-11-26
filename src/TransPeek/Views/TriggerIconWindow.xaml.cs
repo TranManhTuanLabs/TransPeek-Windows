@@ -48,10 +48,6 @@ public sealed partial class TriggerIconWindow : Window
     /// Clicks are ignored until it fires.</summary>
     private readonly DispatcherTimer _readLingerTimer = new();
     private bool _visible;
-    /// <summary>True while the speaker mark shows (click = listen mode).
-    /// While speaking, hover must not open the translate panel (mac:
-    /// startHoverTimer has guard !isSpeaking).</summary>
-    private bool _isSpeaking;
     /// <summary>Last Alt state seen by the poll timer (or at ShowAt).
     /// Compared each poll so only a real change flips the preview.</summary>
     private bool _altHeld;
@@ -67,13 +63,12 @@ public sealed partial class TriggerIconWindow : Window
     /// <summary>Raised on click, or when the hover delay elapses.</summary>
     public event Action? OpenRequested;
 
-    /// <summary>Raised when the user clicks the icon to start listening
-    /// (the speaker mark appears). App speaks the current selection.</summary>
+    /// <summary>Raised when the user clicks the icon to listen to the
+    /// current selection. App starts (or toggles) the TTS session
+    /// and shows the separate speaker indicator — the icon itself
+    /// never shows playback state (Manh 2026-11-26, indicator split:
+    /// the icon is only the trigger, the indicator is the player).</summary>
     public event Action? SpeakRequested;
-
-    /// <summary>Raised when the user clicks the icon again to stop
-    /// listening (the speaker mark goes back to the preview mark).</summary>
-    public event Action? SpeakStopped;
 
     /// <summary>Raised on Alt+click, on a plain click when the click
     /// action setting is Fast Read, or from the right-click menu's
@@ -124,10 +119,7 @@ public sealed partial class TriggerIconWindow : Window
         listenItem.Click += (_, _) =>
         {
             _hoverTimer.Stop();
-            SetSpeaking(true);
             SpeakRequested?.Invoke();
-            _autoHideTimer.Interval = TimeSpan.FromSeconds(App.Settings.TriggerIconAutoHideSeconds);
-            _autoHideTimer.Start();
         };
         var fastReadItem = new MenuFlyoutItem { Text = "Fast Read", Icon = new FontIcon { Glyph = "\uE736" } };
         fastReadItem.Click += (_, _) =>
@@ -195,33 +187,19 @@ public sealed partial class TriggerIconWindow : Window
             if (altHeld != clickReads)
             {
                 _hoverTimer.Stop();
-                if (_isSpeaking)
-                {
-                    SetSpeaking(false);
-                    SpeakStopped?.Invoke();
-                }
                 BeginReadLinger();
                 FastReadRequested?.Invoke();
                 return;
             }
-            if (_isSpeaking)
-            {
-                SetSpeaking(false);
-                SpeakStopped?.Invoke();
-                _autoHideTimer.Interval = TimeSpan.FromSeconds(App.Settings.TriggerIconAutoHideSeconds);
-                _autoHideTimer.Start();
-            }
-            else
-            {
-                _hoverTimer.Stop();
-                SetSpeaking(true);
-                SpeakRequested?.Invoke();
-                // Keep the speaker visible while it speaks (the mac
-                // keeps it until playback stops); the auto-hide timer
-                // hides it after the usual delay if nothing stops it.
-                _autoHideTimer.Interval = TimeSpan.FromSeconds(App.Settings.TriggerIconAutoHideSeconds);
-                _autoHideTimer.Start();
-            }
+            // Plain click = listen: the icon is only the trigger —
+            // App starts a new session, or pauses/resumes the
+            // session for this same text, and shows the separate
+            // speaker indicator. The icon itself never shows
+            // playback state (Manh 2026-11-26, indicator split), so
+            // there is no speaking toggle here any more; its
+            // auto-hide keeps running on the normal lifecycle.
+            _hoverTimer.Stop();
+            SpeakRequested?.Invoke();
         };
         // Preview from the pointer event too (mac-style): the glyph
         // flips as soon as Alt is pressed/released while the pointer
@@ -298,8 +276,7 @@ public sealed partial class TriggerIconWindow : Window
         // be holding Alt when the icon appears — read it before the
         // glyph refresh below, so the preview is right at once.
         _altHeld = IsAltHeldGlobally();
-        SetSpeaking(false); // fresh selection: back to the preview mark.
-        UpdateGlyph(); // SetSpeaking returns early when already not speaking.
+        UpdateGlyph();
         // Sizes, applied on every show from the user settings (Manh
         // 2026-11-21, mac parity: TriggerIconPanel.size /
         // compactSize read Defaults live): the window is the setting
@@ -378,7 +355,6 @@ public sealed partial class TriggerIconWindow : Window
         _altPollTimer.Stop();
         _readLingerTimer.Stop();
         _inReadLinger = false;
-        SetSpeaking(false);
         WindowHelpers.Hide(this);
     }
 
@@ -414,35 +390,27 @@ public sealed partial class TriggerIconWindow : Window
     /// the icon's normal face is the plain A (not bold, blue #0078D4
     /// — Style 1; the bubble E8BD is a backup style only, kept defined
     /// but never shown). A+ (turmeric) and the speaker (E767, blue
-    /// #0078D4) only appear as the Alt preview or as feedback: Alt held
-    /// previews what Alt+click will do — A+ when Click=Speak (Alt+click
-    /// reads), speaker when Click=FastRead (Alt+click speaks). While
-    /// speaking the speaker shows for every setting; during the 2.5s
-    /// Read linger the A+ shows. Exactly one mark is visible.</summary>
+    /// #0078D4) only appear as the Alt preview: Alt held previews
+    /// what Alt+click will do — A+ when Click=Speak (Alt+click
+    /// reads), speaker when Click=FastRead (Alt+click speaks).
+    /// During the 2.5s Read linger the A+ shows. The icon NEVER
+    /// shows playback state (Manh 2026-11-26, indicator split: the
+    /// speaker indicator is a separate window now, so the
+    /// !speaking guard is gone — hover works even while a session
+    /// plays, which is the point of the split: listen and translate
+    /// at the same time). Exactly one mark is visible.</summary>
     private void UpdateGlyph()
     {
         var clickReads = string.Equals(App.Settings.IconClickAction, "FastRead", StringComparison.OrdinalIgnoreCase);
         // No Alt => the plain A: hover means translate, whatever Click
         // is set to. Alt held previews the Alt+click action.
-        var showSpeaker = _isSpeaking && !_inReadLinger;
-        var showRead = _inReadLinger || (!showSpeaker && _altHeld && !clickReads);
+        var showRead = _inReadLinger || (_altHeld && !clickReads);
         // Alt held and Click=FastRead => Alt+click speaks => speaker.
-        var showAltSpeak = !showSpeaker && !showRead && _altHeld;
+        var showAltSpeak = !showRead && _altHeld;
         BubbleMark.Visibility = Visibility.Collapsed; // backup style — kept, not shown.
-        PlainAMark.Visibility = !showSpeaker && !showRead && !showAltSpeak ? Visibility.Visible : Visibility.Collapsed;
+        PlainAMark.Visibility = !showRead && !showAltSpeak ? Visibility.Visible : Visibility.Collapsed;
         APlusMark.Visibility = showRead ? Visibility.Visible : Visibility.Collapsed;
-        SpeakerMark.Visibility = showSpeaker || showAltSpeak ? Visibility.Visible : Visibility.Collapsed;
-    }
-
-    /// <summary>Switch the mark to the speaker glyph (click = listen
-    /// mode) or back to the preview mark. TTS audio is not built yet —
-    /// this is only the icon state for now.</summary>
-    private void SetSpeaking(bool speaking)
-    {
-        if (_isSpeaking == speaking)
-            return;
-        _isSpeaking = speaking;
-        UpdateGlyph();
+        SpeakerMark.Visibility = showAltSpeak ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void OnPointerEntered(object sender, PointerRoutedEventArgs e)
@@ -457,11 +425,11 @@ public sealed partial class TriggerIconWindow : Window
             _altHeld = held;
             UpdateGlyph();
         }
-        // While speaking, hover must not open the translate panel (mac:
-        // startHoverTimer has guard !isSpeaking) — the click already
-        // consumed the interaction. During the Read linger the hover
-        // must not open it either.
-        if (_isSpeaking || _inReadLinger)
+        // During the Read linger the hover must not open the panel.
+        // (The old !isSpeaking guard is gone — Manh 2026-11-26,
+        // indicator split: hover opens the panel even while a TTS
+        // session plays, so the user can translate while listening.)
+        if (_inReadLinger)
             return;
         _hoverTimer.Interval = TimeSpan.FromMilliseconds(App.Settings.HoverDelayMs);
         _hoverTimer.Start();

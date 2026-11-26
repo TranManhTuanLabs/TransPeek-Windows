@@ -69,6 +69,17 @@ public sealed partial class App : Application
     /// service — the icon speaks the selection without opening the
     /// panel, so it needs its own synthesizer/player.</summary>
     private SystemSpeechService? _iconSpeech;
+    /// <summary>Speaker indicator (Manh 2026-11-26): the separate
+    /// floating play/pause control for a float-icon TTS session. It
+    /// shows at the spot where the user pressed the float icon's
+    /// speaker, Pause while playing and Play while paused. The float
+    /// icon itself never shows playback state.</summary>
+    private SpeakerIndicatorWindow? _speakerIndicator;
+    /// <summary>The text of the active float-icon TTS session, or
+    /// null when none is active. Pressing the float icon's speaker
+    /// for the same text pauses/resumes it; a different text stops
+    /// it and starts a new session from the top.</summary>
+    private string? _floatSessionText;
     /// <summary>Alternative icon (mac FAST_READ_SELECT_ICON, Manh
     /// 2026-11-22): the fake icon over a selection inside Fast Read.
     /// Own monitor + window + TTS path — it never touches the main
@@ -149,7 +160,19 @@ public sealed partial class App : Application
         _triggerIcon.SettingsRequested += ShowSettings;
         _iconSpeech = new SystemSpeechService();
         _triggerIcon.SpeakRequested += OnTriggerIconSpeakRequested;
-        _triggerIcon.SpeakStopped += () => _iconSpeech?.Stop();
+        // The session ending on its own (the unit finished) hides the
+        // indicator and clears the session text.
+        _iconSpeech.SpeechEnded += (_, _) =>
+        {
+            _floatSessionText = null;
+            _speakerIndicator?.HideIndicator();
+        };
+        _speakerIndicator = new SpeakerIndicatorWindow();
+        _speakerIndicator.ToggleRequested += OnSpeakerIndicatorToggleRequested;
+        _speakerIndicator.AutoHidden += () => StopFloatSession();
+        // A panel session starting replaces a float session — only
+        // one TTS session runs at a time.
+        _panel?.SpeechSessionStarted += () => StopFloatSession();
 
         _ocrFlow = new OcrFlowService(
             () => Settings,
@@ -418,14 +441,19 @@ public sealed partial class App : Application
         }
     }
 
-    /// <summary>Float icon click = listen (mac handleIconClick,
-    /// .speak): read the selected text aloud without opening the
-    /// panel. Re-grabs the selection via the clipboard when it is
-    /// stale, like the translate hotkey path. Language: the source
-    /// language setting when the user picked one; when it is "auto"
-    /// the text's language is unknown, so guess from the text
-    /// (Vietnamese diacritics -> vi, otherwise en — the app's two
-    /// main languages). Nothing to speak -> stay silent.</summary>
+    /// <summary>Float icon speaker pressed: play/pause/resume the
+    /// TTS session for the current selection (Manh 2026-11-26).
+    /// Same text as the running float session: toggle pause/resume
+    /// (the indicator shows the state). A different text — or no
+    /// session: stop any other session first (only one TTS session
+    /// runs at a time), then play this text from the top and show
+    /// the speaker indicator at the icon's spot. Re-grabs the
+    /// selection via the clipboard when it is stale, like the
+    /// translate hotkey path. Language: the source language setting
+    /// when the user picked one; when it is "auto" the text's
+    /// language is unknown, so guess from the text (Vietnamese
+    /// diacritics -> vi, otherwise en — the app's two main
+    /// languages). Nothing to speak -> stay silent.</summary>
     private async void OnTriggerIconSpeakRequested()
     {
         var text = _lastSelection;
@@ -437,10 +465,63 @@ public sealed partial class App : Application
         }
         if (string.IsNullOrWhiteSpace(text) || _iconSpeech is null)
             return;
+        // Same text as the running float session: toggle pause/resume.
+        if (_iconSpeech.IsSpeaking && string.Equals(_floatSessionText, text, StringComparison.Ordinal))
+        {
+            if (_iconSpeech.IsPaused)
+                _iconSpeech.Resume();
+            else
+                _iconSpeech.Pause();
+            _speakerIndicator?.SetPaused(_iconSpeech.IsPaused);
+            return;
+        }
+        // A different text (or no session): stop any other session
+        // first, then play this text from the top.
+        _panel?.StopSpeechSession();
+        _iconSpeech.Stop();
         var lang = Settings.SourceLanguage == LanguageCode.Auto
             ? SystemSpeechService.DetectLanguage(text)
             : Settings.SourceLanguage;
-        _ = await _iconSpeech.SpeakAsync(text, lang);
+        var started = await _iconSpeech.SpeakAsync(text, lang);
+        if (!started)
+        {
+            _floatSessionText = null;
+            _speakerIndicator?.HideIndicator();
+            return;
+        }
+        _floatSessionText = text;
+        // The indicator appears at the spot where the user pressed
+        // the speaker — the float icon's current position.
+        var pos = _triggerIcon.AppWindow.Position;
+        _speakerIndicator?.ShowAt(pos.X, pos.Y, paused: false);
+    }
+
+    /// <summary>Speaker indicator clicked: pause (while playing) or
+    /// resume (while paused) the float-icon TTS session. The
+    /// indicator is the only pause/resume control for the float
+    /// path — the float icon itself never shows playback state.</summary>
+    private void OnSpeakerIndicatorToggleRequested()
+    {
+        if (_iconSpeech is null || !_iconSpeech.IsSpeaking)
+            return;
+        if (_iconSpeech.IsPaused)
+            _iconSpeech.Resume();
+        else
+            _iconSpeech.Pause();
+        _speakerIndicator?.SetPaused(_iconSpeech.IsPaused);
+    }
+
+    /// <summary>Stop the float-icon TTS session (a no-op when none is
+    /// active) and hide its indicator. A panel session starting, the
+    /// indicator auto-hiding while paused, and opening Fast Read all
+    /// stop it — only one TTS session runs at a time.</summary>
+    private void StopFloatSession()
+    {
+        if (_iconSpeech is null)
+            return;
+        _iconSpeech.Stop();
+        _floatSessionText = null;
+        _speakerIndicator?.HideIndicator();
     }
 
     private async Task TranslateCurrentSelectionAsync()
@@ -512,6 +593,15 @@ public sealed partial class App : Application
     /// window (the panel hides first).</summary>
     private void RouteFastRead(string text)
     {
+        // Opening Fast Read stops any click-to-listen session (the
+        // old float icon stopped speech on a Fast Read click; the
+        // Read mode has its own speaker, so the click-to-listen
+        // audio must not keep playing under it). The panel session
+        // is stopped here too when reading in the panel — HidePanel
+        // only stops it when the panel hides for a separate reader
+        // window.
+        StopFloatSession();
+        _panel?.StopSpeechSession();
         if (string.Equals(Settings.FastReadRunLocation, "RightPanel", StringComparison.OrdinalIgnoreCase))
             _panel?.ShowPanelForReading(text);
         else

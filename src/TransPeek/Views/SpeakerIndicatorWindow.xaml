@@ -1,0 +1,24 @@
+<Window
+    x:Class="TransPeek.Views.SpeakerIndicatorWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Speaker indicator — the separate floating play/pause control
+         (Manh 2026-11-26, speaker indicator split from the float
+         icon, following Speechify's Pill Player and NaturalReader's
+         minibar). It reuses the float icon's floating-window
+         machinery (TransparentWindow, circular region, show without
+         activation) and the same size (FloatIconSize, default 24 pt):
+         a white circle with a #C8C8C8 border and a blue glyph.
+         The glyph shows what the next press will do: Pause (E769)
+         while playing, Play (E768) while paused. The float icon
+         itself never shows playback state any more — the indicator
+         is the player, the icon is only the trigger. -->
+    <Grid Background="Transparent">
+        <Border x:Name="IndicatorBorder" Width="30" Height="30" CornerRadius="15"
+                Background="White" BorderBrush="#C8C8C8" BorderThickness="1">
+            <FontIcon x:Name="IndicatorGlyph" Glyph="&#xE769;" FontSize="16" Foreground="#0078D4"
+                      HorizontalAlignment="Center" VerticalAlignment="Center" />
+        </Border>
+    </Grid>
+</Window>

@@ -246,6 +246,14 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// the panel speaker buttons speak through this. One instance for
     /// the window's lifetime; it owns a MediaPlayer + synthesizer.</summary>
     private readonly SystemSpeechService _speech = new();
+    /// <summary>Raised when the panel starts a speech session, so
+    /// App can stop a float-icon session — only one TTS session runs
+    /// at a time (Manh 2026-11-26, speaker indicator split). The
+    /// panel buttons themselves stay as-is for now (Manh 2026-11-27):
+    /// no glyph change, toggle = stop as before — the new
+    /// play/pause/resume law + indicator apply to the float-icon
+    /// flow only.</summary>
+    public event Action? SpeechSessionStarted;
     /// <summary>Auto-play chain (TTS Speech tab): when auto-play spoke
     /// the source and Auto-play translation is also on, speak the
     /// translation when the source finishes (SpeechEnded). Cleared
@@ -641,6 +649,9 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         {
             _ = _speech.SpeakAsync(_translationText, App.Settings.TargetLanguage);
         }
+        // Auto-play starting a session replaces a float-icon session
+        // (only one TTS session runs at a time).
+        SpeechSessionStarted?.Invoke();
     }
 
     // ----- internals -----
@@ -729,16 +740,23 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
 
     // ----- speaker buttons (Windows system TTS, Manh 2026-11-16) -----
 
-    /// <summary>Speaker icons (E767 Volume, same glyph as the float
-    /// icon's speaker state): one at the bottom-right of the input
-    /// area, one at the bottom-right of the output card body — both
-    /// mirroring mac, where Speak + Copy sit on the right below the
-    /// text in SourceInputView and in ProviderResultCard. Wired to
-    /// the Windows system voices (SystemSpeechService): the source
-    /// button speaks the source text in the source language, the
-    /// translation button speaks the translation in the target
-    /// language. Click while speaking stops. A second click on the
-    /// same button therefore toggles speak/stop.</summary>
+    // ----- speaker buttons (Windows system TTS, Manh 2026-11-16) -----
+
+    /// <summary>Speaker buttons (Manh 2026-11-27 — KEPT AS-IS for
+    /// now): one at the bottom-right of the input area (source), one
+    /// at the bottom-right of the output card body (translation) —
+    /// both mirroring mac, where Speak + Copy sit on the right below
+    /// the text. Wired to the Windows system voices
+    /// (SystemSpeechService): the source button speaks the source
+    /// text in the source language, the translation button speaks
+    /// the translation in the target language. Click while speaking
+    /// stops (toggle = stop, the old law). A second click on the
+    /// same button therefore toggles speak/stop. No glyph change,
+    /// no play/pause/resume — the new speaker law + indicator apply
+    /// to the float-icon flow only, because the user does not
+    /// mainly listen here. The only addition is the session
+    /// coordination: starting a panel session tells App to stop a
+    /// float-icon session, so only one TTS session runs at a time.</summary>
     private async void OnSpeakSourceClicked(object sender, RoutedEventArgs e)
         // Source language for the voice: the provider's detected
         // language when the source was "auto" (that is what the text
@@ -763,7 +781,21 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         }
         if (string.IsNullOrWhiteSpace(text))
             return;
-        await _speech.SpeakAsync(text, languageCode);
+        var started = await _speech.SpeakAsync(text, languageCode);
+        // A panel session starting replaces a float-icon session.
+        if (started)
+            SpeechSessionStarted?.Invoke();
+    }
+
+    /// <summary>Stop the panel's speech session (a no-op when none is
+    /// active). App calls this when a float-icon session starts, so
+    /// only one TTS session runs at a time, and when Fast Read opens
+    /// (the Read mode has its own speaker).</summary>
+    public void StopSpeechSession()
+    {
+        if (!_speech.IsSpeaking)
+            return;
+        _speech.Stop();
     }
 
     private void ShowPanelNear(int x, int y)
