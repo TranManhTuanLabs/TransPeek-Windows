@@ -6,7 +6,7 @@
 
 ## 2026-11-26
 
-- **Đổi tên nhãn — lẻ gộp (Manh 26/11):** tray mục Reading: "Fast Read" → "Fast Read (RSVP)" (thêm key resw `Tray.Menu.FastRead` mới + sửa fallback trong `TrayIconService.cs`; trước đây resw không có key này nên tray hiện chữ fallback); "Focus rest" → "Focus & Rest" — ĐÃ ĐÚNG SẴN (resw + code đều ghi "Focus & Rest"), không sửa. Settings/General: "Watch selection automatically" → "Show floating icon on text selection"; "Show icon when hovering over text" → "Auto Show icon when hovering over text (default: on)" — mặc định của `HoverBlockText` là `true` (bật) nên ghi "(default: on)". Sửa cả XAML Header lẫn resw (resw thắng lúc chạy).
+- **Đổi tên nhãn — lẻ gộp (Manh 26/11):** tray mục Reading: "Fast Read" → "Fast Read (RSVP)" (thêm key resw `Tray.Menu.FastRead` mới + sửa fallback trong `TrayIconService.cs`; trước đây resw không có key này nên tray hiện chữ fallback); "Focus rest" → "Focus & Rest" — LẦN ĐẦU TƯỞNG ĐÃ ĐÚNG SẴN (resw + code đều ghi "Focus & Rest") NHƯNG SAI: menu tray là Win32 popup menu (H.NotifyIcon chuyển MenuFlyout thành popup Win32), ký tự `&` trong menu Win32 là phím tắt (mnemonic) nên bị nuốt, không hiện ra — tray thực tế hiện "Focus rest". Sửa: ghi `&&` (resw `Focus &amp;&amp; Rest` + fallback `"Focus && Rest"`) để Win32 hiện đúng 1 dấu `&`. Settings/General: "Watch selection automatically" → "Show floating icon on text selection"; "Show icon when hovering over text" → "Auto Show icon when hovering over text (default: on)" — mặc định của `HoverBlockText` là `true` (bật) nên ghi "(default: on)". Sửa cả XAML Header lẫn resw (resw thắng lúc chạy).
 
 ## 2026-11-24
 

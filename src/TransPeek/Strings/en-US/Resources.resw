@@ -37,7 +37,7 @@
     <value>Fast Read (RSVP)</value>
   </data>
   <data name="Tray.Menu.FocusRest" xml:space="preserve">
-    <value>Focus &amp; Rest</value>
+    <value>Focus &amp;&amp; Rest</value>
   </data>
   <data name="Tray.Menu.ClipboardTranslation" xml:space="preserve">
     <value>Translate Clipboard</value>

@@ -85,7 +85,7 @@ public sealed class TrayIconService : IDisposable
         // there is no "Timer" glyph in Segoe Fluent Icons).
         menu.Items.Add(SectionItem(AppStrings.Get("Tray.Section.Reading", "Reading")));
         menu.Items.Add(Item("Tray.Menu.FastRead", "Fast Read (RSVP)", "\uE736", fastRead));
-        menu.Items.Add(Item("Tray.Menu.FocusRest", "Focus & Rest", "\uE917", focusRest));
+        menu.Items.Add(Item("Tray.Menu.FocusRest", "Focus && Rest", "\uE917", focusRest));
         menu.Items.Add(new MenuFlyoutSeparator());
         menu.Items.Add(SectionItem(AppStrings.Get("Tray.Section.Capture", "Text Capture from Screen")));
         menu.Items.Add(Item("Tray.Menu.ManualTranslation", "Manual Translation", "\uE765", manualTranslation));
