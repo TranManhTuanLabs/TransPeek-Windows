@@ -19,7 +19,9 @@
     chứa 2 TextBlock riêng** ("A" căn giữa + "+" căn Top/Right) — KHÔNG dùng 1
     TextBlock 2 Run với `BaselineAlignment="Superscript"`: thuộc tính đó chỉ có
     ở WPF, WinUI không có, dùng là vỡ build #178 (WMC0011).
-  - **SpeakerMark:** loa **E767** Volume — lúc đang phát tiếng.
+  - **SpeakerMark:** loa **E767** Volume — preview khi giữ Alt lúc Click = Fast Read
+    (Alt+click sẽ Speak); KHÔNG hiện lúc đang phát tiếng nữa (trạng thái phát nhạc
+    hiện trên indicator loa riêng — xem `SPEECH_PLAYER.md` §1, CHỐT 26/11 23:59).
 - Chữ "A" 14pt cũ (Manh 2026-11-14) đã bỏ; bubble Path tự vẽ (0.1.3.72) từng bị
   revert vì xấu, nhưng glyph font thì sạch nên dùng glyph.
 - Trong suốt thật: `TransparentWindow.cs` + `SetWindowRgn` cắt tròn; tắt viền DWM
@@ -38,10 +40,10 @@
   Click = Fast Read thì Alt+Click nghe).
 - **Bảng glyph (Style B) — icon hiện việc click tiếp theo sẽ làm:**
 
-  | Click setting | Không giữ Alt | Giữ Alt | Đang phát tiếng |
-  | --- | --- | --- | --- |
-  | Speak (mặc định) | bubble (xanh) | **A+** (nghệ) | loa |
-  | Fast Read | **A+** (nghệ) | bubble (xanh) | loa |
+  | Click setting | Không giữ Alt | Giữ Alt |
+  | --- | --- | --- |
+  | Speak (mặc định) | bubble (xanh) | **A+** (nghệ) |
+  | Fast Read | **A+** (nghệ) | bubble (xanh) |
 - **Linger A+ 2.5s:** sau bất kỳ lần bấm Read nào (click thường, Alt+Click, menu
   chuột phải) icon hiện A+ trong **2.5s** để xác nhận đã bấm Read, rồi mới ẩn —
   trong 2.5s đó bỏ qua click thêm. App không ẩn icon sớm (`IsReadLingerActive`).
@@ -57,7 +59,9 @@
   lúc icon hiện. Trong lúc giữ Alt thì auto-hide tạm dừng, thả Alt ra thì
   auto-hide chạy lại từ đầu (5s mới).
 - **Auto-hide:** mặc định **5s** (đổi từ 3s ngày 2026-11-18, giống mac). Tạm dừng
-  khi: chuột đang trên icon; đang phát tiếng; đang giữ Alt; đang trong linger 2.5s.
+  khi: chuột đang trên icon; đang giữ Alt; đang trong linger 2.5s. Phiên loa
+  KHÔNG bao giờ tạm dừng auto-hide của icon nữa (CHỐT 26/11 23:59 — indicator
+  loa là phần tử riêng, có auto-hide riêng — xem `SPEECH_PLAYER.md` §1).
 - **Chuột phải icon → menu** có mục "Fast Read".
 - Icon thỉnh thoảng lúc hiện lúc không khi select text — **đang chờ Manh test thêm**
   trên các bản mới (nợ phiên).

@@ -56,8 +56,7 @@ Mac đã ghi tương tự vào `docs/UI/UX_DESIGN/FLOAT_ICON_UX_SPEC.md` §3
 
 Từ 2026-11-20 18:09 ý tưởng translate-first ở §3 ĐÃ LÀM (Manh duyệt):
 idle LUÔN là A thường; A+ / loa chỉ hiện khi giữ Alt (preview hành động
-Alt+click) hoặc làm feedback sau khi bấm (A+ 2.5s sau Read, loa khi đang
-nói). Style B preview click tiếp theo đã bỏ. Loa E767 giờ màu xanh dương
+Alt+click) hoặc làm feedback sau khi bấm (A+ 2.5s sau Read). Style B preview click tiếp theo đã bỏ. Loa E767 giờ màu xanh dương
 `#0078D4` (Manh 2026-11-20 18:09 — loa là highlight, không phải glyph tối).
 
 Code gap (mac, ghi để Windows biết): code mac hiện vẫn đang vẽ
@@ -77,7 +76,9 @@ này từ commit `1ffcbb7`.
   Fast Read). Giữ Alt thì đổi sang preview hành động Alt+click: **A+**
   khi Click=Speak (Alt+click đọc), **loa E767 xanh** khi Click=Fast Read
   (Alt+click nghe). Sau bất kỳ lần bấm Read nào icon hiện A+ trong
-  **2.5s** rồi mới ẩn; đang nói thì hiện loa. Bong bóng E8BD xanh giờ
+  **2.5s** rồi mới ẩn. Icon KHÔNG hiện trạng thái phát nhạc nữa — trạng
+  thái đó hiện trên indicator loa riêng (xem `SPEECH_PLAYER.md` §1,
+  CHỐT 26/11 23:59). Bong bóng E8BD xanh giờ
   chỉ là **mẫu style dự phòng** — vẫn định nghĩa trong code (`BubbleMark`,
   luôn ẩn) để sau cần thì bật lại.
 - Alt cho click đọc từ event con trỏ lúc bấm (`PointerPressed` + `KeyModifiers.Menu`),
@@ -112,7 +113,8 @@ So the icon's idle state stays "translate", and A+ / speaker appear as the Alt p
 or as feedback for the action that was just triggered — instead of Style B's preview of
 the *next* click. Same note as mac (`docs/UI/UX_DESIGN/FLOAT_ICON_UX_SPEC.md` §3,
 commit `9818f6c` — Option on mac, Alt on Windows). Implementation: `UpdateGlyph` in
-`TriggerIconWindow.xaml.cs` — `showRead = linger || (!speaking && altHeld && !clickReads)`.
+`TriggerIconWindow.xaml.cs` — `showRead = linger || (!speaking && altHeld && !clickReads)`
+(sẽ bỏ `!speaking` khi làm indicator — icon không còn track speaking nữa, CHỐT 26/11 23:59).
 
 ## 4. Nợ
 
