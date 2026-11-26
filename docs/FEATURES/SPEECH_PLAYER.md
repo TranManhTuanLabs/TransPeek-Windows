@@ -24,7 +24,7 @@ Lý do tách: icon float chỉ có 1 cửa sổ — lúc đang phát, nó bị p
 - **Biểu tượng theo trạng thái** (theo nguyên tắc "glyph cho biết lần bấm tới sẽ làm gì"): đang phát: ⏸ (bấm để pause); đang pause: ▶ (bấm để resume). Nút loa panel (input/output) GIỮ NGUYÊN tạm thời — không đổi biểu tượng theo trạng thái (xem phạm vi ở đầu §1). Icon float KHÔNG hiện trạng thái phát nhạc nữa (xem `FLOAT_ICON_UX_SPEC.md`).
 - **Hiện trong lúc ĐANG PHÁT** để user luôn bấm được để pause. Trong lúc **ĐANG PAUSE**, indicator chạy theo luật ẩn bình thường (auto-hide sau 5s, hover vào thì timer tạm dừng như luật auto-hide thường); khi indicator ẩn thì phiên kết thúc lặng lẽ (stop). Resume được trong lúc indicator còn hiện.
 - **Alternative icon (icon giả trong Read) — click loa của nó = click loa icon float thật** (CHỐT 27/11 00:32): bắt đầu phiên nghe, indicator hiện ở đúng chỗ bấm (chỗ alternative icon đang đứng), ⏸/▶, luật play/pause/resume như thường. Alternative icon KHÔNG đổi sang hình loa khi đang nói nữa — giữ glyph A blue bình thường; trạng thái phát nhạc chỉ hiện trên indicator. Bấm lại alternative icon trong lúc đang phát = phát mới thay phiên cũ (pause/resume là việc của indicator). Hover vẫn dịch như cũ (Lite: chuyển tab center; Full: mở panel tại cursor). Nút loa của cửa sổ Read (bật/tắt tiếng RSVP) là control riêng, KHÔNG đổi, không thuộc luật này. (Windows CHƯA có alternative icon — áp dụng khi làm theo mac.)
-- **Hiện tại (26/11): CHƯA LÀM** — luật mới + indicator làm theo spec này (chat Windows báo lại khi xong).
+- **Hiện tại (27/11): ĐÃ VIẾT CODE, CHỜ CI XANH** — luật mới + indicator đã làm xong (commit 156693b2, sửa lỗi build CS9202 gộp cùng đợt này); Manh test live khi CI xanh.
 
 ## 2. Auto-play
 

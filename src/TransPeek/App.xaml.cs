@@ -171,8 +171,13 @@ public sealed partial class App : Application
         _speakerIndicator.ToggleRequested += OnSpeakerIndicatorToggleRequested;
         _speakerIndicator.AutoHidden += () => StopFloatSession();
         // A panel session starting replaces a float session — only
-        // one TTS session runs at a time.
-        _panel?.SpeechSessionStarted += () => StopFloatSession();
+        // one TTS session runs at a time. (No `?.` + `+=` here:
+        // null-conditional assignment needs C# 14, the project
+        // builds with C# 12 — CI #257, CS9202.)
+        if (_panel is not null)
+        {
+            _panel.SpeechSessionStarted += () => StopFloatSession();
+        }
 
         _ocrFlow = new OcrFlowService(
             () => Settings,
