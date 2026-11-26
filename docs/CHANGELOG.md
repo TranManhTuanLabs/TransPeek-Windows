@@ -4,6 +4,10 @@
 > Quyết định chi tiết: `DECISIONS.md`. Trạng thái hiện tại (ảnh chụp nhanh):
 > `PROJECT_STATE.md`.
 
+## 2026-11-26
+
+- **Đổi tên nhãn — lẻ gộp (Manh 26/11):** tray mục Reading: "Fast Read" → "Fast Read (RSVP)" (thêm key resw `Tray.Menu.FastRead` mới + sửa fallback trong `TrayIconService.cs`; trước đây resw không có key này nên tray hiện chữ fallback); "Focus rest" → "Focus & Rest" — ĐÃ ĐÚNG SẴN (resw + code đều ghi "Focus & Rest"), không sửa. Settings/General: "Watch selection automatically" → "Show floating icon on text selection"; "Show icon when hovering over text" → "Auto Show icon when hovering over text (default: on)" — mặc định của `HoverBlockText` là `true` (bật) nên ghi "(default: on)". Sửa cả XAML Header lẫn resw (resw thắng lúc chạy).
+
 ## 2026-11-24
 
 - **Enter xác nhận Done khi nút Done đang hiện (Manh 24/11, làm trên main sau khi gộp PR #6):** khi nào nút Done hiện ra (đếm ngược sau khi đọc xong ở cửa sổ Nghỉ + đếm ngược nhắc ở panel) thì user bấm Enter được thay vì phải click chuột vào Done — trước đây Enter chỉ fire khi nút Done đang focus, còn không focus thì Enter không làm gì. Sửa: `RestWindow.OnKeyDown` (Enter + `CountdownGrid` đang hiện → đóng cửa sổ, cùng hành động với nút Done) và `PanelFastReadView.HandleKey` (Enter khi `PanelReminderCountdown` đang chạy → `StopPanelReading`, cùng hành động với nút Done). Không có nút Done ở cửa sổ Full (chỉ có share) nên không đổi. Ghi vào `DECISIONS.md` + `FOCUS_REST.md` + `TASK_QUEUE.md`.

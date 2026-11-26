@@ -86,7 +86,7 @@
                        FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
             <TextBlock x:Name="LaunchErrorText" FontSize="12" Foreground="Red" Visibility="Collapsed" />
 
-            <ToggleSwitch x:Name="WatchSelectionToggle" x:Uid="Settings.General.WatchSelection" Header="Watch selection automatically"
+            <ToggleSwitch x:Name="WatchSelectionToggle" x:Uid="Settings.General.WatchSelection" Header="Show floating icon on text selection"
                           OnContent="On" OffContent="Off"
                           Toggled="OnWatchSelectionToggled" />
             <TextBlock x:Uid="Settings.General.WatchSelectionHint" Text="When on, the trigger icon appears whenever you select text. When off, the app only responds to hotkeys and the tray menu."
@@ -97,7 +97,7 @@
                  rests on a block of text — no selection needed. Sits
                  right under Watch selection: both decide when the icon
                  appears on its own. -->
-            <ToggleSwitch x:Name="HoverBlockTextToggle" x:Uid="Settings.General.HoverBlockText" Header="Show icon when hovering over text"
+            <ToggleSwitch x:Name="HoverBlockTextToggle" x:Uid="Settings.General.HoverBlockText" Header="Auto Show icon when hovering over text (default: on)"
                           OnContent="On" OffContent="Off"
                           Toggled="OnHoverBlockTextToggled" />
             <TextBlock x:Uid="Settings.General.HoverBlockTextHint" Text="When on, hovering over a block of text shows the trigger icon, without selecting anything first. Only text the app exposes to UI Automation is detected."

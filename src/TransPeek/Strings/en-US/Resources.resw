@@ -33,6 +33,9 @@
   <data name="Tray.Menu.SelectionTranslation" xml:space="preserve">
     <value>Translate Selection</value>
   </data>
+  <data name="Tray.Menu.FastRead" xml:space="preserve">
+    <value>Fast Read (RSVP)</value>
+  </data>
   <data name="Tray.Menu.FocusRest" xml:space="preserve">
     <value>Focus &amp; Rest</value>
   </data>
@@ -175,7 +178,7 @@
     <value>Keyboard shortcuts</value>
   </data>
   <data name="Settings.General.WatchSelection.Header" xml:space="preserve">
-    <value>Watch selection automatically</value>
+    <value>Show floating icon on text selection</value>
   </data>
   <data name="Settings.General.WatchSelection.OnContent" xml:space="preserve">
     <value>On</value>
@@ -187,7 +190,7 @@
     <value>When on, the trigger icon appears whenever you select text. When off, the app only responds to hotkeys and the tray menu.</value>
   </data>
   <data name="Settings.General.HoverBlockText.Header" xml:space="preserve">
-    <value>Show icon when hovering over text</value>
+    <value>Auto Show icon when hovering over text (default: on)</value>
   </data>
   <data name="Settings.General.HoverBlockText.OnContent" xml:space="preserve">
     <value>On</value>
