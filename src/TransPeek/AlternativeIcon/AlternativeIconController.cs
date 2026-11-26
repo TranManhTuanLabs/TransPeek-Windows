@@ -1,18 +1,12 @@
 // Alternative icon controller (mac FAST_READ_SELECT_ICON.md): owns the
-// Read-selection monitor, the floating icon window, and the icon's OWN
-// system-TTS path. The translate action is App's job (it knows whether
-// the selection came from the Full window or the panel's Lite tab), so
-// the controller only reports it via a callback — it never touches the
-// panel or the reader itself.
-//
-// The icon's TTS path is SEPARATE from the Read speaker button's: the
-// reader's speaker drives RSVP playback sync (TTS advances the chunks),
-// while this one is a quick independent "speak this selected text"
-// that does not touch playback state (mac §6).
+// Read-selection monitor and the floating icon window. The translate
+// action and the listen action are both App's job — App knows the
+// shared click-to-listen flow (one voice, separate indicator), so the
+// controller only reports hover/click via callbacks and never touches
+// the panel, the reader, or any TTS service itself (mac 1cdaa44a: no
+// synthesizer of its own anymore).
 
 using Microsoft.UI.Dispatching;
-using TransPeek.Core.Translation;
-using TransPeek.Services;
 
 namespace TransPeek.AlternativeIcon;
 
@@ -20,10 +14,10 @@ public sealed class AlternativeIconController : IDisposable
 {
     private readonly Func<bool> _isReadSurfaceActive;
     private readonly Action<string, (int X, int Y)> _onTranslateRequested;
+    private readonly Action<string, (int X, int Y)> _onSpeakRequested;
     private readonly DispatcherQueue _uiQueue;
     private readonly ReadSelectionMonitor _monitor;
     private readonly AlternativeIconWindow _icon;
-    private readonly SystemSpeechService _speech = new();
     private string _selectedText = "";
     private (int X, int Y) _selectedPoint;
     private bool _disposed;
@@ -36,16 +30,22 @@ public sealed class AlternativeIconController : IDisposable
     /// when the user hovers the icon: App translates the selected text
     /// (Full window: open the panel at the selection; Lite: translate
     /// in place).</param>
+    /// <param name="onSpeakRequested">Invoked on the UI thread when
+    /// the user clicks the icon: App starts the shared click-to-listen
+    /// session, with the indicator at the icon's position (passed
+    /// along — read before the icon hides).</param>
     /// <param name="uiQueue">The UI thread's queue (captured in
     /// App.OnLaunched) — the monitor reports on a background thread,
     /// so every icon call marshals through it.</param>
     public AlternativeIconController(
         Func<bool> isReadSurfaceActive,
         Action<string, (int X, int Y)> onTranslateRequested,
+        Action<string, (int X, int Y)> onSpeakRequested,
         DispatcherQueue uiQueue)
     {
         _isReadSurfaceActive = isReadSurfaceActive;
         _onTranslateRequested = onTranslateRequested;
+        _onSpeakRequested = onSpeakRequested;
         _uiQueue = uiQueue;
         _monitor = new ReadSelectionMonitor(
             isReadSurfaceActive,
@@ -56,13 +56,6 @@ public sealed class AlternativeIconController : IDisposable
         _icon = new AlternativeIconWindow();
         _icon.OpenRequested += OnIconOpenRequested;
         _icon.SpeakRequested += OnIconSpeakRequested;
-        _icon.SpeakStopped += () => _speech.Stop();
-        _speech.SpeechEnded += (_, _) =>
-        {
-            // Playback ended on its own: back to the A-in-bubble mark.
-            // MediaEnded fires off the UI thread — marshal to it.
-            _uiQueue.TryEnqueue(() => _icon.SetSpeaking(false));
-        };
     }
 
     public void Start() => _monitor.Start();
@@ -100,26 +93,35 @@ public sealed class AlternativeIconController : IDisposable
             _onTranslateRequested(text, point);
     }
 
-    private async void OnIconSpeakRequested()
+    /// <summary>The icon window's current position (physical pixels)
+    /// — where the speaker indicator appears when the user clicks to
+    /// listen. Read BEFORE hiding the icon (mac 1cdaa44a: hiding may
+    /// clear the frame).</summary>
+    public (int X, int Y) CurrentPosition
     {
-        // Click = listen through the icon's OWN TTS path (mac §6): a
-        // quick independent speak that never touches RSVP playback
-        // state. Language: the source language setting when the user
-        // picked one, else guess from the text — same rule as the main
-        // icon's Speak path.
+        get
+        {
+            var pos = _icon.AppWindow.Position;
+            return (pos.X, pos.Y);
+        }
+    }
+
+    private void OnIconSpeakRequested()
+    {
+        // Click = listen through the SHARED click-to-listen flow (mac
+        // 1cdaa44a): the icon only reports the click + its position;
+        // App starts the session (pauses any read, stops any old
+        // session, shows the indicator at this spot). Clicking again
+        // starts a NEW session replacing the old one — pause/resume is
+        // the indicator's job, never a toggle here.
         var text = _selectedText;
         if (string.IsNullOrWhiteSpace(text))
             return;
-        var lang = App.Settings.SourceLanguage == LanguageCode.Auto
-            ? SystemSpeechService.DetectLanguage(text)
-            : App.Settings.SourceLanguage;
-        var ok = await _speech.SpeakAsync(text, lang);
-        if (!ok)
-        {
-            // Nothing to speak (no voice installed, synthesis failed):
-            // back to the A-in-bubble mark.
-            _uiQueue.TryEnqueue(() => _icon.SetSpeaking(false));
-        }
+        // Read the position BEFORE hiding — the indicator appears at
+        // the spot the user pressed (same order as mac).
+        var pos = CurrentPosition;
+        _icon.HideIcon();
+        _onSpeakRequested(text, pos);
     }
 
     public void Dispose()
@@ -128,7 +130,6 @@ public sealed class AlternativeIconController : IDisposable
             return;
         _disposed = true;
         _monitor.Dispose();
-        _speech.Dispose();
         _icon.HideIcon();
     }
 }

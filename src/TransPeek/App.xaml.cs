@@ -243,14 +243,18 @@ public sealed partial class App : Application
         // Alternative icon (mac FAST_READ_SELECT_ICON, Manh 2026-11-22):
         // a selection inside a Fast Read surface shows the fake icon
         // (A in a chat bubble) — hover translates, click listens
-        // through its own TTS path. The gate is the foreground window:
-        // only the Fast Read window, or the panel on its Fast Read tab,
-        // counts — never the translate input or Settings. Inert unless
-        // a Read surface is foreground, so it needs no settings toggle
-        // and no rebuild on settings save (sizes/delays read live).
+        // through the SHARED click-to-listen flow (mac 1cdaa44a: the
+        // icon owns no TTS of its own — App starts the session with
+        // the indicator at the icon's spot). The gate is the foreground
+        // window: only the Fast Read window, or the panel on its Fast
+        // Read tab, counts — never the translate input or Settings.
+        // Inert unless a Read surface is foreground, so it needs no
+        // settings toggle and no rebuild on settings save (sizes/delays
+        // read live).
         _altIconController = new AlternativeIconController(
             IsReadSurfaceForeground,
             OnAlternativeIconTranslateRequested,
+            OnAlternativeIconSpeakRequested,
             _uiQueue);
         _altIconController.Start();
 
@@ -473,14 +477,43 @@ public sealed partial class App : Application
             text = await ClipboardHelper.TryGetSelectionViaClipboardAsync()
                 ?? _lastSelection;
         }
+        if (string.IsNullOrWhiteSpace(text))
+            return;
+        // The indicator appears at the float icon's current position.
+        var pos = _triggerIcon.AppWindow.Position;
+        await StartClickToListenAsync(text, (pos.X, pos.Y), allowToggle: true);
+    }
+
+    /// <summary>Alternative icon clicked to listen (mac 1cdaa44a):
+    /// the icon already hid itself and reported its position — start
+    /// the shared click-to-listen session with the indicator at that
+    /// spot. Clicking it again starts a NEW session (allowToggle:
+    /// false), never a toggle.</summary>
+    private async void OnAlternativeIconSpeakRequested(string text, (int X, int Y) position)
+    {
+        await StartClickToListenAsync(text, position, allowToggle: false);
+    }
+
+    /// <summary>Start a click-to-listen session through the shared
+    /// float-icon speaker path (one voice at a time): pause any read,
+    /// stop any other session, then play this text from the top with
+    /// the indicator at <paramref name="indicatorPos"/>.
+    /// <paramref name="allowToggle"/> is true only for the float icon:
+    /// clicking it again for the same text toggles pause/resume. The
+    /// alternative icon passes false — clicking it again starts a NEW
+    /// session replacing the old one (Manh 2026-11-27 00:32).</summary>
+    private async Task StartClickToListenAsync(string text, (int X, int Y) indicatorPos, bool allowToggle)
+    {
         if (string.IsNullOrWhiteSpace(text) || _iconSpeech is null)
             return;
         // A read playing now pauses (keeping its position) — the
         // click-to-listen text takes the one voice, and Play/Space
         // resumes the read from where it stopped (Manh 2026-11-27).
         PauseAnyReading();
-        // Same text as the running float session: toggle pause/resume.
-        if (_iconSpeech.IsSpeaking && string.Equals(_floatSessionText, text, StringComparison.Ordinal))
+        // Same text as the running float session: the float icon
+        // toggles pause/resume; the alternative icon always starts a
+        // new session.
+        if (allowToggle && _iconSpeech.IsSpeaking && string.Equals(_floatSessionText, text, StringComparison.Ordinal))
         {
             if (_iconSpeech.IsPaused)
                 _iconSpeech.Resume();
@@ -505,9 +538,9 @@ public sealed partial class App : Application
         }
         _floatSessionText = text;
         // The indicator appears at the spot where the user pressed
-        // the speaker — the float icon's current position.
-        var pos = _triggerIcon.AppWindow.Position;
-        _speakerIndicator?.ShowAt(pos.X, pos.Y, paused: false);
+        // the speaker — the float icon's or the alternative icon's
+        // current position.
+        _speakerIndicator?.ShowAt(indicatorPos.X, indicatorPos.Y, paused: false);
     }
 
     /// <summary>Speaker indicator clicked: pause (while playing) or

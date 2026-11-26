@@ -42,7 +42,7 @@ it does not duplicate or modify the icon's internals.
 | Action | What happens | Notes |
 | --- | --- | --- |
 | **Hover** | Translate (look up the selected word) | Per surface (see §5). |
-| **Click** | Speak — listen to the selected text | Its OWN separate system-TTS path (see §6). No Read. |
+| **Click** | Speak — listen to the selected text | Through the SHARED click-to-listen flow (see §6) + separate speaker indicator. No Read. |
 
 There is **no Read action** on this icon. The user selected one word
 inside a long passage, so starting a Fast Read session on that fragment
@@ -63,19 +63,23 @@ ignored here — the icon is always speaker + hover in Read mode.
 
 App picks the flow by the foreground window at hover time (see §7).
 
-## 6. Click uses a SEPARATE system-TTS audio path
+## 6. Click uses the SHARED click-to-listen flow (mac `1cdaa44a`, 27/11)
 
-Clicking the alternative icon speaks the selected text through its **own
-separate `SystemSpeechService` instance** (owned by
-`AlternativeIconController`). It does NOT share the Read-mode speaker
-button's audio path: the Read speaker button is tied to RSVP playback
-sync (TTS drives the chunk advance), while the alternative icon's click
-is a quick, independent "speak this selected text" that does not touch
-RSVP playback state. Click again (or natural playback end) stops it and
-the icon goes back to the A-in-bubble mark. Language: the source
-language setting when the user picked one, else the same
-`DetectLanguage` heuristic as the main icon (Vietnamese diacritics →
-vi, otherwise en).
+Clicking the alternative icon starts a click-to-listen session through
+the SHARED float-icon speaker path (`App.StartClickToListenAsync`) —
+the icon owns NO `SystemSpeechService` of its own anymore. App pauses
+any Read in progress (keeping its position), stops any old session,
+then plays the selected text with the separate speaker indicator at
+the spot the icon was standing (read before the icon hides). The icon
+itself keeps its blue A glyph — it NEVER swaps to a speaker while
+speaking; playback state (⏸/▶, pause/resume) lives only on the
+indicator. Clicking the icon again starts a NEW session replacing the
+old one (pause/resume is the indicator's job, never a toggle here) —
+unlike the float icon, which toggles pause/resume when clicked again
+for the same text. Hover still translates even while a session is
+playing. Language: the source language setting when the user picked
+one, else the same `DetectLanguage` heuristic as the main icon
+(Vietnamese diacritics → vi, otherwise en).
 
 ## 7. When the icon appears
 

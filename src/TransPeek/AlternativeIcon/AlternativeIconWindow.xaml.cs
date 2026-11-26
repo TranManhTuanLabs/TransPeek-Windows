@@ -1,10 +1,13 @@
 // Alternative icon window (mac FAST_READ_SELECT_ICON.md): the small
 // floating tile that appears near a text selection INSIDE Fast Read.
 // Hover (after the usual hover delay) translates the selected word;
-// click speaks it through its own system-TTS path. NO Read action, NO
-// context menu, NO Alt preview — the icon is always speaker + hover in
-// Read mode, whatever "Click icon for:" says. It never touches the main
-// float icon's logic, glyphs, or settings.
+// click speaks it through the SHARED click-to-listen flow (App owns
+// the session + indicator — mac 1cdaa44a). NO Read action, NO context
+// menu, NO Alt preview — the icon is always speaker + hover in Read
+// mode, whatever "Click icon for:" says. It never touches the main
+// float icon's logic, glyphs, or settings. It never shows playback
+// state — the blue A stays as-is while speaking; the indicator alone
+// shows ⏸/▶.
 
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -19,23 +22,19 @@ public sealed partial class AlternativeIconWindow : Window
     // parity): AutoShowFloatIconSize (default 24 pt) — the same size as
     // the hover icon, so the alternative icon reads as the same family.
     // The window is the setting, the circle 2 pt smaller, glyphs scale
-    // with the circle: bubble ~80%, A = half, speaker ~60%. ShowAt
-    // re-applies the sizes on every show (the XAML values are
-    // first-paint defaults only).
+    // with the circle: bubble ~80%, A = half. ShowAt re-applies the
+    // sizes on every show (the XAML values are first-paint defaults
+    // only).
 
     private readonly DispatcherTimer _hoverTimer = new();
     private readonly DispatcherTimer _autoHideTimer = new();
     private bool _visible;
-    private bool _isSpeaking;
 
     /// <summary>Raised when the hover delay elapses: App translates the selected text.</summary>
     public event Action? OpenRequested;
 
     /// <summary>Raised when the user clicks the icon to listen.</summary>
     public event Action? SpeakRequested;
-
-    /// <summary>Raised when the user clicks again to stop listening.</summary>
-    public event Action? SpeakStopped;
 
     public AlternativeIconWindow()
     {
@@ -56,29 +55,19 @@ public sealed partial class AlternativeIconWindow : Window
         }
         IconBorder.PointerEntered += OnPointerEntered;
         IconBorder.PointerExited += OnPointerExited;
-        // Click = listen, toggled (mac §6: its own TTS path, second
-        // click stops). PointerPressed, not Tapped — same reason as the
-        // main icon: the press is the interaction, and a click must
-        // cancel the pending hover so hover and click never both fire.
-        // Left button only.
+        // Click = listen through the shared flow (mac 1cdaa44a): the
+        // press is the interaction, and a click must cancel the
+        // pending hover so hover and click never both fire. Clicking
+        // again starts a NEW session — pause/resume is the indicator's
+        // job, never a toggle here. PointerPressed, not Tapped — same
+        // reason as the main icon. Left button only.
         IconBorder.PointerPressed += (_, e) =>
         {
             if (!e.GetCurrentPoint(IconBorder).Properties.IsLeftButtonPressed)
                 return;
             e.Handled = true;
-            if (_isSpeaking)
-            {
-                SetSpeaking(false);
-                SpeakStopped?.Invoke();
-                RestartAutoHide();
-            }
-            else
-            {
-                _hoverTimer.Stop();
-                SetSpeaking(true);
-                SpeakRequested?.Invoke();
-                RestartAutoHide();
-            }
+            _hoverTimer.Stop();
+            SpeakRequested?.Invoke();
         };
         _hoverTimer.Tick += (_, _) =>
         {
@@ -102,21 +91,18 @@ public sealed partial class AlternativeIconWindow : Window
     /// scaled display (same lesson as the main icon, 0.1.3.68).</summary>
     public void ShowAt(int x, int y)
     {
-        SetSpeaking(false); // fresh selection: back to the A-in-bubble mark.
         // Sizes from the auto-show setting, applied on every show:
         // window = setting, circle = setting − 2, bubble ~80% of the
-        // circle, A = half, speaker ~60%.
+        // circle, A = half.
         var windowPx = App.Settings.AutoShowFloatIconSize;
         var circlePx = windowPx - 2;
         var bubbleSize = (int)Math.Round(circlePx * 0.8);
         var aSize = (int)Math.Round(circlePx * 0.5);
-        var speakerSize = (int)Math.Round(circlePx * 0.6);
         IconBorder.Width = circlePx;
         IconBorder.Height = circlePx;
         IconBorder.CornerRadius = new CornerRadius(circlePx / 2.0);
         BubbleMark.FontSize = bubbleSize;
         AMark.FontSize = aSize;
-        SpeakerMark.FontSize = speakerSize;
         var scale = WindowHelpers.DpiScale(this);
         var w = Math.Max(1, (int)Math.Round(windowPx * scale));
         var h = Math.Max(1, (int)Math.Round(windowPx * scale));
@@ -158,32 +144,7 @@ public sealed partial class AlternativeIconWindow : Window
         _visible = false;
         _hoverTimer.Stop();
         _autoHideTimer.Stop();
-        SetSpeaking(false);
         WindowHelpers.Hide(this);
-    }
-
-    /// <summary>True while the speaker mark shows (click = listen mode).</summary>
-    public bool IsSpeaking => _isSpeaking;
-
-    /// <summary>Switch the mark to the speaker glyph (while speaking)
-    /// or back to the A-in-bubble mark. Audio is the controller's job —
-    /// this is only the icon state.</summary>
-    public void SetSpeaking(bool speaking)
-    {
-        if (_isSpeaking == speaking)
-            return;
-        _isSpeaking = speaking;
-        UpdateGlyph();
-    }
-
-    private void UpdateGlyph()
-    {
-        // Same mark normally and on hover (mac §3): only speaking
-        // swaps it, to the speaker.
-        var showSpeaker = _isSpeaking;
-        BubbleMark.Visibility = showSpeaker ? Visibility.Collapsed : Visibility.Visible;
-        AMark.Visibility = showSpeaker ? Visibility.Collapsed : Visibility.Visible;
-        SpeakerMark.Visibility = showSpeaker ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void RestartAutoHide()
@@ -195,11 +156,9 @@ public sealed partial class AlternativeIconWindow : Window
     private void OnPointerEntered(object sender, PointerRoutedEventArgs e)
     {
         _autoHideTimer.Stop(); // stay while the user is hovering
-        // While speaking, hover must not open the translate panel —
-        // the click already consumed the interaction (same guard as
-        // the main icon, mac startHoverTimer !isSpeaking).
-        if (_isSpeaking)
-            return;
+        // Hover still translates even while a session is playing (mac
+        // 1cdaa44a: the speaking guard is gone — playback state lives
+        // only on the indicator, never on this icon).
         _hoverTimer.Interval = TimeSpan.FromMilliseconds(App.Settings.HoverDelayMs);
         _hoverTimer.Start();
     }
