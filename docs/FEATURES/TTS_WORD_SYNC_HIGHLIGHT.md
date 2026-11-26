@@ -1,8 +1,9 @@
 # TTS Word-Sync Highlight — highlight từ/câu theo giọng đọc
 
 **Trạng thái (27/11): SPEC — chưa làm code.** Mirror spec mac
-`docs/FEATURES/TTS_WORD_SYNC_HIGHLIGHT.md` (đang viết bên mac; link khi có
-commit). Nguồn research dùng chung ở repo mac:
+`docs/FEATURES/TTS_WORD_SYNC_HIGHLIGHT.md` (commit `ec7c452c`,
+https://github.com/TranManhTuanLabs/TransPeek/commit/ec7c452cd43d9fb74a0c180f86ce12f9a7dbac80).
+Nguồn research dùng chung ở repo mac:
 `docs/RESEARCH/tts-speechify-naturalreader/recommendation.md` (§3, §8–§9)
 và `rsvp-report.md` §6.5. Spec này viết cho Windows (WinRT, không SAPI
 Desktop, `MediaPlayer` riêng mỗi surface) — chỗ nào khác mac thì ghi rõ.
@@ -140,8 +141,10 @@ audio read-along chưa tốt vì dấu phẩy ngắt nhịp.)
 
 ## Liên kết
 
-- Spec mac (đang viết): repo `TranManhTuanLabs/TransPeek`,
-  `docs/FEATURES/TTS_WORD_SYNC_HIGHLIGHT.md` — mirror spec này.
+- Spec mac: repo `TranManhTuanLabs/TransPeek`,
+  `docs/FEATURES/TTS_WORD_SYNC_HIGHLIGHT.md` (commit `ec7c452c`,
+  https://github.com/TranManhTuanLabs/TransPeek/commit/ec7c452cd43d9fb74a0c180f86ce12f9a7dbac80)
+  — mirror spec này.
 - Research dùng chung (repo mac, không copy sang Windows):
   `docs/RESEARCH/tts-speechify-naturalreader/recommendation.md` (§3 TTS,
   §8 thứ tự triển khai, §9 rủi ro) và `rsvp-report.md` §6.5 (dấu phẩy),
