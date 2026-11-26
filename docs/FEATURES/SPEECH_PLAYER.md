@@ -26,6 +26,14 @@ Lý do tách: icon float chỉ có 1 cửa sổ — lúc đang phát, nó bị p
 - **Alternative icon (icon giả trong Read) — click loa của nó = click loa icon float thật** (CHỐT 27/11 00:32): bắt đầu phiên nghe, indicator hiện ở đúng chỗ bấm (chỗ alternative icon đang đứng), ⏸/▶, luật play/pause/resume như thường. Alternative icon KHÔNG đổi sang hình loa khi đang nói nữa — giữ glyph A blue bình thường; trạng thái phát nhạc chỉ hiện trên indicator. Bấm lại alternative icon trong lúc đang phát = phát mới thay phiên cũ (pause/resume là việc của indicator). Hover vẫn dịch như cũ (Lite: chuyển tab center; Full: mở panel tại cursor). Nút loa của cửa sổ Read (bật/tắt tiếng RSVP) là control riêng, KHÔNG đổi, không thuộc luật này. (Windows CHƯA có alternative icon — áp dụng khi làm theo mac.)
 - **Hiện tại (27/11): ĐÃ VIẾT CODE, CHỜ CI XANH** — luật mới + indicator đã làm xong (commit 156693b2, sửa lỗi build CS9202 gộp cùng đợt này); Manh test live khi CI xanh.
 
+### Read playback vs click-to-listen — 1 giọng tại 1 thời điểm (CHỐT 27/11 00:48)
+
+Phiên mới thay phiên cũ, kể cả Read playback — cả 2 chiều, không bao giờ chồng 2 luồng tiếng:
+
+- **Read đang phát → bấm loa nghe (icon float / alternative icon)**: Read DỪNG ở chỗ đang đọc (giữ nguyên vị trí), từ được nghe; bấm Play/Space thì Read đọc tiếp từ chỗ dừng.
+- **Click-to-listen đang phát → bấm Play / bật loa trong Read**: phiên click-to-listen BỊ DỪNG trước, rồi Read mới đọc — Read phải dừng phiên cũ trước khi bắt đầu (không xếp hàng).
+- (Trên mac đã kiểm chứng code 27/11: chiều Read → click đã đúng; chiều ngược còn lỗ xếp hàng + nguy cơ bug delegate — SỬA bằng cách gọi `stop()` trước khi bắt đầu. Windows CHƯA kiểm chứng — chat Windows kiểm tra `SpeechPlayer`/`SystemSpeechService` xem bấm Play trong Read lúc click-to-listen đang phát thì dừng hay xếp hàng, sửa tương tự.)
+
 ## 2. Auto-play
 
 - Tab TTS Speech: Auto-play source, Auto-play translation (nguồn trước, dịch sau
