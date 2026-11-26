@@ -113,6 +113,16 @@ public sealed partial class RestWindow : Window
             ShowCountdown();
     }
 
+    /// <summary>Pause the Rest-window read (if playing) without
+    /// closing or clearing it — the user resumes with Play/Space from
+    /// the same position. Called when a click-to-listen session
+    /// starts, so only one voice plays at a time (Manh 2026-11-27).</summary>
+    public void PauseReading()
+    {
+        if (_viewModel.IsPlaying)
+            _viewModel.SetPlaying(false);
+    }
+
     /// <summary>The reminder read finished: swap the reader for the
     /// countdown and close at zero.</summary>
     private void ShowCountdown()

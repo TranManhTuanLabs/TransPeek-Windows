@@ -167,6 +167,11 @@ public sealed partial class App : Application
             _floatSessionText = null;
             _speakerIndicator?.HideIndicator();
         };
+        // A read starting to speak stops any click-to-listen session
+        // first — only one voice plays at a time (Manh 2026-11-27).
+        // The view model fires this for every phrase it is about to
+        // speak; stopping is a no-op when no float session is active.
+        RsvpReaderViewModel.SpeechStarting += StopFloatSession;
         _speakerIndicator = new SpeakerIndicatorWindow();
         _speakerIndicator.ToggleRequested += OnSpeakerIndicatorToggleRequested;
         _speakerIndicator.AutoHidden += () => StopFloatSession();
@@ -470,6 +475,10 @@ public sealed partial class App : Application
         }
         if (string.IsNullOrWhiteSpace(text) || _iconSpeech is null)
             return;
+        // A read playing now pauses (keeping its position) — the
+        // click-to-listen text takes the one voice, and Play/Space
+        // resumes the read from where it stopped (Manh 2026-11-27).
+        PauseAnyReading();
         // Same text as the running float session: toggle pause/resume.
         if (_iconSpeech.IsSpeaking && string.Equals(_floatSessionText, text, StringComparison.Ordinal))
         {
@@ -527,6 +536,17 @@ public sealed partial class App : Application
         _iconSpeech.Stop();
         _floatSessionText = null;
         _speakerIndicator?.HideIndicator();
+    }
+
+    /// <summary>Pause any read that is playing (Full window, panel
+    /// Lite, Rest window) without clearing it — the user resumes with
+    /// Play/Space from the same position. Called when a
+    /// click-to-listen session starts, so only one voice plays at a
+    /// time (Manh 2026-11-27).</summary>
+    private void PauseAnyReading()
+    {
+        _fastReadWindow?.PauseReading();
+        _focusTimerStore?.PauseAnyReading();
     }
 
     private async Task TranslateCurrentSelectionAsync()

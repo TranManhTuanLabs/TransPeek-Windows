@@ -39,6 +39,15 @@ public static class ProGate
 
 public sealed class RsvpReaderViewModel : INotifyPropertyChanged
 {
+    /// <summary>Raised when any read is about to speak a phrase — the
+    /// app stops any click-to-listen session first, so only one voice
+    /// plays at a time (Manh 2026-11-27, "1 giọng tại 1 thời điểm").
+    /// Fired right before the speaker starts, so the old session is
+    /// stopped before the new one begins (no queueing). Static: the
+    /// app subscribes once, and every read (Full / Lite / Rest)
+    /// reports through it.</summary>
+    public static event Action? SpeechStarting;
+
     private readonly DispatcherTimer _timer = new();
     // The UI-thread queue, captured at construction (the view model is
     // always built on the UI thread). DispatcherTimer has NO
@@ -508,6 +517,10 @@ public sealed class RsvpReaderViewModel : INotifyPropertyChanged
         var generation = ++_speechGeneration;
         _expectedSpeechGeneration = generation;
         var phrase = _phrases[Math.Clamp(_currentPhraseIndex, 0, _phrases.Count - 1)];
+        // A read starting to speak stops any click-to-listen session
+        // first (one voice at a time) — the app clears the float
+        // session (audio + indicator) before this phrase begins.
+        SpeechStarting?.Invoke();
         var spoken = await _speaker.SpeakAsync(phrase.Text, _speakLanguageCode);
         // The read may have paused / sought / switched style while the
         // speech was starting — only fall back when this utterance is

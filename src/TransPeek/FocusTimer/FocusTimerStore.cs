@@ -294,6 +294,18 @@ public sealed class FocusTimerStore : INotifyPropertyChanged
         EnsureTicker();
     }
 
+    /// <summary>Pause any reading owned by the store (panel Lite +
+    /// Rest window) without clearing it — the user resumes with
+    /// Play/Space from the same position. Called when a
+    /// click-to-listen session starts, so only one voice plays at a
+    /// time (Manh 2026-11-27).</summary>
+    public void PauseAnyReading()
+    {
+        if (PanelReadingViewModel is { } panelVm && panelVm.IsPlaying)
+            panelVm.SetPlaying(false);
+        _restWindow?.PauseReading();
+    }
+
     /// <summary>Start the countdown after a reminder read finishes
     /// (the panel view calls this when the read is finished): the panel
     /// shows the coffee countdown screen in the middle ("Take a break"

@@ -178,6 +178,16 @@ public sealed partial class FastReadWindow : Window
             _viewModel.SetPlaying(true);
     }
 
+    /// <summary>Pause the Full-window read (if playing) without
+    /// closing or clearing it — the user resumes with Play/Space from
+    /// the same position. Called when a click-to-listen session
+    /// starts, so only one voice plays at a time (Manh 2026-11-27).</summary>
+    public void PauseReading()
+    {
+        if (_viewModel.IsPlaying)
+            _viewModel.SetPlaying(false);
+    }
+
     /// <summary>View-model changes drive the rendering: the slide (and
     /// the focus size, which the pivot shift depends on), the play
     /// icon, the progress bar + status, the pause context, the reading
