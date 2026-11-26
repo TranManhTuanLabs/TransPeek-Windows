@@ -55,4 +55,5 @@ Phiên mới thay phiên cũ, kể cả Read playback — cả 2 chiều, không
 
 - [Speech Engine](SPEECH_ENGINE.md)
 - [Float Icon](FLOAT_ICON.md)
+- [TTS Word-Sync Highlight](TTS_WORD_SYNC_HIGHLIGHT.md)
 - [Panel UX (CHỐT)](../UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md)

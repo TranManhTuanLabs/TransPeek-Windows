@@ -530,6 +530,8 @@ Cỡ theo setting auto-show (mặc định 24pt). Chi tiết: `ALTERNATIVE_ICON.
 
 ## Links
 
+- TTS word-sync highlight (từ/câu theo giọng, 1 component chung Full +
+  Lite): `TTS_WORD_SYNC_HIGHLIGHT.md`
 - Alternative icon (select in Read → look up / listen):
   `ALTERNATIVE_ICON.md`
 - Research: mac repo `docs/RESEARCH/tts-speechify-naturalreader/rsvp-report.md`
