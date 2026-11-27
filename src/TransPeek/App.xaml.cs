@@ -13,10 +13,13 @@
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using TransPeek.AlternativeIcon;
 using TransPeek.BlockText;
+using TransPeek.ContinuousListen;
 using TransPeek.Core.Barcode;
+using TransPeek.Core.ContinuousListen;
 using TransPeek.Core.Dictionary;
 using TransPeek.Core.Ocr;
 using TransPeek.Core.Settings;
@@ -87,6 +90,23 @@ public sealed partial class App : Application
     /// for the same text pauses/resumes it; a different text stops
     /// it and starts a new session from the top.</summary>
     private string? _floatSessionText;
+    /// <summary>Continuous listen (chaining, Manh 2026-11-27): after
+    /// the click-to-listen first chunk ends, keep reading the page.
+    /// Created once at startup (after _iconSpeech); App starts it
+    /// from StartClickToListenAsync, advances it from the SpeechEnded
+    /// handler, and cancels it from every stop path (StopFloatSession).
+    /// Null only before OnLaunched runs.</summary>
+    private ContinuousListenController? _listenChain;
+    /// <summary>The paragraph containing _lastSelection (text +
+    /// rect), captured at SELECTION/HOVER time by the monitors — the
+    /// continuous-listen probe anchor. Null / empty when no paragraph
+    /// was captured (provider has no Paragraph unit, or the text came
+    /// from a Reader selection that never captures one): then no chain
+    /// starts and the session reads just the text (the old behaviour).
+    /// Set together with _lastSelection/_lastPoint, on the monitors'
+    /// background threads (plain fields, same pattern as _lastSelection).</summary>
+    private string? _lastParagraphText;
+    private Rectangle _lastParagraphRect;
     /// <summary>Alternative icon (mac FAST_READ_SELECT_ICON, Manh
     /// 2026-11-22): the fake icon over a selection inside Fast Read.
     /// Own monitor + window + TTS path — it never touches the main
@@ -178,30 +198,34 @@ public sealed partial class App : Application
         _triggerIcon.SettingsRequested += ShowSettings;
         _iconSpeech = new SystemSpeechService();
         _triggerIcon.SpeakRequested += OnTriggerIconSpeakRequested;
-        // The session ending on its own (the unit finished) hides the
-        // indicator and clears the session text. A reminder that
-        // waited out the listening shows now, unless the user is
-        // reading somewhere else (the store checks).
-        _iconSpeech.SpeechEnded += (_, _) =>
-        {
-            // The session ended on its own — hide the float icon too
-            // when it is showing the text that was just read (Manh
-            // 2026-11-27: "click icon speak không tự ẩn kết thúc phiên
-            // nghe"). The icon can re-appear during the session: the
-            // hover service re-detects the block once the click cleared
-            // the selection (it only checks "no active selection", not
-            // "no listen session"), and a re-selection re-fires the
-            // monitor. Hiding only the same-text icon keeps a genuinely
-            // new selection/hover (different text) visible, per the
-            // design that a later hover/select shows a new icon while
-            // the session plays.
-            var sessionText = _floatSessionText;
-            _floatSessionText = null;
-            _speakerIndicator?.HideIndicator();
-            if (sessionText is not null && string.Equals(_lastSelection, sessionText, StringComparison.Ordinal))
-                _triggerIcon?.HideIcon();
-            _focusTimerStore?.ClickToListenEnded();
-        };
+        // Continuous listen (chaining, Manh 2026-11-27): the controller
+        // drives the chain — App speaks the first chunk, the controller
+        // probes + speaks the next paragraphs, and tells App when the
+        // chain ends on its own so the normal cleanup runs. The speak
+        // callback updates _floatSessionText per chunk (so the toggle
+        // and the same-text icon check track the CURRENT chunk, not the
+        // first one). The DPI scale comes from the hidden window (1.0
+        // at 96 DPI); it is read fresh per probe.
+        _listenChain = new ContinuousListenController(
+            speak: async (text, lang) =>
+            {
+                // Capture to a local first: the compiler only tracks
+                // null-state for locals across an await, not for a
+                // field that another thread could clear mid-await.
+                var speech = _iconSpeech;
+                var ok = speech is not null && await speech.SpeakAsync(text, lang);
+                if (ok)
+                    _floatSessionText = text;
+                return ok;
+            },
+            chainEnded: EndClickToListenSession,
+            getDpiScale: () => _hiddenWindow is { } w ? WindowHelpers.DpiScale(w) : 1.0);
+        // The session ending on its own (the unit finished): for a chain,
+        // advance to the next paragraph instead of ending the session;
+        // otherwise hide the indicator and clear the session text. A
+        // reminder that waited out the listening shows now, unless the
+        // user is reading somewhere else (the store checks).
+        _iconSpeech.SpeechEnded += (_, _) => OnIconSpeechEnded();
         // A read starting to speak stops any click-to-listen session
         // first — only one voice plays at a time (Manh 2026-11-27).
         // The view model fires this for every phrase it is about to
@@ -384,11 +408,18 @@ public sealed partial class App : Application
 
     // ----- selection → trigger icon -----
 
-    private void OnSelectionChanged(string text, (int X, int Y) point)
+    private void OnSelectionChanged(string text, (int X, int Y) point, TextParagraph? paragraph)
     {
         _lastSelection = text;
         _lastSelectionAt = DateTimeOffset.UtcNow;
         _lastPoint = point;
+        // The paragraph the selection sits in, captured at detection
+        // time (see the monitor's doc): the continuous-listen probe
+        // anchor for when Speak is clicked. Null when the provider has
+        // no Paragraph unit — then no chain starts (read the selection
+        // and stop, the old behaviour).
+        _lastParagraphText = paragraph?.Text;
+        _lastParagraphRect = paragraph?.Rect ?? Rectangle.Empty;
         // A manual selection is the freshest source: it wins over any
         // hovered block (the hover service already refuses to probe
         // while a selection is active; this flag keeps the priority
@@ -447,12 +478,19 @@ public sealed partial class App : Application
     /// selection; the flag marks the text as hovered so the Speak /
     /// Fast Read / translate paths skip their clipboard re-grab for it
     /// (see IsLastTextStale).</summary>
-    private void OnBlockTextHovered(string text, (int X, int Y) point)
+    private void OnBlockTextHovered(string text, (int X, int Y) point, Rectangle? paragraphRect)
     {
         _lastSelection = text;
         _lastSelectionAt = DateTimeOffset.UtcNow;
         _lastPoint = point;
         _lastTextIsHover = true;
+        // The hovered block IS its paragraph (when the paragraph path
+        // succeeded): the text is the paragraph text and the rect is
+        // the probe anchor. Null rect = the text came from a fallback
+        // (DocumentRange / Value / Name), not a paragraph — then no
+        // chain starts (read the block and stop, the old behaviour).
+        _lastParagraphText = paragraphRect is not null ? text : null;
+        _lastParagraphRect = paragraphRect ?? Rectangle.Empty;
         // Same UI-thread marshal + own-window guard as the selection
         // path (the monitor runs on a background thread). Compact
         // icon: a hovered block gets the small (~3/4) icon, so it
@@ -617,7 +655,54 @@ public sealed partial class App : Application
         // had also appeared over the Reader) was never hidden by this
         // path, so it stayed after the unit finished.
         _triggerIcon?.HideIcon();
+        // A Reader selection has no captured paragraph (the alternative
+        // icon's monitor never captures one — it reads our own windows):
+        // clear any stale paragraph context from an earlier hover/select
+        // in another app, or the chain would probe the wrong page.
+        _lastParagraphText = null;
+        _lastParagraphRect = Rectangle.Empty;
         await StartClickToListenAsync(text, position, allowToggle: false);
+    }
+
+    /// <summary>The click-to-listen unit finished on its own: when a
+    /// continuous-listen chain is active, advance it to the next
+    /// paragraph instead of ending the session (the chain owns the
+    /// cleanup when it ends on its own); otherwise end the session now.
+    /// Async void like the other event handlers in App (the SpeechEnded
+    /// event is void) — the advance awaits the UIA probe + speak.</summary>
+    private async void OnIconSpeechEnded()
+    {
+        if (_listenChain is not null && _listenChain.IsActive)
+        {
+            await _listenChain.AdvanceAsync();
+            return;
+        }
+        EndClickToListenSession();
+    }
+
+    /// <summary>End the click-to-listen session on its own (the unit
+    /// finished and no chain is active, or the chain ended): clear the
+    /// session text and hide the indicator. Hides the float icon too
+    /// when it is showing the text that was just read (Manh 2026-11-27:
+    /// "click icon speak không tự ẩn kết thúc phiên nghe"). The icon can
+    /// re-appear during the session: the hover service re-detects the
+    /// block once the click cleared the selection (it only checks "no
+    /// active selection", not "no listen session"), and a re-selection
+    /// re-fires the monitor. Hiding only the same-text icon keeps a
+    /// genuinely new selection/hover (different text) visible, per the
+    /// design that a later hover/select shows a new icon while the
+    /// session plays. A reminder that waited out the listening shows
+    /// now, unless the user is reading somewhere else (the store
+    /// checks). Shared by the SpeechEnded handler and the chain-ended
+    /// callback (the same cleanup, one place).</summary>
+    private void EndClickToListenSession()
+    {
+        var sessionText = _floatSessionText;
+        _floatSessionText = null;
+        _speakerIndicator?.HideIndicator();
+        if (sessionText is not null && string.Equals(_lastSelection, sessionText, StringComparison.Ordinal))
+            _triggerIcon?.HideIcon();
+        _focusTimerStore?.ClickToListenEnded();
     }
 
     /// <summary>Start a click-to-listen session through the shared
@@ -649,7 +734,12 @@ public sealed partial class App : Application
             return;
         }
         // A different text (or no session): stop any other session
-        // first, then play this text from the top.
+        // first, then play this text from the top. A new session
+        // replaces a running chain (only one voice, one chain) — cancel
+        // it before speaking, or its SpeechEnded would advance the old
+        // page under the new session (Stop() does not fire SpeechEnded,
+        // so the chain would otherwise stay active and stale).
+        _listenChain?.Cancel();
         _panel?.StopSpeechSession();
         _iconSpeech.Stop();
         var lang = Settings.SourceLanguage == LanguageCode.Auto
@@ -663,6 +753,24 @@ public sealed partial class App : Application
             return;
         }
         _floatSessionText = text;
+        // Continuous listen (chaining, Manh 2026-11-27): when the
+        // paragraph captured at selection/hover time matches the text
+        // just spoken, start a chain from it — when this chunk ends,
+        // the SpeechEnded handler advances to the next paragraph below
+        // it, to the end of the page. No match (stale context, Reader
+        // text, provider without a Paragraph unit) = no chain: the
+        // session reads just this text and stops, exactly as before.
+        // Word-start: the first chunk is the EXACT text spoken here
+        // (the selection, or the hovered paragraph from its start) —
+        // the chain only adds the paragraphs AFTER it.
+        if (_listenChain is not null
+            && ContinuousListenChain.CanChain(_lastParagraphText, _lastParagraphRect, text))
+        {
+            _listenChain.StartChain(
+                new TextParagraph(_lastParagraphText!, _lastParagraphRect),
+                lang,
+                indicatorPos);
+        }
         // The indicator appears at the spot where the user pressed
         // the speaker — the float icon's or the alternative icon's
         // current position.
@@ -692,6 +800,13 @@ public sealed partial class App : Application
     {
         if (_iconSpeech is null)
             return;
+        // Every stop cancels the chain too (panel session, indicator
+        // auto-hide, Fast Read open, reminder showing, a Read starting):
+        // the chain must never outlive the session it belongs to, or
+        // its SpeechEnded would read the old page under a new session.
+        // (Stop() itself does not fire SpeechEnded, so cancelling here
+        // is the only thing that clears the chain on these paths.)
+        _listenChain?.Cancel();
         _iconSpeech.Stop();
         _floatSessionText = null;
         _speakerIndicator?.HideIndicator();

@@ -49,18 +49,31 @@ public sealed class BlockTextHoverService : IDisposable
     // not drag the whole document along.
     private const int MaxHoverTextLength = 4000;
 
-    private readonly Action<string, (int X, int Y)> _onBlockHovered;
+    private readonly Action<string, (int X, int Y), Rectangle?> _onBlockHovered;
     private readonly Func<bool>? _isSuppressed;
     private readonly TimeSpan _interval;
     private readonly BlockTextHoverState _state;
     private readonly CancellationTokenSource _cts = new();
     private Task? _loop;
     private bool _disposed;
+    // The paragraph rect from the last probe (null when the paragraph
+    // path failed): a cached re-show (ShowCached) has no fresh probe,
+    // so it reuses this — the mouse is still inside the same block, so
+    // the last probed paragraph is still the right anchor for
+    // continuous listen. Cleared with the state (NoteProbe null) so a
+    // stale paragraph never chains after the block changed.
+    private Rectangle? _lastParagraphRect;
 
     /// <param name="onBlockHovered">Invoked on a background thread with
-    /// the hovered block's text and the cursor point (physical pixels)
+    /// the hovered block's text, the cursor point (physical pixels)
     /// to anchor the trigger icon at — same shape as the selection
-    /// monitor's callback, so App feeds it into the same icon path.</param>
+    /// monitor's callback, so App feeds it into the same icon path —
+    /// and the PARAGRAPH's rect (or null when the paragraph path
+    /// failed and the text came from a fallback). The rect is the
+    /// continuous-listen probe anchor: it is captured HERE, at probe
+    /// time, because by the time Speak is clicked the hovered block is
+    /// usually gone (Mac lesson fa187c83). A null rect just means "no
+    /// chain, read the block and stop" (the old behaviour).</param>
     /// <param name="dwell">How long the cursor must stay still before
     /// a probe. Null = the research default
     /// (BlockTextHoverState.DefaultDwellMilliseconds, 150 ms). App
@@ -77,7 +90,7 @@ public sealed class BlockTextHoverService : IDisposable
     /// panel's focus — confirmed by Manh turning HoverBlockText off
     /// (focus loss stopped). Keep it to thread-safe reads (a plain
     /// bool field, like IsFastReadTabActive).</param>
-    public BlockTextHoverService(Action<string, (int X, int Y)> onBlockHovered,
+    public BlockTextHoverService(Action<string, (int X, int Y), Rectangle?> onBlockHovered,
         TimeSpan? dwell = null, TimeSpan? interval = null, Func<bool>? isSuppressed = null)
     {
         _onBlockHovered = onBlockHovered;
@@ -139,6 +152,7 @@ public sealed class BlockTextHoverService : IDisposable
         if (HasActiveSelection(automation))
         {
             _state.NoteProbe(null, null);
+            _lastParagraphRect = null;
             return;
         }
         // Panel-up suppression (Manh 2026-11-27, mac parity): while the
@@ -149,14 +163,18 @@ public sealed class BlockTextHoverService : IDisposable
         if (_isSuppressed?.Invoke() == true)
         {
             _state.NoteProbe(null, null);
+            _lastParagraphRect = null;
             return;
         }
         if (action == BlockTextHoverAction.ShowCached)
         {
             // New dwell session inside a known block (the icon auto-hid
             // while the mouse stayed there): show the cached text again.
+            // The paragraph rect is the last probed one (same block —
+            // the cursor is still inside it), or null when the block
+            // never had a paragraph path.
             if (_state.CachedText is { } text)
-                _onBlockHovered(text, cursor);
+                _onBlockHovered(text, cursor, _lastParagraphRect);
             return;
         }
         Probe(automation, cursor);
@@ -200,10 +218,14 @@ public sealed class BlockTextHoverService : IDisposable
             // rectangle together with text (see
             // BlockTextHoverState.NoteProbe), so a text-less container
             // never hides its text children.
-            var (text, rect) = TryGetBlockText(element, new Point(cursor.X, cursor.Y));
+            var (text, rect, paragraphRect) = TryGetBlockText(element, new Point(cursor.X, cursor.Y));
             _state.NoteProbe(rect.IsEmpty ? null : rect, text);
+            // Remember the paragraph rect for the cached re-show path
+            // (and as the continuous-listen anchor): it is only set
+            // when the paragraph path itself succeeded.
+            _lastParagraphRect = paragraphRect;
             if (!string.IsNullOrWhiteSpace(text))
-                _onBlockHovered(text, cursor);
+                _onBlockHovered(text, cursor, paragraphRect);
         }
         catch
         {
@@ -245,8 +267,12 @@ public sealed class BlockTextHoverService : IDisposable
     /// mouse roaming inside the same paragraph re-shows the cached
     /// text), the element's rect otherwise. Text that is not exposed
     /// at all yields (null, rect) — the caller does nothing (Manh:
-    /// don't force it).</summary>
-    private static (string? Text, Rectangle Rect) TryGetBlockText(AutomationElement element, Point cursor)
+    /// don't force it). The third value is the paragraph's own rect,
+    /// set ONLY when the paragraph path (step 1) succeeded — the
+    /// continuous-listen probe anchor. The fallbacks' element rect is
+    /// NOT a paragraph rect (a whole document element's rect would
+    /// probe below the whole document), so they report null.</summary>
+    private static (string? Text, Rectangle Rect, Rectangle? ParagraphRect) TryGetBlockText(AutomationElement element, Point cursor)
     {
         // 1. The paragraph under the cursor (research Model A:
         // speechify-report.md §11.1 — TextPattern.RangeFromPoint +
@@ -257,7 +283,7 @@ public sealed class BlockTextHoverService : IDisposable
         // whole document for any line in it.
         var paragraph = TryGetParagraph(element, cursor);
         if (paragraph is { } p)
-            return (CapText(p.Text), p.Rect);
+            return (CapText(p.Text), p.Rect, p.Rect);
         // 2. Whole-element text (DocumentRange): fallback when the
         // provider has no RangeFromPoint / Paragraph support. The
         // entire text the element exposes; -1 means "all of it"
@@ -266,19 +292,19 @@ public sealed class BlockTextHoverService : IDisposable
         var textPattern = SafeGet(() => element.Patterns.Text.PatternOrDefault);
         var documentText = SafeGet(() => textPattern?.DocumentRange.GetText(-1));
         if (!string.IsNullOrWhiteSpace(documentText))
-            return (CapText(documentText), elementRect);
+            return (CapText(documentText), elementRect, null);
         // 3. ValuePattern: single-value controls (text boxes, combo
         // boxes, anything whose "value" is its text).
         var valuePattern = SafeGet(() => element.Patterns.Value.PatternOrDefault);
         var value = SafeGet(() => valuePattern?.Value.ValueOrDefault);
         if (!string.IsNullOrWhiteSpace(value))
-            return (CapText(value), elementRect);
+            return (CapText(value), elementRect, null);
         // 4. Name: buttons, links, labels — a label by nature, so no
         // cap is needed (it is short already).
         var name = SafeGet(() => element.Properties.Name.ValueOrDefault);
         if (!string.IsNullOrWhiteSpace(name))
-            return (name.Trim(), elementRect);
-        return (null, elementRect);
+            return (name.Trim(), elementRect, null);
+        return (null, elementRect, null);
     }
 
     /// <summary>The paragraph under the cursor: RangeFromPoint hit-tests

@@ -58,6 +58,7 @@ Phiên mới thay phiên cũ, kể cả Read playback — cả 2 chiều, không
 ## Liên kết
 
 - [Speech Engine](SPEECH_ENGINE.md)
+- [Continuous Listen (đọc nối tiếp — hết chunk đọc đoạn sau tới hết trang)](CONTINUOUS_LISTEN.md)
 - [Float Icon](FLOAT_ICON.md)
 - [TTS Word-Sync Highlight](TTS_WORD_SYNC_HIGHLIGHT.md)
 - [Panel UX (CHỐT)](../UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md)

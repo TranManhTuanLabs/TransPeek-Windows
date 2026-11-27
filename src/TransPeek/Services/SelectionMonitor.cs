@@ -10,14 +10,17 @@
 // background thread and are wrapped in try/catch: any app can expose a
 // broken accessibility tree, and a broken tree must never crash TransPeek.
 
+using System.Drawing;
 using FlaUI.Core;
+using FlaUI.Core.Definitions;
 using FlaUI.UIA3;
+using TransPeek.Core.ContinuousListen;
 
 namespace TransPeek.Services;
 
 public sealed class SelectionMonitor : IDisposable
 {
-    private readonly Action<string, (int X, int Y)> _onSelectionChanged;
+    private readonly Action<string, (int X, int Y), TextParagraph?> _onSelectionChanged;
     private readonly TimeSpan _interval;
     private readonly CancellationTokenSource _cts = new();
     private Task? _loop;
@@ -25,10 +28,17 @@ public sealed class SelectionMonitor : IDisposable
     private bool _disposed;
 
     /// <param name="onSelectionChanged">Invoked on a background thread with
-    /// the new selected text and the point (physical pixels) to anchor the
+    /// the new selected text, the point (physical pixels) to anchor the
     /// trigger icon at (bottom-right of the focused element, or the cursor
-    /// when the element reports no rectangle).</param>
-    public SelectionMonitor(Action<string, (int X, int Y)> onSelectionChanged,
+    /// when the element reports no rectangle), and the PARAGRAPH
+    /// containing the selection (text + rect, or null when the provider
+    /// has no Paragraph unit). The paragraph is captured HERE, at
+    /// detection time — continuous listen needs it when Speak is clicked,
+    /// and by then the selection may be gone (Mac lesson fa187c83: the
+    /// hovered block is almost always nil at click time). App stores it
+    /// as the chain's probe anchor; a null paragraph just means "no
+    /// chain, read the selection and stop" (the old behaviour).</param>
+    public SelectionMonitor(Action<string, (int X, int Y), TextParagraph?> onSelectionChanged,
         TimeSpan? interval = null)
     {
         _onSelectionChanged = onSelectionChanged;
@@ -50,11 +60,11 @@ public sealed class SelectionMonitor : IDisposable
             {
                 try
                 {
-                    var (text, point) = TryGetSelection(automation);
+                    var (text, point, paragraph) = TryGetSelection(automation);
                     if (text is not null && !string.Equals(text, _lastText, StringComparison.Ordinal))
                     {
                         _lastText = text;
-                        _onSelectionChanged(text, point);
+                        _onSelectionChanged(text, point, paragraph);
                     }
                     else if (text is null)
                     {
@@ -84,11 +94,11 @@ public sealed class SelectionMonitor : IDisposable
         }
     }
 
-    private static (string? Text, (int X, int Y) Point) TryGetSelection(UIA3Automation automation)
+    private static (string? Text, (int X, int Y) Point, TextParagraph? Paragraph) TryGetSelection(UIA3Automation automation)
     {
         var element = automation.FocusedElement();
         if (element is null)
-            return (null, (0, 0));
+            return (null, (0, 0), null);
         // Own windows (panel, Settings) must never trigger the icon:
         // selecting text inside TransPeek itself popped the floating
         // icon right under the mouse (0.1.3.59 test — hovering /
@@ -98,16 +108,16 @@ public sealed class SelectionMonitor : IDisposable
         // a wrong one would hide the core feature.
         var pid = element.Properties.ProcessId.ValueOrDefault;
         if (pid != 0 && pid == Environment.ProcessId)
-            return (null, (0, 0));
+            return (null, (0, 0), null);
         var pattern = element.Patterns.Text.PatternOrDefault;
         if (pattern is null)
-            return (null, (0, 0));
+            return (null, (0, 0), null);
         var ranges = pattern.GetSelection();
         if (ranges is null || ranges.Length == 0)
-            return (null, (0, 0));
+            return (null, (0, 0), null);
         var text = string.Concat(ranges.Select(r => r.GetText(-1) ?? "")).Trim();
         if (string.IsNullOrWhiteSpace(text))
-            return (null, (0, 0));
+            return (null, (0, 0), null);
 
         (int X, int Y) point;
         // Anchor at the SELECTION's rectangle (bottom-right of the last
@@ -135,7 +145,72 @@ public sealed class SelectionMonitor : IDisposable
         {
             point = Interop.WindowHelpers.CursorPosition();
         }
-        return (text, point);
+        // The paragraph containing the selection, captured NOW (see the
+        // constructor doc): continuous listen probes below it when the
+        // first chunk ends. RangeFromPoint at the selection's anchor
+        // point hits the paragraph (the selection is inside it) — the
+        // same pattern as BlockTextHoverService.TryGetParagraph, and it
+        // does NOT mutate the selection ranges (ExpandToEnclosingUnit
+        // grows a range in place, so expanding the selection itself
+        // would move the icon anchor to the paragraph's corner). A
+        // failed probe just means "no chain" (null paragraph); the
+        // selection itself still shows the icon.
+        return (text, point, TryGetParagraph(pattern, point));
+    }
+
+    /// <summary>The paragraph at a point: RangeFromPoint hit-tests the
+    /// document, ExpandToEnclosingUnit(Paragraph) grows that range to
+    /// the whole enclosing paragraph, GetBoundingRectangles gives the
+    /// paragraph's line rects (their union is its rect). Any step may
+    /// fail — providers vary — so every step is guarded and null means
+    /// "no paragraph here" rather than "no text".</summary>
+    private static TextParagraph? TryGetParagraph(FlaUI.Core.AutomationElements.TextPattern pattern, (int X, int Y) point)
+    {
+        try
+        {
+            var range = pattern.RangeFromPoint(new Point(point.X, point.Y));
+            if (range is null)
+                return null;
+            try
+            {
+                range.ExpandToEnclosingUnit(TextUnit.Paragraph);
+            }
+            catch
+            {
+                // Expand failed (no Paragraph unit): the range stays
+                // as-is. Its text is still the text at the point, but
+                // it is not a paragraph — only usable when it carries
+                // a non-empty rect (checked below).
+            }
+            var text = range.GetText(-1);
+            if (string.IsNullOrWhiteSpace(text))
+                return null;
+            var rect = UnionRects(range.GetBoundingRectangles());
+            if (rect.IsEmpty)
+                return null;
+            return new TextParagraph(text.Trim(), rect);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /// <summary>Union of a range's line rects = the range's rect (the
+    /// same helper as BlockTextHoverService.UnionRects, mirrored here
+    /// so the working hover service is left untouched). Empty when the
+    /// provider returns no usable rects.</summary>
+    private static Rectangle UnionRects(Rectangle[]? rects)
+    {
+        var union = Rectangle.Empty;
+        if (rects is null)
+            return union;
+        foreach (var rect in rects)
+        {
+            if (!rect.IsEmpty)
+                union = union.IsEmpty ? rect : Rectangle.Union(union, rect);
+        }
+        return union;
     }
 
     public void Dispose()

@@ -25,6 +25,7 @@
 | `docs/FEATURES/FLOAT_ICON.md` | Tính năng icon float | Bản nháp |
 | `docs/FEATURES/SPEECH_ENGINE.md` | Engine TTS | Bản nháp |
 | `docs/FEATURES/SPEECH_PLAYER.md` | Player TTS + RSVP | Bản nháp |
+| `docs/FEATURES/CONTINUOUS_LISTEN.md` | Đọc nối tiếp (chaining) — đọc hết trang khi hết chunk | Bản nháp |
 | `docs/FEATURES/FAST_READ.md` | Fast Read (RSVP) — cửa sổ đọc riêng | Bản nháp |
 | `docs/FEATURES/TTS_WORD_SYNC_HIGHLIGHT.md` | TTS word-sync highlight (từ/câu theo giọng) | Bản nháp |
 | `docs/FEATURES/ALTERNATIVE_ICON.md` | Icon alternative trong Fast Read (bôi đen → tra từ / nghe) | Bản nháp |
@@ -70,6 +71,7 @@ docs/
 │   ├── FLOAT_ICON.md             # tính năng icon float
 │   ├── SPEECH_ENGINE.md          # engine TTS
 │   ├── SPEECH_PLAYER.md          # player TTS + RSVP
+│   ├── CONTINUOUS_LISTEN.md      # đọc nối tiếp (chaining) — đọc hết trang
 │   ├── FAST_READ.md              # Fast Read (RSVP) — cửa sổ đọc riêng
 │   ├── TTS_WORD_SYNC_HIGHLIGHT.md  # TTS word-sync highlight (từ/câu theo giọng)
 │   ├── ALTERNATIVE_ICON.md       # icon alternative trong Fast Read
