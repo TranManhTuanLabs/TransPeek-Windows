@@ -115,6 +115,33 @@ bản riêng).
   đã đọc theo cụm; component highlight chỉ cần biết "cụm hiện tại là cụm
   nào + từ nào trong cụm (nếu có word tracking)".
 
+### Khái niệm cần biết (để hiểu các mục spike)
+
+- **Rect (khung hình chữ nhật):** vị trí chính xác của 1 từ/câu/cụm trên
+  màn hình — gồm tọa độ x, y (góc trái-trên) + chiều rộng + chiều cao.
+  Muốn tô highlight lên 1 từ thì phải biết chính xác rect của từ đó;
+  không biết rect thì không tô đúng chỗ được, dù biết giọng đang đọc
+  tới từ nào.
+- **UIA (UI Automation):** bộ công cụ của Windows cho phép app mình hỏi
+  app khác "đoạn text này nằm ở khung nào trên màn hình?" — qua
+  `TextPattern.GetBoundingRectangles()`. Bên mac, công cụ tương đương là
+  AX (`AXBoundsForRange`). UIA là cách duy nhất trên Windows để lấy khung
+  của từ/câu/cụm trong app khác (Word, Edge, Chrome...).
+- **Speech marks / timepoints:** mốc thời gian từng từ do dịch vụ TTS
+  cloud trả về — cho biết từ nào bắt đầu/kết thúc lúc nào trong audio.
+  Đây là cách biết giọng đang đọc tới từ nào, vì WinRT không có
+  word-boundary callback (xem đầu §3). Azure AI Speech gọi là
+  "timepoints"; NaturalReader gọi là "speech marks" (audio + marks,
+  poll mỗi 50 ms).
+- **Vì sao spike phải thử trên Word/Edge/Chrome:** không phải app nào
+  cũng trả rect từ đúng. Word và Edge trả khung từ khá chuẩn; Chrome
+  (và app Electron) chỉ trả một phần — có lúc trả khung của cả đoạn thay
+  vì từng từ, hoặc không trả gì. Nên spike phải thử thực tế trên từng
+  app: app nào cho rect từ chính xác thì mới vẽ highlight từ trên app đó
+  được; app nào không cho thì rơi về chỉ tô cả đoạn (như mac).
+- **Spike này để sau** — làm khi tới giai đoạn TTS Pro nhúng engine giọng
+  AI trả phí (Manh 2026-11-27), chưa làm bây giờ.
+
 ## 4. Dấu phẩy — tách theo cụm-câu, cap ~20 từ, không tách ở mọi phẩy
 
 (Nguồn: `rsvp-report.md` §6.5 — bổ sung 22/11/2026 từ báo cáo của Manh:
