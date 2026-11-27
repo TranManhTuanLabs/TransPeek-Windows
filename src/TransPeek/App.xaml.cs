@@ -393,6 +393,19 @@ public sealed partial class App : Application
         // WRONG queue — it must be the one captured in OnLaunched).
         _uiQueue.TryEnqueue(() =>
         {
+            // Flicker investigation log (Manh 2026-11-27): selecting
+            // text in the Reader around text still flickers the icon +
+            // panel + read window on #264, after two guard fixes. Log
+            // the guard inputs and outcome so the real cause is visible
+            // in windows.log (tray -> Diagnose -> Open windows.log).
+            var insideOwn = IsPointInsideOwnWindow(point);
+            var fg = NativeMethods.GetForegroundWindow();
+            var readGuard = IsReadSurfaceForeground();
+            WindowDiagnostics.AppendLine(
+                $"[Flicker] sel point=({point.X},{point.Y}) insideOwn={insideOwn} " +
+                $"fg=0x{fg.ToInt64():X} fgIsFull={(_fastReadWindow is not null && fg == _fastReadWindowHwnd)} " +
+                $"fgIsPanel={(_panel is not null && fg == _panelHwnd)} panelFastRead={(_panel?.IsFastReadTabActive ?? false)} " +
+                $"guard={(readGuard ? "blocked" : "pass")} textLen={text.Length}");
             // Never summon the icon over our own windows (0.1.3.65 test):
             // selecting text inside the translate panel still showed the
             // icon — the UIA ProcessId exclusion in SelectionMonitor
@@ -401,7 +414,7 @@ public sealed partial class App : Application
             // capture overlay, where it sat under the mouse and broke the
             // region drag. AppWindow rects are physical pixels, same as
             // the UIA point.
-            if (IsPointInsideOwnWindow(point))
+            if (insideOwn)
                 return;
             // Never summon the icon over a Read surface (Manh
             // 2026-11-27): the Fast Read window is NOT topmost, so the
@@ -412,7 +425,7 @@ public sealed partial class App : Application
             // alternative icon is the one for Reader selections, and
             // the main float icon popping over the Reader flickered
             // (and stayed after a listen from the alternative icon).
-            if (IsReadSurfaceForeground())
+            if (readGuard)
                 return;
             _triggerIcon?.ShowAt(point.X, point.Y);
         });
@@ -441,12 +454,22 @@ public sealed partial class App : Application
         // for a manual selection (Manh 2026-11-21, mac parity).
         _uiQueue.TryEnqueue(() =>
         {
-            if (IsPointInsideOwnWindow(point))
+            // Same [Flicker] log as the selection path (see above):
+            // a hovered block can summon the icon too.
+            var insideOwn = IsPointInsideOwnWindow(point);
+            var fg = NativeMethods.GetForegroundWindow();
+            var readGuard = IsReadSurfaceForeground();
+            WindowDiagnostics.AppendLine(
+                $"[Flicker] hover point=({point.X},{point.Y}) insideOwn={insideOwn} " +
+                $"fg=0x{fg.ToInt64():X} fgIsFull={(_fastReadWindow is not null && fg == _fastReadWindowHwnd)} " +
+                $"fgIsPanel={(_panel is not null && fg == _panelHwnd)} panelFastRead={(_panel?.IsFastReadTabActive ?? false)} " +
+                $"guard={(readGuard ? "blocked" : "pass")} textLen={text.Length}");
+            if (insideOwn)
                 return;
             // Same Read-surface guard as the selection path (the Fast
             // Read window is not topmost, so the rect guard cannot
             // cover it — see above).
-            if (IsReadSurfaceForeground())
+            if (readGuard)
                 return;
             _triggerIcon?.ShowAt(point.X, point.Y, compact: true);
         });

@@ -16,6 +16,7 @@
 
 using FlaUI.Core;
 using FlaUI.UIA3;
+using TransPeek.Services;
 
 namespace TransPeek.AlternativeIcon;
 
@@ -85,6 +86,11 @@ public sealed class ReadSelectionMonitor : IDisposable
                         if (text is not null && !string.Equals(text, _lastText, StringComparison.Ordinal))
                         {
                             _lastText = text;
+                            // Flicker investigation log (Manh 2026-11-27):
+                            // log Reader-surface selections so windows.log
+                            // shows whether the alternative icon fired.
+                            WindowDiagnostics.AppendLine(
+                                $"[Flicker] altSel point=({point.X},{point.Y}) textLen={text.Length}");
                             _onSelectionChanged(text, point);
                         }
                         else if (text is null && _lastText != "")
