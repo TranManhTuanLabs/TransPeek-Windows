@@ -74,6 +74,30 @@ dưới. Xem thêm panel spec
   waiting meanwhile). Banner background: solid orange, **no opacity**
   (Manh 2026-11-21 — the 0.25 wash let the reading text show through);
   text and bell are white on it.
+- **"When a reminder fires while reading" (Manh 2026-11-27):** the
+  picker in the Focus & Rest card, right below "Run reminder in" —
+  same shape (label on its own line, full-width picker, note below).
+  Two choices: **"Notification only"** (default — the reminder waits
+  as above) or **"Run now"** (the reminder shows at once even while
+  reading). Only applies while reading; when not reading the reminder
+  always shows at once, whatever this says. "fires" is the timer word
+  (mac's `fireReminder`) — not "push", which reads like push
+  notifications. Setting: `FocusReminderWhileReading`
+  ("NotificationOnly" / "RunNow").
+- **What counts as "reading" (Manh 2026-11-27, extended):** a read
+  running in panel right, a Fast Read window open, **or a
+  click-to-listen session on the page** (the float icon's session —
+  playing or paused; an ended session does not count). Before this,
+  "reading" covered only the panel + Fast Read window, so while the
+  user was listening on the page the reminder ran at once and stole
+  the listening flow with no conflict notification — now it waits
+  (under "Notification only") and the banner + dot show. The panel's
+  own speaker button session is NOT counted (it is a separate control,
+  toggle = stop). When the listening session ends on its own (the unit
+  finished, or the indicator auto-hid while paused), the waiting
+  reminder shows itself — unless the user is reading somewhere else.
+  When the reminder runs, the voice being listened to stops first
+  (one voice at a time).
 - The user stops reading (closes the Fast Read window / ends the panel
   read / hides the panel) → the waiting reminder **shows itself** per
   the "Run reminder in" setting.
@@ -145,7 +169,9 @@ engine's `ReminderReady` / `PendingReminder` like the banner does.)
 - `FocusWorkMinutes` (25), `FocusRestMinutes` (5),
   `FocusLongBreakMinutes` (15), `FocusRepeatAutomatically` (true),
   `FocusAutoStart` (false), `FocusReminderDestination`
-  ("NewWindow" / "RightPanel"), `FocusTimerCollapsed` (false) — see
+  ("NewWindow" / "RightPanel"), `FocusReminderWhileReading`
+  ("NotificationOnly" / "RunNow", default "NotificationOnly"),
+  `FocusTimerCollapsed` (false) — see
   `docs/FEATURES/SETTINGS.md`.
 - `FastReadRunLocation` ("NewWindow" / "RightPanel") — where Fast Read
   opens; see `FAST_READ.md`.

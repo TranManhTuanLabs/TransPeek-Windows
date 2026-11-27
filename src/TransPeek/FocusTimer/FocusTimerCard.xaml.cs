@@ -75,6 +75,7 @@ public sealed partial class FocusTimerCard : UserControl
             : "Off";
         EyeRestButton.Content = engine.EyeRestRunning ? "Stop eye reminders" : "Start eye reminders";
         SelectComboByTag(ReminderDestinationCombo, App.Settings.FocusReminderDestination);
+        SelectComboByTag(ReminderWhileReadingCombo, App.Settings.FocusReminderWhileReading);
         PendingDot.Visibility = engine.PendingReminder is not null ? Visibility.Visible : Visibility.Collapsed;
         ApplyCollapsed();
         _loading = false;
@@ -141,6 +142,14 @@ public sealed partial class FocusTimerCard : UserControl
             return;
         if (ReminderDestinationCombo.SelectedItem is ComboBoxItem item && item.Tag is string tag)
             _store?.SetReminderDestination(tag);
+    }
+
+    private void OnReminderWhileReadingChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_loading)
+            return;
+        if (ReminderWhileReadingCombo.SelectedItem is ComboBoxItem item && item.Tag is string tag)
+            _store?.SetReminderWhileReading(tag);
     }
 
     private static void SelectComboByTag(ComboBox combo, string tag)

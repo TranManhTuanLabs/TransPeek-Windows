@@ -48,9 +48,25 @@ public sealed class FocusTimerStore : INotifyPropertyChanged
     public FocusTimerEngine Engine => _engine;
 
     /// <summary>Whether the Fast Read window is open (set by App).
-    /// Together with a panel-right read, this is "reading" for the
-    /// reminder rule.</summary>
+    /// Together with a panel-right read and a click-to-listen session,
+    /// this is "reading" for the reminder rule.</summary>
     public Func<bool> IsFastReadWindowOpen { get; set; } = () => false;
+
+    /// <summary>Whether a click-to-listen session is active on the
+    /// page (set by App: the float icon's session exists — playing or
+    /// paused). Together with a panel-right read and a Fast Read
+    /// window, this is "reading" for the reminder rule — a reminder
+    /// then waits instead of stealing the listening flow (Manh
+    /// 2026-11-27: "reading" used to cover only the panel + Fast Read
+    /// window, so the conflict notification never showed while
+    /// listening on the page).</summary>
+    public Func<bool> IsListening { get; set; } = () => false;
+
+    /// <summary>Called before a reminder shows (set by App to stop
+    /// the float-icon listening session) — one voice at a time: when
+    /// the reminder runs, the voice being listened to stops first
+    /// (Manh 2026-11-27). A no-op when no session is active.</summary>
+    public Action? OnReminderShowing { get; set; }
 
     /// <summary>Bring the panel forward (set by App). Called when a
     /// reminder is routed to panel right.</summary>
@@ -109,7 +125,15 @@ public sealed class FocusTimerStore : INotifyPropertyChanged
             App.Settings.FocusRestMinutes,
             App.Settings.FocusLongBreakMinutes,
             App.Settings.FocusRepeatAutomatically);
-        _engine.IsReading = () => PanelReadingViewModel is not null || IsFastReadWindowOpen();
+        // "Reading" for the reminder rule: a panel-right read, a Fast
+        // Read window, or a click-to-listen session on the page (Manh
+        // 2026-11-27 — listening counts too, so the conflict
+        // notification shows while listening, not just while reading).
+        _engine.IsReading = () => PanelReadingViewModel is not null || IsFastReadWindowOpen() || IsListening();
+        // Whether a reminder that fires while reading waits (default)
+        // or runs now — from the "When a reminder fires while reading"
+        // setting in the Focus & Rest card.
+        _engine.WaitWhileReading = () => string.Equals(App.Settings.FocusReminderWhileReading, "NotificationOnly", StringComparison.OrdinalIgnoreCase);
         _engine.ReminderReady += ShowReminder;
         _ticker.Tick += (_, _) => Tick();
     }
@@ -187,6 +211,17 @@ public sealed class FocusTimerStore : INotifyPropertyChanged
         SettingsStore.Save(App.Settings);
     }
 
+    /// <summary>What a reminder does when it fires while reading:
+    /// "NotificationOnly" (wait — pending + banner + orange dot;
+    /// default) or "RunNow" (show at once even while reading). Only
+    /// applies while reading — when not reading the reminder always
+    /// shows at once.</summary>
+    public void SetReminderWhileReading(string behavior)
+    {
+        App.Settings.FocusReminderWhileReading = behavior;
+        SettingsStore.Save(App.Settings);
+    }
+
     /// <summary>Where Fast Read opens: "NewWindow" (a separate Fast
     /// Read window, default) or "RightPanel" (read in panel right).
     /// Applies to every Fast Read entry.</summary>
@@ -214,8 +249,24 @@ public sealed class FocusTimerStore : INotifyPropertyChanged
     /// the read shows now.</summary>
     public void FastReadWindowClosed() => _engine.ShowPendingReminder();
 
+    /// <summary>Called when a click-to-listen session ends on its own
+    /// (the unit finished, or the indicator auto-hid while paused): a
+    /// reminder that waited out the listening shows now — but only if
+    /// the user is not reading anywhere else (a Read starting stops
+    /// the float session too, and the reminder must wait for THAT read
+    /// to end instead).</summary>
+    public void ClickToListenEnded()
+    {
+        if (!_engine.IsReading())
+            _engine.ShowPendingReminder();
+    }
+
     private void ShowReminder(FocusReminder reminder)
     {
+        // One voice at a time: the reminder takes over, so the voice
+        // being listened to stops first (Manh 2026-11-27). A no-op
+        // when no listening session is active.
+        OnReminderShowing?.Invoke();
         if (string.Equals(App.Settings.FocusReminderDestination, "RightPanel", StringComparison.OrdinalIgnoreCase))
         {
             // Order matters: bring the panel forward FIRST, then set

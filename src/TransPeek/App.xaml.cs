@@ -138,14 +138,25 @@ public sealed partial class App : Application
 
         _toast = new ToastWindow();
         // Focus & Rest store (feature/focus-timer-decor): the engine
-        // asks it whether a Fast Read window is open (a reminder then
-        // waits instead of stealing the read), it brings the panel
-        // forward for panel-right reminders, and it hides the panel
-        // before a Rest window shows (the panel is topmost and would
-        // float above it).
+        // asks it whether the user is reading (a Fast Read window, a
+        // panel-right read, or a click-to-listen session on the page —
+        // a reminder then waits instead of stealing the read), it
+        // brings the panel forward for panel-right reminders, and it
+        // hides the panel before a Rest window shows (the panel is
+        // topmost and would float above it). The lambdas read the
+        // fields at call time — the store is created before
+        // _iconSpeech, like IsFastReadWindowOpen reads _fastReadWindow.
         _focusTimerStore = new FocusTimerStore
         {
             IsFastReadWindowOpen = () => _fastReadWindow is not null,
+            // The float icon's session is active (playing or paused)
+            // while IsSpeaking is true, and ends when the stream ends
+            // or Stop is called (Manh 2026-11-27: listening on the
+            // page counts as "reading" for the reminder rule).
+            IsListening = () => _iconSpeech is not null && _iconSpeech.IsSpeaking,
+            // When a reminder shows, the voice being listened to stops
+            // first (one voice at a time, Manh 2026-11-27).
+            OnReminderShowing = () => StopFloatSession(),
             OnShowPanel = () => _panel?.ShowPanelNearCursor(),
             OnShowRestWindow = () => _panel?.HidePanel(),
         };
@@ -161,11 +172,14 @@ public sealed partial class App : Application
         _iconSpeech = new SystemSpeechService();
         _triggerIcon.SpeakRequested += OnTriggerIconSpeakRequested;
         // The session ending on its own (the unit finished) hides the
-        // indicator and clears the session text.
+        // indicator and clears the session text. A reminder that
+        // waited out the listening shows now, unless the user is
+        // reading somewhere else (the store checks).
         _iconSpeech.SpeechEnded += (_, _) =>
         {
             _floatSessionText = null;
             _speakerIndicator?.HideIndicator();
+            _focusTimerStore?.ClickToListenEnded();
         };
         // A read starting to speak stops any click-to-listen session
         // first — only one voice plays at a time (Manh 2026-11-27).
@@ -174,7 +188,15 @@ public sealed partial class App : Application
         RsvpReaderViewModel.SpeechStarting += StopFloatSession;
         _speakerIndicator = new SpeakerIndicatorWindow();
         _speakerIndicator.ToggleRequested += OnSpeakerIndicatorToggleRequested;
-        _speakerIndicator.AutoHidden += () => StopFloatSession();
+        // The indicator auto-hiding while paused (5s, no interaction)
+        // ends the session silently (the speaker law, Manh 2026-11-26).
+        // A reminder that waited out the listening shows now, unless
+        // the user is reading somewhere else (the store checks).
+        _speakerIndicator.AutoHidden += () =>
+        {
+            StopFloatSession();
+            _focusTimerStore?.ClickToListenEnded();
+        };
         // A panel session starting replaces a float session — only
         // one TTS session runs at a time. (No `?.` + `+=` here:
         // null-conditional assignment needs C# 14, the project

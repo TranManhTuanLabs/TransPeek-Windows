@@ -146,6 +146,28 @@
                     <TextBlock Text="Applies only to focus / rest-eyes reminders — not to Fast Read itself."
                                FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
                 </StackPanel>
+                <!-- What a reminder does when it fires while reading
+                     (Manh 2026-11-27): same shape as "Run reminder
+                     in" above — label on its own line, full-width
+                     picker, note below. "Notification only" (default)
+                     waits: pending + banner + orange dot, and the
+                     reminder shows itself when the read ends. "Run now"
+                     shows at once even while reading. Only applies
+                     while reading (a panel read, a Fast Read window, or
+                     a click-to-listen session on the page); when not
+                     reading the reminder always shows at once. "fires"
+                     is the timer word (mac's fireReminder) — not
+                     "push", which reads like push notifications. -->
+                <StackPanel Spacing="4">
+                    <TextBlock Text="When a reminder fires while reading:" FontSize="13" FontWeight="SemiBold" />
+                    <ComboBox x:Name="ReminderWhileReadingCombo" HorizontalAlignment="Stretch"
+                              SelectionChanged="OnReminderWhileReadingChanged">
+                        <ComboBoxItem Content="Notification only" Tag="NotificationOnly" />
+                        <ComboBoxItem Content="Run now" Tag="RunNow" />
+                    </ComboBox>
+                    <TextBlock Text="Notification only (default): the reminder waits and shows when you stop reading. Run now: it shows at once, even while reading."
+                               FontSize="12" Foreground="Gray" TextWrapping="Wrap" />
+                </StackPanel>
             </StackPanel>
         </Grid>
     </Border>

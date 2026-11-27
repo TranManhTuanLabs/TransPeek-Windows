@@ -63,8 +63,16 @@ public sealed class FocusTimerEngine : INotifyPropertyChanged
 
     /// <summary>Whether the user is reading right now (a Fast Read
     /// window or a panel-right read). Set by the store: while reading,
-    /// a reminder waits as PendingReminder instead of showing.</summary>
+    /// a reminder waits as PendingReminder instead of showing — unless
+    /// WaitWhileReading says to run it now (see below).</summary>
     public Func<bool> IsReading { get; set; } = () => false;
+
+    /// <summary>Whether a reminder that fires while reading should
+    /// wait (default) or run now. Set by the store from the "When a
+    /// reminder fires while reading" setting ("NotificationOnly" =
+    /// wait, "RunNow" = run). Only consulted while reading — when not
+    /// reading the reminder always shows at once.</summary>
+    public Func<bool> WaitWhileReading { get; set; } = () => true;
 
     public int WorkMinutes { get; private set; }
     public int RestMinutes { get; private set; }
@@ -266,12 +274,13 @@ public sealed class FocusTimerEngine : INotifyPropertyChanged
         }
     }
 
-    /// <summary>Fire a reminder: while reading it waits (pending),
-    /// otherwise it shows now. Called on a focus end, an eye-rest
-    /// interval, and a snooze expiry.</summary>
+    /// <summary>Fire a reminder: while reading it waits (pending)
+    /// when the "fires while reading" setting says to wait, otherwise
+    /// it shows now. Called on a focus end, an eye-rest interval, and
+    /// a snooze expiry.</summary>
     private void FireReminder(FocusReminder reminder)
     {
-        if (IsReading())
+        if (IsReading() && WaitWhileReading())
         {
             PendingReminder = reminder;
         }

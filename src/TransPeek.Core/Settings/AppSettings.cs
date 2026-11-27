@@ -283,6 +283,14 @@ public sealed class AppSettings
     /// text is read in panel right). Only applies to reminders — not
     /// to Fast Read itself. Picker in the Focus &amp; Rest card.</summary>
     public string FocusReminderDestination { get; set; } = "NewWindow";
+    /// <summary>What a reminder does when it fires while the user is
+    /// reading: "NotificationOnly" (wait — pending + banner + orange
+    /// dot, show when the read ends; default) or "RunNow" (show at
+    /// once even while reading). Only applies while reading — when not
+    /// reading the reminder always shows at once. Picker in the Focus
+    /// &amp; Rest card, right below "Run reminder in" (Manh
+    /// 2026-11-27).</summary>
+    public string FocusReminderWhileReading { get; set; } = "NotificationOnly";
     /// <summary>Panel left: the Focus &amp; Rest card starts collapsed
     /// (remembered, like the "How the icon works" card). Set when the
     /// user collapses/expands the card by clicking its top bar.</summary>
