@@ -32,6 +32,7 @@
 | `docs/FEATURES/SETTINGS.md` | Tính năng Settings | **CHƯA VIẾT** |
 | `docs/UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md` | **Panel UX — size đã CHỐT** | **CHỐT 17/11/2026 (#161)** |
 | `docs/UI/UX_DESIGN/FLOAT_ICON_UX_SPEC.md` | Icon float UX | Bản nháp |
+| `docs/UI/UX_DESIGN/HIGHLIGHT_COLORS_UX_SPEC.md` | Highlight: màu + hiện/ẩn 6 lớp (vạch/cụm/câu/từ) | Bản nháp |
 | `docs/UI/UX_DESIGN/APP_UX_OVERVIEW.md` | Tổng quan UX | Bản nháp |
 | `docs/UI/UX_DESIGN/SETTING_UX.md` | Settings UX | **CHƯA VIẾT** |
 | `docs/UI/UX_DESIGN/MAIN_NAVIGATION_UX.md` | Menu tray + Settings | Bản nháp |
@@ -78,6 +79,7 @@ docs/
     └── UX_DESIGN/
         ├── FLOAT_POPUP_PANEL_UX.md   # panel UX — size đã CHỐT
         ├── FLOAT_ICON_UX_SPEC.md     # icon float UX
+        ├── HIGHLIGHT_COLORS_UX_SPEC.md  # highlight: màu + hiện/ẩn 6 lớp
         ├── APP_UX_OVERVIEW.md        # tổng quan UX
         ├── MAIN_NAVIGATION_UX.md     # menu tray + Settings
         └── SETTING_UX.md             # Settings UX (CHƯA VIẾT)
@@ -96,4 +98,5 @@ docs/
 - [Trạng thái dự án](PROJECT_STATE.md)
 - [Log thay đổi](CHANGELOG.md)
 - [Panel UX (CHỐT)](UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md)
+- [Highlight: màu + hiện/ẩn 6 lớp](UI/UX_DESIGN/HIGHLIGHT_COLORS_UX_SPEC.md)
 - [Chỉ mục UX](UI_DESIGN.md)

@@ -1,7 +1,6 @@
-# Block text hover — show the icon by resting on text (feature/block-text-detection)
+# Block text hover — show the icon by resting on text
 
-> Status: on branch `feature/block-text-detection` (2026-11-21), not
-> merged. Manh 2026-11-20 23:58: no manual mouse selection needed — the
+> Status: **merged to main** (PR #3, 2026-11-21). Manh 2026-11-20 23:58: no manual mouse selection needed — the
 > trigger icon appears when the mouse RESTS on a block of text, ready
 > to translate / listen / read that block.
 
@@ -150,7 +149,56 @@ This feature is **Model A** exactly as the TTS research defines it
   (gated on "no active selection" both sides), stop on cursor move /
   rect read failure / 5 s cap. The alternative pattern (ENVI,
   `recommendation.md` §4) is to HIDE on scroll instead of following —
-  to be decided after real-machine testing, not guessed here.
+  **DECIDED + IMPLEMENTED 2026-11-27 (commit `0fc12cb7`, CI 262): hide
+  wins.** A low-level mouse hook (`WH_MOUSE_LL`, `Services/ScrollDismissMonitor`,
+  same pattern as `ClickOutsideMonitor`) catches `WM_MOUSEWHEEL` and
+  hides the float icon at once when the page scrolls — the block has
+  scrolled away from where the icon stands, so the icon is stale. Only
+  the float icon hides; the speaker indicator is a player and stays
+  visible while speaking. Follow (moving the icon with the block)
+  stays deferred — hide-on-scroll is the v1 answer, same as mac
+  (mac hides when the block frame moves > 10 pt in its 0.3 s poll).
+
+### Mac parity — Model A details (2026-11-27)
+
+Mac `docs/FEATURES/FLOAT_ICON.md` §3 records the same Model A with
+these details; Windows matches where noted, differs where stated:
+
+- **Hit-test one point, climb to the nearest text-bearing ancestor,
+  ≤ 5 levels up** (was 3, raised in step 1, 2026-11-23). **A link is
+  climbed past, not stopped at:** hovering a link inside a paragraph
+  summons the icon for that paragraph; the link's own text is never
+  taken. **Windows differs:** Windows does NOT climb parents — it
+  reads the paragraph straight from the hit-tested element via
+  `TextPattern.RangeFromPoint` → `ExpandToEnclosingUnit(Paragraph)`
+  (fallback DocumentRange → ValuePattern → Name), so a link's own
+  text can be the hovered text when the provider exposes it that way.
+- **Debounce:** the icon appears only after the mouse has stayed still
+  over a text block for the "Hover text delay" (default **400 ms** both
+  sides; mac shows seconds in the picker, Windows stores ms). Longer =
+  the icon only shows on a deliberate pause, not while sweeping.
+- **No hit-test while dragging** (a selection is in progress — the
+  selection flow owns it), and **no delivery while the icon or the
+  panel is already up**. **Windows differs:** Windows has no drag gate
+  and no panel-up gate in code — the probe is gated only by "no active
+  selection" at probe time (see "Priority rule" below), and
+  `OnBlockTextHovered` only skips points inside TransPeek's own
+  windows (`IsPointInsideOwnWindow`). Whether a panel-up gate is
+  needed is still open — not guessed here.
+- **Stale-dismiss while the icon is up:** mac re-reads the hovered
+  block's frame every 0.3 s; if it moved > 10 pt or the element is
+  gone, the icon is dismissed as stale — even while a speaker session
+  is playing elsewhere (the session lives on the separate speaker
+  indicator). Windows does the same job with the scroll hook above
+  (hide on wheel) instead of a frame poll.
+- **Limits (v1):** mac requires a block ≥ 4 chars and ≤ 2000 chars;
+  buttons, links and other controls never summon the icon; TransPeek's
+  own windows are skipped; the excluded-apps list applies, same as
+  selection. **Windows differs:** any non-empty exposed text shows the
+  icon (a single word, a button label — see "No >10-word filter"
+  above), capped at **4000 chars** (mac cap is 2000).
+- **Icon sizes:** both icon sizes user-adjustable, default 24 pt both
+  sides (selection icon + hover icon), read live at each show.
 
 ## Priority rule — selection ALWAYS beats hover
 
@@ -173,7 +221,10 @@ This feature is **Model A** exactly as the TTS research defines it
 
 - **Only exposed text.** Apps that draw their own text without UIA show nothing. (Handling those is a separate research task for a later session — not this one.)
 - **Whole-element blocks.** If an app exposes one giant text element with no paragraph support, the hovered "block" is that whole element, capped at 4000 chars.
-- **Scroll:** the icon does not follow the block when the page scrolls (see above); it lingers at most 5 s, then hides. Moving the mouse re-probes the block now under the cursor.
+- **Scroll:** the icon does NOT follow the block when the page scrolls
+  (see above) — it **hides at once on scroll** (2026-11-27, `ScrollDismissMonitor`,
+  `WH_MOUSE_LL` hook on `WM_MOUSEWHEEL`). Moving the mouse re-probes the
+  block now under the cursor.
 - **Admin apps (UIPI):** TransPeek running as a normal user cannot read UI Automation of an app running as administrator — hovering text there shows nothing.
 - **Perfectly still mouse.** If the mouse stays exactly still, the icon auto-hides after 5 s and only comes back when the mouse moves (a new dwell session). A tiny wiggle is enough.
 - **No test on CI Linux.** UIA needs a real Windows desktop: the polling service is compile-checked by CI only. The dwell/rect rules are unit-tested in `tests/TransPeek.Tests/BlockTextHoverStateTests.cs` (9 tests).
@@ -210,10 +261,9 @@ the items Manh needs to measure / check live:
    THAT paragraph, not the article's start (which would mean the
    provider degraded Paragraph → Document and the 4000-char cap is
    doing the work). Try the same in Word and Notepad.
-9. **Scroll:** hover a paragraph, icon shows, scroll the page with the
-   wheel — the icon stays up to 5 s at the old spot, then hides. Note
-   whether that feels wrong enough to want the follow (next round) or
-   the hide-on-scroll alternative.
+9. **Scroll (hide-on-scroll, 2026-11-27):** hover a paragraph, icon shows, scroll the page with the
+   wheel — the icon must hide AT ONCE (not linger up to 5 s). While a speaker session is playing, the
+   speaker indicator must stay visible during the scroll — only the float icon hides.
 10. **Latency feel:** is the 400 ms default right (icon popping up
     while just reading with the mouse resting on text, or feeling
     slow to appear)? Try the other levels (0.2/0.3/0.5/0.7s) in

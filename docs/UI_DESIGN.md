@@ -9,6 +9,7 @@
 |---|---|---|
 | `UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md` | Panel dịch: size chốt, khung layout 8 hàng, auto-fit, snap-back, text dài/ngắn | **CHỐT** |
 | `UI/UX_DESIGN/FLOAT_ICON_UX_SPEC.md` | Icon float: hình dạng, hover=dịch, click=nghe | Bản nháp |
+| `UI/UX_DESIGN/HIGHLIGHT_COLORS_UX_SPEC.md` | Highlight: màu + hiện/ẩn 6 lớp (vạch/cụm/câu/từ), "Line follows", ẩn lúc cuộn | Bản nháp |
 | `UI/UX_DESIGN/APP_UX_OVERVIEW.md` | Tổng quan UX toàn app | Bản nháp |
 | `UI/UX_DESIGN/MAIN_NAVIGATION_UX.md` | Menu tray + cấu trúc Settings | Bản nháp |
 | `UI/UX_DESIGN/SETTING_UX.md` | UX từng trang Settings | **CHƯA VIẾT** |
@@ -26,6 +27,7 @@
 
 - [Panel UX (CHỐT)](UI/UX_DESIGN/FLOAT_POPUP_PANEL_UX.md)
 - [Icon float UX](UI/UX_DESIGN/FLOAT_ICON_UX_SPEC.md)
+- [Highlight colors](UI/UX_DESIGN/HIGHLIGHT_COLORS_UX_SPEC.md)
 - [Tổng quan UX](UI/UX_DESIGN/APP_UX_OVERVIEW.md)
 - [Điều hướng chính](UI/UX_DESIGN/MAIN_NAVIGATION_UX.md)
 - [Settings UX (chưa viết)](UI/UX_DESIGN/SETTING_UX.md)

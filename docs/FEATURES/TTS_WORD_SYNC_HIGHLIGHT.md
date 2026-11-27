@@ -22,6 +22,17 @@ bản riêng).
   mặt đọc; không highlight ở đó.
 - Đọc PDF là Pro (chốt 23/11); Word/Md free hay Pro chưa quyết — không
   thuộc spec này.
+- **Overlay highlight trên trang (đọc nối tiếp / chaining) — bước 2,
+  chưa làm trên Windows.** Bên mac overlay này đã có sẵn
+  (`ReadingIndicatorOverlay` — highlight câu/từ theo giọng ngay trên
+  trang đang đọc, qua `ContinuousSpeakController` + `onWordRange`).
+  Trên Windows chưa có overlay nào trên trang: click-to-listen hiện chỉ
+  đọc 1 unit rồi dừng, chưa tự tìm block tiếp theo. Bước 2 sẽ làm sau,
+  riêng (kế hoạch thử bên mac: `docs/RESEARCH/tts-speechify-naturalreader/step2-trial-plan.md`
+  trong repo mac — research dùng chung, không copy sang Windows).
+  Spec này chỉ định nghĩa highlight cho **mặt đọc** (Full/Lite/Nghỉ);
+  khi bước 2 làm thì overlay trên trang dùng chung bảng màu + luật
+  highlight ở §2 (xem `../UI/UX_DESIGN/HIGHLIGHT_COLORS_UX_SPEC.md`).
 
 ## 2. Hành vi (đã chốt theo research + luật loa)
 
@@ -36,10 +47,27 @@ bản riêng).
 - **Resume tiếp tục từ chỗ dừng** — không đọc lại từ đầu unit, không nhảy
   về đầu (cùng luật loa 26/11: đang pause bấm resume thì đọc tiếp đúng
   chỗ dừng).
-- **Màu:** 4 lớp theo mac (word / sentence / paragraph / bar), tông pastel
-  — từ tím nhạt, câu vàng nhạt, đoạn xanh lá nhạt, thanh xanh dương nhạt
-  (theo bản thử overlay nhánh `feature/continuous-reading` bên mac).
-  Số màu chính xác theo spec mac; Windows không tự đặt màu khác.
+- **Màu — 6 lớp theo mac, đã chốt (Manh 2026-11-27), lấy từ Settings
+  "Highlight colors", không hardcode màu mới trong spec này.** Mặc định
+  (fill mờ 0.30 để chữ đọc được; vạch + gạch chân đặc 1.0):
+  từ `#5666F0` (chàm Speechify), câu `#ABB3FE` (tím nhạt Speechify),
+  cụm `#FFC2D1` (hồng nhạt), đoạn `#BFF2B3` (xanh lá nhạt),
+  vạch dọc `#8CBFFF` (xanh dương nhạt, 1.75 pt), gạch chân `#5666F0`
+  (chàm, như màu từ, 2.5 pt). **Mặc định chỉ bật từ + gạch chân** —
+  câu, cụm, đoạn, vạch đều TẮT (Manh muốn lần đầu hiện ít nhất, user tự
+  bật thêm). Chi tiết đầy đủ (bảng màu, thứ tự hàng, "Line follows",
+  ẩn lúc cuộn, popover "How it works"): xem
+  `../UI/UX_DESIGN/HIGHLIGHT_COLORS_UX_SPEC.md`.
+  (Sửa 27/11: bảng màu cũ trong spec này — "4 lớp pastel, từ tím nhạt,
+  câu vàng nhạt" theo bản thử overlay nhánh `feature/continuous-reading`
+  — đã lỗi thời; từ + câu nay theo Speechify, xem bảng trên.)
+- **Tắt loa (speaker OFF) thì không highlight** — Read chạy bằng đồng hồ
+  WPM im lặng thì chỉ có focus RSVP (chữ cam ORP pivot) như hiện tại,
+  không thêm highlight từ/câu.
+- **Highlight đi theo giọng (follow):** khi giọng sang từ ở slide/dòng
+  khác thì focus + highlight chuyển theo tới slide/dòng chứa từ đó
+  (auto-scroll/follow, không để highlight chạy ra ngoài màn hình).
+  Style 1: chuyển slide chứa từ; Style 2: chuyển dòng chứa từ.
 - **Tốc độ:** highlight chạy theo tốc độ giọng (0.5x–4x, chung control
   WPM/speed sau này). Ở tốc độ cao, khoảng lặng ở dấu phẩy có thể không
   co lại theo tốc độ (xem §4) — highlight vẫn chờ giọng, không tự chạy
@@ -70,6 +98,11 @@ bản riêng).
   - **ĐỪNG hứa highlight theo từ trên Windows trước khi spike xong.**
     Research (§9) đã cảnh báo: đừng chốt UI highlight-từ trên Windows
     trước khi spike xong.
+- **Không bịa range, không ước lượng thời gian từ.** Không có word-range
+  thì không highlight từ — chỉ highlight câu/cụm hiện tại theo nhịp
+  utterance (xem fallback ở §3 mac: provider không có word-range thì
+  chỉ highlight câu/slide). Không tự tính thời gian từng từ để "đoán"
+  từ đang đọc.
 - **Component bám vào `RsvpReaderViewModel`, không bám từng
   `MediaPlayer`.** Mỗi mặt đọc có 1 `SystemSpeechService` + 1
   `MediaPlayer` RIÊNG (đã sửa "1 giọng" ở commit `4fefa60e`: App phối hợp
@@ -122,8 +155,10 @@ audio read-along chưa tốt vì dấu phẩy ngắt nhịp.)
 1. **Cơ chế highlight theo từ trên Windows** — cloud TTS nào (Azure?
    Google? khác?), speech marks/timepoints có ổn định không, giá, độ trễ.
    Spike phải chạy thật trước khi chốt.
-2. **Màu highlight chính xác** — theo spec mac (4 lớp pastel); Windows
-   không tự đặt màu khác.
+2. ~~**Màu highlight chính xác**~~ — **ĐÃ CHỐT 27/11** (bỏ khỏi danh sách
+   spike): 6 lớp theo Speechify + pastel, xem §2 và
+   `../UI/UX_DESIGN/HIGHLIGHT_COLORS_UX_SPEC.md`. Windows không tự đặt
+   màu khác.
 3. **Highlight theo câu có đủ cho v1 không, hay bắt buộc phải có highlight
    theo từ mới ship?** — Manh quyết sau khi xem spike.
 4. **WinRT có tôn trọng SSML `<break>` không** — nếu có thì chỉnh pause ở
@@ -138,6 +173,13 @@ audio read-along chưa tốt vì dấu phẩy ngắt nhịp.)
    và event `PlayingStarted` (dự kiến cho shared-read-focus) có dùng chung
    hay tách riêng cho rõ — quyết lúc làm shared-read-focus, không quyết ở
    spec này.
+8. **Bước 2 — đọc nối tiếp + overlay trên trang** — chưa làm trên Windows
+   (xem §1). Khi làm: chaining qua `SpeechEnded` (hết 1 block → hit-test
+   UIA 1 điểm ngay dưới khung block vừa đọc để tìm block tiếp theo, như
+   Model A bên mac); khung từ/câu/cụm lấy qua
+   `TextPattern.GetBoundingRectangles()` (UIA) thay cho `AXBoundsForRange`
+   bên mac — app nào không cho khung thì rơi về chỉ tô cả đoạn (như mac).
+   Kế hoạch thử bên mac là research dùng chung, không copy sang Windows.
 
 ## Liên kết
 
@@ -152,4 +194,6 @@ audio read-along chưa tốt vì dấu phẩy ngắt nhịp.)
 - Windows: [Speech Player](SPEECH_PLAYER.md) (luật loa + indicator + 1
   giọng) · [Speech Engine](SPEECH_ENGINE.md) (WinRT, không SAPI Desktop)
   · [Fast Read](FAST_READ.md) (RSVP, `RsvpReaderViewModel`,
-  `BuildPhrases`) · [Float Icon](FLOAT_ICON.md).
+  `BuildPhrases`) · [Float Icon](FLOAT_ICON.md) ·
+  [Highlight Colors UX](../UI/UX_DESIGN/HIGHLIGHT_COLORS_UX_SPEC.md)
+  (6 lớp màu + hiện/ẩn + "Line follows" + ẩn lúc cuộn).
