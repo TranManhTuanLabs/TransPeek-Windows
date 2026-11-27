@@ -164,7 +164,7 @@ public sealed class SelectionMonitor : IDisposable
     /// paragraph's line rects (their union is its rect). Any step may
     /// fail — providers vary — so every step is guarded and null means
     /// "no paragraph here" rather than "no text".</summary>
-    private static TextParagraph? TryGetParagraph(FlaUI.Core.AutomationElements.TextPattern pattern, (int X, int Y) point)
+    private static TextParagraph? TryGetParagraph(FlaUI.Core.Patterns.TextPattern pattern, (int X, int Y) point)
     {
         try
         {
