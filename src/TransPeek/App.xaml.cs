@@ -389,6 +389,17 @@ public sealed partial class App : Application
             // the UIA point.
             if (IsPointInsideOwnWindow(point))
                 return;
+            // Never summon the icon over a Read surface (Manh
+            // 2026-11-27): the Fast Read window is NOT topmost, so the
+            // rect guard above cannot cover it (a point inside its rect
+            // may be in another app on top of it — the same reason
+            // Settings is excluded). The foreground check is the right
+            // guard here: when the user works in a Read surface, the
+            // alternative icon is the one for Reader selections, and
+            // the main float icon popping over the Reader flickered
+            // (and stayed after a listen from the alternative icon).
+            if (IsReadSurfaceForeground())
+                return;
             _triggerIcon?.ShowAt(point.X, point.Y);
         });
     }
@@ -417,6 +428,11 @@ public sealed partial class App : Application
         _uiQueue.TryEnqueue(() =>
         {
             if (IsPointInsideOwnWindow(point))
+                return;
+            // Same Read-surface guard as the selection path (the Fast
+            // Read window is not topmost, so the rect guard cannot
+            // cover it — see above).
+            if (IsReadSurfaceForeground())
                 return;
             _triggerIcon?.ShowAt(point.X, point.Y, compact: true);
         });
@@ -552,6 +568,12 @@ public sealed partial class App : Application
     /// false), never a toggle.</summary>
     private async void OnAlternativeIconSpeakRequested(string text, (int X, int Y) position)
     {
+        // Hide the float icon too (Manh 2026-11-27): it must never
+        // stay visible over a Read surface after a listen starts —
+        // the alternative icon hid itself, but the float icon (if it
+        // had also appeared over the Reader) was never hidden by this
+        // path, so it stayed after the unit finished.
+        _triggerIcon?.HideIcon();
         await StartClickToListenAsync(text, position, allowToggle: false);
     }
 

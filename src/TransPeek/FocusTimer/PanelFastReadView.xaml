@@ -25,8 +25,11 @@
          hides and a coffee countdown screen (like the Rest window)
          shows in the middle: Cafe icon + title + big mm:ss + Done. -->
     <Grid>
-        <!-- Demo -->
-        <StackPanel x:Name="DemoGrid" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8" Margin="16,0">
+        <!-- Demo — scrollable (Manh 2026-11-27): the demo content
+             (preview + "Read in:" + "Run FastRead in:") can be taller
+             than the panel, so it scrolls instead of being cut off. -->
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel x:Name="DemoGrid" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8" Margin="16,12">
             <FontIcon Glyph="&#xE736;" FontSize="32" Foreground="Gray" HorizontalAlignment="Center" />
             <TextBlock Text="Fast Read Lite" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" />
             <TextBlock Text="Try the focus preview below, or read the current text in this panel."
@@ -67,6 +70,7 @@
                            FontSize="12" Foreground="Gray" HorizontalAlignment="Left" TextWrapping="Wrap" TextAlignment="Left" />
             </StackPanel>
         </StackPanel>
+        </ScrollViewer>
 
         <!-- Reading -->
         <Grid x:Name="ReadingGrid" Visibility="Collapsed">
