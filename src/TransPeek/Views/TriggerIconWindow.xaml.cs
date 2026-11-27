@@ -363,6 +363,11 @@ public sealed partial class TriggerIconWindow : Window
     /// skips HideIcon while this is true; the linger timer hides it).</summary>
     public bool IsReadLingerActive => _inReadLinger;
 
+    /// <summary>True while the icon window is shown: the scroll-dismiss
+    /// monitor (App) reads this from its hook thread, so a scroll with
+    /// no icon up costs no dispatcher post.</summary>
+    public bool IsVisible => _visible;
+
     /// <summary>Global Alt state (mac §5): GetAsyncKeyState reads the
     /// hardware state whatever app is frontmost. The high bit (0x8000)
     /// means the key is down.</summary>

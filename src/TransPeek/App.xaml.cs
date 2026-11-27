@@ -48,6 +48,13 @@ public sealed partial class App : Application
     /// Settings.HoverBlockDelayMs (default 400 ms, Manh 2026-11-21),
     /// NOT Settings.HoverDelayMs — see the state's comment.</summary>
     private BlockTextHoverService? _blockTextHoverService;
+    /// <summary>Scroll-dismiss for the float icon (Manh 2026-11-27,
+    /// bug 1): a wheel hook that hides the icon the moment the user
+    /// scrolls — the hovered block scrolled away from the icon's place,
+    /// so the icon is stale. No settings dependency, so it is created
+    /// once at startup and never rebuilt on settings save (unlike the
+    /// hover service above).</summary>
+    private ScrollDismissMonitor? _scrollDismissMonitor;
     private GlobalHotkeyService? _hotkeys;
     private TriggerIconWindow? _triggerIcon;
     private TranslatePanelWindow? _panel;
@@ -288,6 +295,22 @@ public sealed partial class App : Application
         if (Settings.HoverBlockText)
             _blockTextHoverService.Start();
 
+        // Scroll-dismiss for the float icon (Manh 2026-11-27, bug 1):
+        // the hover service only re-probes when the cursor MOVES, so a
+        // scroll — which moves the text, not the cursor — left the icon
+        // sitting at a stale spot for its full auto-hide time. A
+        // low-level wheel hook sees the scroll at once (same shape as
+        // ClickOutsideMonitor) and hides the icon, like mac's
+        // HoverTextDetector.onHoverStale. Only the float icon hides;
+        // the speaker indicator is the player and stays while a session
+        // plays. The hook runs from here on; the icon-visibility gate
+        // keeps a scroll with no icon up from costing a post.
+        _scrollDismissMonitor = new ScrollDismissMonitor(
+            _uiQueue,
+            () => _triggerIcon is not null && _triggerIcon.IsVisible,
+            () => _triggerIcon?.HideIcon());
+        _scrollDismissMonitor.Start();
+
         StartHotkeys();
 
         // v0.1.1 — the app is tray-only, and v0.1 showed nothing at all
@@ -501,8 +524,24 @@ public sealed partial class App : Application
         }
         if (string.IsNullOrWhiteSpace(text))
             return;
-        // The indicator appears at the float icon's current position.
+        // The indicator appears at the float icon's current position —
+        // read it BEFORE hiding the icon (hiding does not move the
+        // window, but the position is the indicator's anchor and must
+        // come from the icon that was just clicked).
         var pos = _triggerIcon.AppWindow.Position;
+        // The icon dismisses when its speak is clicked (Manh 2026-11-27,
+        // bug 2 — mac parity: AppDelegate shows the indicator at the
+        // icon's frame and dismisses the icon, "so the two never
+        // overlap"). The indicator takes the icon's place; a later
+        // hover/select shows a new icon while the session keeps
+        // playing. Without this, the icon stayed UNDER the indicator
+        // and was revealed when the session ended on its own — and its
+        // auto-hide timer was stopped (the pointer never left it), so
+        // it never hid. The toggle still works: pause/resume is the
+        // indicator's job now, and a re-shown icon clicking the same
+        // text still reaches the toggle branch in
+        // StartClickToListenAsync.
+        _triggerIcon.HideIcon();
         await StartClickToListenAsync(text, (pos.X, pos.Y), allowToggle: true);
     }
 
@@ -862,6 +901,7 @@ public sealed partial class App : Application
     private void QuitApp()
     {
         try { _tray?.Dispose(); } catch { }
+        try { _scrollDismissMonitor?.Dispose(); } catch { }
         Environment.Exit(0);
     }
 

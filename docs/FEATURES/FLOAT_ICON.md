@@ -89,6 +89,12 @@ này từ commit `1ffcbb7`.
   Read, dù preview (đã dùng XOR) đổi đúng. Sửa 1 dòng thành
   `altHeld != clickReads`: Alt ĐỔI hành động, không ép về Read.
 
+### Vòng đời — khi nào icon ẩn (Manh 2026-11-27, theo mac)
+
+- **Tự ẩn sau 5s** không tương tác (setting `TriggerIconAutoHideSeconds`, mặc định 5s); hover vào icon thì timer tạm dừng, rời chuột thì chạy lại.
+- **Scroll thì ẩn ngay (Manh 2026-11-27, bug 1):** khối chữ icon đang bám đã cuộn khỏi chỗ icon đứng nên icon hết hạn — không chờ hết timer 5s. Windows dùng hook chuột mức thấp `WH_MOUSE_LL` (`Services/ScrollDismissMonitor`, cùng mẫu `ClickOutsideMonitor`) bắt sự kiện lăn chuột/trackpad rồi ẩn icon; mac làm tương đương bằng poll theo dõi khung khối chữ (`HoverTextDetector.onHoverStale`, ẩn khi khung dịch > 10pt). Chỉ icon float ẩn — indicator loa là player, vẫn hiện trong lúc đang phát.
+- **Bấm speak thì icon ẩn, indicator chiếm chỗ (Manh 2026-11-27, bug 2):** bấm loa trên icon float thì icon ẩn ngay, indicator hiện đúng chỗ icon vừa đứng — hai cái không bao giờ chồng nhau (mac: AppDelegate đọc khung icon rồi `dismissSilently()` trước khi hiện indicator). Trước đây Windows để icon nằm DƯỚI indicator; hết unit indicator ẩn thì icon lộ ra, mà timer tự ẩn của nó đã dừng (chuột vẫn đặt trên icon, không có sự kiện rời chuột) nên icon kẹt lại mãi. Hover/chọn mới thì icon hiện lại trong lúc phiên vẫn phát.
+
 ## 2. Cài đặt liên quan
 
 - **Watch selection automatically** (General → behaviour): bật/tắt theo dõi selection.
