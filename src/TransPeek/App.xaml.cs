@@ -304,8 +304,14 @@ public sealed partial class App : Application
         // Hover-to-show (feature/block-text-detection): the dwell is
         // Settings.HoverBlockDelayMs (default 400 ms) — the mouse
         // must rest that long before the icon appears.
+        // Panel-up suppression (Manh 2026-11-27, mac parity): while the
+        // panel is open, hovering text in another app must not
+        // auto-detect — the probe + icon stole the panel's focus
+        // (confirmed by Manh turning HoverBlockText off). Selection
+        // still works (it is an explicit user action).
         _blockTextHoverService = new BlockTextHoverService(OnBlockTextHovered,
-            dwell: TimeSpan.FromMilliseconds(Settings.HoverBlockDelayMs));
+            dwell: TimeSpan.FromMilliseconds(Settings.HoverBlockDelayMs),
+            isSuppressed: () => _panel is not null && _panel.IsPanelVisible);
         if (Settings.HoverBlockText)
             _blockTextHoverService.Start();
 
@@ -1075,8 +1081,12 @@ public sealed partial class App : Application
         // The rebuild picks up both at once — the service reads the
         // dwell at construction.
         _blockTextHoverService?.Dispose();
+        // Rebuild keeps the panel-up suppression (see the initial
+        // creation above): without it, a settings change would silently
+        // re-enable hover while the panel is open.
         _blockTextHoverService = new BlockTextHoverService(OnBlockTextHovered,
-            dwell: TimeSpan.FromMilliseconds(Settings.HoverBlockDelayMs));
+            dwell: TimeSpan.FromMilliseconds(Settings.HoverBlockDelayMs),
+            isSuppressed: () => _panel is not null && _panel.IsPanelVisible);
         if (Settings.HoverBlockText)
             _blockTextHoverService.Start();
         _panel?.RefreshDictionaryBar(Settings.DictionaryLinks, Settings.DictionaryDisplayMode);

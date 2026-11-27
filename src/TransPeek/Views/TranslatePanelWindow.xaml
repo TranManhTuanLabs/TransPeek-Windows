@@ -526,15 +526,17 @@
                           Margin="10,0,0,0" Padding="6,2"
                           ToolTipService.ToolTip="Pin panel (keep it visible)"
                           Click="OnPinToggled">
-                <!-- Pin rotation 0° TEST (Manh 2026-11-27): the -30°
-                     rotation is suspected of blurring the pin (only
-                     rotated icon in the app, and the only blurry one).
-                     If 0° is sharp, restore to +30° tilted LEFT like
-                     mac (Windows -30° tilted right). RenderTransformOrigin
-                     centers the rotation on the icon. -->
+                <!-- Pin rotation +30° tilted LEFT like mac (Manh
+                     2026-11-27): the 0° test confirmed the pin is sharp
+                     (rotation was the blur cause), but the upright pin
+                     still points right — +30° tilts it left like mac
+                     (Windows -30° tilted right). If +30° blurs again,
+                     the rotation itself is the problem, not the angle.
+                     RenderTransformOrigin centers the rotation on the
+                     icon. -->
                 <FontIcon Glyph="&#xE718;" FontSize="12" RenderTransformOrigin="0.5,0.5">
                     <FontIcon.RenderTransform>
-                        <RotateTransform Angle="0" />
+                        <RotateTransform Angle="30" />
                     </FontIcon.RenderTransform>
                 </FontIcon>
             </ToggleButton>

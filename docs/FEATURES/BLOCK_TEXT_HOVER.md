@@ -179,12 +179,20 @@ these details; Windows matches where noted, differs where stated:
   the icon only shows on a deliberate pause, not while sweeping.
 - **No hit-test while dragging** (a selection is in progress — the
   selection flow owns it), and **no delivery while the icon or the
-  panel is already up**. **Windows differs:** Windows has no drag gate
-  and no panel-up gate in code — the probe is gated only by "no active
-  selection" at probe time (see "Priority rule" below), and
-  `OnBlockTextHovered` only skips points inside TransPeek's own
-  windows (`IsPointInsideOwnWindow`). Whether a panel-up gate is
-  needed is still open — not guessed here.
+  panel is already up**. **Windows now matches the panel-up gate
+  (2026-11-27):** the probe is suppressed while the translate panel
+  is visible — `BlockTextHoverService` takes an `isSuppressed`
+  predicate from App (`IsPanelVisible`); the gate clears the cached
+  state, so no stale icon pops up when the panel closes. The gate was
+  added because hovering text in another app while the panel was open
+  stole the panel's focus — confirmed by Manh turning
+  `HoverBlockText` off (focus loss stopped). **Lesson — do not remove
+  this gate:** any future hover change must keep the panel-up
+  suppression, or the focus loss returns. Windows still has no drag
+  gate; the probe is otherwise gated only by "no active selection" at
+  probe time (see "Priority rule" below), and `OnBlockTextHovered`
+  only skips points inside TransPeek's own windows
+  (`IsPointInsideOwnWindow`).
 - **Stale-dismiss while the icon is up:** mac re-reads the hovered
   block's frame every 0.3 s; if it moved > 10 pt or the element is
   gone, the icon is dismissed as stale — even while a speaker session

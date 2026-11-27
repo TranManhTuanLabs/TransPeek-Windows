@@ -30,6 +30,16 @@ public sealed class ReadSelectionMonitor : IDisposable
     private Task? _loop;
     private string _lastText = "";
     private bool _disposed;
+    // Debounce for "no valid selection" (Manh 2026-11-27, [Flicker]
+    // log): the foreground gate (or a null UIA read) can flap for a
+    // single poll while a selection is active in the Reader — clearing
+    // _lastText on one flap made the same selection re-fire as "new" on
+    // the next poll (85 altSel lines for one 6-char selection in
+    // windows.log), re-showing the icon and flickering it. Only treat
+    // "no valid selection" as real after this many consecutive polls;
+    // a single flap is ignored and the icon stays put.
+    private const int NoSelectionDebouncePolls = 2;
+    private int _noSelectionStreak;
 
     /// <param name="isReadSurfaceActive">True while a Read surface is
     /// the foreground window (Fast Read window, or the panel on its
@@ -71,10 +81,13 @@ public sealed class ReadSelectionMonitor : IDisposable
                 try
                 {
                     // Gate first: outside a Read surface there is
-                    // nothing to watch, and the icon must hide.
+                    // nothing to watch, and the icon must hide — but
+                    // only after the debounce (see the field comment):
+                    // a single gate flap must not clear _lastText.
                     if (!_isReadSurfaceActive())
                     {
-                        if (_lastText != "")
+                        _noSelectionStreak++;
+                        if (_noSelectionStreak >= NoSelectionDebouncePolls && _lastText != "")
                         {
                             _lastText = "";
                             _onSelectionCleared();
@@ -85,6 +98,7 @@ public sealed class ReadSelectionMonitor : IDisposable
                         var (text, point) = TryGetSelection(automation);
                         if (text is not null && !string.Equals(text, _lastText, StringComparison.Ordinal))
                         {
+                            _noSelectionStreak = 0;
                             _lastText = text;
                             // Flicker investigation log (Manh 2026-11-27):
                             // log Reader-surface selections so windows.log
@@ -93,10 +107,22 @@ public sealed class ReadSelectionMonitor : IDisposable
                                 $"[Flicker] altSel point=({point.X},{point.Y}) textLen={text.Length}");
                             _onSelectionChanged(text, point);
                         }
-                        else if (text is null && _lastText != "")
+                        else if (text is null)
                         {
-                            _lastText = "";
-                            _onSelectionCleared();
+                            // Same debounce as the gate: a single null
+                            // UIA read must not clear _lastText.
+                            _noSelectionStreak++;
+                            if (_noSelectionStreak >= NoSelectionDebouncePolls && _lastText != "")
+                            {
+                                _lastText = "";
+                                _onSelectionCleared();
+                            }
+                        }
+                        else
+                        {
+                            // Same text still selected: the selection is
+                            // alive, so the streak resets.
+                            _noSelectionStreak = 0;
                         }
                     }
                 }

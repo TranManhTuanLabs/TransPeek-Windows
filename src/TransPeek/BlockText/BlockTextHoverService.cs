@@ -50,6 +50,7 @@ public sealed class BlockTextHoverService : IDisposable
     private const int MaxHoverTextLength = 4000;
 
     private readonly Action<string, (int X, int Y)> _onBlockHovered;
+    private readonly Func<bool>? _isSuppressed;
     private readonly TimeSpan _interval;
     private readonly BlockTextHoverState _state;
     private readonly CancellationTokenSource _cts = new();
@@ -67,10 +68,20 @@ public sealed class BlockTextHoverService : IDisposable
     /// 2026-11-21, mac parity: hoverBlockDelayMs) — deliberately NOT
     /// Settings.HoverDelayMs (see the const's comment: that setting
     /// governs hovering the icon, not text).</param>
+    /// <param name="isSuppressed">Optional gate, evaluated on the poll
+    /// thread before every probe: while it returns true, the service
+    /// neither probes nor fires (and clears its cached state, so no
+    /// stale icon pops up when suppression ends). App passes "the
+    /// translate panel is visible" (Manh 2026-11-27, mac parity):
+    /// hovering text in another app while the panel is up stole the
+    /// panel's focus — confirmed by Manh turning HoverBlockText off
+    /// (focus loss stopped). Keep it to thread-safe reads (a plain
+    /// bool field, like IsFastReadTabActive).</param>
     public BlockTextHoverService(Action<string, (int X, int Y)> onBlockHovered,
-        TimeSpan? dwell = null, TimeSpan? interval = null)
+        TimeSpan? dwell = null, TimeSpan? interval = null, Func<bool>? isSuppressed = null)
     {
         _onBlockHovered = onBlockHovered;
+        _isSuppressed = isSuppressed;
         _state = new BlockTextHoverState(dwell ?? TimeSpan.FromMilliseconds(BlockTextHoverState.DefaultDwellMilliseconds));
         _interval = interval ?? TimeSpan.FromMilliseconds(DefaultPollIntervalMs);
     }
@@ -126,6 +137,16 @@ public sealed class BlockTextHoverService : IDisposable
         // (The check runs at probe time, not from a cached flag, so it
         // is true the moment the user selects.)
         if (HasActiveSelection(automation))
+        {
+            _state.NoteProbe(null, null);
+            return;
+        }
+        // Panel-up suppression (Manh 2026-11-27, mac parity): while the
+        // translate panel is open, do NOT probe or fire at all — the
+        // probe + icon stole the panel's focus when the mouse moved to
+        // another app. Clearing the state (NoteProbe null) means no
+        // stale icon appears the moment the panel closes.
+        if (_isSuppressed?.Invoke() == true)
         {
             _state.NoteProbe(null, null);
             return;

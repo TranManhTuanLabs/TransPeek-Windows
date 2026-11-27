@@ -526,6 +526,12 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// thread: a plain bool/enum field read, atomic and safe to poll.</summary>
     public bool IsFastReadTabActive => _visible && _activeTab == PanelTab.FastRead;
 
+    /// <summary>True while the panel is shown (any tab). App's hover
+    /// suppression gate reads this from the hover service's background
+    /// thread: a plain bool field read, atomic and safe to poll (same
+    /// pattern as IsFastReadTabActive).</summary>
+    public bool IsPanelVisible => _visible;
+
     /// <summary>Translate in place (alternative icon, Lite — mac
     /// FAST_READ_SELECT_ICON §5): the panel is ALREADY open on the
     /// Fast Read tab, so only switch it to the Translate tab and
