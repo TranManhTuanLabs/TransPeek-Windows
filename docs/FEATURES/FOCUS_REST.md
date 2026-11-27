@@ -98,6 +98,23 @@ dưới. Xem thêm panel spec
   reminder shows itself — unless the user is reading somewhere else.
   When the reminder runs, the voice being listened to stops first
   (one voice at a time).
+- **When the listening session ends, a waiting reminder shows itself
+  (Manh 2026-11-27):** if a reminder waited out a click-to-listen
+  session (setting "Notification only"), it appears on its own as soon
+  as the session ends — no tap needed. Two endings trigger it: (1) the
+  unit finishes naturally — `MediaPlayer.MediaEnded` clears `_speaking`
+  first, then `SpeechEnded` fires, and `App` calls
+  `FocusTimerStore.ClickToListenEnded()`; (2) the speaker indicator
+  auto-hides while paused (5 s, no interaction) — `AutoHidden` stops
+  the session first (`StopFloatSession`, which clears `_speaking`) and
+  then calls `ClickToListenEnded()`. Both go through the same guard:
+  the reminder shows only when `!IsReading()` — if the user is reading
+  somewhere else (panel Read running, or a Fast Read window open), it
+  keeps waiting and shows when that read ends instead. Under "Run now"
+  the reminder never waits, so there is nothing to show. Edge case: a
+  playback failure (`MediaFailed`) clears `_speaking` but does **not**
+  fire `SpeechEnded`, so the reminder stays waiting (banner + dot
+  remain; "Take a break" shows it).
 - The user stops reading (closes the Fast Read window / ends the panel
   read / hides the panel) → the waiting reminder **shows itself** per
   the "Run reminder in" setting.
