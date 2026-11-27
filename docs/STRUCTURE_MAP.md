@@ -87,7 +87,7 @@ docs/
 
 ## 4. Quy ước
 
-- Doc trong `docs/` viết tiếng Việt (trừ `DECISIONS.md` viết tiếng Anh từ đầu — giữ nguyên).
+- Doc trong `docs/` viết tiếng Anh từ nay trở đi (Manh 2026-11-27). Các doc cũ viết tiếng Việt giữ nguyên, không sửa lại toàn bộ sang tiếng Anh; nếu cần thì tạo doc tiếng Anh riêng sau. (Trừ `DECISIONS.md` viết tiếng Anh từ đầu — giữ nguyên.)
 - Panel UX là spec chốt: đổi số trong đó cần Manh duyệt, và cập nhật doc trong cùng đợt
   với code.
 
