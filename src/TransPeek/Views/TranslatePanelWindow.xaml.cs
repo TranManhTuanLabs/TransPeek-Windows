@@ -821,7 +821,16 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
         var py = Math.Clamp(y + gap, work.Y, work.Y + work.Height - h);
         _lastProgrammaticSize = new Windows.Graphics.SizeInt32(w, h);
         WindowHelpers.MoveAndResize(this, px, py, w, h);
-        WindowHelpers.ShowWithoutActivation(this);
+        // Only apply NOACTIVATE on a fresh show (Manh 2026-11-27):
+        // ShowWithoutActivation re-sets the sticky WS_EX_NOACTIVATE
+        // on every show, undoing the activation from the user's click
+        // (ActivateWindow clears it) — so the panel lost focus every
+        // time it was re-shown for a new translation, and only got it
+        // back when the user clicked into it again. When the panel is
+        // already visible, keep its activation state and just move /
+        // resize it.
+        if (!_visible)
+            WindowHelpers.ShowWithoutActivation(this);
         _visible = true;
         _clickOutside.Start();
         _escapeKey.Start();

@@ -184,8 +184,22 @@ public sealed partial class App : Application
         // reading somewhere else (the store checks).
         _iconSpeech.SpeechEnded += (_, _) =>
         {
+            // The session ended on its own — hide the float icon too
+            // when it is showing the text that was just read (Manh
+            // 2026-11-27: "click icon speak không tự ẩn kết thúc phiên
+            // nghe"). The icon can re-appear during the session: the
+            // hover service re-detects the block once the click cleared
+            // the selection (it only checks "no active selection", not
+            // "no listen session"), and a re-selection re-fires the
+            // monitor. Hiding only the same-text icon keeps a genuinely
+            // new selection/hover (different text) visible, per the
+            // design that a later hover/select shows a new icon while
+            // the session plays.
+            var sessionText = _floatSessionText;
             _floatSessionText = null;
             _speakerIndicator?.HideIndicator();
+            if (sessionText is not null && string.Equals(_lastSelection, sessionText, StringComparison.Ordinal))
+                _triggerIcon?.HideIcon();
             _focusTimerStore?.ClickToListenEnded();
         };
         // A read starting to speak stops any click-to-listen session
