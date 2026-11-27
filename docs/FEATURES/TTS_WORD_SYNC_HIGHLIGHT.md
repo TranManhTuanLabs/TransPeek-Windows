@@ -10,14 +10,45 @@ Desktop, `MediaPlayer` riêng mỗi surface) — chỗ nào khác mac thì ghi r
 
 ## 1. Phạm vi
 
+**Tên gọi (Manh 2026-11-27): "Reader RSVP" (trình đọc RSVP).** Cửa sổ
+Full + panel Lite + cửa sổ Nghỉ đều là các mặt của cùng 1 trình đọc
+RSVP — cùng 1 engine (`RsvpEngine`) + cùng 1 ViewModel
+(`RsvpReaderViewModel`), chỉ khác chỗ hiển thị. Tên "Fast Read" trên
+giao diện (menu tray, Settings) giữ nguyên — đó là tên tính năng người
+dùng thấy; "Reader RSVP" là tên khái niệm trong docs/code. Trình đọc
+file local (PDF/doc/TXT/MD, bước 3) sau này cũng là 1 mặt của cùng
+Reader RSVP này, không phải trình đọc khác.
+
 **Làm:** 1 component chung cho mọi mặt đọc — highlight từ/câu theo giọng
 đọc, dùng chung cho **cửa sổ Full + panel Lite + cửa sổ Nghỉ** (cả 3 đều
 dùng chung `RsvpReaderViewModel`, nên 1 component là đủ — không làm 2–3
 bản riêng).
 
+**Kiến trúc highlight (Manh 2026-11-27): 1 mô hình chung + 2 cách vẽ
+riêng.** Highlight trong Reader RSVP và highlight overlay trên trang
+(bước 2, đọc nối tiếp) **dùng chung mô hình** — cùng 1 trạng thái (từ/
+câu/cụm/block nào đang đọc), cùng bảng màu + các lớp (§2, đã chốt theo
+Speechify), cùng luật (pause thì giữ highlight, hết unit thì gỡ). Nhưng
+**cách vẽ tách riêng**, vì 2 chỗ vẽ khác nhau về bản chất:
+- Reader RSVP: chữ là của mình, tự vẽ chữ nên tô highlight trực tiếp
+  lên chữ được — chính xác, không cần UIA, không cần cửa sổ overlay,
+  cuộn thì chữ cuộn theo.
+- Overlay trên trang: chữ là của app khác (Word/Edge/Chrome), không sửa
+  được chữ của họ nên phải vẽ 1 cửa sổ overlay trong suốt đè lên trên,
+  vị trí lấy qua UIA (rect — xem khái niệm ở §3). Rect có thể lệch/thiếu
+  tùy app, phải ẩn khi cuộn và lấy lại rect.
+Hệ quả: **trải nghiệm giống nhau** (cùng màu, cùng luật pause/hết —
+người dùng chỉ thấy highlight đi theo giọng, không phân biệt là trong
+Reader hay trên app khác); **trình bày nhìn giống nhau** (cùng màu, cùng
+lớp) nhưng **độ chính xác khác nhau** (trong Reader luôn chính xác vì chữ
+của mình; trên app khác phụ thuộc UIA). Khi làm highlight cho trình đọc
+file local (bước 3) thì nối vào mô hình chung này, không viết hệ
+highlight mới.
+
 **Ngoài phạm vi:**
 - Trình đọc file local (PDF/doc/TXT/MD) — đó là bước 3 (chỉ đọc file
-  local), làm sau, riêng.
+  local), làm sau, riêng. (Nhưng khi làm thì là 1 mặt của Reader RSVP,
+  dùng chung mô hình highlight ở trên — xem đoạn kiến trúc.)
 - Highlight trên panel dịch — panel dịch là chỗ xem bản dịch, không phải
   mặt đọc; không highlight ở đó.
 - Đọc PDF là Pro (chốt 23/11); Word/Md free hay Pro chưa quyết — không
@@ -31,8 +62,8 @@ bản riêng).
   riêng (kế hoạch thử bên mac: `docs/RESEARCH/tts-speechify-naturalreader/step2-trial-plan.md`
   trong repo mac — research dùng chung, không copy sang Windows).
   Spec này chỉ định nghĩa highlight cho **mặt đọc** (Full/Lite/Nghỉ);
-  khi bước 2 làm thì overlay trên trang dùng chung bảng màu + luật
-  highlight ở §2 (xem `../UI/UX_DESIGN/HIGHLIGHT_COLORS_UX_SPEC.md`).
+  khi bước 2 làm thì overlay trên trang dùng chung **mô hình highlight**
+  ở trên (trạng thái + bảng màu + luật — xem đoạn kiến trúc).
 
 ## 2. Hành vi (đã chốt theo research + luật loa)
 
