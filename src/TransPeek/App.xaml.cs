@@ -838,7 +838,8 @@ public sealed partial class App : Application
         // log whether the chain starts, with the paragraph rect — a
         // whole-document rect means Paragraph degraded to Document.
         var canChain = _listenChain is not null
-            && ContinuousListenChain.CanChain(_lastParagraphText, _lastParagraphRect, text);
+            && ContinuousListenChain.CanChain(_lastParagraphText, _lastParagraphRect, text,
+                new Point(_lastPoint.X, _lastPoint.Y));
         WindowDiagnostics.AppendLine(
             $"[Chain] start canChain={canChain} paraLen={_lastParagraphText?.Length ?? 0} rect=({_lastParagraphRect.X},{_lastParagraphRect.Y},{_lastParagraphRect.Width}x{_lastParagraphRect.Height}) spokenLen={text.Length}");
         if (canChain)

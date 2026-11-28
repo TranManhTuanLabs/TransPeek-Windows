@@ -155,8 +155,16 @@ public sealed class ContinuousListenChain
     /// page. A hovered block's text EQUALS its paragraph text; a
     /// selection is a SUBSTRING of its paragraph. When this is false,
     /// the caller reads just the text and stops (the old behaviour) —
-    /// never chain on a guess.</summary>
-    public static bool CanChain(string? paragraphText, Rectangle paragraphRect, string spokenText)
+    /// never chain on a guess. Fallback: UIA text is unreliable in Word
+    /// (log 277: a 4-char selection in a 42-char paragraph still
+    /// mismatched after whitespace normalization — invisible characters
+    /// or two reads disagreeing), so when a selection point is given
+    /// and the paragraph rect contains it, the paragraph IS the one at
+    /// the selection's location — chain from it even if the text does
+    /// not match. The paragraph was captured AT that point, so its rect
+    /// containing the point also guards against a stale context (a
+    /// stale paragraph's rect would not cover the current point).</summary>
+    public static bool CanChain(string? paragraphText, Rectangle paragraphRect, string spokenText, Point? selectionPoint = null)
     {
         if (string.IsNullOrWhiteSpace(paragraphText) || paragraphRect.IsEmpty)
             return false;
@@ -164,8 +172,10 @@ public sealed class ContinuousListenChain
             return false;
         var paragraph = NormalizeWhitespace(paragraphText);
         var spoken = NormalizeWhitespace(spokenText);
-        return string.Equals(paragraph, spoken, StringComparison.Ordinal)
-            || paragraph.Contains(spoken, StringComparison.Ordinal);
+        if (string.Equals(paragraph, spoken, StringComparison.Ordinal)
+            || paragraph.Contains(spoken, StringComparison.Ordinal))
+            return true;
+        return selectionPoint.HasValue && paragraphRect.Contains(selectionPoint.Value);
     }
 
     // Whitespace-normalized text for comparisons: UIA returns the same

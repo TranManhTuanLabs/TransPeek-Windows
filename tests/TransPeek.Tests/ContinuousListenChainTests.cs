@@ -142,6 +142,35 @@ public sealed class ContinuousListenChainTests
     }
 
     [Fact]
+    public void CanChain_TextMismatchButPointInsideRect_Chains()
+    {
+        // UIA text is unreliable in Word (log 277: a 4-char selection
+        // in a 42-char paragraph mismatched even after whitespace
+        // normalization). When the paragraph rect contains the
+        // selection's point, it IS the paragraph at the selection's
+        // location — chain from it even if the text does not match.
+        Assert.True(ContinuousListenChain.CanChain(
+            "A paragraph whose UIA text disagrees with the selection.",
+            new Rectangle(0, 0, 100, 20), "zzzz",
+            new Point(50, 10)));
+    }
+
+    [Fact]
+    public void CanChain_TextMismatchAndPointOutsideRect_NoChain()
+    {
+        // Text mismatch AND the point outside the rect: the paragraph
+        // is stale / from another location — never chain on it.
+        Assert.False(ContinuousListenChain.CanChain(
+            "A paragraph whose UIA text disagrees with the selection.",
+            new Rectangle(0, 0, 100, 20), "zzzz",
+            new Point(500, 500)));
+        // No point given: the text check alone decides.
+        Assert.False(ContinuousListenChain.CanChain(
+            "A paragraph whose UIA text disagrees with the selection.",
+            new Rectangle(0, 0, 100, 20), "zzzz"));
+    }
+
+    [Fact]
     public void CanChain_HoveredTextEqualsParagraph_Chains()
     {
         // A hovered block's text IS its paragraph text.
