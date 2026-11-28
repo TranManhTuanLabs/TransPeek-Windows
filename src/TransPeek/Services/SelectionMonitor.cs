@@ -164,15 +164,7 @@ public sealed class SelectionMonitor : IDisposable
     /// paragraph's line rects (their union is its rect). Any step may
     /// fail — providers vary — so every step is guarded and null means
     /// "no paragraph here" rather than "no text".</summary>
-    // FlaUI type rule (Build #267/#269 red — do NOT name `TextPattern`
-    // here): FlaUI.Core.Patterns only defines the INTERFACE `ITextPattern`;
-    // the concrete `TextPattern` class lives in `FlaUI.UIA3.Patterns`
-    // (UIA3 provider), so `FlaUI.Core.AutomationElements.TextPattern`
-    // (#267) and `FlaUI.Core.Patterns.TextPattern` (#269) both fail
-    // CS0234. Code against the interface — `element.Patterns.Text`
-    // returns an `ITextPattern` (or a UIA3 `TextPattern` that implements
-    // it), and `RangeFromPoint`/`GetText`/`GetBoundingRectangles` are all
-    // `ITextRange` members, so nothing here needs the concrete class.
+    // FlaUI: the text-pattern type is ITextPattern (interface) — no TextPattern class exists in FlaUI.Core.Patterns.
     private static TextParagraph? TryGetParagraph(FlaUI.Core.Patterns.ITextPattern pattern, (int X, int Y) point)
     {
         try

@@ -672,6 +672,14 @@ public sealed partial class App : Application
     /// event is void) — the advance awaits the UIA probe + speak.</summary>
     private async void OnIconSpeechEnded()
     {
+        // SpeechEnded can fire on a background thread (MediaEnded); the
+        // chain advance + cleanup touch UI, so run them on the UI thread.
+        // (Crash 0x8001010E in HideIndicator, #270.)
+        if (!_uiQueue.HasThreadAccess)
+        {
+            _uiQueue.TryEnqueue(() => OnIconSpeechEnded());
+            return;
+        }
         if (_listenChain is not null && _listenChain.IsActive)
         {
             await _listenChain.AdvanceAsync();
