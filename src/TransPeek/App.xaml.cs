@@ -582,11 +582,15 @@ public sealed partial class App : Application
     }
 
     /// <summary>Foreground-window info for the flicker gate-clear log:
-    /// which window was foreground (hwnd + process id + name), so the
-    /// log names the window that stole foreground while the gate
-    /// flapped. Called on the monitor's background thread — Win32
+    /// <summary>Foreground-window info for the flicker log: which window
+    /// was foreground (hwnd + process id + name + TITLE + which of our
+    /// windows it is), so the log names the window that stole foreground
+    /// while the gate flapped. The title (GetWindowText) + role
+    /// (panel/fastread) identify WHICH TransPeek window it is — the pid
+    /// alone could not (log 275: fg pid 33540 TransPeek, window
+    /// unknown). Called on the monitor's background thread — Win32
     /// calls only, guarded; never throws.</summary>
-    private static string ForegroundWindowInfo()
+    private string ForegroundWindowInfo()
     {
         try
         {
@@ -604,7 +608,34 @@ public sealed partial class App : Application
             {
                 name = "?";
             }
-            return $"fg=0x{fg.ToInt64():X} pid={pid} {name}";
+            // Window title: identifies which window of the process it is.
+            var title = "";
+            try
+            {
+                var sb = new System.Text.StringBuilder(64);
+                if (NativeMethods.GetWindowTextW(fg, sb, sb.Capacity) > 0)
+                    title = sb.ToString();
+            }
+            catch
+            {
+                title = "";
+            }
+            title = title.Replace('\r', ' ').Replace('\n', ' ').Replace('"', '\'');
+            if (title.Length > 40)
+                title = title.Substring(0, 40);
+            // Role: which of OUR windows it is (only meaningful when the
+            // foreground process is TransPeek itself).
+            var role = "";
+            if (name == "TransPeek")
+            {
+                if (_fastReadWindow is not null && fg == _fastReadWindowHwnd)
+                    role = " fastread";
+                else if (_panel is not null && fg == _panelHwnd)
+                    role = " panel";
+                else
+                    role = " other-transpeek";
+            }
+            return $"fg=0x{fg.ToInt64():X} pid={pid} {name} \"{title}\"{role}";
         }
         catch
         {
