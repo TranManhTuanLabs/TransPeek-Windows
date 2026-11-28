@@ -19,6 +19,7 @@
 // sentence splitter here.
 
 using System.Drawing;
+using System.Text;
 
 namespace TransPeek.Core.ContinuousListen;
 
@@ -130,20 +131,20 @@ public sealed class ContinuousListenChain
     }
 
     /// <summary>A candidate is a new paragraph only when it has real
-    /// text and differs from the paragraph just read (trimmed — UIA
-    /// text often carries trailing newlines/whitespace). Same text =
-    /// the same paragraph re-found at a lower offset (or a repeated
-    /// heading) — never re-read it; the caller tries the next offset
-    /// instead. This is Mac's isSameBlock check (text + frame),
-    /// reduced to text: the probe is already below the current rect,
-    /// so a different rect is implied.</summary>
+    /// text and differs from the paragraph just read (whitespace-
+    /// normalized — UIA text often carries trailing newlines/
+    /// whitespace). Same text = the same paragraph re-found at a lower
+    /// offset (or a repeated heading) — never re-read it; the caller
+    /// tries the next offset instead. This is Mac's isSameBlock check
+    /// (text + frame), reduced to text: the probe is already below the
+    /// current rect, so a different rect is implied.</summary>
     public static bool IsNewParagraph(string? currentText, string? candidateText)
     {
         if (string.IsNullOrWhiteSpace(candidateText))
             return false;
         if (string.IsNullOrWhiteSpace(currentText))
             return true;
-        return !string.Equals(currentText.Trim(), candidateText.Trim(), StringComparison.Ordinal);
+        return !string.Equals(NormalizeWhitespace(currentText), NormalizeWhitespace(candidateText), StringComparison.Ordinal);
     }
 
     /// <summary>Whether a captured paragraph context may start a chain
@@ -161,9 +162,40 @@ public sealed class ContinuousListenChain
             return false;
         if (string.IsNullOrWhiteSpace(spokenText))
             return false;
-        var paragraph = paragraphText.Trim();
-        var spoken = spokenText.Trim();
+        var paragraph = NormalizeWhitespace(paragraphText);
+        var spoken = NormalizeWhitespace(spokenText);
         return string.Equals(paragraph, spoken, StringComparison.Ordinal)
             || paragraph.Contains(spoken, StringComparison.Ordinal);
+    }
+
+    // Whitespace-normalized text for comparisons: UIA returns the same
+    // words with different whitespace per provider/range (Word uses
+    // non-breaking spaces and \r line breaks; a selection range and
+    // its paragraph range can disagree), so an exact ordinal compare
+    // wrongly rejects a selection that IS inside its paragraph (log
+    // 275: Word select 5 chars in a 58-char paragraph, canChain=False).
+    // Collapsing every whitespace run to one plain space makes the
+    // compare about words, not UIA whitespace artifacts.
+    private static string NormalizeWhitespace(string text)
+    {
+        var sb = new StringBuilder(text.Length);
+        var inWhitespace = false;
+        foreach (var c in text)
+        {
+            if (char.IsWhiteSpace(c))
+            {
+                if (!inWhitespace)
+                {
+                    sb.Append(' ');
+                    inWhitespace = true;
+                }
+            }
+            else
+            {
+                sb.Append(c);
+                inWhitespace = false;
+            }
+        }
+        return sb.ToString().Trim();
     }
 }

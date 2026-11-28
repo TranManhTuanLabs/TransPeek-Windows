@@ -84,6 +84,15 @@ public sealed class ContinuousListenChainTests
     }
 
     [Fact]
+    public void IsNewParagraph_SameTextDifferentInnerWhitespace_NotNew()
+    {
+        // Same words, different inner whitespace (Word nbsp / \r\n):
+        // still the same paragraph, not a new one.
+        Assert.False(ContinuousListenChain.IsNewParagraph("Hello\u00A0world.", "Hello world."));
+        Assert.False(ContinuousListenChain.IsNewParagraph("Hello\r\nworld.", "Hello world."));
+    }
+
+    [Fact]
     public void IsNewParagraph_DifferentText_IsNew()
     {
         Assert.True(ContinuousListenChain.IsNewParagraph("First paragraph.", "Second paragraph."));
@@ -110,6 +119,26 @@ public sealed class ContinuousListenChainTests
         // A selection is a substring of its paragraph.
         Assert.True(ContinuousListenChain.CanChain(
             "The quick brown fox jumps over the lazy dog.", new Rectangle(0, 0, 100, 20), "brown fox"));
+    }
+
+    [Fact]
+    public void CanChain_SelectionWithDifferentWhitespace_Chains()
+    {
+        // UIA returns the same words with different whitespace per
+        // provider/range (Word: non-breaking spaces, \r line breaks).
+        // A selection that IS inside its paragraph must chain even
+        // when the whitespace disagrees (log 275: Word select 5 chars
+        // in a 58-char paragraph, canChain=False).
+        var rect = new Rectangle(0, 0, 100, 20);
+        // Non-breaking space in the paragraph, plain space in the selection.
+        Assert.True(ContinuousListenChain.CanChain(
+            "The quick\u00A0brown fox jumps.", rect, "quick brown"));
+        // \r\n line break in the paragraph, plain space in the selection.
+        Assert.True(ContinuousListenChain.CanChain(
+            "The quick\r\nbrown fox jumps.", rect, "quick brown"));
+        // Double space in the paragraph, single space in the selection.
+        Assert.True(ContinuousListenChain.CanChain(
+            "The quick  brown fox jumps.", rect, "quick brown"));
     }
 
     [Fact]
