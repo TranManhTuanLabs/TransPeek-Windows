@@ -526,12 +526,12 @@
                           Margin="10,0,0,0" Padding="6,2"
                           ToolTipService.ToolTip="Pin panel (keep it visible)"
                           Click="OnPinToggled">
-                <!-- Pin tilted LEFT like mac (Manh 2026-11-28): glyph leans
-                     30° right at 0°, so -60° leans 30° left. If still blurry,
+                <!-- Pin tilted LEFT like mac: glyph leans 30° right at
+                     0°, so -75° leans 45° left. If still blurry,
                      rotation itself blurs — use a non-rotated glyph/Path. -->
                 <FontIcon Glyph="&#xE718;" FontSize="12" RenderTransformOrigin="0.5,0.5">
                     <FontIcon.RenderTransform>
-                        <RotateTransform Angle="-60" />
+                        <RotateTransform Angle="-75" />
                     </FontIcon.RenderTransform>
                 </FontIcon>
             </ToggleButton>

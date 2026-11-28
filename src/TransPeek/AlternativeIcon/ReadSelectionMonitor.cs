@@ -89,13 +89,17 @@ public sealed class ReadSelectionMonitor : IDisposable
                         _noSelectionStreak++;
                         if (_noSelectionStreak >= NoSelectionDebouncePolls && _lastText != "")
                         {
+                            // Flicker diagnosis: log WHY the selection
+                            // cleared (gate vs UIA read) + its length.
+                            WindowDiagnostics.AppendLine(
+                                $"[Flicker] altClear reason=gate lastLen={_lastText.Length}");
                             _lastText = "";
                             _onSelectionCleared();
                         }
                     }
                     else
                     {
-                        var (text, point) = TryGetSelection(automation);
+                        var (text, point, why) = TryGetSelection(automation);
                         if (text is not null && !string.Equals(text, _lastText, StringComparison.Ordinal))
                         {
                             _noSelectionStreak = 0;
@@ -103,8 +107,10 @@ public sealed class ReadSelectionMonitor : IDisposable
                             // Flicker investigation log (Manh 2026-11-27):
                             // log Reader-surface selections so windows.log
                             // shows whether the alternative icon fired.
+                            // hash = stable text fingerprint: same-text
+                            // re-fires share it, alternating text differs.
                             WindowDiagnostics.AppendLine(
-                                $"[Flicker] altSel point=({point.X},{point.Y}) textLen={text.Length}");
+                                $"[Flicker] altSel point=({point.X},{point.Y}) textLen={text.Length} hash={TextHash(text)}");
                             _onSelectionChanged(text, point);
                         }
                         else if (text is null)
@@ -114,6 +120,10 @@ public sealed class ReadSelectionMonitor : IDisposable
                             _noSelectionStreak++;
                             if (_noSelectionStreak >= NoSelectionDebouncePolls && _lastText != "")
                             {
+                                // Flicker diagnosis: log the UIA reason
+                                // (no-focus / pid / no-pattern / ...).
+                                WindowDiagnostics.AppendLine(
+                                    $"[Flicker] altClear reason={why} lastLen={_lastText.Length}");
                                 _lastText = "";
                                 _onSelectionCleared();
                             }
@@ -149,11 +159,28 @@ public sealed class ReadSelectionMonitor : IDisposable
         }
     }
 
-    private static (string? Text, (int X, int Y) Point) TryGetSelection(UIA3Automation automation)
+    // Stable text fingerprint for the flicker log (FNV-1a): tells
+    // same-text re-fires apart from alternating text, without
+    // logging the user's selected content.
+    private static string TextHash(string text)
+    {
+        unchecked
+        {
+            uint hash = 2166136261;
+            foreach (var c in text)
+            {
+                hash ^= c;
+                hash *= 16777619;
+            }
+            return hash.ToString("X8");
+        }
+    }
+
+    private static (string? Text, (int X, int Y) Point, string Why) TryGetSelection(UIA3Automation automation)
     {
         var element = automation.FocusedElement();
         if (element is null)
-            return (null, (0, 0));
+            return (null, (0, 0), "no-focus");
         // INVERTED vs SelectionMonitor: only our own process. A
         // selection in another app is the main float icon's job; this
         // monitor only watches the Read text inside TransPeek itself.
@@ -163,16 +190,16 @@ public sealed class ReadSelectionMonitor : IDisposable
         // the other direction for the same reason).
         var pid = element.Properties.ProcessId.ValueOrDefault;
         if (pid == 0 || pid != Environment.ProcessId)
-            return (null, (0, 0));
+            return (null, (0, 0), $"pid={pid}");
         var pattern = element.Patterns.Text.PatternOrDefault;
         if (pattern is null)
-            return (null, (0, 0));
+            return (null, (0, 0), "no-textpattern");
         var ranges = pattern.GetSelection();
         if (ranges is null || ranges.Length == 0)
-            return (null, (0, 0));
+            return (null, (0, 0), "no-ranges");
         var text = string.Concat(ranges.Select(r => r.GetText(-1) ?? "")).Trim();
         if (string.IsNullOrWhiteSpace(text))
-            return (null, (0, 0));
+            return (null, (0, 0), "empty-text");
 
         (int X, int Y) point;
         // Anchor at the SELECTION's rectangle (bottom-right of the last
@@ -201,7 +228,7 @@ public sealed class ReadSelectionMonitor : IDisposable
         {
             point = Interop.WindowHelpers.CursorPosition();
         }
-        return (text, point);
+        return (text, point, "ok");
     }
 
     public void Dispose()
