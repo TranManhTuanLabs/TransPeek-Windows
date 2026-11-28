@@ -25,25 +25,43 @@ public sealed class ContinuousListenChainTests
     public void ProbePoints_At100Percent_MatchMacOffsetsInPixels()
     {
         // Mac's [4, 24, 48, 80]pt at 96 DPI (100%) = [5, 32, 64, 107]px
-        // below the paragraph's bottom edge, at its horizontal centre.
+        // below the paragraph's bottom edge, just inside its left edge
+        // (log 274: the centre misses ragged text, the left edge is
+        // where the lines below start).
         var points = ContinuousListenChain.NextProbePoints(Para, dpiScale: 1.0);
         Assert.Equal(4, points.Count);
-        // Centre X = 100 + 400/2 = 300; bottom = 200 + 60 = 260.
-        Assert.Equal((300, 265), points[0]);
-        Assert.Equal((300, 292), points[1]);
-        Assert.Equal((300, 324), points[2]);
-        Assert.Equal((300, 367), points[3]);
+        // Left X = 100 + 8 = 108; bottom = 200 + 60 = 260.
+        Assert.Equal((108, 265), points[0]);
+        Assert.Equal((108, 292), points[1]);
+        Assert.Equal((108, 324), points[2]);
+        Assert.Equal((108, 367), points[3]);
     }
 
     [Fact]
     public void ProbePoints_At150Percent_ScaleWithDpi()
     {
-        // 1.5x DPI: [4, 24, 48, 80]pt = [8, 48, 96, 160]px.
+        // 1.5x DPI: [4, 24, 48, 80]pt = [8, 48, 96, 160]px. The left
+        // inset stays 8 physical px (a few px inside the first
+        // character is enough at any scale).
         var points = ContinuousListenChain.NextProbePoints(Para, dpiScale: 1.5);
-        Assert.Equal((300, 268), points[0]);
-        Assert.Equal((300, 308), points[1]);
-        Assert.Equal((300, 356), points[2]);
-        Assert.Equal((300, 420), points[3]);
+        Assert.Equal((108, 268), points[0]);
+        Assert.Equal((108, 308), points[1]);
+        Assert.Equal((108, 356), points[2]);
+        Assert.Equal((108, 420), points[3]);
+    }
+
+    [Fact]
+    public void ProbePoints_NarrowRect_ClampedToCentre()
+    {
+        // A rect narrower than twice the inset (10px wide): the left
+        // inset would probe past its middle, so the probe X clamps to
+        // the centre instead of landing outside the text.
+        var narrow = new Rectangle(100, 200, 10, 60);
+        var points = ContinuousListenChain.NextProbePoints(narrow, dpiScale: 1.0);
+        Assert.Equal((105, 265), points[0]);
+        Assert.Equal((105, 292), points[1]);
+        Assert.Equal((105, 324), points[2]);
+        Assert.Equal((105, 367), points[3]);
     }
 
     [Fact]

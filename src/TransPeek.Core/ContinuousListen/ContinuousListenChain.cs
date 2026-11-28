@@ -41,6 +41,13 @@ public sealed class ContinuousListenChain
     // (end of page).
     private static readonly double[] NextParagraphProbeOffsetsPt = { 4, 24, 48, 80 };
 
+    // Probe inset inside the paragraph rect's LEFT edge, in physical
+    // pixels (not scaled with DPI — a few pixels inside the first
+    // character is enough at any scale to clear the anti-aliased
+    // edge). See NextProbePoints for why the probe sits here, not at
+    // the centre.
+    private const int LeftProbeInsetPx = 8;
+
     /// <summary>True while the chain is active (a first chunk was
     /// spoken with a paragraph context, and no end/stop has happened
     /// yet). False when idle, ended (end of page), or cancelled.</summary>
@@ -90,21 +97,26 @@ public sealed class ContinuousListenChain
     }
 
     /// <summary>Probe points for the next paragraph, below the current
-    /// paragraph's rect (physical pixels): the rect's horizontal centre
-    /// (Mac probes at block.frame.midX — the middle of the text, where
-    /// a paragraph is, not the margin), at each offset below the
-    /// bottom edge. Empty when the rect is empty (no anchor to probe
-    /// from). <paramref name="dpiScale"/> is physical pixels per DIP
-    /// (1.0 at 96 DPI / 100%): the point offsets are converted to
-    /// pixels with it, so the ladder matches Mac at any scale.</summary>
+    /// paragraph's rect (physical pixels): just inside the rect's LEFT
+    /// edge (8px in), at each offset below the bottom edge. Empty when
+    /// the rect is empty (no anchor to probe from). <paramref
+    /// name="dpiScale"/> is physical pixels per DIP (1.0 at 96 DPI /
+    /// 100%): the point offsets are converted to pixels with it, so the
+    /// ladder matches Mac at any scale.</summary>
     public static IReadOnlyList<(int X, int Y)> NextProbePoints(Rectangle paragraphRect, double dpiScale)
     {
         if (paragraphRect.IsEmpty)
             return Array.Empty<(int X, int Y)>();
-        // The centre of the paragraph's width: a probe at the edge
-        // could land in a margin, a sidebar, or the next column, and
-        // return the wrong block — the middle is text.
-        var x = paragraphRect.Left + paragraphRect.Width / 2;
+        // Just inside the LEFT edge: the rect is the text's own union
+        // (TryGetParagraphAt), so its left edge IS the text's left
+        // edge — the lines below start there too (left-aligned text).
+        // The centre (what this used to probe, and what Mac uses at
+        // block.frame.midX) MISSES ragged text: log 274 proved it — a
+        // 947px-wide line's centre (x=1006) is blank space on the
+        // shorter lines below, so every probe returned null and the
+        // chain never advanced. Clamped to the centre so a very narrow
+        // rect never probes past its own middle.
+        var x = Math.Min(paragraphRect.Left + LeftProbeInsetPx, paragraphRect.Left + paragraphRect.Width / 2);
         var points = new List<(int X, int Y)>(NextParagraphProbeOffsetsPt.Length);
         foreach (var offsetPt in NextParagraphProbeOffsetsPt)
         {
