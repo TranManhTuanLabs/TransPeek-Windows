@@ -37,11 +37,15 @@ public sealed class AlternativeIconController : IDisposable
     /// <param name="uiQueue">The UI thread's queue (captured in
     /// App.OnLaunched) — the monitor reports on a background thread,
     /// so every icon call marshals through it.</param>
+    /// <param name="getForegroundInfo">Foreground-window info for the
+    /// monitor's gate-clear log (which window stole foreground while
+    /// the gate flapped). App supplies it; null = no fg info logged.</param>
     public AlternativeIconController(
         Func<bool> isReadSurfaceActive,
         Action<string, (int X, int Y)> onTranslateRequested,
         Action<string, (int X, int Y)> onSpeakRequested,
-        DispatcherQueue uiQueue)
+        DispatcherQueue uiQueue,
+        Func<string>? getForegroundInfo = null)
     {
         _isReadSurfaceActive = isReadSurfaceActive;
         _onTranslateRequested = onTranslateRequested;
@@ -50,7 +54,8 @@ public sealed class AlternativeIconController : IDisposable
         _monitor = new ReadSelectionMonitor(
             isReadSurfaceActive,
             OnSelectionChanged,
-            OnSelectionCleared);
+            OnSelectionCleared,
+            getForegroundInfo: getForegroundInfo);
         // Window creation is UI-thread work: App builds this
         // controller in OnLaunched, on the UI thread.
         _icon = new AlternativeIconWindow();

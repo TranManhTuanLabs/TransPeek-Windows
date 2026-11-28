@@ -212,14 +212,16 @@ public sealed class BlockTextHoverService : IDisposable
                 _state.NoteProbe(null, null);
                 return;
             }
-            // The text AND the rect come back together: the paragraph
-            // path below can return a paragraph rect (much tighter
-            // than the element rect), and the state only caches a
-            // rectangle together with text (see
-            // BlockTextHoverState.NoteProbe), so a text-less container
-            // never hides its text children.
-            var (text, rect, paragraphRect) = TryGetBlockText(element, new Point(cursor.X, cursor.Y));
-            _state.NoteProbe(rect.IsEmpty ? null : rect, text);
+            // The paragraph rect is the only rect ever cached (tight):
+            // a fallback's element rect can be a whole window/viewport,
+            // and caching it made ShowCached re-show that text over
+            // OTHER windows stacked on top (CI272: hover in Word read
+            // Desktop/Chrome text). A fallback block is never cached —
+            // the next dwell probes it fresh, so the icon always shows
+            // the window under the cursor. A text-less container never
+            // hides its text children (see NoteProbe).
+            var (text, _, paragraphRect) = TryGetBlockText(element, new Point(cursor.X, cursor.Y));
+            _state.NoteProbe(paragraphRect, text);
             // Remember the paragraph rect for the cached re-show path
             // (and as the continuous-listen anchor): it is only set
             // when the paragraph path itself succeeded.

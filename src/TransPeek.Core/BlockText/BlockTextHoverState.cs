@@ -112,7 +112,10 @@ public sealed class BlockTextHoverState
     /// window) and would hide text children elsewhere inside it from
     /// later probes — so a no-text probe caches nothing, and the next
     /// dwell session probes again. A failed probe (rect null) likewise
-    /// caches nothing.</summary>
+    /// caches nothing. A probe with no text or no rect also CLEARS any
+    /// older cached block: the block is gone (or unreadable), so a
+    /// later dwell inside its old rect must probe fresh instead of
+    /// re-showing stale text from another window (CI272).</summary>
     public void NoteProbe(Rectangle? rect, string? text)
     {
         _shownThisDwell = true;
@@ -120,6 +123,11 @@ public sealed class BlockTextHoverState
         {
             _cachedRect = r;
             _cachedText = text;
+        }
+        else
+        {
+            _cachedRect = Rectangle.Empty;
+            _cachedText = null;
         }
     }
 }

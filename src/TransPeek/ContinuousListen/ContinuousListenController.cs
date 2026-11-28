@@ -26,6 +26,7 @@ using System.Drawing;
 using FlaUI.Core.Definitions;
 using FlaUI.UIA3;
 using TransPeek.Core.ContinuousListen;
+using TransPeek.Services;
 
 namespace TransPeek.ContinuousListen;
 
@@ -161,12 +162,20 @@ public sealed class ContinuousListenController
         foreach (var point in ContinuousListenChain.NextProbePoints(current.Rect, _getDpiScale()))
         {
             var found = TryGetParagraphAt(automation, point);
+            // Chain diagnosis (CI272: Word select reads only the
+            // sentence): log each probe point — a ladder that finds
+            // nothing means the next paragraph is not below the current
+            // rect (or the provider gives no paragraph there).
+            WindowDiagnostics.AppendLine(
+                $"[Chain] probe point=({point.X},{point.Y}) found={(found is not null ? $"len={found.Text.Length}" : "null")}");
             // AcceptCandidate returns the text when this is a NEW
             // paragraph (and records it as current); null means same
             // paragraph / no paragraph here — try the next offset down.
             if (found is not null && _chain.AcceptCandidate(found) is { } text)
                 return text;
         }
+        WindowDiagnostics.AppendLine(
+            $"[Chain] advance none rect=({current.Rect.X},{current.Rect.Y},{current.Rect.Width}x{current.Rect.Height})");
         return null;
     }
 

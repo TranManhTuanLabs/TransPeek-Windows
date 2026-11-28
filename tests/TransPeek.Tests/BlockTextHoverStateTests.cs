@@ -108,6 +108,23 @@ public sealed class BlockTextHoverStateTests
         Assert.Equal(BlockTextHoverAction.Probe, state.Tick((11, 10), T0 + TimeSpan.FromMilliseconds(1800)));
     }
 
+    [Fact]
+    public void FailedProbe_ClearsCachedBlock()
+    {
+        var state = NewState();
+        state.Tick((10, 10), T0);
+        Assert.Equal(BlockTextHoverAction.Probe, state.Tick((10, 10), T0 + TimeSpan.FromMilliseconds(600)));
+        state.NoteProbe(new Rectangle(0, 0, 100, 50), "hello");
+        // A failed probe (no text / no rect) clears the older cached
+        // block: a later dwell inside its old rect must probe fresh
+        // instead of re-showing stale text (CI272: hover in Word read
+        // Desktop/Chrome text from a cached block).
+        state.NoteProbe(null, null);
+        Assert.Null(state.CachedText);
+        Assert.Equal(BlockTextHoverAction.None, state.Tick((20, 20), T0 + TimeSpan.FromMilliseconds(900)));
+        Assert.Equal(BlockTextHoverAction.Probe, state.Tick((20, 20), T0 + TimeSpan.FromMilliseconds(1500)));
+    }
+
     // The research default dwell is 150 ms (speechify-report.md §11.1
     // + recommendation.md §2), NOT the 500 ms HoverDelayMs setting:
     // a still cursor must probe after ~150 ms, and must not probe

@@ -322,7 +322,8 @@ public sealed partial class App : Application
             IsReadSurfaceForeground,
             OnAlternativeIconTranslateRequested,
             OnAlternativeIconSpeakRequested,
-            _uiQueue);
+            _uiQueue,
+            ForegroundWindowInfo);
         _altIconController.Start();
 
         // Hover-to-show (feature/block-text-detection): the dwell is
@@ -580,6 +581,37 @@ public sealed partial class App : Application
         return _panel is not null && fg == _panelHwnd && _panel.IsFastReadTabActive;
     }
 
+    /// <summary>Foreground-window info for the flicker gate-clear log:
+    /// which window was foreground (hwnd + process id + name), so the
+    /// log names the window that stole foreground while the gate
+    /// flapped. Called on the monitor's background thread — Win32
+    /// calls only, guarded; never throws.</summary>
+    private static string ForegroundWindowInfo()
+    {
+        try
+        {
+            var fg = NativeMethods.GetForegroundWindow();
+            if (fg == IntPtr.Zero)
+                return "fg=0";
+            var pid = 0u;
+            NativeMethods.GetWindowThreadProcessId(fg, out pid);
+            string name;
+            try
+            {
+                name = System.Diagnostics.Process.GetProcessById((int)pid).ProcessName;
+            }
+            catch
+            {
+                name = "?";
+            }
+            return $"fg=0x{fg.ToInt64():X} pid={pid} {name}";
+        }
+        catch
+        {
+            return "fg=?";
+        }
+    }
+
     /// <summary>Alternative icon hover = translate (mac §5). Full
     /// window: the panel is closed, so open it at the selection like
     /// the main icon. Lite: the panel is already open, so translate in
@@ -771,10 +803,16 @@ public sealed partial class App : Application
         // Word-start: the first chunk is the EXACT text spoken here
         // (the selection, or the hovered paragraph from its start) —
         // the chain only adds the paragraphs AFTER it.
-        if (_listenChain is not null
-            && ContinuousListenChain.CanChain(_lastParagraphText, _lastParagraphRect, text))
+        // Chain diagnosis (CI272: Word select reads only the sentence):
+        // log whether the chain starts, with the paragraph rect — a
+        // whole-document rect means Paragraph degraded to Document.
+        var canChain = _listenChain is not null
+            && ContinuousListenChain.CanChain(_lastParagraphText, _lastParagraphRect, text);
+        WindowDiagnostics.AppendLine(
+            $"[Chain] start canChain={canChain} paraLen={_lastParagraphText?.Length ?? 0} rect=({_lastParagraphRect.X},{_lastParagraphRect.Y},{_lastParagraphRect.Width}x{_lastParagraphRect.Height}) spokenLen={text.Length}");
+        if (canChain)
         {
-            _listenChain.StartChain(
+            _listenChain!.StartChain(
                 new TextParagraph(_lastParagraphText!, _lastParagraphRect),
                 lang,
                 indicatorPos);
