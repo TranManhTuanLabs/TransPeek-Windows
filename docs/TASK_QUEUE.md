@@ -45,6 +45,7 @@
   trình duyệt để chọn file + Publish (trình duyệt không upload được zip 150MB).
 - [ ] **0.1.4** — Velopack → Privacy Policy → SignPath → Store (thứ tự trong
   `MASTER_PLAN.md`). Chờ Manh ra lệnh mới triển khai.
+- [ ] **Quản lý version cho workflow Release chính thức** (Windows — TransPeek-Windows, Manh 2026-11-28, ghi chú để dành — làm khi tới bước Release): theo hướng mac đã chốt (SemVer + 1 nguồn duy nhất). SemVer MAJOR.MINOR.PATCH (MAJOR tăng khi thay đổi lớn không tương thích, MINOR khi thêm tính năng, PATCH khi sửa lỗi; bản 0.x tăng MINOR khi thêm tính năng, PATCH khi sửa lỗi). Version chỉ nằm ở 1 chỗ duy nhất (mac: `Project.swift` MARKETING_VERSION; Windows: 1 chỗ duy nhất, vd `.csproj`), còn `build.yml` + workflow Release tự đọc theo — không ghi cứng version ở nhiều chỗ, không gõ tay version riêng nữa. Lý do: cách cũ ghi cứng/gõ riêng làm 2 số lệch nhau (mac: app báo 0.1.5 trong khi release là 0.1.13). Kèm theo: khi Release có ô gõ version thì strip chữ "v" đầu nếu user gõ thừa (không tạo tag "vv...") — xem `MEMORY.md` 2026-11-28.
 
 ## NỢ / LÀM SAU
 
