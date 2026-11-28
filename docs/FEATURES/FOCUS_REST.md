@@ -123,7 +123,12 @@ dưới. Xem thêm panel spec
   panel-right bắt đầu (đường reminder), panel tự thành cửa sổ đang focus nên Space ăn
   ngay, không cần click vào panel trước. Áp dụng cả focus (Pomodoro) lẫn rest-eyes —
   2 đường này đi chung luồng `fireReminder` → `showReminder`. Quy tắc không cướp màn
-  hình vẫn giữ: nhắc chỉ tự hiện khi user KHÔNG đang đọc.
+  hình vẫn giữ: nhắc chỉ tự hiện khi user KHÔNG đang đọc. **Cơ chế mới 2026-11-28
+  (main):** kích hoạt tập trung qua event `PlayingStarted` của `RsvpReaderViewModel`
+  (bắn khi `SetPlaying` dừng→phát) — Full, Lite, Rest cùng gán 1 callback
+  `WindowHelpers.ForceForeground` (thử `SetForegroundWindow` trước, bị foreground
+  lockdown chặn thì `AttachThreadInput` ép lên, không được thì topmost để đếm ngược
+  vẫn thấy). Nhắc từ timer cũng hiện CÓ focus như mac, Space dừng audio được ngay.
 - "Take a break" while reading is impossible by construction (the
   banner's button is the only way, and it shows the reminder — the
   current read is replaced, not kept).

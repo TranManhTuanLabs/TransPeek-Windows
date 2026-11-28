@@ -50,6 +50,9 @@ public sealed partial class RestWindow : Window
             if (e.PropertyName == nameof(RsvpReaderViewModel.IsFinished) && _viewModel.IsFinished)
                 ShowCountdown();
         };
+        // A read just started: bring this window forward with focus so
+        // Space works at once (Manh 2026-11-28, mac parity).
+        _viewModel.PlayingStarted += OnPlayingStarted;
         _countdownTimer.Tick += (_, _) =>
         {
             _countdownSeconds--;
@@ -99,19 +102,25 @@ public sealed partial class RestWindow : Window
         {
             // Positioning must never stop the window from opening.
         }
-        var hwnd = WindowNative.GetWindowHandle(this);
-        if (NativeMethods.IsIconic(hwnd))
-            NativeMethods.ShowWindow(hwnd, NativeMethods.SW_RESTORE);
-        NativeMethods.SetForegroundWindow(hwnd);
-        Activate();
+        // Focus comes from PlayingStarted (fired by SetPlaying below):
+        // one hook for click + timer, with a force fallback when the
+        // foreground lockdown refuses a plain activation.
         if (_viewModel.HasSlides)
             _viewModel.SetPlaying(true);
         else
+        {
             // Empty text (should not happen — reminder messages are
             // fixed strings): go straight to the countdown instead of
-            // sitting on an empty reader forever.
+            // sitting on an empty reader forever. No read starts, so
+            // bring the countdown forward directly.
+            WindowHelpers.ForceForeground(this);
             ShowCountdown();
+        }
     }
+
+    /// <summary>A read just started — bring this window forward with
+    /// keyboard focus, so Space (Play/Pause) works at once.</summary>
+    private void OnPlayingStarted() => WindowHelpers.ForceForeground(this);
 
     /// <summary>Pause the Rest-window read (if playing) without
     /// closing or clearing it — the user resumes with Play/Space from

@@ -48,6 +48,14 @@ public sealed class RsvpReaderViewModel : INotifyPropertyChanged
     /// reports through it.</summary>
     public static event Action? SpeechStarting;
 
+    /// <summary>Raised when a read starts playing (stopped -&gt; playing)
+    /// — the host window/panel brings itself to the front with keyboard
+    /// focus, so Space (Play/Pause) works at once (Manh 2026-11-28: a
+    /// Read surface must show focused, like mac, whether it opens from
+    /// a click or a reminder timer). Instance event: each host owns its
+    /// view model (the panel creates a fresh one per read).</summary>
+    public event Action? PlayingStarted;
+
     private readonly DispatcherTimer _timer = new();
     // The UI-thread queue, captured at construction (the view model is
     // always built on the UI thread). DispatcherTimer has NO
@@ -382,6 +390,7 @@ public sealed class RsvpReaderViewModel : INotifyPropertyChanged
     {
         if (PositionCount == 0)
             playing = false;
+        bool wasPlaying = IsPlaying;
         IsPlaying = playing;
         if (playing)
         {
@@ -415,6 +424,10 @@ public sealed class RsvpReaderViewModel : INotifyPropertyChanged
         }
         UpdateContext();
         Notify(nameof(HighlightVisible));
+        // A read just started: tell the host to bring itself forward
+        // with focus (fired last, the read is fully started).
+        if (playing && !wasPlaying)
+            PlayingStarted?.Invoke();
     }
 
     /// <summary>Restart the pacing for the current unit after a change

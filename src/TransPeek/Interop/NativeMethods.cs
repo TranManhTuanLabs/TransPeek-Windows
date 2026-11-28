@@ -95,6 +95,15 @@ internal static class NativeMethods
     [DllImport("user32.dll")]
     public static extern bool SetForegroundWindow(IntPtr hWnd);
 
+    // AttachThreadInput (winuser.h, User32.dll — Microsoft Learn):
+    // share one thread's input state with another's, so a
+    // SetForegroundWindow that the foreground lockdown refused (a timer
+    // firing while the user works in another app) can still bring our
+    // window forward. A thread cannot attach to itself. Fails if either
+    // thread has no message queue — both sides here are UI threads.
+    [DllImport("user32.dll")]
+    public static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool fAttach);
+
     // ----- user32: foreground window (alternative icon gate) -----
     // GetForegroundWindow returns the HWND of the window the user is
     // currently working in. The alternative icon only watches a Read

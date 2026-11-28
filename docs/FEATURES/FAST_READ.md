@@ -100,6 +100,9 @@ tweak.
 - **Window:** title "TransPeek — Fast Read RSVP". Default 70% × 55% of
   the work area, min 880×550, size remembered after resize. Single
   instance; re-opening focuses it and loads the new text. Not topmost.
+  A read starting (click or reminder timer) brings the window forward
+  with keyboard focus via `PlayingStarted` + `ForceForeground` (Manh
+  2026-11-28, mac parity), so Space works at once.
 - **Top bar:** subtitle "Rapid Serial Visual Presentation — RSVP"
   (15pt semibold, truly centered); Settings gear (E713) + "?" at the
   right; left empty. (Mac dropped the "— RSVP" suffix on 2026-11-19;

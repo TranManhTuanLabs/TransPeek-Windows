@@ -29,6 +29,7 @@ using TransPeek.Assets;
 using TransPeek.Core.Dictionary;
 using TransPeek.Core.Settings;
 using TransPeek.Core.Translation;
+using TransPeek.FastRead;
 using TransPeek.FocusTimer;
 using TransPeek.Interop;
 using TransPeek.Services;
@@ -209,6 +210,11 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
     /// and the panel-right read. Created once by App and shared with
     /// the FocusTimerCard, the reminder banner and PanelFastReadView.</summary>
     private readonly FocusTimerStore _focusTimerStore;
+    /// <summary>The panel-right view model currently hooked for
+    /// PlayingStarted — the store creates a fresh view model per read,
+    /// so the hook moves to the new instance each time (Manh
+    /// 2026-11-28). Null when no panel read is running.</summary>
+    private RsvpReaderViewModel? _subscribedPanelVm;
     /// <summary>Whether the "?" shortcuts card embedded at the top of
     /// the output area is open (Manh 2026-11-18, mac parity). Persists
     /// across tab switches and panel hides — ShowTab restores it when
@@ -946,23 +952,31 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
             if (request is not null)
             {
                 ShowTab(PanelTab.FastRead);
-                // Safe direction (Manh 2026-11-22, mac parity): a
-                // panel-right read starts KEYED — the panel activates
-                // itself, so Space (Play/Pause) works at once, no
-                // click into the panel first. This covers the reminder
-                // path (ShowPanelNearCursor shows without activation)
-                // as well as the manual paths (which already
-                // activated). No global key capture: once the user
-                // clicks to another app, the keys go there.
-                WindowHelpers.ActivateWindow(this);
+                // Focus comes from PlayingStarted (the new view model
+                // hooks it when the store sets it below): one hook for
+                // click + timer, so Space works at once with no click
+                // into the panel first (Manh 2026-11-28, mac parity —
+                // same safe direction as 2026-11-22, now via the play
+                // event instead of an activate call here). No global
+                // key capture: once the user clicks to another app,
+                // the keys go there.
                 _focusTimerStore.StartPanelReading(request.Text, request.CountdownSeconds, request.Title);
                 SetPinned(true);
             }
         }
         else if (e.PropertyName == nameof(FocusTimerStore.PanelReadingViewModel))
         {
-            if (_focusTimerStore.PanelReadingViewModel is not null)
+            var vm = _focusTimerStore.PanelReadingViewModel;
+            // The store creates a fresh view model per read — move the
+            // PlayingStarted hook to the new instance (Manh 2026-11-28).
+            if (_subscribedPanelVm is not null)
+                _subscribedPanelVm.PlayingStarted -= OnPanelReadingStarted;
+            _subscribedPanelVm = vm;
+            if (vm is not null)
+            {
+                vm.PlayingStarted += OnPanelReadingStarted;
                 _manualResizeGeneration = _epoch;
+            }
             else
             {
                 _manualResizeGeneration = null;
@@ -970,6 +984,11 @@ public sealed partial class TranslatePanelWindow : Window, ITranslatePanel
             }
         }
     }
+
+    /// <summary>A panel Lite read just started — bring the panel
+    /// forward with keyboard focus, so Space (Play/Pause) works at
+    /// once, even when the read was started by a reminder timer.</summary>
+    private void OnPanelReadingStarted() => WindowHelpers.ForceForeground(this);
 
     /// <summary>Grow/shrink the window to fit its content, like mac's
     /// PopupPanelSizing.frameToFit. All rows are Auto and the

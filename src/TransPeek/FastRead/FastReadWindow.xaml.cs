@@ -86,6 +86,9 @@ public sealed partial class FastReadWindow : Window
             ? $"{AppInfo.Version} (build {AppInfo.CiBuildNumber})"
             : AppInfo.Version;
         _viewModel.PropertyChanged += OnViewModelChanged;
+        // A read just started: bring this window forward with focus so
+        // Space works at once (Manh 2026-11-28, mac parity).
+        _viewModel.PlayingStarted += OnPlayingStarted;
         _viewModel.Speaker = _speech;
         Style2View.ViewModel = _viewModel;
         PopulateVoices(EnglishVoiceCombo, "en");
@@ -167,16 +170,16 @@ public sealed partial class FastReadWindow : Window
                 // Positioning must never stop the window from opening.
             }
         }
-        // Bring it to the front as the focused window (same pattern as
-        // the Settings window: restore first, then force it forward).
-        var hwnd = WindowNative.GetWindowHandle(this);
-        if (NativeMethods.IsIconic(hwnd))
-            NativeMethods.ShowWindow(hwnd, NativeMethods.SW_RESTORE);
-        NativeMethods.SetForegroundWindow(hwnd);
-        Activate();
+        // Focus comes from PlayingStarted (fired by SetPlaying below):
+        // one hook for click + timer, with a force fallback when the
+        // foreground lockdown refuses a plain activation.
         if (_viewModel.HasSlides)
             _viewModel.SetPlaying(true);
     }
+
+    /// <summary>A read just started — bring this window forward with
+    /// keyboard focus, so Space (Play/Pause) works at once.</summary>
+    private void OnPlayingStarted() => WindowHelpers.ForceForeground(this);
 
     /// <summary>Pause the Full-window read (if playing) without
     /// closing or clearing it — the user resumes with Play/Space from

@@ -68,6 +68,69 @@ internal static class WindowHelpers
         window.Activate();
     }
 
+    /// <summary>Bring a Read window to the front WITH keyboard focus,
+    /// even when the trigger is a timer (a reminder) rather than a
+    /// direct click — Windows foreground lockdown blocks a plain
+    /// SetForegroundWindow from a background timer, so attach to the
+    /// foreground thread first, then detach. (Manh 2026-11-28: a
+    /// reminder must show focused, like mac, so Space works and the
+    /// countdown is visible.)</summary>
+    public static void ForceForeground(Window window)
+    {
+        var hwnd = WindowNative.GetWindowHandle(window);
+        if (hwnd == IntPtr.Zero)
+            return;
+        // Clear WS_EX_NOACTIVATE (sticky from ShowWithoutActivation) —
+        // a NOACTIVATE window never takes keyboard focus.
+        var exStyle = NativeMethods.GetWindowLongPtr(hwnd, NativeMethods.GWL_EXSTYLE);
+        var next = new IntPtr(exStyle.ToInt64() & ~(long)NativeMethods.WS_EX_NOACTIVATE);
+        if (next != exStyle)
+        {
+            NativeMethods.SetWindowLongPtr(hwnd, NativeMethods.GWL_EXSTYLE, next);
+            NativeMethods.SetWindowPos(hwnd, IntPtr.Zero, 0, 0, 0, 0,
+                NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOZORDER |
+                NativeMethods.SWP_FRAMECHANGED);
+        }
+        if (NativeMethods.IsIconic(hwnd))
+            NativeMethods.ShowWindow(hwnd, NativeMethods.SW_RESTORE);
+        // Normal path first (direct click): no attach, no topmost.
+        if (NativeMethods.SetForegroundWindow(hwnd))
+        {
+            window.Activate();
+            return;
+        }
+        // Timer path, user active in another app: attach our input to
+        // the foreground thread, force it forward, detach at once.
+        var fgHwnd = NativeMethods.GetForegroundWindow();
+        uint fgThread = fgHwnd == IntPtr.Zero ? 0 : NativeMethods.GetWindowThreadProcessId(fgHwnd, out _);
+        uint ourThread = NativeMethods.GetCurrentThreadId();
+        bool attached = false;
+        try
+        {
+            if (fgThread != 0 && ourThread != 0 && fgThread != ourThread)
+                attached = NativeMethods.AttachThreadInput(ourThread, fgThread, true);
+            if (attached)
+            {
+                NativeMethods.SetForegroundWindow(hwnd);
+                window.Activate();
+            }
+            else
+            {
+                // Last resort: at least make the countdown visible.
+                NativeMethods.SetWindowPos(hwnd, NativeMethods.HWND_TOPMOST, 0, 0, 0, 0,
+                    NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_SHOWWINDOW);
+                window.Activate();
+            }
+        }
+        finally
+        {
+            // Never leave the threads attached (shared input queues
+            // hang together) — detach even if the force failed.
+            if (attached)
+                NativeMethods.AttachThreadInput(ourThread, fgThread, false);
+        }
+    }
+
     /// <summary>Start a native window drag (for borderless windows
     /// like the panel): pretend the user grabbed the title bar.
     /// Windows handles the move, including multi-monitor and snap.</summary>
